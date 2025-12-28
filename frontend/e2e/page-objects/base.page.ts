@@ -20,9 +20,16 @@ export abstract class BasePage {
 
   /**
    * Wait for the page to be fully loaded.
+   * This includes waiting for Next.js FOUC prevention to be removed.
    */
   async waitForLoad() {
     await this.page.waitForLoadState('networkidle');
+    // Wait for Next.js FOUC (Flash of Unstyled Content) prevention to be removed
+    // Next.js adds body{display:none} during SSR and removes it after hydration
+    await this.page.waitForFunction(() => {
+      const bodyStyle = window.getComputedStyle(document.body);
+      return bodyStyle.display !== 'none';
+    }, { timeout: 30000 });
   }
 
   /**

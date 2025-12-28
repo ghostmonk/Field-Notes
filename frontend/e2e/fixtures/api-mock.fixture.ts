@@ -295,7 +295,8 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
   });
 
   // Mock pages endpoint (About, Contact)
-  await page.route('**/pages/**', async (route) => {
+  // Note: Pattern must include /api/ to avoid matching Next.js bundle paths like /_next/static/chunks/pages/
+  await page.route('**/api/pages/**', async (route) => {
     await maybeDelay();
 
     if (failRequests) {
@@ -328,8 +329,8 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
     }
   });
 
-  // Mock projects list endpoint
-  await page.route('**/projects?**', async (route) => {
+  // Mock projects list endpoint with query params (API route only)
+  await page.route(/\/api\/projects\?/, async (route) => {
     await maybeDelay();
 
     if (failRequests) {
@@ -366,8 +367,8 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
     });
   });
 
-  // Mock projects list endpoint (without query params)
-  await page.route(/\/projects\/?$/, async (route) => {
+  // Mock projects list endpoint without query params (API route only)
+  await page.route(/\/api\/projects\/?$/, async (route) => {
     if (route.request().method() === 'POST') {
       await route.fallback();
       return;
@@ -433,7 +434,9 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
   });
 
   // Mock project by ID endpoint (for API routes that use slug as path param)
-  await page.route(/\/projects\/(?!slug\/)[\w-]+$/i, async (route) => {
+  // Note: Must NOT match page routes like /projects/awesome-portfolio-site
+  // Only match /api/projects/{slug} patterns
+  await page.route(/\/api\/projects\/[\w-]+$/i, async (route) => {
     await maybeDelay();
 
     if (failRequests) {
@@ -467,6 +470,24 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
         body: JSON.stringify({ detail: 'Project not found' }),
       });
     }
+  });
+
+  // Mock warmup endpoint (called by keep-alive service on page load)
+  await page.route('**/api/warmup', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'warm', message: 'Mock warmup successful' }),
+    });
+  });
+
+  // Mock health endpoint (called by keep-alive service periodically)
+  await page.route('**/api/health', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'ok' }),
+    });
   });
 }
 

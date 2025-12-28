@@ -42,7 +42,7 @@ export class ProjectDetailPage extends BasePage {
     this.projectImage = page.locator('img').first();
     this.loadingState = page.getByText('Loading project...');
     this.errorState = page.getByText('Failed to load project');
-    this.notFoundState = page.getByText('Project not found');
+    this.notFoundState = page.getByRole('heading', { name: 'Project Not Found' });
   }
 
   /**

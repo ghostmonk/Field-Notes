@@ -27,9 +27,10 @@ test.describe('Contact Page', () => {
     const contactPage = new ContactPage(mockApiPage);
 
     await contactPage.goto();
+    await contactPage.waitForContent();
 
     const browserTitle = await contactPage.getTitle();
-    expect(browserTitle).toContain('Contact');
+    expect(browserTitle).toContain('Get In Touch');
     expect(browserTitle).toContain('Turbulence');
   });
 

@@ -65,7 +65,7 @@ const ProjectDetailPage: React.FC = () => {
     return (
         <>
             <Head>
-                <title>{project.title} | Turbulence</title>
+                <title>{`${project.title} | Turbulence`}</title>
                 <meta name="description" content={project.summary} />
             </Head>
 

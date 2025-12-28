@@ -27,6 +27,7 @@ test.describe('About Page', () => {
     const aboutPage = new AboutPage(mockApiPage);
 
     await aboutPage.goto();
+    await aboutPage.waitForContent();
 
     const browserTitle = await aboutPage.getTitle();
     expect(browserTitle).toContain('About');

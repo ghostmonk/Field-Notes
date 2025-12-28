@@ -31,7 +31,7 @@ const AboutPage: React.FC = () => {
     return (
         <>
             <Head>
-                <title>{page?.title || 'About'} | Turbulence</title>
+                <title>{`${page?.title || 'About'} | Turbulence`}</title>
                 <meta name="description" content="About Ghostmonk and Turbulence" />
             </Head>
 

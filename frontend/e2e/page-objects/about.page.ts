@@ -37,10 +37,14 @@ export class AboutPage extends BasePage {
   }
 
   /**
-   * Wait for page content to load.
+   * Wait for page content to load from API.
+   * Waits for loading state to disappear and actual content to appear.
    */
   async waitForContent() {
-    await this.content.waitFor({ state: 'visible' });
+    // Wait for loading state to disappear (API call completed)
+    await this.loadingState.waitFor({ state: 'hidden', timeout: 10000 });
+    // Wait for the actual title to be populated (not the fallback)
+    await this.pageTitle.filter({ hasText: 'About Me' }).waitFor({ state: 'visible' });
   }
 
   /**
