@@ -5,11 +5,10 @@ Unit tests for Pydantic models
 from datetime import datetime, timezone
 
 import pytest
-from models.page import PageBase, PageCreate, PageResponse, PageUpdate
+from models.page import PageBase, PageResponse, PageUpdate
 from models.project import (
     ProjectBase,
     ProjectCard,
-    ProjectCreate,
     ProjectResponse,
     ProjectUpdate,
 )

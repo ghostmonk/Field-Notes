@@ -122,7 +122,7 @@ def verify_ffmpeg_availability() -> bool:
         logger.error(f"FFmpeg verification failed: {e}")
         return False
     except FileNotFoundError:
-        logger.error(f"FFmpeg not found in system PATH")
+        logger.error("FFmpeg not found in system PATH")
         return False
     except Exception as e:
         logger.error(f"Unexpected error verifying FFmpeg: {str(e)}")
@@ -217,7 +217,7 @@ def generate_thumbnails(
                 }
             )
 
-            logger.info(f"Generated thumbnail {i+1}/5 at {timestamp:.1f}s")
+            logger.info(f"Generated thumbnail {i + 1}/5 at {timestamp:.1f}s")
 
         except ffmpeg.Error as e:
             error_msg = e.stderr.decode("utf-8") if e.stderr else str(e)

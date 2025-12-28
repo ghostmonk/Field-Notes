@@ -1,6 +1,5 @@
 """Tests for logger API compatibility methods."""
 
-import pytest
 from glogger.factory import DefaultLogger
 from glogger.interfaces import LogLevel
 
@@ -54,7 +53,6 @@ class TestLoggerCompatibilityAPI:
         provider = MockProvider()
         logger = DefaultLogger("test", provider, {})
 
-        test_exception = ValueError("Test error")
         logger.exception_with_context(
             "Exception occurred", {"error_type": "ValueError", "request_id": "456"}
         )

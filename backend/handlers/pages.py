@@ -9,7 +9,7 @@ from database import get_pages_collection
 from decorators.auth import requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from glogger import logger
-from models.page import PageCreate, PageResponse, PageType, PageUpdate
+from models.page import PageResponse, PageType, PageUpdate
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
 from utils import find_one_and_convert

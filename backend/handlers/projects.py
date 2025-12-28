@@ -4,7 +4,6 @@ API handlers for portfolio projects.
 
 import traceback
 from datetime import datetime, timezone
-from typing import List
 
 from bson import ObjectId
 from database import get_projects_collection
