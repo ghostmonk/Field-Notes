@@ -15,7 +15,7 @@ const ProjectsPage: React.FC = () => {
             try {
                 const data = await apiClient.projects.list();
                 setProjects(data.items);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 setError('Failed to load projects.');
                 console.error('Error fetching projects:', err);
             } finally {
@@ -33,7 +33,7 @@ const ProjectsPage: React.FC = () => {
                 <meta name="description" content="Projects and work by Ghostmonk" />
             </Head>
 
-            <div style={{ margin: '0 auto', maxWidth: '800px', padding: '0 1rem' }}>
+            <div className="page-container">
                 <h1 className="page-title">Projects</h1>
 
                 {loading && (
@@ -56,8 +56,7 @@ const ProjectsPage: React.FC = () => {
                             <Link
                                 key={project.id}
                                 href={`/projects/${project.slug}`}
-                                className="card card--hoverable"
-                                style={{ textDecoration: 'none', display: 'block' }}
+                                className="card card--hoverable card--link"
                             >
                                 {project.image_url && (
                                     <Image
@@ -65,65 +64,41 @@ const ProjectsPage: React.FC = () => {
                                         alt={project.title}
                                         width={400}
                                         height={160}
-                                        style={{
-                                            width: '100%',
-                                            height: '160px',
-                                            objectFit: 'cover',
-                                            borderRadius: '8px 8px 0 0',
-                                            marginBottom: '1rem'
-                                        }}
+                                        className="project-image"
                                     />
                                 )}
 
-                                <h3 className="section-title" style={{ marginBottom: '0.5rem' }}>
+                                <h3 className="section-title mb-sm">
                                     {project.title}
                                     {project.is_featured && (
-                                        <span
-                                            style={{
-                                                marginLeft: '0.5rem',
-                                                fontSize: '0.75rem',
-                                                padding: '0.125rem 0.5rem',
-                                                backgroundColor: 'var(--color-brand-primary)',
-                                                color: 'white',
-                                                borderRadius: '4px',
-                                                verticalAlign: 'middle'
-                                            }}
-                                        >
+                                        <span className="badge--featured">
                                             Featured
                                         </span>
                                     )}
                                 </h3>
 
-                                <p className="text-text-secondary" style={{ marginBottom: '1rem' }}>
+                                <p className="text-text-secondary mb-lg">
                                     {project.summary}
                                 </p>
 
                                 {project.technologies.length > 0 && (
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                    <div className="tech-tags">
                                         {project.technologies.map((tech) => (
-                                            <span
-                                                key={tech}
-                                                style={{
-                                                    fontSize: '0.75rem',
-                                                    padding: '0.25rem 0.5rem',
-                                                    backgroundColor: 'var(--bg-secondary)',
-                                                    borderRadius: '4px'
-                                                }}
-                                            >
+                                            <span key={tech} className="tech-tag">
                                                 {tech}
                                             </span>
                                         ))}
                                     </div>
                                 )}
 
-                                <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+                                <div className="project-links">
                                     {project.github_url && (
-                                        <span className="text-text-secondary" style={{ fontSize: '0.875rem' }}>
+                                        <span className="text-text-secondary text-sm">
                                             GitHub
                                         </span>
                                     )}
                                     {project.live_url && (
-                                        <span className="text-text-secondary" style={{ fontSize: '0.875rem' }}>
+                                        <span className="text-text-secondary text-sm">
                                             Live Demo
                                         </span>
                                     )}

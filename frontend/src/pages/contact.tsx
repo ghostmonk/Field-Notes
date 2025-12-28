@@ -13,9 +13,10 @@ const ContactPage: React.FC = () => {
             try {
                 const data = await apiClient.pages.get('contact');
                 setPage(data);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 // 404 is expected if page hasn't been created yet
-                if (err?.status !== 404) {
+                const apiError = err as { status?: number };
+                if (apiError?.status !== 404) {
                     console.error('Error fetching contact page:', err);
                 }
             } finally {
@@ -33,7 +34,7 @@ const ContactPage: React.FC = () => {
                 <meta name="description" content="Get in touch with Ghostmonk" />
             </Head>
 
-            <div style={{ margin: '0 auto', maxWidth: '800px', padding: '0 1rem' }}>
+            <div className="page-container">
                 <h1 className="page-title">{page?.title || 'Contact'}</h1>
 
                 {loading && (

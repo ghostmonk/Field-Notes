@@ -22,8 +22,9 @@ const ProjectDetailPage: React.FC = () => {
             try {
                 const data = await apiClient.projects.getBySlug(slug);
                 setProject(data);
-            } catch (err: any) {
-                if (err?.status === 404) {
+            } catch (err: unknown) {
+                const apiError = err as { status?: number };
+                if (apiError?.status === 404) {
                     setError('Project not found.');
                 } else {
                     setError('Failed to load project.');
@@ -39,7 +40,7 @@ const ProjectDetailPage: React.FC = () => {
 
     if (loading) {
         return (
-            <div style={{ margin: '0 auto', maxWidth: '800px', padding: '0 1rem' }}>
+            <div className="page-container">
                 <p className="text-text-secondary">Loading project...</p>
             </div>
         );
@@ -51,11 +52,11 @@ const ProjectDetailPage: React.FC = () => {
                 <Head>
                     <title>Project Not Found | Turbulence</title>
                 </Head>
-                <div style={{ margin: '0 auto', maxWidth: '800px', padding: '0 1rem' }}>
+                <div className="page-container">
                     <h1 className="page-title">Project Not Found</h1>
                     <div className="card">
                         <p className="text-text-secondary">{error || 'Project not found.'}</p>
-                        <Link href="/projects" className="btn btn--primary" style={{ marginTop: '1rem', display: 'inline-block' }}>
+                        <Link href="/projects" className="btn btn--primary mt-lg inline-block">
                             Back to Projects
                         </Link>
                     </div>
@@ -71,8 +72,8 @@ const ProjectDetailPage: React.FC = () => {
                 <meta name="description" content={project.summary} />
             </Head>
 
-            <div style={{ margin: '0 auto', maxWidth: '800px', padding: '0 1rem' }}>
-                <Link href="/projects" className="text-text-secondary" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+            <div className="page-container">
+                <Link href="/projects" className="text-text-secondary back-link">
                     &larr; Back to Projects
                 </Link>
 
@@ -82,59 +83,34 @@ const ProjectDetailPage: React.FC = () => {
                         alt={project.title}
                         width={800}
                         height={400}
-                        style={{
-                            width: '100%',
-                            height: 'auto',
-                            maxHeight: '400px',
-                            objectFit: 'cover',
-                            borderRadius: '8px',
-                            marginBottom: '1.5rem'
-                        }}
+                        className="project-image--hero"
                     />
                 )}
 
-                <h1 className="page-title" style={{ marginBottom: '0.5rem' }}>
+                <h1 className="page-title mb-sm">
                     {project.title}
                     {project.is_featured && (
-                        <span
-                            style={{
-                                marginLeft: '0.75rem',
-                                fontSize: '0.875rem',
-                                padding: '0.25rem 0.75rem',
-                                backgroundColor: 'var(--color-brand-primary)',
-                                color: 'white',
-                                borderRadius: '4px',
-                                verticalAlign: 'middle'
-                            }}
-                        >
+                        <span className="badge--featured">
                             Featured
                         </span>
                     )}
                 </h1>
 
-                <p className="text-text-secondary" style={{ fontSize: '1.125rem', marginBottom: '1.5rem' }}>
+                <p className="text-text-secondary text-lg mb-xl">
                     {project.summary}
                 </p>
 
                 {project.technologies.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                    <div className="tech-tags mb-xl">
                         {project.technologies.map((tech) => (
-                            <span
-                                key={tech}
-                                style={{
-                                    fontSize: '0.875rem',
-                                    padding: '0.375rem 0.75rem',
-                                    backgroundColor: 'var(--bg-secondary)',
-                                    borderRadius: '4px'
-                                }}
-                            >
+                            <span key={tech} className="tech-tag tech-tag--lg">
                                 {tech}
                             </span>
                         ))}
                     </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                <div className="project-actions">
                     {project.github_url && (
                         <a
                             href={project.github_url}

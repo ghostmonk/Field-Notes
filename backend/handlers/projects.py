@@ -85,6 +85,8 @@ async def get_projects(
 
         return {"items": projects, "total": total, "limit": limit, "offset": offset}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception_with_context(
             "Error fetching projects",
