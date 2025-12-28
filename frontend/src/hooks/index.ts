@@ -28,3 +28,7 @@ export type { UseStoryEditorReturn } from './editor';
 
 // Client-side storage
 export { default as useClientSideStorage } from './useClientSideStorage';
+
+// Navigation hooks
+export { useActiveSection } from './useActiveSection';
+export { useMediaQuery, useIsDesktop, useIsMobile } from './useMediaQuery';

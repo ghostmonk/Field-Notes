@@ -95,6 +95,16 @@ async def get_collection() -> AsyncIOMotorCollection:
     return db["stories"]
 
 
+async def get_pages_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["pages"]
+
+
+async def get_projects_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["projects"]
+
+
 def _get_variable(key: str) -> str:
     output = os.getenv(key)
     if not output:
