@@ -95,9 +95,7 @@ async def upsert_page(
 
         if existing_page:
             # Update existing page
-            update_data = {
-                k: v for k, v in page.model_dump().items() if v is not None
-            }
+            update_data = {k: v for k, v in page.model_dump().items() if v is not None}
             update_data["updatedDate"] = current_time
 
             result = await collection.update_one(
@@ -106,14 +104,10 @@ async def upsert_page(
             )
 
             if result.modified_count == 0 and result.matched_count == 0:
-                logger.error_with_context(
-                    "Failed to update page", {"page_type": page_type}
-                )
+                logger.error_with_context("Failed to update page", {"page_type": page_type})
                 raise HTTPException(status_code=500, detail="Failed to update page")
 
-            logger.info_with_context(
-                "Page updated successfully", {"page_type": page_type}
-            )
+            logger.info_with_context("Page updated successfully", {"page_type": page_type})
         else:
             # Create new page
             if not page.title or not page.content:
@@ -210,9 +204,7 @@ async def delete_page(
         )
 
         if result.modified_count == 0:
-            logger.error_with_context(
-                "Failed to delete page", {"page_type": page_type}
-            )
+            logger.error_with_context("Failed to delete page", {"page_type": page_type})
             raise HTTPException(status_code=500, detail="Failed to delete page")
 
         logger.info_with_context(

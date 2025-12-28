@@ -1,4 +1,5 @@
 """Tests for logger API compatibility methods."""
+
 import pytest
 from glogger.factory import DefaultLogger
 from glogger.interfaces import LogLevel
@@ -6,6 +7,7 @@ from glogger.interfaces import LogLevel
 
 class MockProvider:
     """Mock provider for testing."""
+
     def __init__(self):
         self.logged_entries = []
 
@@ -54,8 +56,7 @@ class TestLoggerCompatibilityAPI:
 
         test_exception = ValueError("Test error")
         logger.exception_with_context(
-            "Exception occurred",
-            {"error_type": "ValueError", "request_id": "456"}
+            "Exception occurred", {"error_type": "ValueError", "request_id": "456"}
         )
 
         assert len(provider.logged_entries) == 1

@@ -340,9 +340,7 @@ async def update_project(
                 collection, project.title, ObjectId(project_id)
             )
 
-        result = await collection.update_one(
-            {"_id": ObjectId(project_id)}, {"$set": update_data}
-        )
+        result = await collection.update_one({"_id": ObjectId(project_id)}, {"$set": update_data})
 
         if result.modified_count == 0 and result.matched_count == 0:
             logger.error_with_context(
@@ -363,7 +361,11 @@ async def update_project(
 
         logger.info_with_context(
             "Project updated successfully",
-            {"project_id": project_id, "title": updated_project.title, "slug": updated_project.slug},
+            {
+                "project_id": project_id,
+                "title": updated_project.title,
+                "slug": updated_project.slug,
+            },
         )
 
         return updated_project

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import { ProjectCard } from '@/types/api';
@@ -59,9 +60,11 @@ const ProjectsPage: React.FC = () => {
                                 style={{ textDecoration: 'none', display: 'block' }}
                             >
                                 {project.image_url && (
-                                    <img
+                                    <Image
                                         src={project.image_url}
                                         alt={project.title}
+                                        width={400}
+                                        height={160}
                                         style={{
                                             width: '100%',
                                             height: '160px',

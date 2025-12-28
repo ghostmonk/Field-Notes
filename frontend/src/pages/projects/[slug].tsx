@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import apiClient from '@/lib/api-client';
@@ -75,11 +76,14 @@ const ProjectDetailPage: React.FC = () => {
                 </Link>
 
                 {project.image_url && (
-                    <img
+                    <Image
                         src={project.image_url}
                         alt={project.title}
+                        width={800}
+                        height={400}
                         style={{
                             width: '100%',
+                            height: 'auto',
                             maxHeight: '400px',
                             objectFit: 'cover',
                             borderRadius: '8px',

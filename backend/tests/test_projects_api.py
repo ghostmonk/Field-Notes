@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 
 import pytest
 from bson import ObjectId
-
 from tests.test_utils import MockCursor
 
 
@@ -82,7 +81,10 @@ class TestProjectsPublicEndpoints:
     ):
         """Test successful retrieval of project by slug"""
         project_id = ObjectId()
-        override_projects_database.find_one.return_value = {**sample_project_data, "_id": project_id}
+        override_projects_database.find_one.return_value = {
+            **sample_project_data,
+            "_id": project_id,
+        }
 
         response = await projects_async_client.get("/projects/slug/my-awesome-project")
 
@@ -118,16 +120,21 @@ class TestProjectsAuthenticatedEndpoints:
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_get_project_by_id_success(
-        self, projects_async_client, override_projects_database, sample_project_data,
-        mock_auth, auth_headers
+        self,
+        projects_async_client,
+        override_projects_database,
+        sample_project_data,
+        mock_auth,
+        auth_headers,
     ):
         """Test successful retrieval of project by ID with auth"""
         project_id = ObjectId()
-        override_projects_database.find_one.return_value = {**sample_project_data, "_id": project_id}
+        override_projects_database.find_one.return_value = {
+            **sample_project_data,
+            "_id": project_id,
+        }
 
-        response = await projects_async_client.get(
-            f"/projects/{project_id}", headers=auth_headers
-        )
+        response = await projects_async_client.get(f"/projects/{project_id}", headers=auth_headers)
 
         assert response.status_code == 200
         assert response.json()["title"] == "My Awesome Project"
@@ -138,9 +145,7 @@ class TestProjectsAuthenticatedEndpoints:
         self, projects_async_client, mock_auth, auth_headers
     ):
         """Test retrieval with invalid ObjectId format"""
-        response = await projects_async_client.get(
-            "/projects/invalid_id", headers=auth_headers
-        )
+        response = await projects_async_client.get("/projects/invalid_id", headers=auth_headers)
         assert response.status_code == 400
 
     @pytest.mark.integration
@@ -156,12 +161,21 @@ class TestProjectsAuthenticatedEndpoints:
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_create_project_success(
-        self, projects_async_client, override_projects_database, sample_project_data,
-        mock_auth, auth_headers
+        self,
+        projects_async_client,
+        override_projects_database,
+        sample_project_data,
+        mock_auth,
+        auth_headers,
     ):
         """Test successful project creation with auth"""
         project_id = ObjectId()
-        created_project = {**sample_project_data, "_id": project_id, "title": "New Project", "slug": "new-project"}
+        created_project = {
+            **sample_project_data,
+            "_id": project_id,
+            "title": "New Project",
+            "slug": "new-project",
+        }
 
         override_projects_database.find_one.side_effect = [None, created_project]
         override_projects_database.insert_one.return_value = MagicMock(inserted_id=project_id)
@@ -205,17 +219,28 @@ class TestProjectsAuthenticatedEndpoints:
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_update_project_success(
-        self, projects_async_client, override_projects_database, sample_project_data,
-        mock_auth, auth_headers
+        self,
+        projects_async_client,
+        override_projects_database,
+        sample_project_data,
+        mock_auth,
+        auth_headers,
     ):
         """Test successful project update with auth"""
         project_id = ObjectId()
         existing = {**sample_project_data, "_id": project_id}
-        updated = {**sample_project_data, "_id": project_id, "title": "Updated Title", "slug": "updated-title"}
+        updated = {
+            **sample_project_data,
+            "_id": project_id,
+            "title": "Updated Title",
+            "slug": "updated-title",
+        }
 
         # Order: 1) check project exists, 2) slug check for generate_unique_slug, 3) fetch updated project
         override_projects_database.find_one.side_effect = [existing, None, updated]
-        override_projects_database.update_one.return_value = MagicMock(modified_count=1, matched_count=1)
+        override_projects_database.update_one.return_value = MagicMock(
+            modified_count=1, matched_count=1
+        )
 
         response = await projects_async_client.put(
             f"/projects/{project_id}",
@@ -251,12 +276,19 @@ class TestProjectsAuthenticatedEndpoints:
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_delete_project_success(
-        self, projects_async_client, override_projects_database, sample_project_data,
-        mock_auth, auth_headers
+        self,
+        projects_async_client,
+        override_projects_database,
+        sample_project_data,
+        mock_auth,
+        auth_headers,
     ):
         """Test successful project deletion with auth"""
         project_id = ObjectId()
-        override_projects_database.find_one.return_value = {**sample_project_data, "_id": project_id}
+        override_projects_database.find_one.return_value = {
+            **sample_project_data,
+            "_id": project_id,
+        }
         override_projects_database.update_one.return_value = MagicMock(modified_count=1)
 
         response = await projects_async_client.delete(

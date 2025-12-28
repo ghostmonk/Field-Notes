@@ -31,7 +31,12 @@ class TestGetPage:
         self, pages_async_client, override_pages_database, sample_page_data
     ):
         """Test successfully retrieving the contact page"""
-        contact_page = {**sample_page_data, "_id": ObjectId(), "page_type": "contact", "title": "Contact"}
+        contact_page = {
+            **sample_page_data,
+            "_id": ObjectId(),
+            "page_type": "contact",
+            "title": "Contact",
+        }
         override_pages_database.find_one.return_value = contact_page
 
         response = await pages_async_client.get("/pages/contact")
@@ -40,9 +45,7 @@ class TestGetPage:
         assert response.json()["page_type"] == "contact"
 
     @pytest.mark.asyncio
-    async def test_get_page_not_found(
-        self, pages_async_client, override_pages_database
-    ):
+    async def test_get_page_not_found(self, pages_async_client, override_pages_database):
         """Test 404 when page doesn't exist"""
         override_pages_database.find_one.return_value = None
 
@@ -63,8 +66,7 @@ class TestUpsertPage:
 
     @pytest.mark.asyncio
     async def test_create_new_page(
-        self, pages_async_client, override_pages_database, sample_page_data,
-        mock_auth, auth_headers
+        self, pages_async_client, override_pages_database, sample_page_data, mock_auth, auth_headers
     ):
         """Test creating a new page when it doesn't exist"""
         page_id = ObjectId()
@@ -84,8 +86,7 @@ class TestUpsertPage:
 
     @pytest.mark.asyncio
     async def test_update_existing_page(
-        self, pages_async_client, override_pages_database, sample_page_data,
-        mock_auth, auth_headers
+        self, pages_async_client, override_pages_database, sample_page_data, mock_auth, auth_headers
     ):
         """Test updating an existing page"""
         page_id = ObjectId()
@@ -93,7 +94,9 @@ class TestUpsertPage:
         updated = {**sample_page_data, "_id": page_id, "title": "Updated About"}
 
         override_pages_database.find_one.side_effect = [existing, updated]
-        override_pages_database.update_one.return_value = MagicMock(modified_count=1, matched_count=1)
+        override_pages_database.update_one.return_value = MagicMock(
+            modified_count=1, matched_count=1
+        )
 
         response = await pages_async_client.put(
             "/pages/about",
@@ -125,8 +128,7 @@ class TestDeletePage:
 
     @pytest.mark.asyncio
     async def test_delete_page_success(
-        self, pages_async_client, override_pages_database, sample_page_data,
-        mock_auth, auth_headers
+        self, pages_async_client, override_pages_database, sample_page_data, mock_auth, auth_headers
     ):
         """Test soft deleting a page"""
         override_pages_database.find_one.return_value = {**sample_page_data, "_id": ObjectId()}

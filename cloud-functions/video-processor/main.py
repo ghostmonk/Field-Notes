@@ -2,6 +2,7 @@
 FFmpeg-based video processing Cloud Function triggered by GCS uploads.
 Handles video transcoding, thumbnail generation, and metadata extraction using FFmpeg.
 """
+
 import os
 import shutil
 import tempfile
@@ -252,12 +253,14 @@ def transcode_video(
         try:
             target_height = quality_config["height"]
             target_width = int(target_height * aspect_ratio)
-            
+
             if target_width % 2 != 0:
                 target_width += 1
 
             if original_height <= target_height:
-                logger.info(f"Skipping {quality_config['name']} - original video is smaller ({original_height}p)")
+                logger.info(
+                    f"Skipping {quality_config['name']} - original video is smaller ({original_height}p)"
+                )
                 continue
 
             output_filename = f"{base_name}{quality_config['suffix']}.mp4"
@@ -266,7 +269,9 @@ def transcode_video(
             bitrate_num = int(quality_config["bitrate"].replace("k", ""))
             bufsize = f"{bitrate_num * 2}k"
 
-            logger.info(f"Transcoding to {quality_config['name']} ({target_width}x{target_height})...")
+            logger.info(
+                f"Transcoding to {quality_config['name']} ({target_width}x{target_height})..."
+            )
 
             (
                 ffmpeg.input(input_path)
