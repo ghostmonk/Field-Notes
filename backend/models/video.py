@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class VideoMetadata(BaseModel):
@@ -38,8 +38,8 @@ class VideoProcessingJob(BaseModel):
     processed_formats: List[str] = []
     error_message: str = ""
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "job_id": "job_123456",
                 "original_file": "uploads/video_20241201.mp4",
@@ -53,6 +53,7 @@ class VideoProcessingJob(BaseModel):
                 },
             }
         }
+    )
 
 
 class VideoProcessingJobCreate(BaseModel):

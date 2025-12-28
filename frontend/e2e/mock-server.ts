@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
-import { sampleStories, FIXED_TIMESTAMP } from './test-data';
+import { sampleStories, samplePages, sampleProjects, projectToCard, FIXED_TIMESTAMP } from './test-data';
 
 const app = express();
 
@@ -114,6 +114,122 @@ app.delete('/stories/:id', (req: Request, res: Response) => {
 // POST /upload/:type - Mock file uploads
 app.post('/upload/:type', (req: Request, res: Response) => {
   res.json({ url: '/mock-uploaded-file.jpg' });
+});
+
+// ============================================================================
+// Pages (About, Contact)
+// ============================================================================
+
+// Use shared sample pages from test-data.ts
+const pages = [...samplePages];
+
+// GET /pages/:pageType - Get page by type
+app.get('/pages/:pageType', (req: Request, res: Response) => {
+  const page = pages.find((p) => p.page_type === req.params.pageType);
+  if (page) {
+    res.json(page);
+  } else {
+    res.status(404).json({ detail: `Page '${req.params.pageType}' not found` });
+  }
+});
+
+// PUT /pages/:pageType - Update page (returns success but doesn't persist)
+app.put('/pages/:pageType', (req: Request, res: Response) => {
+  const existingPage = pages.find((p) => p.page_type === req.params.pageType);
+  if (existingPage) {
+    res.json({ ...existingPage, ...req.body, updatedDate: FIXED_TIMESTAMP });
+  } else {
+    // Create new page
+    const newPage = {
+      id: `page-${Date.now()}`,
+      page_type: req.params.pageType,
+      ...req.body,
+      createdDate: FIXED_TIMESTAMP,
+      updatedDate: FIXED_TIMESTAMP,
+    };
+    res.json(newPage);
+  }
+});
+
+// DELETE /pages/:pageType - Delete page
+app.delete('/pages/:pageType', (req: Request, res: Response) => {
+  res.status(204).send();
+});
+
+// ============================================================================
+// Projects
+// ============================================================================
+
+// Use shared sample projects from test-data.ts
+const projects = [...sampleProjects];
+
+// GET /projects - List projects with pagination
+app.get('/projects', (req: Request, res: Response) => {
+  const limit = Math.max(1, parseInt(req.query.limit as string || '20', 10) || 20);
+  const offset = Math.max(0, parseInt(req.query.offset as string || '0', 10) || 0);
+  const featuredOnly = req.query.featured_only === 'true';
+
+  let filteredProjects = projects.filter((p) => p.is_published);
+  if (featuredOnly) {
+    filteredProjects = filteredProjects.filter((p) => p.is_featured);
+  }
+
+  const pageProjects = filteredProjects.slice(offset, offset + limit);
+  const projectCards = pageProjects.map(projectToCard);
+
+  res.json({
+    items: projectCards,
+    total: filteredProjects.length,
+    limit,
+    offset,
+  });
+});
+
+// GET /projects/slug/:slug - Get project by slug
+app.get('/projects/slug/:slug', (req: Request, res: Response) => {
+  const project = projects.find((p) => p.slug === req.params.slug && p.is_published);
+  if (project) {
+    res.json(project);
+  } else {
+    res.status(404).json({ detail: 'Project not found' });
+  }
+});
+
+// GET /projects/:id - Get project by ID
+app.get('/projects/:id', (req: Request, res: Response) => {
+  const project = projects.find((p) => p.id === req.params.id);
+  if (project) {
+    res.json(project);
+  } else {
+    res.status(404).json({ detail: 'Project not found' });
+  }
+});
+
+// POST /projects - Create project (returns success but doesn't persist)
+app.post('/projects', (req: Request, res: Response) => {
+  const newProject = {
+    id: `project-${Date.now()}`,
+    slug: req.body.title?.toLowerCase().replace(/\s+/g, '-') || 'new-project',
+    ...req.body,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  };
+  res.status(201).json(newProject);
+});
+
+// PUT /projects/:id - Update project (returns success but doesn't persist)
+app.put('/projects/:id', (req: Request, res: Response) => {
+  const project = projects.find((p) => p.id === req.params.id);
+  if (project) {
+    res.json({ ...project, ...req.body, updatedDate: FIXED_TIMESTAMP });
+  } else {
+    res.status(404).json({ detail: 'Project not found' });
+  }
+});
+
+// DELETE /projects/:id - Delete project
+app.delete('/projects/:id', (req: Request, res: Response) => {
+  res.status(204).send();
 });
 
 // Health check

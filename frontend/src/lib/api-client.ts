@@ -2,7 +2,18 @@
  * API Client for making requests to the backend
  */
 
-import { Story, CreateStoryRequest, PaginatedResponse } from '@/types/api';
+import {
+  Story,
+  CreateStoryRequest,
+  PaginatedResponse,
+  Page,
+  PageType,
+  UpdatePageRequest,
+  ProjectCard,
+  Project,
+  CreateProjectRequest,
+  UpdateProjectRequest
+} from '@/types/api';
 import { ApiRequestError } from '@/types/error';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -83,11 +94,14 @@ async function fetchApi<T, B = unknown>(
         data,
         requestDetails
       );
-      console.error('API error:', { 
-        status: response.status, 
-        request: requestDetails,
-        error: apiError
-      });
+      // Don't log 404s - they're often expected (e.g., checking if a resource exists)
+      if (response.status !== 404) {
+        console.error('API error:', {
+          status: response.status,
+          request: requestDetails,
+          error: apiError
+        });
+      }
       throw apiError;
     }
 
@@ -122,12 +136,30 @@ const apiRoutes = {
     update: (id: string) => `/api/stories/${id}`,
     delete: (id: string) => `/api/stories/${id}`,
   },
+  pages: {
+    get: (pageType: PageType) => `/api/pages/${pageType}`,
+    update: (pageType: PageType) => `/api/pages/${pageType}`,
+    delete: (pageType: PageType) => `/api/pages/${pageType}`,
+  },
+  projects: {
+    list: () => '/api/projects',
+    getBySlug: (slug: string) => `/api/projects/${slug}`,
+    create: () => '/api/projects',
+    update: (id: string) => `/api/projects/${id}`,
+    delete: (id: string) => `/api/projects/${id}`,
+  },
 };
 
 interface PaginationParams {
   limit?: number;
   offset?: number;
   include_drafts?: boolean;
+}
+
+interface ProjectPaginationParams {
+  limit?: number;
+  offset?: number;
+  featured_only?: boolean;
 }
 
 /**
@@ -166,10 +198,64 @@ const apiClient = {
         token 
       }),
     
-    delete: (id: string, token: string) => 
-      fetchApi<Story>(apiRoutes.stories.delete(id), { 
-        method: 'DELETE', 
-        token 
+    delete: (id: string, token: string) =>
+      fetchApi<Story>(apiRoutes.stories.delete(id), {
+        method: 'DELETE',
+        token
+      }),
+  },
+
+  /**
+   * Page methods
+   */
+  pages: {
+    get: (pageType: PageType) =>
+      fetchApi<Page>(apiRoutes.pages.get(pageType)),
+
+    update: (pageType: PageType, data: UpdatePageRequest, token: string) =>
+      fetchApi<Page, UpdatePageRequest>(apiRoutes.pages.update(pageType), {
+        method: 'PUT',
+        body: data,
+        token
+      }),
+
+    delete: (pageType: PageType, token: string) =>
+      fetchApi<void>(apiRoutes.pages.delete(pageType), {
+        method: 'DELETE',
+        token
+      }),
+  },
+
+  /**
+   * Project methods
+   */
+  projects: {
+    list: (pagination?: ProjectPaginationParams) =>
+      fetchApi<PaginatedResponse<ProjectCard>>(apiRoutes.projects.list(), {
+        params: pagination as Record<string, string | number>
+      }),
+
+    getBySlug: (slug: string) =>
+      fetchApi<Project>(apiRoutes.projects.getBySlug(slug)),
+
+    create: (data: CreateProjectRequest, token: string) =>
+      fetchApi<Project, CreateProjectRequest>(apiRoutes.projects.create(), {
+        method: 'POST',
+        body: data,
+        token
+      }),
+
+    update: (id: string, data: UpdateProjectRequest, token: string) =>
+      fetchApi<Project, UpdateProjectRequest>(apiRoutes.projects.update(id), {
+        method: 'PUT',
+        body: data,
+        token
+      }),
+
+    delete: (id: string, token: string) =>
+      fetchApi<void>(apiRoutes.projects.delete(id), {
+        method: 'DELETE',
+        token
       }),
   },
 

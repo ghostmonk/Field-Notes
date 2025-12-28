@@ -2,13 +2,13 @@ import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState } from "react";
-import StoryProgressBar from "./StoryProgressBar";
-import { useFetchStories } from "@/hooks/stories";
+import { SECTIONS } from "@/lib/navigation";
+import { useActiveSection } from "@/hooks/useActiveSection";
 
 export default function TopNav() {
     const { data: session } = useSession();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const { stories, totalStories } = useFetchStories();
+    const activeSection = useActiveSection();
 
     const toggleMobileMenu = () => {
         setMobileMenuOpen(!mobileMenuOpen);
@@ -18,18 +18,25 @@ export default function TopNav() {
         <nav className="nav" data-testid="top-nav">
             <div className="nav__container">
                 <div className="flex space-x-4">
-                    {/* Desktop Navigation */}
+                    {/* Desktop Navigation - Section Links */}
                     <div className="nav__links">
-                        <Link href="/" className="nav__link" data-testid="nav-home-link">
-                            Home
-                        </Link>
+                        {SECTIONS.map((section) => (
+                            <Link
+                                key={section.id}
+                                href={section.path}
+                                className={`nav__link ${activeSection === section.id ? 'text-blue-500' : ''}`}
+                                data-testid={`nav-${section.id}-link`}
+                            >
+                                {section.label}
+                            </Link>
+                        ))}
                         {session && (
                             <Link href="/editor" className="nav__link" data-testid="nav-new-story-link">
                                 New Story
                             </Link>
                         )}
                     </div>
-                    
+
                     {/* Mobile Menu Button */}
                     <button
                         className="nav__mobile-toggle"
@@ -42,7 +49,7 @@ export default function TopNav() {
                         </svg>
                     </button>
                 </div>
-                
+
                 <div className="flex items-center space-x-4">
                     {session ? (
                         <div className="flex items-center space-x-4">
@@ -67,19 +74,11 @@ export default function TopNav() {
                     <ThemeToggle />
                 </div>
             </div>
-            
-            {/* Mobile Menu */}
+
+            {/* Mobile Menu - Auth/Settings only (sections handled by BottomNav) */}
             {mobileMenuOpen && (
                 <div className="nav__mobile-menu" data-testid="mobile-menu">
                     <div className="nav__mobile-links">
-                        <Link
-                            href="/"
-                            className="nav__mobile-link"
-                            onClick={() => setMobileMenuOpen(false)}
-                            data-testid="mobile-nav-home-link"
-                        >
-                            Home
-                        </Link>
                         {session && (
                             <Link
                                 href="/editor"
@@ -92,14 +91,6 @@ export default function TopNav() {
                         )}
                     </div>
                 </div>
-            )}
-            
-            {/* Integrated Progress Bar */}
-            {stories.length > 0 && (
-                <StoryProgressBar 
-                    currentStoryCount={stories.length}
-                    totalStoryCount={totalStories}
-                />
             )}
         </nav>
     );

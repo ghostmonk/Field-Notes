@@ -1,6 +1,6 @@
 """Test that README examples are valid."""
-import pytest
-from glogger import logger, get_component_logger
+
+from glogger import get_component_logger, logger
 
 
 def test_readme_basic_usage():

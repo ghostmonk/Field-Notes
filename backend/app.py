@@ -2,12 +2,15 @@ import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+from database import ensure_indexes
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from glogger import logger
 from handlers.backfill import backfill_published_flag
+from handlers.pages import router as pages_router
+from handlers.projects import router as projects_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
 from handlers.video_processing import router as video_processing_router
@@ -43,6 +46,9 @@ async def lifespan(app: FastAPI):
         logger.info(f"GOOGLE_APPLICATION_CREDENTIALS file path: {google_creds_file}")
     updated_count = await backfill_published_flag()
     logger.info(f"Startup complete. Backfilled {updated_count} stories.")
+
+    # Ensure database indexes exist
+    await ensure_indexes()
 
     yield  # This is where the app runs
 
@@ -176,6 +182,8 @@ async def warmup():
 
 
 app.include_router(stories_router)
+app.include_router(pages_router)
+app.include_router(projects_router)
 app.include_router(uploads_router)
 app.include_router(video_processing_router)
 

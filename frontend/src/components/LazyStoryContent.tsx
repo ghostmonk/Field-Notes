@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface LazyStoryContentProps {
   content: string;
@@ -118,7 +119,7 @@ export const LazyStoryContent: React.FC<LazyStoryContentProps> = ({
     return (
       <div
         className={className}
-        dangerouslySetInnerHTML={{ __html: serverContent }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(serverContent) }}
         data-testid={testId}
       />
     );
@@ -127,7 +128,7 @@ export const LazyStoryContent: React.FC<LazyStoryContentProps> = ({
   return (
     <div
       className={className}
-      dangerouslySetInnerHTML={{ __html: clientContent }}
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(clientContent) }}
       suppressHydrationWarning={true}
       data-testid={testId}
     />

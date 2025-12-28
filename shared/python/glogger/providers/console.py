@@ -8,7 +8,6 @@ and platforms that capture stdout/stderr logs.
 
 import json
 import sys
-from datetime import datetime
 from typing import Any, Dict
 
 from ..interfaces import LogEntry, LogLevel, LogProvider

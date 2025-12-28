@@ -2,18 +2,28 @@
 Test configuration and fixtures
 """
 
+import os
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
 
 import mongomock_motor
 import pytest
 import pytest_asyncio
-from database import get_collection
+
+# Set environment variables before importing handlers that check them at module load time
+os.environ.setdefault("GCS_BUCKET_NAME", "test-bucket")
+os.environ.setdefault("DATABASE_URL", "mongodb://localhost:27017/test")
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "test-project")
+os.environ.setdefault("STORAGE_BUCKET", "test-bucket")
+
+from database import get_collection, get_pages_collection, get_projects_collection
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 # Create a test app without lifespan to avoid DB connections during startup
 # Import routers directly to avoid the lifespan event
+from handlers.pages import router as pages_router
+from handlers.projects import router as projects_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
 from handlers.video_processing import router as video_processing_router
@@ -23,6 +33,8 @@ test_app = FastAPI()
 test_app.include_router(stories_router)
 test_app.include_router(uploads_router)
 test_app.include_router(video_processing_router)
+test_app.include_router(pages_router)
+test_app.include_router(projects_router)
 
 
 @pytest.fixture
@@ -130,8 +142,123 @@ def mock_logger():
 
 
 @pytest.fixture(autouse=True)
-def setup_test_environment(monkeypatch):
-    """Set up test environment variables"""
-    monkeypatch.setenv("DATABASE_URL", "mongodb://localhost:27017/test")
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "test-project")
-    monkeypatch.setenv("STORAGE_BUCKET", "test-bucket")
+def setup_test_environment():
+    """Test environment is set up at module load time via os.environ.setdefault"""
+    pass
+
+
+@pytest.fixture
+def mock_pages_collection():
+    """Mock collection for pages testing"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    mock.count_documents = AsyncMock()
+    mock.insert_one = AsyncMock()
+    mock.update_one = AsyncMock()
+    mock.delete_one = AsyncMock()
+    return mock
+
+
+@pytest.fixture
+def mock_projects_collection():
+    """Mock collection for projects testing"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    mock.count_documents = AsyncMock()
+    mock.insert_one = AsyncMock()
+    mock.update_one = AsyncMock()
+    mock.delete_one = AsyncMock()
+    return mock
+
+
+@pytest.fixture
+def override_pages_database(mock_pages_collection):
+    """Override the pages collection to use mocks"""
+
+    async def get_mock_pages_collection():
+        return mock_pages_collection
+
+    test_app.dependency_overrides[get_pages_collection] = get_mock_pages_collection
+    yield mock_pages_collection
+    test_app.dependency_overrides.pop(get_pages_collection, None)
+
+
+@pytest.fixture
+def override_projects_database(mock_projects_collection):
+    """Override the projects collection to use mocks"""
+
+    async def get_mock_projects_collection():
+        return mock_projects_collection
+
+    test_app.dependency_overrides[get_projects_collection] = get_mock_projects_collection
+    yield mock_projects_collection
+    test_app.dependency_overrides.pop(get_projects_collection, None)
+
+
+@pytest_asyncio.fixture
+async def pages_async_client(override_pages_database):
+    """Async test client for pages tests"""
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+        yield ac
+
+
+@pytest_asyncio.fixture
+async def projects_async_client(override_projects_database):
+    """Async test client for projects tests"""
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+        yield ac
+
+
+@pytest.fixture
+def sample_page_data():
+    """Sample page data for testing"""
+    fixed_datetime = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    return {
+        "title": "About Me",
+        "content": "<p>This is the about page content.</p>",
+        "page_type": "about",
+        "is_published": True,
+        "createdDate": fixed_datetime,
+        "updatedDate": fixed_datetime,
+    }
+
+
+@pytest.fixture
+def sample_project_data():
+    """Sample project data for testing"""
+    fixed_datetime = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    return {
+        "title": "My Awesome Project",
+        "summary": "A brief summary of the project",
+        "content": "<p>Detailed project description.</p>",
+        "technologies": ["Python", "FastAPI", "MongoDB"],
+        "github_url": "https://github.com/user/project",
+        "live_url": "https://project.example.com",
+        "image_url": "https://example.com/image.jpg",
+        "is_published": True,
+        "is_featured": True,
+        "sort_order": 0,
+        "slug": "my-awesome-project",
+        "createdDate": fixed_datetime,
+        "updatedDate": fixed_datetime,
+    }
+
+
+@pytest.fixture
+def mock_auth():
+    """Mock authentication decorator for testing authenticated endpoints"""
+    from unittest.mock import patch
+
+    with patch("decorators.auth.requests.get") as mock:
+        mock.return_value.status_code = 200
+        mock.return_value.json.return_value = {
+            "scope": "https://www.googleapis.com/auth/userinfo.email",
+            "exp": 9999999999,
+        }
+        yield mock
+
+
+@pytest.fixture
+def auth_headers():
+    """Standard auth headers for testing"""
+    return {"Authorization": "Bearer valid_token"}

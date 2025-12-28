@@ -73,19 +73,29 @@ deps-dev:
 	@echo "Installing development dependencies..."
 	. $(VENV_ACTIVATE) && pip install -r backend/requirements-dev.txt
 
-# Python formatting
+# Python formatting and linting
 format:
 	. $(VENV_ACTIVATE) && isort backend/
 	. $(VENV_ACTIVATE) && black backend/
+	. $(VENV_ACTIVATE) && flake8 --config=backend/.flake8 backend/
 	. $(VENV_ACTIVATE) && isort cloud-functions/video-processor/
 	. $(VENV_ACTIVATE) && black cloud-functions/video-processor/
+	. $(VENV_ACTIVATE) && flake8 --config=backend/.flake8 cloud-functions/video-processor/
 	. $(VENV_ACTIVATE) && isort shared/python/
 	. $(VENV_ACTIVATE) && black shared/python/
+	. $(VENV_ACTIVATE) && flake8 --config=backend/.flake8 shared/python/
 	cd frontend && npx eslint --fix .
 
 format-check:
 	. $(VENV_ACTIVATE) && isort backend/ --check-only
 	. $(VENV_ACTIVATE) && black backend/ --check
+	. $(VENV_ACTIVATE) && flake8 --config=backend/.flake8 backend/
+	. $(VENV_ACTIVATE) && isort cloud-functions/video-processor/ --check-only
+	. $(VENV_ACTIVATE) && black cloud-functions/video-processor/ --check
+	. $(VENV_ACTIVATE) && flake8 --config=backend/.flake8 cloud-functions/video-processor/
+	. $(VENV_ACTIVATE) && isort shared/python/ --check-only
+	. $(VENV_ACTIVATE) && black shared/python/ --check
+	. $(VENV_ACTIVATE) && flake8 --config=backend/.flake8 shared/python/
 
 lint-frontend:
 	cd frontend && npm run lint
@@ -192,8 +202,8 @@ help:
 	@echo "  deps-upgrade     - Upgrade all dependencies and recompile"
 	@echo "  deps             - Install production dependencies only"
 	@echo "  deps-dev         - Install development dependencies"
-	@echo "  format           - Format code using black and isort (backend only)"
-	@echo "  format-check     - Check code formatting without making changes (backend only)"
+	@echo "  format           - Format code with black/isort and lint with flake8"
+	@echo "  format-check     - Check formatting and linting without making changes"
 	@echo "  lint-frontend    - Run ESLint on frontend code"
 	@echo "  test             - Run all tests"
 	@echo "  test-unit        - Run only unit tests"
@@ -210,4 +220,4 @@ help:
 	@echo "  dev-backend      - Start backend development server"
 	@echo "  dev-frontend     - Start frontend development server"
 	@echo "  clean            - Clean up Python cache files and build artifacts"
-	@echo "  docker-nuke      - Nuke all Docker resources for a clean slate" 
+	@echo "  docker-nuke      - Nuke all Docker resources for a clean slate"

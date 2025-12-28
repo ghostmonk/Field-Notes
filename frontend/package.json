@@ -17,7 +17,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
-    "dev:test": "BACKEND_URL=http://localhost:5555 NEXT_PUBLIC_API_URL=http://localhost:5555 UNSAFE_EVAL=true next dev"
+    "dev:test": "BACKEND_URL=http://localhost:5555 NEXT_PUBLIC_API_URL=http://localhost:5555 NEXTAUTH_URL=http://localhost:3000 NEXTAUTH_SECRET=test-secret-for-e2e-tests UNSAFE_EVAL=true next dev"
   },
   "dependencies": {
     "@mantine/tiptap": "^7.0.0",
@@ -31,6 +31,7 @@
     "cheerio": "^1.1.2",
     "cookie": "^1.0.2",
     "dompurify": "^3.2.5",
+    "isomorphic-dompurify": "^2.35.0",
     "jwt-decode": "^4.0.0",
     "next": "^15.3.2",
     "next-auth": "^4.24.11",

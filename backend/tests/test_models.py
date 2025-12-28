@@ -5,6 +5,13 @@ Unit tests for Pydantic models
 from datetime import datetime, timezone
 
 import pytest
+from models.page import PageBase, PageResponse, PageUpdate
+from models.project import (
+    ProjectBase,
+    ProjectCard,
+    ProjectResponse,
+    ProjectUpdate,
+)
 from models.story import StoryBase, StoryCreate, StoryResponse
 from pydantic import ValidationError
 
@@ -202,3 +209,404 @@ class TestStoryResponse:
         assert story.createdDate == expected_utc
         assert story.updatedDate == expected_utc
         assert story.date.hour == 17  # Converted from EST 12:00 to UTC 17:00
+
+
+class TestPageBase:
+    """Test PageBase model"""
+
+    @pytest.mark.unit
+    def test_valid_page_base(self):
+        """Test creating a valid PageBase"""
+        page_data = {
+            "title": "About Me",
+            "content": "<p>This is the about page content.</p>",
+            "page_type": "about",
+            "is_published": True,
+        }
+        page = PageBase(**page_data)
+
+        assert page.title == "About Me"
+        assert page.content == "<p>This is the about page content.</p>"
+        assert page.page_type == "about"
+        assert page.is_published is True
+
+    @pytest.mark.unit
+    def test_page_base_contact_type(self):
+        """Test PageBase with contact page type"""
+        page_data = {
+            "title": "Contact",
+            "content": "Contact information here",
+            "page_type": "contact",
+        }
+        page = PageBase(**page_data)
+        assert page.page_type == "contact"
+
+    @pytest.mark.unit
+    def test_page_base_invalid_page_type(self):
+        """Test that invalid page type raises validation error"""
+        page_data = {
+            "title": "Invalid",
+            "content": "Content here",
+            "page_type": "invalid",
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            PageBase(**page_data)
+
+        errors = exc_info.value.errors()
+        assert any("page_type" in str(error["loc"]) for error in errors)
+
+    @pytest.mark.unit
+    def test_page_base_empty_title(self):
+        """Test that empty title raises validation error"""
+        page_data = {
+            "title": "",
+            "content": "Some content",
+            "page_type": "about",
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            PageBase(**page_data)
+
+        errors = exc_info.value.errors()
+        assert any(error["type"] == "string_too_short" for error in errors)
+
+    @pytest.mark.unit
+    def test_page_base_title_too_long(self):
+        """Test that title longer than 200 chars raises validation error"""
+        page_data = {
+            "title": "x" * 201,
+            "content": "Content",
+            "page_type": "about",
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            PageBase(**page_data)
+
+        errors = exc_info.value.errors()
+        assert any(error["type"] == "string_too_long" for error in errors)
+
+    @pytest.mark.unit
+    def test_page_base_empty_content(self):
+        """Test that empty content raises validation error"""
+        page_data = {
+            "title": "About",
+            "content": "",
+            "page_type": "about",
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            PageBase(**page_data)
+
+        errors = exc_info.value.errors()
+        assert any(error["type"] == "string_too_short" for error in errors)
+
+    @pytest.mark.unit
+    def test_page_base_default_is_published(self):
+        """Test that is_published defaults to True"""
+        page_data = {
+            "title": "About",
+            "content": "Content",
+            "page_type": "about",
+        }
+        page = PageBase(**page_data)
+        assert page.is_published is True
+
+
+class TestPageUpdate:
+    """Test PageUpdate model"""
+
+    @pytest.mark.unit
+    def test_page_update_all_optional(self):
+        """Test that all fields in PageUpdate are optional"""
+        page = PageUpdate()
+        assert page.title is None
+        assert page.content is None
+        assert page.is_published is None
+
+    @pytest.mark.unit
+    def test_page_update_partial(self):
+        """Test partial update with only some fields"""
+        page = PageUpdate(title="New Title")
+        assert page.title == "New Title"
+        assert page.content is None
+
+
+class TestPageResponse:
+    """Test PageResponse model"""
+
+    @pytest.mark.unit
+    def test_valid_page_response(self):
+        """Test creating a valid PageResponse"""
+        now = datetime.now(timezone.utc)
+        page_data = {
+            "title": "About Me",
+            "content": "<p>Content here</p>",
+            "page_type": "about",
+            "is_published": True,
+            "id": "507f1f77bcf86cd799439011",
+            "createdDate": now,
+            "updatedDate": now,
+        }
+        page = PageResponse(**page_data)
+
+        assert page.title == "About Me"
+        assert page.id == "507f1f77bcf86cd799439011"
+        assert page.createdDate == now
+        assert page.updatedDate == now
+
+    @pytest.mark.unit
+    def test_page_response_timezone_validation(self):
+        """Test that naive datetime gets converted to UTC"""
+        naive_datetime = datetime(2024, 1, 1, 12, 0, 0)
+        page_data = {
+            "title": "About",
+            "content": "Content",
+            "page_type": "about",
+            "is_published": True,
+            "id": "507f1f77bcf86cd799439011",
+            "createdDate": naive_datetime,
+            "updatedDate": naive_datetime,
+        }
+        page = PageResponse(**page_data)
+
+        expected_datetime = naive_datetime.replace(tzinfo=timezone.utc)
+        assert page.createdDate == expected_datetime
+        assert page.updatedDate == expected_datetime
+
+
+class TestProjectBase:
+    """Test ProjectBase model"""
+
+    @pytest.mark.unit
+    def test_valid_project_base(self):
+        """Test creating a valid ProjectBase"""
+        project_data = {
+            "title": "My Awesome Project",
+            "summary": "A brief summary of the project",
+            "content": "<p>Detailed project description.</p>",
+            "technologies": ["Python", "FastAPI", "MongoDB"],
+            "github_url": "https://github.com/user/project",
+            "live_url": "https://project.example.com",
+            "is_published": True,
+            "is_featured": True,
+        }
+        project = ProjectBase(**project_data)
+
+        assert project.title == "My Awesome Project"
+        assert project.summary == "A brief summary of the project"
+        assert project.technologies == ["Python", "FastAPI", "MongoDB"]
+        assert project.github_url == "https://github.com/user/project"
+        assert project.is_featured is True
+
+    @pytest.mark.unit
+    def test_project_base_minimal(self):
+        """Test ProjectBase with only required fields"""
+        project_data = {
+            "title": "Simple Project",
+            "summary": "Summary",
+            "content": "Content",
+        }
+        project = ProjectBase(**project_data)
+
+        assert project.title == "Simple Project"
+        assert project.technologies == []
+        assert project.github_url is None
+        assert project.live_url is None
+        assert project.image_url is None
+        assert project.is_published is True
+        assert project.is_featured is False
+        assert project.sort_order == 0
+
+    @pytest.mark.unit
+    def test_project_base_empty_title(self):
+        """Test that empty title raises validation error"""
+        project_data = {
+            "title": "",
+            "summary": "Summary",
+            "content": "Content",
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            ProjectBase(**project_data)
+
+        errors = exc_info.value.errors()
+        assert any(error["type"] == "string_too_short" for error in errors)
+
+    @pytest.mark.unit
+    def test_project_base_title_too_long(self):
+        """Test that title longer than 200 chars raises validation error"""
+        project_data = {
+            "title": "x" * 201,
+            "summary": "Summary",
+            "content": "Content",
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            ProjectBase(**project_data)
+
+        errors = exc_info.value.errors()
+        assert any(error["type"] == "string_too_long" for error in errors)
+
+    @pytest.mark.unit
+    def test_project_base_summary_too_long(self):
+        """Test that summary longer than 500 chars raises validation error"""
+        project_data = {
+            "title": "Project",
+            "summary": "x" * 501,
+            "content": "Content",
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            ProjectBase(**project_data)
+
+        errors = exc_info.value.errors()
+        assert any(error["type"] == "string_too_long" for error in errors)
+
+    @pytest.mark.unit
+    def test_project_base_empty_summary(self):
+        """Test that empty summary raises validation error"""
+        project_data = {
+            "title": "Project",
+            "summary": "",
+            "content": "Content",
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            ProjectBase(**project_data)
+
+        errors = exc_info.value.errors()
+        assert any(error["type"] == "string_too_short" for error in errors)
+
+    @pytest.mark.unit
+    def test_project_base_missing_required_fields(self):
+        """Test that missing required fields raise validation error"""
+        incomplete_data = {"title": "Project"}
+
+        with pytest.raises(ValidationError) as exc_info:
+            ProjectBase(**incomplete_data)
+
+        errors = exc_info.value.errors()
+        error_fields = [error["loc"][0] for error in errors]
+        assert "summary" in error_fields
+        assert "content" in error_fields
+
+
+class TestProjectUpdate:
+    """Test ProjectUpdate model"""
+
+    @pytest.mark.unit
+    def test_project_update_all_optional(self):
+        """Test that all fields in ProjectUpdate are optional"""
+        project = ProjectUpdate()
+        assert project.title is None
+        assert project.summary is None
+        assert project.content is None
+        assert project.technologies is None
+        assert project.is_featured is None
+
+    @pytest.mark.unit
+    def test_project_update_partial(self):
+        """Test partial update with only some fields"""
+        project = ProjectUpdate(title="New Title", is_featured=True)
+        assert project.title == "New Title"
+        assert project.is_featured is True
+        assert project.summary is None
+
+
+class TestProjectResponse:
+    """Test ProjectResponse model"""
+
+    @pytest.mark.unit
+    def test_valid_project_response(self):
+        """Test creating a valid ProjectResponse"""
+        now = datetime.now(timezone.utc)
+        project_data = {
+            "title": "My Project",
+            "summary": "Project summary",
+            "content": "<p>Project content</p>",
+            "technologies": ["React", "TypeScript"],
+            "github_url": "https://github.com/user/project",
+            "is_published": True,
+            "is_featured": False,
+            "sort_order": 1,
+            "id": "507f1f77bcf86cd799439011",
+            "slug": "my-project",
+            "createdDate": now,
+            "updatedDate": now,
+        }
+        project = ProjectResponse(**project_data)
+
+        assert project.title == "My Project"
+        assert project.id == "507f1f77bcf86cd799439011"
+        assert project.slug == "my-project"
+        assert project.technologies == ["React", "TypeScript"]
+
+    @pytest.mark.unit
+    def test_project_response_timezone_validation(self):
+        """Test that naive datetime gets converted to UTC"""
+        naive_datetime = datetime(2024, 1, 1, 12, 0, 0)
+        project_data = {
+            "title": "Project",
+            "summary": "Summary",
+            "content": "Content",
+            "technologies": [],
+            "is_published": True,
+            "is_featured": False,
+            "sort_order": 0,
+            "id": "507f1f77bcf86cd799439011",
+            "slug": "project",
+            "createdDate": naive_datetime,
+            "updatedDate": naive_datetime,
+        }
+        project = ProjectResponse(**project_data)
+
+        expected_datetime = naive_datetime.replace(tzinfo=timezone.utc)
+        assert project.createdDate == expected_datetime
+        assert project.updatedDate == expected_datetime
+
+
+class TestProjectCard:
+    """Test ProjectCard model"""
+
+    @pytest.mark.unit
+    def test_valid_project_card(self):
+        """Test creating a valid ProjectCard"""
+        card_data = {
+            "id": "507f1f77bcf86cd799439011",
+            "title": "My Project",
+            "slug": "my-project",
+            "summary": "A brief summary",
+            "technologies": ["Python", "FastAPI"],
+            "image_url": "https://example.com/image.jpg",
+            "github_url": "https://github.com/user/project",
+            "live_url": "https://project.example.com",
+            "is_featured": True,
+        }
+        card = ProjectCard(**card_data)
+
+        assert card.id == "507f1f77bcf86cd799439011"
+        assert card.title == "My Project"
+        assert card.slug == "my-project"
+        assert card.technologies == ["Python", "FastAPI"]
+        assert card.is_featured is True
+
+    @pytest.mark.unit
+    def test_project_card_optional_urls(self):
+        """Test ProjectCard with optional URL fields as None"""
+        card_data = {
+            "id": "507f1f77bcf86cd799439011",
+            "title": "My Project",
+            "slug": "my-project",
+            "summary": "Summary",
+            "technologies": [],
+            "image_url": None,
+            "github_url": None,
+            "live_url": None,
+            "is_featured": False,
+        }
+        card = ProjectCard(**card_data)
+
+        assert card.image_url is None
+        assert card.github_url is None
+        assert card.live_url is None

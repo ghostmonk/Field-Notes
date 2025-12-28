@@ -81,7 +81,7 @@ async def find_many_and_convert(
     collection: AsyncIOMotorCollection,
     query: dict,
     model_class: Type[T],
-    sort: dict = None,
+    sort: list = None,
     limit: int = None,
     skip: int = 0,
     projection: dict = None,

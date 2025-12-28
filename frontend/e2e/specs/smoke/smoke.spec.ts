@@ -6,10 +6,11 @@ test.describe('Smoke Tests', () => {
     const homePage = new HomePage(mockApiPage);
 
     await homePage.goto();
+    await homePage.waitForLoad();
 
     // Verify navigation is visible
     await expect(homePage.nav.nav).toBeVisible();
-    await expect(homePage.nav.homeLink).toBeVisible();
+    await expect(homePage.nav.blogLink).toBeVisible();
 
     // Verify page title
     const title = await homePage.getTitle();
@@ -31,6 +32,7 @@ test.describe('Smoke Tests', () => {
     const homePage = new HomePage(mockApiPage);
 
     await homePage.goto();
+    await homePage.waitForLoad();
 
     // Verify sign in button is visible
     await expect(homePage.nav.signInButton).toBeVisible();
@@ -43,6 +45,7 @@ test.describe('Smoke Tests', () => {
     const homePage = new HomePage(mockAuthenticatedApiPage);
 
     await homePage.goto();
+    await homePage.waitForLoad();
 
     // Verify welcome message is visible
     await expect(homePage.nav.userWelcome).toBeVisible();
@@ -58,6 +61,7 @@ test.describe('Smoke Tests', () => {
     const homePage = new HomePage(mockAuthenticatedApiPage);
 
     await homePage.goto();
+    await homePage.waitForLoad();
 
     // Verify New Story link is visible
     await expect(homePage.nav.newStoryLink).toBeVisible();
@@ -67,11 +71,25 @@ test.describe('Smoke Tests', () => {
     const homePage = new HomePage(mockApiPage);
 
     await homePage.goto();
+    await homePage.waitForLoad();
 
-    // Click home link
-    await homePage.nav.goHome();
+    // Click blog link (home)
+    await homePage.nav.goToBlog();
 
     // Should still be on home page
-    expect(homePage.url).toContain('/');
+    expect(homePage.url).toMatch(/\/$/);
+  });
+
+  test('all section links are present', async ({ mockApiPage }) => {
+    const homePage = new HomePage(mockApiPage);
+
+    await homePage.goto();
+    await homePage.waitForLoad();
+
+    // Verify all section links are visible
+    await expect(homePage.nav.blogLink).toBeVisible();
+    await expect(homePage.nav.aboutLink).toBeVisible();
+    await expect(homePage.nav.projectsLink).toBeVisible();
+    await expect(homePage.nav.contactLink).toBeVisible();
   });
 });

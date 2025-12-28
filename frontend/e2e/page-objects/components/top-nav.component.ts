@@ -9,8 +9,13 @@ export class TopNavComponent {
 
   // Navigation elements
   readonly nav: Locator;
-  readonly homeLink: Locator;
   readonly newStoryLink: Locator;
+
+  // Section links (desktop)
+  readonly blogLink: Locator;
+  readonly aboutLink: Locator;
+  readonly projectsLink: Locator;
+  readonly contactLink: Locator;
 
   // Auth elements
   readonly signInButton: Locator;
@@ -20,7 +25,6 @@ export class TopNavComponent {
   // Mobile menu
   readonly mobileMenuToggle: Locator;
   readonly mobileMenu: Locator;
-  readonly mobileHomeLink: Locator;
   readonly mobileNewStoryLink: Locator;
 
   constructor(page: Page) {
@@ -28,8 +32,13 @@ export class TopNavComponent {
 
     // Navigation
     this.nav = page.getByTestId('top-nav');
-    this.homeLink = page.getByTestId('nav-home-link');
     this.newStoryLink = page.getByTestId('nav-new-story-link');
+
+    // Section links
+    this.blogLink = page.getByTestId('nav-blog-link');
+    this.aboutLink = page.getByTestId('nav-about-link');
+    this.projectsLink = page.getByTestId('nav-projects-link');
+    this.contactLink = page.getByTestId('nav-contact-link');
 
     // Auth
     this.signInButton = page.getByTestId('signin-button');
@@ -39,17 +48,46 @@ export class TopNavComponent {
     // Mobile
     this.mobileMenuToggle = page.getByTestId('mobile-menu-toggle');
     this.mobileMenu = page.getByTestId('mobile-menu');
-    this.mobileHomeLink = page.getByTestId('mobile-nav-home-link');
     this.mobileNewStoryLink = page.getByTestId('mobile-nav-new-story-link');
   }
 
   /**
-   * Navigate to home page via nav link.
+   * Navigate to blog/home page via nav link.
    */
-  async goHome() {
+  async goToBlog() {
     await Promise.all([
       this.page.waitForURL('**/'),
-      this.homeLink.click(),
+      this.blogLink.click(),
+    ]);
+  }
+
+  /**
+   * Navigate to about page via nav link.
+   */
+  async goToAbout() {
+    await Promise.all([
+      this.page.waitForURL('**/about'),
+      this.aboutLink.click(),
+    ]);
+  }
+
+  /**
+   * Navigate to projects page via nav link.
+   */
+  async goToProjects() {
+    await Promise.all([
+      this.page.waitForURL('**/projects'),
+      this.projectsLink.click(),
+    ]);
+  }
+
+  /**
+   * Navigate to contact page via nav link.
+   */
+  async goToContact() {
+    await Promise.all([
+      this.page.waitForURL('**/contact'),
+      this.contactLink.click(),
     ]);
   }
 
