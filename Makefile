@@ -1,4 +1,4 @@
-.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci clean docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend
+.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui clean docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend
 
 # Virtual environment configuration
 VENV_DEFAULT := $(HOME)/Documents/venvs/turbulence
@@ -115,6 +115,12 @@ test-ci:
 	echo "Running tests with coverage..." && \
 	pytest -v --tb=short --cov=. --cov-report=term-missing
 
+test-frontend:
+	cd frontend && npm run test:e2e
+
+test-frontend-ui:
+	cd frontend && npm run test:e2e:ui
+
 # Docker operations
 build:
 	docker-compose build
@@ -194,6 +200,8 @@ help:
 	@echo "  test-integration - Run only integration tests"
 	@echo "  test-coverage    - Run tests with coverage report"
 	@echo "  test-ci          - Run CI-style tests with formatting and linting checks"
+	@echo "  test-frontend    - Run frontend E2E tests (headless)"
+	@echo "  test-frontend-ui - Run frontend E2E tests with interactive UI"
 	@echo "  docker-build     - Build Docker images"
 	@echo "  docker-up        - Start Docker containers"
 	@echo "  docker-down      - Stop Docker containers"

@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 interface LazyStoryContentProps {
   content: string;
   className?: string;
+  'data-testid'?: string;
 }
 
 /**
@@ -10,9 +11,10 @@ interface LazyStoryContentProps {
  * Uses a suppressHydrationWarning approach to avoid attribute order mismatches
  * This is a workaround for Next.js's hydration issues with HTML attributes
  */
-export const LazyStoryContent: React.FC<LazyStoryContentProps> = ({ 
-  content, 
-  className = '' 
+export const LazyStoryContent: React.FC<LazyStoryContentProps> = ({
+  content,
+  className = '',
+  'data-testid': testId
 }) => {
   const [isClient, setIsClient] = useState(false);
 
@@ -114,18 +116,20 @@ export const LazyStoryContent: React.FC<LazyStoryContentProps> = ({
 
   if (!isClient) {
     return (
-      <div 
+      <div
         className={className}
         dangerouslySetInnerHTML={{ __html: serverContent }}
+        data-testid={testId}
       />
     );
   }
 
   return (
-    <div 
+    <div
       className={className}
       dangerouslySetInnerHTML={{ __html: clientContent }}
       suppressHydrationWarning={true}
+      data-testid={testId}
     />
   );
 };

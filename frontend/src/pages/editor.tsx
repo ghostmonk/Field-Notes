@@ -31,7 +31,7 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8" data-testid="editor-page">
       <EditorHeader
         isEditing={isEditing}
         onNewStory={resetForm}
@@ -103,6 +103,7 @@ function EditorHeader({
             type="button"
             onClick={onNewStory}
             className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+            data-testid="editor-new-button"
           >
             New Story
           </button>
@@ -111,6 +112,7 @@ function EditorHeader({
             onClick={onDelete}
             disabled={isDeleting}
             className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+            data-testid="editor-delete-button"
           >
             Delete
           </button>
@@ -146,6 +148,7 @@ function TitleInput({
         placeholder="Story title"
         required
         disabled={disabled}
+        data-testid="editor-title-input"
       />
     </div>
   );
@@ -195,6 +198,7 @@ function PublishToggle({
         onChange={(e) => onChange(e.target.checked)}
         className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
         disabled={disabled}
+        data-testid="editor-publish-toggle"
       />
       <label htmlFor="is_published" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
         Publish
@@ -223,6 +227,7 @@ function FormActions({
         type="submit"
         className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
         disabled={isLoading || isSaving}
+        data-testid="editor-save-button"
       >
         {isSaving ? 'Saving...' : `Save${isPublished ? ' & Publish' : ' as Draft'}`}
       </button>
@@ -231,6 +236,7 @@ function FormActions({
         onClick={onCancel}
         className="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         disabled={isSaving}
+        data-testid="editor-cancel-button"
       >
         Cancel
       </button>

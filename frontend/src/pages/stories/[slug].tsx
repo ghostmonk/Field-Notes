@@ -21,11 +21,11 @@ export default function StoryPage({ story, error, ogImage, excerpt }: StoryPageP
   
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8" data-testid="story-error">
         <div className="p-4 bg-red-50 border border-red-200 rounded-md">
           <h3 className="text-red-800 font-semibold">Error Loading Story</h3>
           <p className="text-red-600 mt-2">{error}</p>
-          <Link href="/" className="btn btn--primary">
+          <Link href="/" className="btn btn--primary" data-testid="story-error-home-link">
             Return Home
           </Link>
         </div>
@@ -45,7 +45,7 @@ export default function StoryPage({ story, error, ogImage, excerpt }: StoryPageP
   return (
     <>
       <Head>
-        <title>{story.title} | Turbulence Blog</title>
+        <title>{`${story.title} | Turbulence Blog`}</title>
         <meta name="description" content={excerpt || `${story.title} - Read the full story on ghostmonk.com`} />
         <meta property="og:title" content={story.title} />
         <meta property="og:description" content={excerpt || `${story.title} - Read the full story on ghostmonk.com`} />
@@ -63,12 +63,12 @@ export default function StoryPage({ story, error, ogImage, excerpt }: StoryPageP
       </Head>
       
       <div style={{margin: '0 auto', maxWidth: '800px', padding: '2rem 1rem'}}>
-        <Link href="/" className="inline-block mb-8 btn btn--secondary btn--sm">
+        <Link href="/" className="inline-block mb-8 btn btn--secondary btn--sm" data-testid="story-back-link">
           &larr; Back to all stories
         </Link>
-        
-        <article className="card">
-          <h1 className="story-title">{story.title}</h1>
+
+        <article className="card" data-testid="story-article">
+          <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
           
           <div className="flex items-center text-sm mb-8">
             <span className="text-gray-400">{formatDate(story.createdDate)}</span>
@@ -79,9 +79,10 @@ export default function StoryPage({ story, error, ogImage, excerpt }: StoryPageP
             )}
           </div>
           
-          <LazyStoryContent 
+          <LazyStoryContent
             content={story.content}
             className="prose--card lg:prose-lg dark:prose-invert dark:text-gray-200"
+            data-testid="story-content"
           />
           
           <div className="mt-10 pt-6">

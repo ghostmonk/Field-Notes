@@ -84,7 +84,7 @@ export default function RichTextEditor({ onChange, content = "" }: RichTextEdito
     };
 
     return (
-        <div className="w-full border rounded dark:border-gray-700 p-2">
+        <div className="w-full border rounded dark:border-gray-700 p-2" data-testid="rich-text-editor">
             {uploadError && (
                 <div className="mb-4">
                     <ErrorDisplay
@@ -100,44 +100,53 @@ export default function RichTextEditor({ onChange, content = "" }: RichTextEdito
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     isActive={editor.isActive('bold')}
                     label="Bold"
+                    testId="toolbar-bold"
                 />
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleItalic().run()}
                     isActive={editor.isActive('italic')}
                     label="Italic"
+                    testId="toolbar-italic"
                 />
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                     isActive={editor.isActive('heading', { level: 1 })}
                     label="H1"
+                    testId="toolbar-h1"
                 />
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                     isActive={editor.isActive('heading', { level: 2 })}
                     label="H2"
+                    testId="toolbar-h2"
                 />
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleBulletList().run()}
                     isActive={editor.isActive('bulletList')}
                     label="Bullet List"
+                    testId="toolbar-bullet-list"
                 />
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleOrderedList().run()}
                     isActive={editor.isActive('orderedList')}
                     label="Ordered List"
+                    testId="toolbar-ordered-list"
                 />
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleBlockquote().run()}
                     isActive={editor.isActive('blockquote')}
                     label="Blockquote"
+                    testId="toolbar-blockquote"
                 />
                 <ToolbarButton
                     onClick={imageUpload.triggerFileSelect}
                     label="Image"
+                    testId="toolbar-image"
                 />
                 <ToolbarButton
                     onClick={videoUpload.triggerFileSelect}
                     label="Video"
+                    testId="toolbar-video"
                 />
                 <input
                     type="file"
@@ -145,6 +154,7 @@ export default function RichTextEditor({ onChange, content = "" }: RichTextEdito
                     className="hidden"
                     accept={imageUpload.acceptTypes}
                     onChange={imageUpload.handleFileChange}
+                    data-testid="image-upload-input"
                 />
                 <input
                     type="file"
@@ -152,9 +162,10 @@ export default function RichTextEditor({ onChange, content = "" }: RichTextEdito
                     className="hidden"
                     accept={videoUpload.acceptTypes}
                     onChange={videoUpload.handleFileChange}
+                    data-testid="video-upload-input"
                 />
             </div>
-            <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" />
+            <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
         </div>
     );
 }
@@ -162,16 +173,17 @@ export default function RichTextEditor({ onChange, content = "" }: RichTextEdito
 /**
  * Toolbar button component to reduce repetition.
  */
-function ToolbarButton({ onClick, isActive, label }: {
+function ToolbarButton({ onClick, isActive, label, testId }: {
     onClick: () => void;
     isActive?: boolean;
     label: string;
+    testId: string;
 }) {
     const baseClass = "px-2 py-1 rounded";
     const activeClass = isActive ? 'bg-gray-200 dark:bg-gray-700' : 'bg-gray-100 dark:bg-gray-800';
 
     return (
-        <button type="button" onClick={onClick} className={`${baseClass} ${activeClass}`}>
+        <button type="button" onClick={onClick} className={`${baseClass} ${activeClass}`} data-testid={testId}>
             {label}
         </button>
     );
