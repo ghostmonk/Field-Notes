@@ -6,7 +6,6 @@ import { Page } from '@/types/api';
 const ContactPage: React.FC = () => {
     const [page, setPage] = useState<Page | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchPage = async () => {
@@ -14,12 +13,10 @@ const ContactPage: React.FC = () => {
                 const data = await apiClient.pages.get('contact');
                 setPage(data);
             } catch (err: any) {
-                if (err?.status === 404) {
-                    setError('Page not found. Content has not been added yet.');
-                } else {
-                    setError('Failed to load page content.');
+                // 404 is expected if page hasn't been created yet
+                if (err?.status !== 404) {
+                    console.error('Error fetching contact page:', err);
                 }
-                console.error('Error fetching contact page:', err);
             } finally {
                 setLoading(false);
             }
@@ -38,21 +35,23 @@ const ContactPage: React.FC = () => {
             <div style={{ margin: '0 auto', maxWidth: '800px', padding: '0 1rem' }}>
                 <h1 className="page-title">{page?.title || 'Contact'}</h1>
 
-                <div className="card">
-                    <div className="prose prose--card">
-                        {loading && (
-                            <p className="text-text-secondary">Loading...</p>
-                        )}
+                {loading && (
+                    <p className="text-text-secondary">Loading...</p>
+                )}
 
-                        {error && (
-                            <p className="text-text-secondary">{error}</p>
-                        )}
-
-                        {!loading && !error && page && (
-                            <div dangerouslySetInnerHTML={{ __html: page.content }} />
-                        )}
+                {!loading && !page && (
+                    <div className="card">
+                        <p className="text-text-secondary">No content yet.</p>
                     </div>
-                </div>
+                )}
+
+                {!loading && page && (
+                    <div className="card">
+                        <div className="prose prose--card">
+                            <div dangerouslySetInnerHTML={{ __html: page.content }} />
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );

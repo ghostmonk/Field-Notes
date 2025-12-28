@@ -94,11 +94,14 @@ async function fetchApi<T, B = unknown>(
         data,
         requestDetails
       );
-      console.error('API error:', { 
-        status: response.status, 
-        request: requestDetails,
-        error: apiError
-      });
+      // Don't log 404s - they're often expected (e.g., checking if a resource exists)
+      if (response.status !== 404) {
+        console.error('API error:', {
+          status: response.status,
+          request: requestDetails,
+          error: apiError
+        });
+      }
       throw apiError;
     }
 

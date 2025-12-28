@@ -210,4 +210,4 @@ help:
 	@echo "  dev-backend      - Start backend development server"
 	@echo "  dev-frontend     - Start frontend development server"
 	@echo "  clean            - Clean up Python cache files and build artifacts"
-	@echo "  docker-nuke      - Nuke all Docker resources for a clean slate" 
+	@echo "  docker-nuke      - Nuke all Docker resources for a clean slate"
