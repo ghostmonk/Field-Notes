@@ -1,6 +1,15 @@
 import { test as base, Page } from '@playwright/test';
 import { test as authTest, MockSession, defaultMockSession } from './auth.fixture';
-import { sampleStories as sharedStories, FIXED_TIMESTAMP, TestStory } from '../test-data';
+import {
+  sampleStories as sharedStories,
+  samplePages as sharedPages,
+  sampleProjects as sharedProjects,
+  FIXED_TIMESTAMP,
+  TestStory,
+  TestPage,
+  TestProject,
+  projectToCard,
+} from '../test-data';
 
 /**
  * API Mock Fixture
@@ -91,6 +100,8 @@ export const sampleStories = {
  */
 export interface ApiMockOptions {
   stories?: MockStory[];
+  pages?: TestPage[];
+  projects?: TestProject[];
   failRequests?: boolean;
   networkDelay?: number;
 }
@@ -101,6 +112,8 @@ export interface ApiMockOptions {
 async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
   const {
     stories = [sampleStories.published, sampleStories.draft],
+    pages = sharedPages,
+    projects = sharedProjects,
     failRequests = false,
     networkDelay = 0,
   } = options;
@@ -279,6 +292,181 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
       contentType: 'application/json',
       body: JSON.stringify({ url: '/mock-uploaded-file.jpg' }),
     });
+  });
+
+  // Mock pages endpoint (About, Contact)
+  await page.route('**/pages/**', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const urlObj = new URL(route.request().url());
+    const pathParts = urlObj.pathname.split('/');
+    const pageType = pathParts[pathParts.length - 1];
+
+    const pageData = pages.find((p) => p.page_type === pageType);
+
+    if (pageData) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(pageData),
+      });
+    } else {
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: `Page '${pageType}' not found` }),
+      });
+    }
+  });
+
+  // Mock projects list endpoint
+  await page.route('**/projects?**', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const url = new URL(route.request().url());
+    const limit = parseInt(url.searchParams.get('limit') || '20', 10);
+    const offset = parseInt(url.searchParams.get('offset') || '0', 10);
+    const featuredOnly = url.searchParams.get('featured_only') === 'true';
+
+    let filteredProjects = projects.filter((p) => p.is_published);
+    if (featuredOnly) {
+      filteredProjects = filteredProjects.filter((p) => p.is_featured);
+    }
+
+    const pageProjects = filteredProjects.slice(offset, offset + limit);
+    const projectCards = pageProjects.map(projectToCard);
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        items: projectCards,
+        total: filteredProjects.length,
+        limit,
+        offset,
+      }),
+    });
+  });
+
+  // Mock projects list endpoint (without query params)
+  await page.route(/\/projects\/?$/, async (route) => {
+    if (route.request().method() === 'POST') {
+      await route.fallback();
+      return;
+    }
+
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const filteredProjects = projects.filter((p) => p.is_published);
+    const projectCards = filteredProjects.map(projectToCard);
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        items: projectCards,
+        total: filteredProjects.length,
+        limit: 20,
+        offset: 0,
+      }),
+    });
+  });
+
+  // Mock project by slug endpoint
+  await page.route('**/projects/slug/**', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const urlObj = new URL(route.request().url());
+    const pathParts = urlObj.pathname.split('/');
+    const slug = pathParts[pathParts.length - 1];
+    const project = projects.find((p) => p.slug === slug && p.is_published);
+
+    if (project) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(project),
+      });
+    } else {
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Project not found' }),
+      });
+    }
+  });
+
+  // Mock project by ID endpoint (for API routes that use slug as path param)
+  await page.route(/\/projects\/(?!slug\/)[\w-]+$/i, async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const urlObj = new URL(route.request().url());
+    const pathParts = urlObj.pathname.split('/');
+    const slugOrId = pathParts[pathParts.length - 1];
+
+    // Try to find by slug first (for frontend API routes), then by ID
+    const project = projects.find(
+      (p) => (p.slug === slugOrId || p.id === slugOrId) && p.is_published
+    );
+
+    if (project) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(project),
+      });
+    } else {
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Project not found' }),
+      });
+    }
   });
 }
 
