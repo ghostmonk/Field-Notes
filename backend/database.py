@@ -105,6 +105,41 @@ async def get_projects_collection() -> AsyncIOMotorCollection:
     return db["projects"]
 
 
+async def ensure_indexes() -> None:
+    """Create database indexes for optimal query performance.
+
+    Indexes are created with background=True to avoid blocking.
+    Unique index creation may fail if duplicates exist - this is logged but not fatal.
+    """
+    db = await get_database()
+
+    async def safe_create_index(collection, keys, **kwargs):
+        """Create index, logging errors but not failing startup."""
+        try:
+            await collection.create_index(keys, background=True, **kwargs)
+        except Exception as e:
+            index_name = kwargs.get("name", str(keys))
+            logger.warning(f"Failed to create index {index_name} on {collection.name}: {e}")
+
+    # Pages indexes
+    pages = db["pages"]
+    await safe_create_index(pages, "page_type", unique=True)
+    await safe_create_index(pages, "is_published")
+
+    # Projects indexes
+    projects = db["projects"]
+    await safe_create_index(projects, "slug", unique=True)
+    await safe_create_index(projects, [("is_published", 1), ("is_featured", -1)])
+    await safe_create_index(projects, [("is_published", 1), ("created_date", -1)])
+
+    # Stories indexes
+    stories = db["stories"]
+    await safe_create_index(stories, "slug", unique=True)
+    await safe_create_index(stories, [("is_published", 1), ("published_date", -1)])
+
+    logger.info("Database indexes ensured")
+
+
 def _get_variable(key: str) -> str:
     output = os.getenv(key)
     if not output:

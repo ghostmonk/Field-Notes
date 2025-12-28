@@ -7,8 +7,8 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from database import get_projects_collection
-from decorators.auth import requires_auth
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from decorators.auth import requires_auth, verify_auth
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
 from models.project import ProjectCard, ProjectCreate, ProjectResponse, ProjectUpdate
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -21,7 +21,6 @@ router = APIRouter()
 @router.get("/projects")
 async def get_projects(
     request: Request,
-    response: Response,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     include_unpublished: bool = Query(False),
@@ -30,6 +29,10 @@ async def get_projects(
 ):
     """Get all projects as cards for listing."""
     try:
+        # Require authentication to view unpublished projects
+        if include_unpublished:
+            await verify_auth(request)
+
         query = {"deleted": {"$ne": True}}
         if not include_unpublished:
             query["is_published"] = True

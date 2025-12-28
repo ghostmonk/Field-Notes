@@ -2,6 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+from database import ensure_indexes
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -45,6 +46,9 @@ async def lifespan(app: FastAPI):
         logger.info(f"GOOGLE_APPLICATION_CREDENTIALS file path: {google_creds_file}")
     updated_count = await backfill_published_flag()
     logger.info(f"Startup complete. Backfilled {updated_count} stories.")
+
+    # Ensure database indexes exist
+    await ensure_indexes()
 
     yield  # This is where the app runs
 

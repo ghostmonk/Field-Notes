@@ -22,6 +22,16 @@ class ProjectBase(BaseModel):
     is_featured: bool = False
     sort_order: int = Field(default=0)
 
+    @field_validator("github_url", "live_url", "image_url")
+    @classmethod
+    def validate_url(cls, v: str | None) -> str | None:
+        """Validate URL format."""
+        if v is None or v == "":
+            return None
+        if not v.startswith(("http://", "https://")):
+            raise ValueError("URL must start with http:// or https://")
+        return v
+
 
 class ProjectCreate(ProjectBase):
     """Model for creating a new project."""
@@ -42,6 +52,16 @@ class ProjectUpdate(BaseModel):
     is_published: bool | None = None
     is_featured: bool | None = None
     sort_order: int | None = None
+
+    @field_validator("github_url", "live_url", "image_url")
+    @classmethod
+    def validate_url(cls, v: str | None) -> str | None:
+        """Validate URL format."""
+        if v is None or v == "":
+            return None
+        if not v.startswith(("http://", "https://")):
+            raise ValueError("URL must start with http:// or https://")
+        return v
 
 
 class ProjectResponse(ProjectBase):

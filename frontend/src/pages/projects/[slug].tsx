@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -158,7 +159,7 @@ const ProjectDetailPage: React.FC = () => {
 
                 <div className="card">
                     <div className="prose prose--card">
-                        <div dangerouslySetInnerHTML={{ __html: project.content }} />
+                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.content) }} />
                     </div>
                 </div>
             </div>

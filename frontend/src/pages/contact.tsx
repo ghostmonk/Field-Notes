@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 import Head from 'next/head';
 import apiClient from '@/lib/api-client';
 import { Page } from '@/types/api';
@@ -48,7 +49,7 @@ const ContactPage: React.FC = () => {
                 {!loading && page && (
                     <div className="card">
                         <div className="prose prose--card">
-                            <div dangerouslySetInnerHTML={{ __html: page.content }} />
+                            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.content) }} />
                         </div>
                     </div>
                 )}
