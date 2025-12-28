@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class MediaDimensions(BaseModel):
@@ -18,9 +18,8 @@ class ProcessedMediaFile(BaseModel):
     width: int
     height: int
 
-    class Config:
-        # Add example for API documentation
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "primary_url": "/uploads/20241201_123456_abc123.webp",
                 "srcset": "/uploads/20241201_123456_abc123_500.webp 500w, /uploads/20241201_123456_abc123_750.webp 750w, /uploads/20241201_123456_abc123.webp 1200w",
@@ -28,6 +27,7 @@ class ProcessedMediaFile(BaseModel):
                 "height": 800,
             }
         }
+    )
 
 
 class UploadResponse(BaseModel):
@@ -37,8 +37,8 @@ class UploadResponse(BaseModel):
     srcsets: List[str]
     dimensions: List[MediaDimensions]
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "urls": ["/uploads/20241201_123456_abc123.webp"],
                 "srcsets": [
@@ -47,6 +47,7 @@ class UploadResponse(BaseModel):
                 "dimensions": [{"width": 1200, "height": 800}],
             }
         }
+    )
 
 
 class ErrorContext(BaseModel):

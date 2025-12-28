@@ -5,7 +5,7 @@ Project-related Pydantic models for portfolio projects.
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ProjectBase(BaseModel):
@@ -61,8 +61,7 @@ class ProjectResponse(ProjectBase):
             return value.replace(tzinfo=timezone.utc)
         return value.astimezone(timezone.utc)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectCard(BaseModel):
@@ -78,5 +77,4 @@ class ProjectCard(BaseModel):
     live_url: Optional[str]
     is_featured: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

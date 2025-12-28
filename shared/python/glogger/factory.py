@@ -5,7 +5,7 @@ Logger factory implementation that manages provider selection and logger creatio
 import os
 import sys
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from .interfaces import (
@@ -57,7 +57,7 @@ class DefaultLogger(Logger):
         entry = LogEntry(
             level=level,
             message=message,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             context=log_context,
             exception=exception,
             stack_trace=traceback.format_exc() if exception else None,

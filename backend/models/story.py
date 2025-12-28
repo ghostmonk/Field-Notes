@@ -4,7 +4,7 @@ Story-related Pydantic models.
 
 from datetime import datetime, timezone
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class StoryBase(BaseModel):
@@ -39,5 +39,4 @@ class StoryResponse(StoryBase):
             return value.replace(tzinfo=timezone.utc)
         return value.astimezone(timezone.utc)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

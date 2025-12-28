@@ -5,7 +5,7 @@ Page-related Pydantic models for static pages (About, Contact).
 from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 PageType = Literal["about", "contact"]
@@ -50,5 +50,4 @@ class PageResponse(PageBase):
             return value.replace(tzinfo=timezone.utc)
         return value.astimezone(timezone.utc)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

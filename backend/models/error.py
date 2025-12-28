@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ErrorCode(str, Enum):
@@ -56,8 +56,8 @@ class StandardErrorResponse(BaseModel):
     details: ErrorDetails | None = None
     request_id: str | None = None
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "error_code": "UPLOAD_FILE_TOO_LARGE",
                 "user_message": "The image file is too large. Please choose a file smaller than 5MB.",
@@ -69,6 +69,7 @@ class StandardErrorResponse(BaseModel):
                 "request_id": "req_abc123",
             }
         }
+    )
 
 
 # Error message templates for consistent messaging
