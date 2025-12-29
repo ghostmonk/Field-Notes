@@ -104,6 +104,9 @@
 
 html {
   height: 100%;
+  /* Use dynamic viewport height for mobile browsers */
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   scroll-behavior: smooth;
 }
 
@@ -506,6 +509,9 @@ button.btn--primary:hover:not(:disabled) {
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--color-border-primary);
   padding-bottom: env(safe-area-inset-bottom);
+  /* Fix for mobile browsers with dynamic viewport */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .dark .bottom-nav {
