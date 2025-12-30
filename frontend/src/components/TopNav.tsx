@@ -6,12 +6,16 @@ import { SECTIONS, SectionConfig } from "@/lib/navigation";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm } from "react-icons/hi";
 
+// Icon mapping for section navigation items defined in SECTIONS config
 const iconMap: Record<SectionConfig['icon'], React.ComponentType<{ className?: string }>> = {
     home: HiHome,
     user: HiUser,
     folder: HiFolder,
     mail: HiMail,
 };
+
+// HiPlusSm is used directly for "New Story" link as it's not part of SECTIONS config
+const NewStoryIcon = HiPlusSm;
 
 export default function TopNav() {
     const { data: session } = useSession();
@@ -39,14 +43,14 @@ export default function TopNav() {
                                     data-testid={`nav-${section.id}-link`}
                                     aria-current={isActive ? 'page' : undefined}
                                 >
-                                    <Icon className="nav__link-icon" />
+                                    <Icon className="nav__link-icon" aria-hidden="true" />
                                     <span>{section.label}</span>
                                 </Link>
                             );
                         })}
                         {session && (
                             <Link href="/editor" className="nav__link" data-testid="nav-new-story-link">
-                                <HiPlusSm className="nav__link-icon" />
+                                <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
                                 <span>New Story</span>
                             </Link>
                         )}
@@ -101,7 +105,7 @@ export default function TopNav() {
                                 onClick={() => setMobileMenuOpen(false)}
                                 data-testid="mobile-nav-new-story-link"
                             >
-                                <HiPlusSm className="nav__link-icon" />
+                                <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
                                 <span>New Story</span>
                             </Link>
                         )}

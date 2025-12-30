@@ -468,6 +468,9 @@ button.btn--primary:hover:not(:disabled) {
   background-color: var(--color-surface-secondary);
 }
 
+/* Active state uses different color tokens for light/dark modes:
+   - Light: --color-brand-primary (#2563eb) for sufficient contrast on white
+   - Dark: --color-text-brand (#3b82f6) is slightly lighter for visibility on dark bg */
 .nav__link--active {
   color: var(--color-brand-primary);
 }
@@ -537,7 +540,10 @@ button.btn--primary:hover:not(:disabled) {
   -webkit-transform: translateZ(0);
 }
 
-/* Extend background below nav to cover any gaps from mobile browser chrome */
+/* Extend background below nav to cover gaps when mobile browser chrome hides.
+   The 100px height is chosen to exceed the maximum browser toolbar height
+   across iOS Safari (~50px) and Chrome Android (~56px) with safety margin.
+   This pseudo-element is invisible and non-interactive. */
 .bottom-nav::after {
   content: '';
   position: absolute;
