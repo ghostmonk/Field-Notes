@@ -2,8 +2,16 @@ import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState } from "react";
-import { SECTIONS } from "@/lib/navigation";
+import { SECTIONS, SectionConfig } from "@/lib/navigation";
 import { useActiveSection } from "@/hooks/useActiveSection";
+import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm } from "react-icons/hi";
+
+const iconMap: Record<SectionConfig['icon'], React.ComponentType<{ className?: string }>> = {
+    home: HiHome,
+    user: HiUser,
+    folder: HiFolder,
+    mail: HiMail,
+};
 
 export default function TopNav() {
     const { data: session } = useSession();
@@ -20,19 +28,26 @@ export default function TopNav() {
                 <div className="flex space-x-4">
                     {/* Desktop Navigation - Section Links */}
                     <div className="nav__links">
-                        {SECTIONS.map((section) => (
-                            <Link
-                                key={section.id}
-                                href={section.path}
-                                className={`nav__link ${activeSection === section.id ? 'text-blue-500' : ''}`}
-                                data-testid={`nav-${section.id}-link`}
-                            >
-                                {section.label}
-                            </Link>
-                        ))}
+                        {SECTIONS.map((section) => {
+                            const Icon = iconMap[section.icon];
+                            const isActive = activeSection === section.id;
+                            return (
+                                <Link
+                                    key={section.id}
+                                    href={section.path}
+                                    className={`nav__link ${isActive ? 'nav__link--active' : ''}`}
+                                    data-testid={`nav-${section.id}-link`}
+                                    aria-current={isActive ? 'page' : undefined}
+                                >
+                                    <Icon className="nav__link-icon" />
+                                    <span>{section.label}</span>
+                                </Link>
+                            );
+                        })}
                         {session && (
                             <Link href="/editor" className="nav__link" data-testid="nav-new-story-link">
-                                New Story
+                                <HiPlusSm className="nav__link-icon" />
+                                <span>New Story</span>
                             </Link>
                         )}
                     </div>
@@ -86,7 +101,8 @@ export default function TopNav() {
                                 onClick={() => setMobileMenuOpen(false)}
                                 data-testid="mobile-nav-new-story-link"
                             >
-                                New Story
+                                <HiPlusSm className="nav__link-icon" />
+                                <span>New Story</span>
                             </Link>
                         )}
                     </div>
