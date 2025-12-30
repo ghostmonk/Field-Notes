@@ -26,7 +26,7 @@ const NavItem: React.FC<NavItemProps> = ({ section, isActive }) => {
             aria-current={isActive ? 'page' : undefined}
             data-testid={`bottom-nav-${section.id}`}
         >
-            <Icon className="bottom-nav__icon" />
+            <Icon className="bottom-nav__icon" aria-hidden="true" />
             <span className="bottom-nav__label">{section.label}</span>
         </Link>
     );

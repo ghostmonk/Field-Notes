@@ -452,13 +452,36 @@ button.btn--primary:hover:not(:disabled) {
 }
 
 .nav__link {
-  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
   text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
   transition: var(--transition-colors);
 }
 
 .nav__link:hover {
-  color: var(--color-text-link);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-secondary);
+}
+
+/* Active state uses different color tokens for light/dark modes:
+   - Light: --color-brand-primary (#2563eb) for sufficient contrast on white
+   - Dark: --color-text-brand (#3b82f6) is slightly lighter for visibility on dark bg */
+.nav__link--active {
+  color: var(--color-brand-primary);
+}
+
+.dark .nav__link--active {
+  color: var(--color-text-brand);
+}
+
+.nav__link-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .nav__mobile-toggle {
@@ -484,6 +507,9 @@ button.btn--primary:hover:not(:disabled) {
 }
 
 .nav__mobile-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   color: var(--color-text-primary);
   text-decoration: none;
   padding: var(--space-sm) 0;
@@ -504,7 +530,7 @@ button.btn--primary:hover:not(:disabled) {
   display: flex;
   align-items: stretch;
   justify-content: space-around;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--color-border-primary);
@@ -514,8 +540,27 @@ button.btn--primary:hover:not(:disabled) {
   -webkit-transform: translateZ(0);
 }
 
+/* Extend background below nav to cover gaps when mobile browser chrome hides.
+   The 100px height is chosen to exceed the maximum browser toolbar height
+   across iOS Safari (~50px) and Chrome Android (~56px) with safety margin.
+   This pseudo-element is invisible and non-interactive. */
+.bottom-nav::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background-color: rgba(255, 255, 255, 0.95);
+  pointer-events: none;
+}
+
 .dark .bottom-nav {
-  background-color: rgba(15, 23, 42, 0.9);
+  background-color: rgba(15, 23, 42, 0.95);
+}
+
+.dark .bottom-nav::after {
+  background-color: rgba(15, 23, 42, 0.95);
 }
 
 .bottom-nav__item {
