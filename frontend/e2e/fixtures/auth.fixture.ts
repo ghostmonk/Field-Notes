@@ -8,6 +8,7 @@ export interface MockSession {
     name: string;
     email: string;
     image?: string;
+    role?: 'admin' | 'commenter';
   };
   expires: string;
   accessToken: string;
@@ -21,6 +22,7 @@ export const defaultMockSession: MockSession = {
     name: 'Test User',
     email: 'test@example.com',
     image: 'https://example.com/avatar.jpg',
+    role: 'admin',
   },
   expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   accessToken: 'mock-access-token-for-testing',
