@@ -10,6 +10,7 @@ from database import get_users_collection
 from fastapi import HTTPException, Request
 from glogger import logger
 from models.user import UserInfo, UserRole
+from pydantic import EmailStr, ValidationError
 from pymongo.errors import DuplicateKeyError
 
 # Admin email - this user gets admin role (required environment variable)
@@ -201,6 +202,12 @@ async def verify_auth_and_get_user(request: Request) -> UserInfo:
         email = token_info.get("email")
         if not email:
             raise HTTPException(status_code=401, detail="Token does not contain email.")
+
+        # Validate email format using Pydantic's EmailStr
+        try:
+            EmailStr._validate(email)
+        except ValidationError:
+            raise HTTPException(status_code=401, detail="Invalid email format in token.")
 
         name = profile.get("name", email.split("@")[0])
         avatar_url = profile.get("picture")

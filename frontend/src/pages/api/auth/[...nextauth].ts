@@ -1,12 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-
-function getBaseUrl(req: NextApiRequest): string {
-    const host = req.headers.host || 'localhost:3000';
-    const protocol = req.headers['x-forwarded-proto'] || 'http';
-    return `${protocol}://${host}`;
-}
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -79,10 +72,4 @@ export const authOptions: NextAuthOptions = {
     debug: process.env.NEXTAUTH_DEBUG === 'true',
 };
 
-export default async function auth(req: NextApiRequest, res: NextApiResponse) {
-    // Dynamically set NEXTAUTH_URL based on the incoming request's host header
-    const baseUrl = getBaseUrl(req);
-    process.env.NEXTAUTH_URL = baseUrl;
-
-    return NextAuth(req, res, authOptions);
-}
+export default NextAuth(authOptions);
