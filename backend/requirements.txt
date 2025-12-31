@@ -21,7 +21,11 @@ charset-normalizer==3.4.2
 click==8.2.1
     # via uvicorn
 dnspython==2.7.0
-    # via pymongo
+    # via
+    #   email-validator
+    #   pymongo
+email-validator==2.3.0
+    # via pydantic
 fastapi==0.115.12
     # via -r requirements.in
 google==3.0.0
@@ -79,6 +83,7 @@ h11==0.16.0
 idna==3.10
     # via
     #   anyio
+    #   email-validator
     #   requests
 importlib-metadata==8.7.0
     # via opentelemetry-api
@@ -109,7 +114,7 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.2
     # via google-auth
-pydantic==2.11.4
+pydantic[email]==2.11.4
     # via
     #   -r requirements.in
     #   fastapi

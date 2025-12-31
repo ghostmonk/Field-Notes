@@ -77,7 +77,6 @@ export const authOptions: NextAuthOptions = {
     },
     secret: process.env.NEXTAUTH_SECRET,
     debug: process.env.NEXTAUTH_DEBUG === 'true',
-    trustHost: true,
 };
 
 export default async function auth(req: NextApiRequest, res: NextApiResponse) {
