@@ -105,6 +105,11 @@ async def get_projects_collection() -> AsyncIOMotorCollection:
     return db["projects"]
 
 
+async def get_users_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["users"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
@@ -136,6 +141,15 @@ async def ensure_indexes() -> None:
     stories = db["stories"]
     await safe_create_index(stories, "slug", unique=True)
     await safe_create_index(stories, [("is_published", 1), ("date", -1)])
+
+    # Users indexes
+    users = db["users"]
+    await safe_create_index(users, "email", unique=True)
+    await safe_create_index(
+        users,
+        [("auth_providers.provider", 1), ("auth_providers.provider_user_id", 1)],
+        name="auth_provider_lookup",
+    )
 
     logger.info("Database indexes ensured")
 

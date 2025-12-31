@@ -3,10 +3,11 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from database import get_collection
-from decorators.auth import requires_auth
+from decorators.auth import check_write_permission, requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from glogger import logger
 from models.story import StoryCreate, StoryResponse
+from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
 from utils import find_many_and_convert, find_one_and_convert, generate_unique_slug
@@ -53,6 +54,7 @@ async def get_stories(
             "createdDate": 1,
             "updatedDate": 1,
             "deleted": 1,
+            "user_id": 1,
         }
 
         stories = await find_many_and_convert(
@@ -198,6 +200,8 @@ async def update_story(
     collection: AsyncIOMotorCollection = Depends(get_collection),
 ):
     try:
+        user: UserInfo = request.state.user
+
         if not ObjectId.is_valid(story_id):
             logger.warning_with_context(
                 "Invalid story ID format for update", {"story_id": story_id}
@@ -211,6 +215,7 @@ async def update_story(
                 "title": story.title,
                 "content_length": len(story.content) if story.content else 0,
                 "is_published": story.is_published,
+                "user_id": user.id,
             },
         )
 
@@ -221,6 +226,16 @@ async def update_story(
         if not existing_story:
             logger.warning_with_context("Story not found for update", {"story_id": story_id})
             raise HTTPException(status_code=404, detail="Story not found")
+
+        # Check write permission
+        if not check_write_permission(user, existing_story.user_id):
+            logger.warning_with_context(
+                "Permission denied for story update",
+                {"story_id": story_id, "user_id": user.id, "owner_id": existing_story.user_id},
+            )
+            raise HTTPException(
+                status_code=403, detail="You don't have permission to edit this story"
+            )
 
         current_time = datetime.now(timezone.utc)
 
@@ -306,12 +321,15 @@ async def add_story(
     collection: AsyncIOMotorCollection = Depends(get_collection),
 ):
     try:
+        user: UserInfo = request.state.user
+
         logger.info_with_context(
             "Creating new story",
             {
                 "title": story.title,
                 "content_length": len(story.content) if story.content else 0,
                 "is_published": story.is_published,
+                "user_id": user.id,
             },
         )
 
@@ -326,6 +344,7 @@ async def add_story(
             "date": current_time,
             "createdDate": current_time,
             "updatedDate": current_time,
+            "user_id": user.id,
         }
 
         result = await collection.insert_one(document)
@@ -387,13 +406,15 @@ async def delete_story(
     request: Request, story_id: str, collection: AsyncIOMotorCollection = Depends(get_collection)
 ):
     try:
+        user: UserInfo = request.state.user
+
         if not ObjectId.is_valid(story_id):
             logger.warning_with_context(
                 "Invalid story ID format for delete", {"story_id": story_id}
             )
             raise HTTPException(status_code=400, detail="Invalid story ID format")
 
-        logger.info_with_context("Soft deleting story", {"story_id": story_id})
+        logger.info_with_context("Soft deleting story", {"story_id": story_id, "user_id": user.id})
 
         existing_story = await find_one_and_convert(
             collection, {"_id": ObjectId(story_id), "deleted": {"$ne": True}}, StoryResponse
@@ -402,6 +423,16 @@ async def delete_story(
         if not existing_story:
             logger.warning_with_context("Story not found for delete", {"story_id": story_id})
             raise HTTPException(status_code=404, detail="Story not found")
+
+        # Check write permission
+        if not check_write_permission(user, existing_story.user_id):
+            logger.warning_with_context(
+                "Permission denied for story delete",
+                {"story_id": story_id, "user_id": user.id, "owner_id": existing_story.user_id},
+            )
+            raise HTTPException(
+                status_code=403, detail="You don't have permission to delete this story"
+            )
 
         result = await collection.update_one(
             {"_id": ObjectId(story_id)}, {"$set": {"deleted": True}}

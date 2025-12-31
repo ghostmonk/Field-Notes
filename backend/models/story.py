@@ -29,6 +29,7 @@ class StoryResponse(StoryBase):
     date: datetime | None = None
     createdDate: datetime
     updatedDate: datetime
+    user_id: str | None = None
 
     @field_validator("date", "createdDate", "updatedDate")
     def ensure_utc(cls, value: datetime | None) -> datetime | None:

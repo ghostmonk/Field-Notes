@@ -16,7 +16,12 @@ os.environ.setdefault("DATABASE_URL", "mongodb://localhost:27017/test")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "test-project")
 os.environ.setdefault("STORAGE_BUCKET", "test-bucket")
 
-from database import get_collection, get_pages_collection, get_projects_collection
+from database import (
+    get_collection,
+    get_pages_collection,
+    get_projects_collection,
+    get_users_collection,
+)
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -26,12 +31,14 @@ from handlers.pages import router as pages_router
 from handlers.projects import router as projects_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
+from handlers.users import router as users_router
 from handlers.video_processing import router as video_processing_router
 from httpx import ASGITransport, AsyncClient
 
 test_app = FastAPI()
 test_app.include_router(stories_router)
 test_app.include_router(uploads_router)
+test_app.include_router(users_router)
 test_app.include_router(video_processing_router)
 test_app.include_router(pages_router)
 test_app.include_router(projects_router)
@@ -245,17 +252,82 @@ def sample_project_data():
 
 
 @pytest.fixture
-def mock_auth():
-    """Mock authentication decorator for testing authenticated endpoints"""
-    from unittest.mock import patch
+def mock_users_collection():
+    """Mock collection for users testing"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    mock.count_documents = AsyncMock()
+    mock.insert_one = AsyncMock()
+    mock.update_one = AsyncMock()
+    mock.delete_one = AsyncMock()
+    return mock
 
-    with patch("decorators.auth.requests.get") as mock:
-        mock.return_value.status_code = 200
-        mock.return_value.json.return_value = {
-            "scope": "https://www.googleapis.com/auth/userinfo.email",
-            "exp": 9999999999,
-        }
-        yield mock
+
+@pytest.fixture
+def override_users_database(mock_users_collection):
+    """Override the users collection to use mocks"""
+
+    async def get_mock_users_collection():
+        return mock_users_collection
+
+    test_app.dependency_overrides[get_users_collection] = get_mock_users_collection
+    yield mock_users_collection
+    test_app.dependency_overrides.pop(get_users_collection, None)
+
+
+@pytest.fixture
+def mock_auth(mock_users_collection):
+    """Mock authentication decorator for testing authenticated endpoints.
+
+    This mocks:
+    1. Google token validation API
+    2. Google userinfo API
+    3. Users collection for get_or_create_user (via module-level patch)
+    """
+    from unittest.mock import MagicMock, patch
+
+    from bson import ObjectId
+
+    # Mock user document returned from DB
+    mock_user_id = ObjectId()
+    mock_users_collection.find_one.return_value = {
+        "_id": mock_user_id,
+        "email": "test@example.com",
+        "name": "Test User",
+        "role": "admin",
+        "auth_providers": [],
+    }
+
+    # Create async function that returns the mock collection
+    async def get_mock_users_collection():
+        return mock_users_collection
+
+    # Patch both requests.get and get_users_collection at the module level
+    with (
+        patch("decorators.auth.requests.get") as mock_requests,
+        patch("decorators.auth.get_users_collection", get_mock_users_collection),
+    ):
+
+        def mock_get(url, **kwargs):
+            response = MagicMock()
+            response.status_code = 200
+            if "tokeninfo" in url:
+                response.json.return_value = {
+                    "scope": "https://www.googleapis.com/auth/userinfo.email",
+                    "exp": 9999999999,
+                    "email": "test@example.com",
+                    "sub": "google-user-id-123",
+                }
+            elif "userinfo" in url:
+                response.json.return_value = {
+                    "email": "test@example.com",
+                    "name": "Test User",
+                    "picture": "https://example.com/avatar.jpg",
+                }
+            return response
+
+        mock_requests.side_effect = mock_get
+        yield mock_requests
 
 
 @pytest.fixture

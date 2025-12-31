@@ -6,10 +6,11 @@ import traceback
 from datetime import datetime, timezone
 
 from database import get_pages_collection
-from decorators.auth import requires_auth
+from decorators.auth import check_write_permission, requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from glogger import logger
 from models.page import PageResponse, PageType, PageUpdate
+from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
 from utils import find_one_and_convert
@@ -75,12 +76,15 @@ async def upsert_page(
 ):
     """Create or update a page by type."""
     try:
+        user: UserInfo = request.state.user
+
         logger.info_with_context(
             "Upserting page",
             {
                 "page_type": page_type,
                 "title": page.title,
                 "content_length": len(page.content) if page.content else 0,
+                "user_id": user.id,
             },
         )
 
@@ -94,6 +98,16 @@ async def upsert_page(
         )
 
         if existing_page:
+            # Check write permission for update
+            if not check_write_permission(user, existing_page.user_id):
+                logger.warning_with_context(
+                    "Permission denied for page update",
+                    {"page_type": page_type, "user_id": user.id, "owner_id": existing_page.user_id},
+                )
+                raise HTTPException(
+                    status_code=403, detail="You don't have permission to edit this page"
+                )
+
             # Update existing page
             update_data = {k: v for k, v in page.model_dump().items() if v is not None}
             update_data["updatedDate"] = current_time
@@ -123,6 +137,7 @@ async def upsert_page(
                 "is_published": page.is_published if page.is_published is not None else True,
                 "createdDate": current_time,
                 "updatedDate": current_time,
+                "user_id": user.id,
             }
 
             result = await collection.insert_one(document)
@@ -186,7 +201,9 @@ async def delete_page(
 ):
     """Soft delete a page."""
     try:
-        logger.info_with_context("Soft deleting page", {"page_type": page_type})
+        user: UserInfo = request.state.user
+
+        logger.info_with_context("Soft deleting page", {"page_type": page_type, "user_id": user.id})
 
         existing_page = await find_one_and_convert(
             collection,
@@ -197,6 +214,16 @@ async def delete_page(
         if not existing_page:
             logger.warning_with_context("Page not found for delete", {"page_type": page_type})
             raise HTTPException(status_code=404, detail="Page not found")
+
+        # Check write permission
+        if not check_write_permission(user, existing_page.user_id):
+            logger.warning_with_context(
+                "Permission denied for page delete",
+                {"page_type": page_type, "user_id": user.id, "owner_id": existing_page.user_id},
+            )
+            raise HTTPException(
+                status_code=403, detail="You don't have permission to delete this page"
+            )
 
         result = await collection.update_one(
             {"page_type": page_type, "deleted": {"$ne": True}},

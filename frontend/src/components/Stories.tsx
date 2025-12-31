@@ -22,6 +22,15 @@ const getStoryPath = (story: Story): string => {
     return `/stories/${story.slug}`;
 };
 
+const canEditStory = (session: Session | null, story: Story): boolean => {
+    if (!session?.user) return false;
+    // Admin can edit any story
+    if (session.user.role === 'admin') return true;
+    // Owner can edit their own story
+    if (story.user_id && session.user.id === story.user_id) return true;
+    return false;
+};
+
 const StoryItem = React.memo(({
     story,
     session,
@@ -37,7 +46,8 @@ const StoryItem = React.memo(({
 }) => {
     const isDraft = !story.is_published;
     const storyPath = getStoryPath(story);
-    
+    const canEdit = canEditStory(session, story);
+
     return (
         <div
             key={story.id}
@@ -51,7 +61,7 @@ const StoryItem = React.memo(({
                             DRAFT
                         </span>
                     )}
-                    {session && (
+                    {canEdit && (
                         <div className="flex gap-2">
                             <button
                                 onClick={() => onEdit(story)}
@@ -217,7 +227,7 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError }) => {
         return (
             <div className="empty-state" data-testid="stories-empty">
                 <h2 className="empty-state__title">No stories found</h2>
-                {session && (
+                {session?.user?.role === 'admin' && (
                     <button
                         onClick={() => router.push('/editor')}
                         className="btn btn--primary"

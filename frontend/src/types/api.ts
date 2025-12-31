@@ -3,6 +3,22 @@
  */
 
 /**
+ * User role type
+ */
+export type UserRole = 'admin' | 'commenter';
+
+/**
+ * Represents a user
+ */
+export interface User {
+    id: string;
+    email: string;
+    name: string;
+    avatar_url: string | null;
+    role: UserRole;
+}
+
+/**
  * Represents a story
  */
 export interface Story {
@@ -14,6 +30,7 @@ export interface Story {
     date: string;
     createdDate: string;
     updatedDate: string;
+    user_id?: string;
 }
 
 /**
@@ -32,6 +49,7 @@ export interface Page {
     is_published: boolean;
     createdDate: string;
     updatedDate: string;
+    user_id?: string;
 }
 
 /**
@@ -56,6 +74,7 @@ export interface ProjectCard {
     github_url: string | null;
     live_url: string | null;
     is_featured: boolean;
+    user_id?: string;
 }
 
 /**
@@ -76,6 +95,7 @@ export interface Project {
     sort_order: number;
     createdDate: string;
     updatedDate: string;
+    user_id?: string;
 }
 
 /**

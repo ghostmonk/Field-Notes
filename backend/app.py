@@ -9,10 +9,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from glogger import logger
 from handlers.backfill import backfill_published_flag
+from handlers.migrations import run_migrations
 from handlers.pages import router as pages_router
 from handlers.projects import router as projects_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
+from handlers.users import router as users_router
 from handlers.video_processing import router as video_processing_router
 from middleware.logging_middleware import LoggingMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -50,6 +52,9 @@ async def lifespan(app: FastAPI):
     # Ensure database indexes exist
     await ensure_indexes()
 
+    # Run database migrations
+    await run_migrations()
+
     yield  # This is where the app runs
 
     # Cleanup database connections
@@ -68,6 +73,7 @@ origins = [
     "http://localhost:3000",
     "http://localhost:5001",
     "http://frontend:3000",
+    "http://10.0.0.195.nip.io:3000",
 ]
 
 app.add_middleware(
@@ -185,6 +191,7 @@ app.include_router(stories_router)
 app.include_router(pages_router)
 app.include_router(projects_router)
 app.include_router(uploads_router)
+app.include_router(users_router)
 app.include_router(video_processing_router)
 
 if __name__ == "__main__":
