@@ -8,6 +8,7 @@ from motor.motor_asyncio import (
     AsyncIOMotorCollection,
     AsyncIOMotorDatabase,
 )
+from pymongo.errors import OperationFailure
 
 client: AsyncIOMotorClient | None = None
 _connection_lock = asyncio.Lock()
@@ -119,12 +120,36 @@ async def ensure_indexes() -> None:
     db = await get_database()
 
     async def safe_create_index(collection, keys, **kwargs):
-        """Create index, logging errors but not failing startup."""
+        """Create index, logging errors but not failing startup.
+
+        Handles specific error cases:
+        - Index already exists (code 85/86): Silently ignored (idempotent)
+        - Duplicate key errors: Logged as warning (data issue, not fatal)
+        - Other OperationFailure: Re-raised (permission issues, connection problems)
+        """
         try:
             await collection.create_index(keys, background=True, **kwargs)
-        except Exception as e:
+        except OperationFailure as e:
             index_name = kwargs.get("name", str(keys))
-            logger.warning(f"Failed to create index {index_name} on {collection.name}: {e}")
+            # Error codes: 85 = IndexOptionsConflict, 86 = IndexKeySpecsConflict
+            # These mean index already exists with same/different options - not fatal
+            if e.code in (85, 86):
+                logger.debug(f"Index {index_name} already exists on {collection.name}")
+            # Error code 11000 = DuplicateKey - data issue, log but don't fail
+            elif e.code == 11000:
+                logger.warning(
+                    f"Cannot create unique index {index_name} on {collection.name}: "
+                    f"duplicate values exist. Fix data before retrying."
+                )
+            else:
+                # Connection issues, permission errors, etc. - re-raise
+                logger.error(f"Failed to create index {index_name} on {collection.name}: {e}")
+                raise
+        except Exception as e:
+            # Unexpected errors - log and re-raise
+            index_name = kwargs.get("name", str(keys))
+            logger.error(f"Unexpected error creating index {index_name} on {collection.name}: {e}")
+            raise
 
     # Pages indexes
     pages = db["pages"]

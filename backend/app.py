@@ -17,6 +17,9 @@ from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
 from handlers.video_processing import router as video_processing_router
 from middleware.logging_middleware import LoggingMiddleware
+from middleware.rate_limit import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse
 
@@ -65,6 +68,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(LoggingMiddleware)
 
 # CORS origins configuration

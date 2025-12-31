@@ -6,6 +6,7 @@ from functools import wraps
 from threading import Lock
 
 import httpx
+from cachetools import TTLCache
 from database import get_users_collection
 from fastapi import HTTPException, Request
 from glogger import logger
@@ -18,11 +19,13 @@ ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 if not ADMIN_EMAIL:
     raise ValueError("ADMIN_EMAIL environment variable is required")
 
-# Token cache: {token_hash: (expiration_timestamp, UserInfo)}
-# Using hash to avoid storing raw tokens in memory
-_token_cache: dict[str, tuple[float, UserInfo]] = {}
-_cache_lock = Lock()
+# Token cache using TTLCache with automatic expiration and size limit
+# Key: hashed token, Value: UserInfo
+# maxsize=1000 prevents memory exhaustion, ttl=300 (5 min) auto-expires entries
 _CACHE_TTL = 300  # 5 minutes
+_CACHE_MAX_SIZE = 1000
+_token_cache: TTLCache[str, UserInfo] = TTLCache(maxsize=_CACHE_MAX_SIZE, ttl=_CACHE_TTL)
+_cache_lock = Lock()
 
 
 def _hash_token(token: str) -> str:
@@ -34,28 +37,18 @@ def _get_cached_user(token: str) -> UserInfo | None:
     """Check if token is in cache and return UserInfo if valid."""
     token_hash = _hash_token(token)
     with _cache_lock:
-        if token_hash in _token_cache:
-            expiration, user_info = _token_cache[token_hash]
-            if time.time() < expiration:
-                return user_info
-            # Expired, remove from cache
-            del _token_cache[token_hash]
-    return None
+        return _token_cache.get(token_hash)
 
 
 def _cache_user(token: str, user_info: UserInfo, ttl: float = _CACHE_TTL) -> None:
-    """Add token and user info to cache with TTL."""
+    """Add token and user info to cache.
+
+    Note: TTLCache uses a global TTL set at creation time.
+    The ttl parameter is kept for API compatibility but the cache's TTL is used.
+    """
     token_hash = _hash_token(token)
-    expiration = time.time() + ttl
     with _cache_lock:
-        _token_cache[token_hash] = (expiration, user_info)
-        # Cleanup: remove expired entries if cache grows large
-        if len(_token_cache) > 1000:
-            current_time = time.time()
-            # Use list() snapshot to avoid RuntimeError from dict mutation during iteration
-            expired = [k for k, (exp, _) in list(_token_cache.items()) if exp < current_time]
-            for k in expired:
-                _token_cache.pop(k, None)
+        _token_cache[token_hash] = user_info
 
 
 async def get_or_create_user(

@@ -1,5 +1,6 @@
 # Production dependencies
 fastapi==0.115.12
+slowapi==0.1.9
 cachetools==5.5.2
 python-dotenv==1.1.0
 google-cloud-logging==3.12.1
