@@ -43,11 +43,11 @@ async def migrate_create_admin_user() -> str | None:
             logger.info(f"Migration: Admin user already exists with ID {existing_admin['_id']}")
             return str(existing_admin["_id"])
 
-        # Create admin user
+        # Create admin user (name will be updated on first OAuth login)
         current_time = datetime.now(timezone.utc)
         admin_user = {
             "email": ADMIN_EMAIL,
-            "name": "Nicholas",
+            "name": ADMIN_EMAIL.split("@")[0],
             "avatar_url": None,
             "role": "admin",
             "auth_providers": [],  # Will be populated on first login

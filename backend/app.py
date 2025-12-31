@@ -85,7 +85,19 @@ origins += [
 # Use CORS_EXTRA_ORIGINS for custom dev IPs, e.g.: CORS_EXTRA_ORIGINS=http://10.0.0.195.nip.io:3000
 extra_origins = os.getenv("CORS_EXTRA_ORIGINS", "")
 if extra_origins:
-    origins.extend([o.strip() for o in extra_origins.split(",") if o.strip()])
+    for origin in extra_origins.split(","):
+        origin = origin.strip()
+        if not origin:
+            continue
+        # Validate origin format (must be http:// or https:// URL)
+        if not origin.startswith(("http://", "https://")):
+            logger.warning(f"Invalid CORS origin ignored (must start with http:// or https://): {origin}")
+            continue
+        # Block wildcards and dangerous patterns
+        if "*" in origin or ".." in origin:
+            logger.warning(f"Invalid CORS origin ignored (wildcards not allowed): {origin}")
+            continue
+        origins.append(origin)
 
 app.add_middleware(
     CORSMiddleware,

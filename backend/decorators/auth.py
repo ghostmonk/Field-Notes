@@ -51,9 +51,10 @@ def _cache_user(token: str, user_info: UserInfo, ttl: float = _CACHE_TTL) -> Non
         # Cleanup: remove expired entries if cache grows large
         if len(_token_cache) > 1000:
             current_time = time.time()
-            expired = [k for k, (exp, _) in _token_cache.items() if exp < current_time]
+            # Use list() snapshot to avoid RuntimeError from dict mutation during iteration
+            expired = [k for k, (exp, _) in list(_token_cache.items()) if exp < current_time]
             for k in expired:
-                del _token_cache[k]
+                _token_cache.pop(k, None)
 
 
 async def get_or_create_user(
@@ -189,7 +190,11 @@ async def verify_auth_and_get_user(request: Request) -> UserInfo:
                 headers={"Authorization": f"Bearer {token}"},
             )
             if profile_response.status_code != 200:
-                logger.warning(f"Failed to fetch user profile: {profile_response.status_code}")
+                # Log detailed error but continue - we can still authenticate with email from token
+                logger.warning(
+                    f"Failed to fetch user profile from Google: status={profile_response.status_code}, "
+                    f"response={profile_response.text[:200] if hasattr(profile_response, 'text') else 'N/A'}"
+                )
             profile = profile_response.json() if profile_response.status_code == 200 else {}
 
         # Extract user info
@@ -258,6 +263,13 @@ def check_write_permission(user: UserInfo, resource_user_id: str | None) -> bool
     Note: If resource_user_id is None (legacy content before migration),
     only admins can edit. This is intentional security behavior.
     """
+    # Alert on legacy content without user_id - indicates data integrity issue
+    if resource_user_id is None:
+        logger.warning(
+            "Legacy content detected without user_id - data integrity issue. "
+            "Run migrations to assign ownership."
+        )
+
     if user.role == "admin":
         return True
     if resource_user_id and user.id == resource_user_id:
