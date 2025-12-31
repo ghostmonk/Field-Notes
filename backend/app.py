@@ -91,7 +91,9 @@ if extra_origins:
             continue
         # Validate origin format (must be http:// or https:// URL)
         if not origin.startswith(("http://", "https://")):
-            logger.warning(f"Invalid CORS origin ignored (must start with http:// or https://): {origin}")
+            logger.warning(
+                f"Invalid CORS origin ignored (must start with http:// or https://): {origin}"
+            )
             continue
         # Block wildcards and dangerous patterns
         if "*" in origin or ".." in origin:

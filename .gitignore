@@ -308,6 +308,7 @@ service-account-key.json
 
 .next/
 .env.local
+playwright-report/
 
 *.zip
 .roomodes

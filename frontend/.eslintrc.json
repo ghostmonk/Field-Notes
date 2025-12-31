@@ -2,7 +2,7 @@
   "extends": ["next/core-web-vitals"],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
-  "ignorePatterns": ["e2e/**"],
+  "ignorePatterns": ["e2e/**", "playwright-report/**"],
   "rules": {
     "@typescript-eslint/no-unused-vars": ["warn", {
       "argsIgnorePattern": "^_",
