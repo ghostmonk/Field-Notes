@@ -2,6 +2,7 @@
 Database migrations for multi-tenancy support.
 """
 
+import os
 from datetime import datetime, timezone
 
 from database import (
@@ -12,8 +13,10 @@ from database import (
 )
 from glogger import logger
 
-# Admin user email for data ownership
-ADMIN_EMAIL = "nicholas@ghostmonk.com"
+# Admin user email for data ownership (required environment variable)
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+if not ADMIN_EMAIL:
+    raise ValueError("ADMIN_EMAIL environment variable is required")
 
 
 async def run_migrations():

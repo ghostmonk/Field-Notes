@@ -9,13 +9,8 @@ from models.user import UserInfo
 router = APIRouter()
 
 
-@router.get("/me")
+@router.get("/me", response_model=UserInfo)
 @requires_auth
-async def get_current_user(request: Request):
+async def get_current_user(request: Request) -> UserInfo:
     """Get the current authenticated user's info."""
-    user: UserInfo = request.state.user
-    return {
-        "id": user.id,
-        "email": user.email,
-        "role": user.role,
-    }
+    return request.state.user

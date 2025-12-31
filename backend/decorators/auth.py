@@ -1,16 +1,21 @@
 import hashlib
+import os
 import time
 from datetime import datetime, timezone
 from functools import wraps
 from threading import Lock
 
-import requests
+import httpx
 from database import get_users_collection
 from fastapi import HTTPException, Request
+from glogger import logger
 from models.user import UserInfo, UserRole
+from pymongo.errors import DuplicateKeyError
 
-# Admin email - this user gets admin role
-ADMIN_EMAIL = "nicholas@ghostmonk.com"
+# Admin email - this user gets admin role (required environment variable)
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+if not ADMIN_EMAIL:
+    raise ValueError("ADMIN_EMAIL environment variable is required")
 
 # Token cache: {token_hash: (expiration_timestamp, UserInfo)}
 # Using hash to avoid storing raw tokens in memory
@@ -109,13 +114,24 @@ async def get_or_create_user(
         "updatedDate": current_time,
     }
 
-    result = await collection.insert_one(new_user)
-
-    return UserInfo(
-        id=str(result.inserted_id),
-        email=email,
-        role=role,
-    )
+    try:
+        result = await collection.insert_one(new_user)
+        return UserInfo(
+            id=str(result.inserted_id),
+            email=email,
+            role=role,
+        )
+    except DuplicateKeyError:
+        # Race condition: another request created the user, fetch it
+        logger.info(f"User {email} created by concurrent request, fetching existing")
+        user_doc = await collection.find_one({"email": email})
+        if user_doc:
+            return UserInfo(
+                id=str(user_doc["_id"]),
+                email=user_doc["email"],
+                role=user_doc.get("role", "commenter"),
+            )
+        raise HTTPException(status_code=500, detail="Failed to create or find user")
 
 
 def _extract_bearer_token(request: Request) -> str:
@@ -147,31 +163,34 @@ async def verify_auth_and_get_user(request: Request) -> UserInfo:
         return cached_user
 
     try:
-        # Validate token with Google
-        response = requests.get(
-            "https://www.googleapis.com/oauth2/v3/tokeninfo",
-            params={"access_token": token},
-        )
-        if response.status_code != 200:
-            raise HTTPException(status_code=401, detail="Invalid token.")
+        async with httpx.AsyncClient() as client:
+            # Validate token with Google
+            response = await client.get(
+                "https://www.googleapis.com/oauth2/v3/tokeninfo",
+                params={"access_token": token},
+            )
+            if response.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid token.")
 
-        token_info = response.json()
-        token_exp = int(token_info.get("exp", 0))
-        current_time = time.time()
+            token_info = response.json()
+            token_exp = int(token_info.get("exp", 0))
+            current_time = time.time()
 
-        if token_exp and current_time > token_exp:
-            raise HTTPException(status_code=401, detail="Token has expired.")
+            if token_exp and current_time > token_exp:
+                raise HTTPException(status_code=401, detail="Token has expired.")
 
-        required_scopes = {"https://www.googleapis.com/auth/userinfo.email"}
-        if not required_scopes.issubset(set(token_info.get("scope", "").split())):
-            raise HTTPException(status_code=403, detail="Insufficient token scopes.")
+            required_scopes = {"https://www.googleapis.com/auth/userinfo.email"}
+            if not required_scopes.issubset(set(token_info.get("scope", "").split())):
+                raise HTTPException(status_code=403, detail="Insufficient token scopes.")
 
-        # Get user profile info from Google
-        profile_response = requests.get(
-            "https://www.googleapis.com/oauth2/v2/userinfo",
-            headers={"Authorization": f"Bearer {token}"},
-        )
-        profile = profile_response.json() if profile_response.status_code == 200 else {}
+            # Get user profile info from Google
+            profile_response = await client.get(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            if profile_response.status_code != 200:
+                logger.warning(f"Failed to fetch user profile: {profile_response.status_code}")
+            profile = profile_response.json() if profile_response.status_code == 200 else {}
 
         # Extract user info
         email = token_info.get("email")
@@ -235,6 +254,9 @@ def check_write_permission(user: UserInfo, resource_user_id: str | None) -> bool
     Returns True if:
     - User has admin role, OR
     - User owns the resource (user.id matches resource_user_id)
+
+    Note: If resource_user_id is None (legacy content before migration),
+    only admins can edit. This is intentional security behavior.
     """
     if user.role == "admin":
         return True

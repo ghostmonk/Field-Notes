@@ -66,15 +66,26 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(LoggingMiddleware)
+
+# CORS origins configuration
+# Production domains
 origins = [
     "https://api.ghostmonk.com",
     "https://ghostmonk.com",
     "https://www.ghostmonk.com",
+]
+# Local development origins (localhost and Docker service names)
+origins += [
     "http://localhost:3000",
     "http://localhost:5001",
     "http://frontend:3000",
-    "http://10.0.0.195.nip.io:3000",
 ]
+
+# Add additional origins from environment variable (comma-separated)
+# Use CORS_EXTRA_ORIGINS for custom dev IPs, e.g.: CORS_EXTRA_ORIGINS=http://10.0.0.195.nip.io:3000
+extra_origins = os.getenv("CORS_EXTRA_ORIGINS", "")
+if extra_origins:
+    origins.extend([o.strip() for o in extra_origins.split(",") if o.strip()])
 
 app.add_middleware(
     CORSMiddleware,

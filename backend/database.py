@@ -130,17 +130,20 @@ async def ensure_indexes() -> None:
     pages = db["pages"]
     await safe_create_index(pages, "page_type", unique=True)
     await safe_create_index(pages, "is_published")
+    await safe_create_index(pages, "user_id")
 
     # Projects indexes
     projects = db["projects"]
     await safe_create_index(projects, "slug", unique=True)
     await safe_create_index(projects, [("is_published", 1), ("is_featured", -1)])
     await safe_create_index(projects, [("is_published", 1), ("createdDate", -1)])
+    await safe_create_index(projects, "user_id")
 
     # Stories indexes
     stories = db["stories"]
     await safe_create_index(stories, "slug", unique=True)
     await safe_create_index(stories, [("is_published", 1), ("date", -1)])
+    await safe_create_index(stories, "user_id")
 
     # Users indexes
     users = db["users"]

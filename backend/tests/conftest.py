@@ -15,6 +15,7 @@ os.environ.setdefault("GCS_BUCKET_NAME", "test-bucket")
 os.environ.setdefault("DATABASE_URL", "mongodb://localhost:27017/test")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "test-project")
 os.environ.setdefault("STORAGE_BUCKET", "test-bucket")
+os.environ.setdefault("ADMIN_EMAIL", "admin@test.com")
 
 from database import (
     get_collection,
@@ -280,11 +281,11 @@ def mock_auth(mock_users_collection):
     """Mock authentication decorator for testing authenticated endpoints.
 
     This mocks:
-    1. Google token validation API
-    2. Google userinfo API
+    1. Google token validation API (via httpx)
+    2. Google userinfo API (via httpx)
     3. Users collection for get_or_create_user (via module-level patch)
     """
-    from unittest.mock import MagicMock, patch
+    from unittest.mock import patch
 
     from bson import ObjectId
 
@@ -302,32 +303,50 @@ def mock_auth(mock_users_collection):
     async def get_mock_users_collection():
         return mock_users_collection
 
-    # Patch both requests.get and get_users_collection at the module level
+    # Create mock httpx AsyncClient
+    class MockResponse:
+        def __init__(self, status_code, json_data):
+            self.status_code = status_code
+            self._json_data = json_data
+
+        def json(self):
+            return self._json_data
+
+    class MockAsyncClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            pass
+
+        async def get(self, url, **kwargs):
+            if "tokeninfo" in url:
+                return MockResponse(
+                    200,
+                    {
+                        "scope": "https://www.googleapis.com/auth/userinfo.email",
+                        "exp": 9999999999,
+                        "email": "test@example.com",
+                        "sub": "google-user-id-123",
+                    },
+                )
+            elif "userinfo" in url:
+                return MockResponse(
+                    200,
+                    {
+                        "email": "test@example.com",
+                        "name": "Test User",
+                        "picture": "https://example.com/avatar.jpg",
+                    },
+                )
+            return MockResponse(404, {})
+
+    # Patch httpx.AsyncClient and get_users_collection at the module level
     with (
-        patch("decorators.auth.requests.get") as mock_requests,
+        patch("decorators.auth.httpx.AsyncClient", MockAsyncClient),
         patch("decorators.auth.get_users_collection", get_mock_users_collection),
     ):
-
-        def mock_get(url, **kwargs):
-            response = MagicMock()
-            response.status_code = 200
-            if "tokeninfo" in url:
-                response.json.return_value = {
-                    "scope": "https://www.googleapis.com/auth/userinfo.email",
-                    "exp": 9999999999,
-                    "email": "test@example.com",
-                    "sub": "google-user-id-123",
-                }
-            elif "userinfo" in url:
-                response.json.return_value = {
-                    "email": "test@example.com",
-                    "name": "Test User",
-                    "picture": "https://example.com/avatar.jpg",
-                }
-            return response
-
-        mock_requests.side_effect = mock_get
-        yield mock_requests
+        yield
 
 
 @pytest.fixture
