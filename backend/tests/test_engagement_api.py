@@ -254,3 +254,83 @@ class TestCommentsAPI:
             json={"content": "test", "parent_id": None, "mentions": []},
         )
         assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_delete_own_comment(
+        self, engagement_async_client, mock_auth, auth_headers, override_engagement_database, mock_users_collection
+    ):
+        """Test soft-deleting own comment."""
+        comment_id = ObjectId()
+
+        # Get mock from override fixture
+        mock_comments_collection = override_engagement_database[1]
+
+        # The mock_auth fixture sets up mock_users_collection.find_one_and_update.return_value
+        # with the user document. The user.id is str(user_doc["_id"])
+        mock_user_doc = mock_users_collection.find_one_and_update.return_value
+        mock_user_id = str(mock_user_doc["_id"])
+
+        # Mock: comment exists and belongs to the authenticated user
+        mock_comments_collection.find_one.return_value = {
+            "_id": comment_id,
+            "user_id": mock_user_id,
+            "deleted_at": None,
+        }
+        mock_comments_collection.update_one.return_value = MagicMock(modified_count=1)
+
+        response = await engagement_async_client.delete(
+            f"/api/engagement/comments/{comment_id}",
+            headers=auth_headers,
+        )
+        assert response.status_code == 204
+
+    @pytest.mark.asyncio
+    async def test_delete_others_comment_forbidden(
+        self, engagement_async_client, mock_auth, auth_headers, override_engagement_database
+    ):
+        """Test that users cannot delete others' comments."""
+        comment_id = ObjectId()
+
+        # Get mock from override fixture
+        mock_comments_collection = override_engagement_database[1]
+
+        # Mock: comment belongs to different user
+        mock_comments_collection.find_one.return_value = {
+            "_id": comment_id,
+            "user_id": "different_user_id",
+            "deleted_at": None,
+        }
+
+        response = await engagement_async_client.delete(
+            f"/api/engagement/comments/{comment_id}",
+            headers=auth_headers,
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_delete_comment_unauthorized(self, engagement_async_client, override_engagement_database):
+        """Test that unauthenticated users cannot delete comments."""
+        comment_id = ObjectId()
+        response = await engagement_async_client.delete(
+            f"/api/engagement/comments/{comment_id}",
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_delete_comment_not_found(
+        self, engagement_async_client, mock_auth, auth_headers, override_engagement_database
+    ):
+        """Test deleting a non-existent comment returns 404."""
+        comment_id = ObjectId()
+
+        # Get mock from override fixture
+        mock_comments_collection = override_engagement_database[1]
+
+        # Mock: comment doesn't exist
+        mock_comments_collection.find_one.return_value = None
+
+        response = await engagement_async_client.delete(
+            f"/api/engagement/comments/{comment_id}",
+            headers=auth_headers,
+        )
+        assert response.status_code == 404

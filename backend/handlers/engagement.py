@@ -272,3 +272,44 @@ async def create_comment(
         "deleted_at": None,
         "replies": [],
     }
+
+
+@router.delete("/comments/{comment_id}", status_code=204)
+@requires_auth
+async def delete_comment(
+    request: Request,
+    comment_id: str,
+    comments_collection: AsyncIOMotorCollection = Depends(get_comments_collection),
+):
+    """Soft delete a comment. Users can only delete their own comments."""
+    if not ObjectId.is_valid(comment_id):
+        raise HTTPException(status_code=400, detail="Invalid comment ID format")
+
+    user: UserInfo = request.state.user
+
+    comment = await comments_collection.find_one({
+        "_id": ObjectId(comment_id),
+        "deleted_at": None,
+    })
+
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
+    # Users can only delete their own comments (for now)
+    if comment["user_id"] != user.id:
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "forbidden", "message": "You can only delete your own comments"},
+        )
+
+    logger.info_with_context(
+        "Soft deleting comment",
+        {"comment_id": comment_id, "user_id": user.id},
+    )
+
+    await comments_collection.update_one(
+        {"_id": ObjectId(comment_id)},
+        {"$set": {"deleted_at": datetime.now(timezone.utc)}},
+    )
+
+    logger.info_with_context("Comment soft deleted", {"comment_id": comment_id})

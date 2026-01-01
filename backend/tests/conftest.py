@@ -294,6 +294,10 @@ def mock_auth(mock_users_collection):
 
     from bson import ObjectId
 
+    # Clear the token cache to ensure fresh auth state for each test
+    from decorators.auth import _token_cache
+    _token_cache.clear()
+
     # Mock user document returned from DB (using find_one_and_update for atomic upsert)
     mock_user_id = ObjectId()
     mock_users_collection.find_one_and_update.return_value = {
