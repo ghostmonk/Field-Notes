@@ -207,3 +207,50 @@ class TestCommentsAPI:
         data = response.json()
         assert len(data["comments"]) == 1  # Only top-level
         assert len(data["comments"][0]["replies"]) == 1  # One reply
+
+    @pytest.mark.asyncio
+    async def test_create_comment(
+        self, engagement_async_client, mock_auth, auth_headers, override_engagement_database
+    ):
+        """Test creating a new comment."""
+        target_id = "507f1f77bcf86cd799439011"
+        new_comment_id = ObjectId()
+
+        # Get mock_comments_collection from override_engagement_database
+        mock_comments_collection = override_engagement_database[1]
+
+        mock_comments_collection.insert_one.return_value = MagicMock(
+            inserted_id=new_comment_id
+        )
+        mock_comments_collection.find_one.return_value = {
+            "_id": new_comment_id,
+            "target_type": "story",
+            "target_id": target_id,
+            "parent_id": None,
+            "user_id": "user1",
+            "user_name": "Test User",
+            "user_avatar": None,
+            "content": "This is my comment",
+            "mentions": [],
+            "created_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+            "updated_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+            "deleted_at": None,
+        }
+
+        response = await engagement_async_client.post(
+            f"/api/engagement/story/{target_id}/comments",
+            json={"content": "This is my comment", "parent_id": None, "mentions": []},
+            headers=auth_headers,
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["content"] == "This is my comment"
+
+    @pytest.mark.asyncio
+    async def test_create_comment_unauthorized(self, engagement_async_client, override_engagement_database):
+        """Test that unauthenticated users cannot comment."""
+        response = await engagement_async_client.post(
+            "/api/engagement/story/507f1f77bcf86cd799439011/comments",
+            json={"content": "test", "parent_id": None, "mentions": []},
+        )
+        assert response.status_code == 401

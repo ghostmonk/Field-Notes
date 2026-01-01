@@ -9,6 +9,7 @@ from config.engagement import ENGAGEMENT_ENABLED_TYPES
 from database import get_comments_collection, get_reactions_collection
 from decorators.auth import requires_auth
 from glogger import logger
+from models.comment import CommentCreate
 from models.reaction import ReactionCounts, ReactionCreate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -193,3 +194,81 @@ async def get_comments(
             )
 
     return {"comments": top_level}
+
+
+@router.post("/{target_type}/{target_id}/comments", status_code=201)
+@requires_auth
+async def create_comment(
+    request: Request,
+    target_type: str,
+    target_id: str,
+    comment: CommentCreate,
+    comments_collection: AsyncIOMotorCollection = Depends(get_comments_collection),
+) -> dict:
+    """Create a new comment. Requires auth."""
+    validate_target_type(target_type, "comments")
+
+    if not ObjectId.is_valid(target_id):
+        raise HTTPException(status_code=400, detail="Invalid target ID format")
+
+    # Validate parent_id if provided (must be a top-level comment)
+    if comment.parent_id:
+        if not ObjectId.is_valid(comment.parent_id):
+            raise HTTPException(status_code=400, detail="Invalid parent ID format")
+        parent = await comments_collection.find_one({
+            "_id": ObjectId(comment.parent_id),
+            "target_type": target_type,
+            "target_id": target_id,
+            "parent_id": None,  # Must be top-level
+            "deleted_at": None,
+        })
+        if not parent:
+            raise HTTPException(status_code=404, detail="Parent comment not found")
+
+    user: UserInfo = request.state.user
+    now = datetime.now(timezone.utc)
+
+    logger.info_with_context(
+        "Creating comment",
+        {
+            "target_type": target_type,
+            "target_id": target_id,
+            "user_id": user.id,
+            "has_parent": comment.parent_id is not None,
+        },
+    )
+
+    doc = {
+        "target_type": target_type,
+        "target_id": target_id,
+        "parent_id": comment.parent_id,
+        "user_id": user.id,
+        "user_name": user.name,
+        "user_avatar": getattr(user, "avatar_url", None),
+        "content": comment.content,
+        "mentions": [m.model_dump() for m in comment.mentions],
+        "created_at": now,
+        "updated_at": now,
+        "deleted_at": None,
+    }
+
+    result = await comments_collection.insert_one(doc)
+    created = await comments_collection.find_one({"_id": result.inserted_id})
+
+    logger.info_with_context("Comment created", {"comment_id": str(result.inserted_id)})
+
+    return {
+        "id": str(created["_id"]),
+        "target_type": created["target_type"],
+        "target_id": created["target_id"],
+        "parent_id": created.get("parent_id"),
+        "user_id": created["user_id"],
+        "user_name": created["user_name"],
+        "user_avatar": created.get("user_avatar"),
+        "content": created["content"],
+        "mentions": created.get("mentions", []),
+        "created_at": created["created_at"].isoformat(),
+        "updated_at": created["updated_at"].isoformat(),
+        "deleted_at": None,
+        "replies": [],
+    }
