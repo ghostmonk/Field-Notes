@@ -37,4 +37,4 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           additional_permissions: |
             actions: read
-          claude_args: '--allowed-tools "create_issue"'
+          claude_args: '--allowed-tools "Bash(gh issue:*)"'
