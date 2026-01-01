@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
     reactStrictMode: true,
     output: 'standalone',
+    outputFileTracingRoot: __dirname,
+    allowedDevOrigins: ['10.0.0.195', '10.0.0.195.nip.io'],
     typescript: {
         ignoreBuildErrors: false,
     },
@@ -12,15 +14,12 @@ const nextConfig: NextConfig = {
         },
     },
 
-    // Turbopack configuration (Next.js 16+ default bundler)
-    // cheerio is only used server-side, Turbopack handles this automatically
-    turbopack: {},
 
     // Add rewrites to proxy static uploads to backend API based on explicit env var
     async rewrites() {
         // For Docker: backend:5001, for local dev: localhost:5001
         // BACKEND_URL should be specifically set for Docker environment
-        let backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.ghostmonk.com';
+        const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.ghostmonk.com';
         
         // Log the backend URL for debugging
         console.log('Backend URL for uploads proxy:', backendUrl);

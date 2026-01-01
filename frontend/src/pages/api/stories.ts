@@ -149,11 +149,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             
             try {
                 errorData = await response.json();
-            } catch (parseError) {
+            } catch (_parseError) {
                 try {
                     responseText = await response.text();
                     errorData = { detail: 'Non-JSON error response', rawResponse: responseText };
-                } catch (textError) {
+                } catch (_textError) {
                     errorData = { detail: 'Unable to read error response' };
                 }
             }
