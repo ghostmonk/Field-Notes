@@ -92,11 +92,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Set up Node.js
+      # Set up Node.js (match Dockerfile version)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -106,11 +106,11 @@ jobs:
           cd frontend
           npm ci
 
-      # Run frontend linting
+      # Run frontend linting (ESLint 9 flat config)
       - name: Run ESLint
         run: |
           cd frontend
-          npx eslint . --ext .js,.jsx,.ts,.tsx
+          npm run lint
 
       # Check TypeScript compilation
       - name: Check TypeScript
