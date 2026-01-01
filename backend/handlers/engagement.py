@@ -10,7 +10,7 @@ from database import get_comments_collection, get_reactions_collection
 from decorators.auth import requires_auth
 from glogger import logger
 from models.comment import CommentCreate
-from models.reaction import ReactionCounts, ReactionCreate
+from models.reaction import BulkCountsRequest, BulkCountsResponse, ReactionCounts, ReactionCreate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 
@@ -313,3 +313,49 @@ async def delete_comment(
     )
 
     logger.info_with_context("Comment soft deleted", {"comment_id": comment_id})
+
+
+@router.post("/bulk/counts")
+async def get_bulk_counts(
+    request: Request,
+    body: BulkCountsRequest,
+    reactions_collection: AsyncIOMotorCollection = Depends(get_reactions_collection),
+    comments_collection: AsyncIOMotorCollection = Depends(get_comments_collection),
+) -> BulkCountsResponse:
+    """Get reaction counts and comment counts for multiple targets. Public endpoint."""
+    result: dict[str, dict] = {}
+
+    for target in body.targets:
+        target_type = target.get("type", "")
+        target_id = target.get("id", "")
+
+        if not target_type or not target_id:
+            continue
+
+        key = f"{target_type}:{target_id}"
+
+        # Get reaction counts
+        reaction_counts: dict[str, int] = {}
+        if ENGAGEMENT_ENABLED_TYPES.get(target_type, {}).get("reactions", False):
+            pipeline = [
+                {"$match": {"target_type": target_type, "target_id": target_id}},
+                {"$group": {"_id": "$reaction_tag", "count": {"$sum": 1}}},
+            ]
+            async for doc in reactions_collection.aggregate(pipeline):
+                reaction_counts[doc["_id"]] = doc["count"]
+
+        # Get comment count
+        comment_count = 0
+        if ENGAGEMENT_ENABLED_TYPES.get(target_type, {}).get("comments", False):
+            comment_count = await comments_collection.count_documents({
+                "target_type": target_type,
+                "target_id": target_id,
+                "deleted_at": None,
+            })
+
+        result[key] = {
+            "reactions": reaction_counts,
+            "comment_count": comment_count,
+        }
+
+    return BulkCountsResponse(counts=result)

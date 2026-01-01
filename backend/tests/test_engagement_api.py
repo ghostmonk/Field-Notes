@@ -334,3 +334,113 @@ class TestCommentsAPI:
             headers=auth_headers,
         )
         assert response.status_code == 404
+
+
+class TestBulkCountsAPI:
+    """Tests for bulk counts endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_bulk_counts(self, engagement_async_client, override_engagement_database):
+        """Test getting counts for multiple targets."""
+        mock_reactions_collection, mock_comments_collection = override_engagement_database
+
+        # Mock reactions aggregation - returns count by tag
+        mock_reactions_cursor = MockAsyncCursor([
+            {"_id": "thumbup", "count": 5},
+            {"_id": "heart", "count": 3},
+        ])
+        mock_reactions_collection.aggregate = MagicMock(return_value=mock_reactions_cursor)
+
+        # Mock comments count
+        mock_comments_collection.count_documents.return_value = 7
+
+        response = await engagement_async_client.post(
+            "/api/engagement/bulk/counts",
+            json={"targets": [{"type": "story", "id": "507f1f77bcf86cd799439011"}]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "counts" in data
+        assert "story:507f1f77bcf86cd799439011" in data["counts"]
+        counts = data["counts"]["story:507f1f77bcf86cd799439011"]
+        assert counts["reactions"]["thumbup"] == 5
+        assert counts["reactions"]["heart"] == 3
+        assert counts["comment_count"] == 7
+
+    @pytest.mark.asyncio
+    async def test_bulk_counts_empty_targets(self, engagement_async_client, override_engagement_database):
+        """Test bulk counts with empty targets list."""
+        response = await engagement_async_client.post(
+            "/api/engagement/bulk/counts",
+            json={"targets": []},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["counts"] == {}
+
+    @pytest.mark.asyncio
+    async def test_bulk_counts_multiple_targets(self, engagement_async_client, override_engagement_database):
+        """Test getting counts for multiple targets."""
+        mock_reactions_collection, mock_comments_collection = override_engagement_database
+
+        # Track call counts for aggregate
+        aggregate_call_count = 0
+
+        def mock_aggregate(pipeline):
+            nonlocal aggregate_call_count
+            aggregate_call_count += 1
+            if aggregate_call_count == 1:
+                return MockAsyncCursor([{"_id": "thumbup", "count": 2}])
+            else:
+                return MockAsyncCursor([{"_id": "heart", "count": 1}])
+
+        mock_reactions_collection.aggregate = MagicMock(side_effect=mock_aggregate)
+
+        # Track call counts for count_documents
+        count_call_count = 0
+
+        async def mock_count_documents(query):
+            nonlocal count_call_count
+            count_call_count += 1
+            return count_call_count * 3  # Return 3, 6 for two calls
+
+        mock_comments_collection.count_documents = mock_count_documents
+
+        response = await engagement_async_client.post(
+            "/api/engagement/bulk/counts",
+            json={
+                "targets": [
+                    {"type": "story", "id": "507f1f77bcf86cd799439011"},
+                    {"type": "story", "id": "507f1f77bcf86cd799439012"},
+                ]
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["counts"]) == 2
+        assert "story:507f1f77bcf86cd799439011" in data["counts"]
+        assert "story:507f1f77bcf86cd799439012" in data["counts"]
+
+    @pytest.mark.asyncio
+    async def test_bulk_counts_skips_invalid_targets(self, engagement_async_client, override_engagement_database):
+        """Test that invalid targets (missing type or id) are skipped."""
+        mock_reactions_collection, mock_comments_collection = override_engagement_database
+
+        mock_reactions_collection.aggregate = MagicMock(return_value=MockAsyncCursor([]))
+        mock_comments_collection.count_documents.return_value = 0
+
+        response = await engagement_async_client.post(
+            "/api/engagement/bulk/counts",
+            json={
+                "targets": [
+                    {"type": "", "id": "507f1f77bcf86cd799439011"},  # Empty type
+                    {"type": "story", "id": ""},  # Empty id
+                    {"type": "story", "id": "507f1f77bcf86cd799439011"},  # Valid
+                ]
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        # Only the valid target should be included
+        assert len(data["counts"]) == 1
+        assert "story:507f1f77bcf86cd799439011" in data["counts"]
