@@ -24,7 +24,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI ? 'github' : 'html',
+  reporter: process.env.CI ? 'github' : 'line',
 
   /* Shared settings for all the projects below. */
   use: {
@@ -76,16 +76,22 @@ export default defineConfig({
    */
   webServer: [
     {
-      command: 'npx tsx e2e/mock-server.ts',
+      command: 'npm run mock-server',
       url: 'http://localhost:5555/health',
       reuseExistingServer: !process.env.CI,
       timeout: MOCK_SERVER_TIMEOUT,
+      cwd: __dirname,
+      stdout: 'ignore',
+      stderr: 'pipe',
     },
     {
       command: 'npm run dev:test',
       url: 'http://localhost:3000',
       reuseExistingServer: !process.env.CI,
       timeout: NEXT_DEV_TIMEOUT,
+      cwd: __dirname,
+      stdout: 'ignore',
+      stderr: 'pipe',
     },
   ],
 });

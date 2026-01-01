@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --color-brand-primary: #2563eb;
   --color-brand-primary-hover: #1d4ed8;
@@ -97,10 +99,6 @@
   --color-shadow-medium: rgba(0, 0, 0, 0.4);
   --color-shadow-dark: rgba(0, 0, 0, 0.6);
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 html {
   height: 100%;
@@ -520,7 +518,7 @@ button.btn--primary:hover:not(:disabled) {
   color: var(--color-text-link);
 }
 
-/* Bottom Navigation (Mobile) */
+/* Bottom Navigation (Mobile Only) */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -538,6 +536,13 @@ button.btn--primary:hover:not(:disabled) {
   /* Fix for mobile browsers with dynamic viewport */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+}
+
+/* Hide bottom nav on desktop */
+@media (min-width: 768px) {
+  .bottom-nav {
+    display: none !important;
+  }
 }
 
 /* Extend background below nav to cover gaps when mobile browser chrome hides.

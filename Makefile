@@ -166,10 +166,11 @@ dev-backend:
 # - Loads .env variables, then .env.local overrides (if exists)
 # - Excludes PORT to avoid conflicts
 # - Explicitly sets PORT=3000 to prevent frontend from using backend's port (5001)
+# - Uses --webpack flag because Turbopack hangs with PostCSS/Tailwind (Next.js 16 bug)
 dev-frontend:
 	export $$(cat .env | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs) && \
 	if [ -f .env.local ]; then export $$(cat .env.local | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs); fi && \
-	cd frontend && PORT=3000 npx next dev -H 0.0.0.0
+	cd frontend && PORT=3000 npx next dev --webpack -H 0.0.0.0
 
 # Cleanup
 clean:

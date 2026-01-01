@@ -1,24 +1,34 @@
 import type { NextConfig } from "next";
 
+// Parse allowed dev origins from environment variable (comma-separated)
+const allowedDevOrigins = process.env.NODE_ENV === 'development'
+    ? (process.env.ALLOWED_DEV_ORIGINS?.split(',').filter(Boolean) || [])
+    : [];
+
 const nextConfig: NextConfig = {
     reactStrictMode: true,
     output: 'standalone',
+    outputFileTracingRoot: __dirname,
+
+    // Only apply in development - origins configured via ALLOWED_DEV_ORIGINS env var
+    ...(allowedDevOrigins.length > 0 && { allowedDevOrigins }),
+
     typescript: {
         ignoreBuildErrors: false,
     },
-    eslint: {
-        ignoreDuringBuilds: false,
-    },
+
+    // Note: ESLint runs separately via `npm run lint`, not during Next.js build
+    // (Next.js 16 removed the eslint config option)
+
     experimental: {
         serverActions: {
             bodySizeLimit: '4mb'
         },
     },
-    
-    // Configure webpack to exclude server-only modules from client bundle
+
+    // Exclude cheerio from client bundle (server-side only for HTML parsing)
     webpack: (config, { isServer }) => {
         if (!isServer) {
-            // Prevent cheerio from being bundled on client side
             config.resolve.fallback = {
                 ...config.resolve.fallback,
                 cheerio: false,
@@ -27,11 +37,12 @@ const nextConfig: NextConfig = {
         return config;
     },
 
+
     // Add rewrites to proxy static uploads to backend API based on explicit env var
     async rewrites() {
         // For Docker: backend:5001, for local dev: localhost:5001
         // BACKEND_URL should be specifically set for Docker environment
-        let backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.ghostmonk.com';
+        const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.ghostmonk.com';
         
         // Log the backend URL for debugging
         console.log('Backend URL for uploads proxy:', backendUrl);
