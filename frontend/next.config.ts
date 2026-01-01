@@ -6,26 +6,15 @@ const nextConfig: NextConfig = {
     typescript: {
         ignoreBuildErrors: false,
     },
-    eslint: {
-        ignoreDuringBuilds: false,
-    },
     experimental: {
         serverActions: {
             bodySizeLimit: '4mb'
         },
     },
-    
-    // Configure webpack to exclude server-only modules from client bundle
-    webpack: (config, { isServer }) => {
-        if (!isServer) {
-            // Prevent cheerio from being bundled on client side
-            config.resolve.fallback = {
-                ...config.resolve.fallback,
-                cheerio: false,
-            };
-        }
-        return config;
-    },
+
+    // Turbopack configuration (Next.js 16+ default bundler)
+    // cheerio is only used server-side, Turbopack handles this automatically
+    turbopack: {},
 
     // Add rewrites to proxy static uploads to backend API based on explicit env var
     async rewrites() {

@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20 AS build
+FROM node:22 AS build
 WORKDIR /app
 
 # Copy package.json and package-lock.json to install dependencies
@@ -14,7 +14,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production
-FROM node:20 AS production
+FROM node:22 AS production
 WORKDIR /app
 
 # Copy only the necessary files from the build stage

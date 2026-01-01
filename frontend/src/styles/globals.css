@@ -98,9 +98,8 @@
   --color-shadow-dark: rgba(0, 0, 0, 0.6);
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 html {
   height: 100%;
