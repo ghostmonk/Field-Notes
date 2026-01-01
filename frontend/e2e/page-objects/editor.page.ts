@@ -123,9 +123,15 @@ export class EditorPage extends BasePage {
 
   /**
    * Check if in edit mode (new/delete buttons visible).
+   * Waits briefly for the button to appear before checking.
    */
   async isEditMode(): Promise<boolean> {
-    return this.newButton.isVisible();
+    try {
+      await this.newButton.waitFor({ state: 'visible', timeout: 5000 });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

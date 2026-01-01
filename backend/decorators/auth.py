@@ -12,7 +12,7 @@ from fastapi import HTTPException, Request
 from glogger import logger
 from models.user import UserInfo, UserRole
 from pydantic import EmailStr, ValidationError
-from pymongo.errors import DuplicateKeyError
+from pymongo import ReturnDocument
 
 # Admin email - this user gets admin role (required environment variable)
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
@@ -40,12 +40,8 @@ def _get_cached_user(token: str) -> UserInfo | None:
         return _token_cache.get(token_hash)
 
 
-def _cache_user(token: str, user_info: UserInfo, ttl: float = _CACHE_TTL) -> None:
-    """Add token and user info to cache.
-
-    Note: TTLCache uses a global TTL set at creation time.
-    The ttl parameter is kept for API compatibility but the cache's TTL is used.
-    """
+def _cache_user(token: str, user_info: UserInfo) -> None:
+    """Add token and user info to cache."""
     token_hash = _hash_token(token)
     with _cache_lock:
         _token_cache[token_hash] = user_info
@@ -54,79 +50,47 @@ def _cache_user(token: str, user_info: UserInfo, ttl: float = _CACHE_TTL) -> Non
 async def get_or_create_user(
     email: str, name: str, avatar_url: str | None, provider_user_id: str
 ) -> UserInfo:
-    """Get existing user or create new one from OAuth info."""
+    """Get existing user or create new one from OAuth info.
+
+    Uses atomic find_one_and_update with upsert to avoid race conditions.
+    """
     collection = await get_users_collection()
-
-    # Try to find existing user by email
-    user_doc = await collection.find_one({"email": email})
-
-    if user_doc:
-        # Update auth provider info if not already present
-        existing_providers = user_doc.get("auth_providers", [])
-        google_provider_exists = any(
-            p.get("provider") == "google" and p.get("provider_user_id") == provider_user_id
-            for p in existing_providers
-        )
-
-        if not google_provider_exists:
-            await collection.update_one(
-                {"_id": user_doc["_id"]},
-                {
-                    "$push": {
-                        "auth_providers": {
-                            "provider": "google",
-                            "provider_user_id": provider_user_id,
-                            "email": email,
-                        }
-                    },
-                    "$set": {"updatedDate": datetime.now(timezone.utc)},
-                },
-            )
-
-        return UserInfo(
-            id=str(user_doc["_id"]),
-            email=user_doc["email"],
-            role=user_doc.get("role", "commenter"),
-        )
-
-    # Create new user
     current_time = datetime.now(timezone.utc)
     role: UserRole = "admin" if email == ADMIN_EMAIL else "commenter"
 
-    new_user = {
+    auth_provider = {
+        "provider": "google",
+        "provider_user_id": provider_user_id,
         "email": email,
-        "name": name,
-        "avatar_url": avatar_url,
-        "role": role,
-        "auth_providers": [
-            {
-                "provider": "google",
-                "provider_user_id": provider_user_id,
-                "email": email,
-            }
-        ],
-        "createdDate": current_time,
-        "updatedDate": current_time,
     }
 
-    try:
-        result = await collection.insert_one(new_user)
-        return UserInfo(
-            id=str(result.inserted_id),
-            email=email,
-            role=role,
-        )
-    except DuplicateKeyError:
-        # Race condition: another request created the user, fetch it
-        logger.info(f"User {email} created by concurrent request, fetching existing")
-        user_doc = await collection.find_one({"email": email})
-        if user_doc:
-            return UserInfo(
-                id=str(user_doc["_id"]),
-                email=user_doc["email"],
-                role=user_doc.get("role", "commenter"),
-            )
+    # Atomic upsert: creates user if not exists, updates auth provider if exists
+    # $setOnInsert only applies on insert, $set always applies, $addToSet adds if not present
+    user_doc = await collection.find_one_and_update(
+        {"email": email},
+        {
+            "$setOnInsert": {
+                "email": email,
+                "name": name,
+                "avatar_url": avatar_url,
+                "role": role,
+                "createdDate": current_time,
+            },
+            "$set": {"updatedDate": current_time},
+            "$addToSet": {"auth_providers": auth_provider},
+        },
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if not user_doc:
         raise HTTPException(status_code=500, detail="Failed to create or find user")
+
+    return UserInfo(
+        id=str(user_doc["_id"]),
+        email=user_doc["email"],
+        role=user_doc.get("role", "commenter"),
+    )
 
 
 def _extract_bearer_token(request: Request) -> str:
@@ -209,15 +173,8 @@ async def verify_auth_and_get_user(request: Request) -> UserInfo:
         # Get or create user in database
         user_info = await get_or_create_user(email, name, avatar_url, provider_user_id)
 
-        # Cache the user info
-        if token_exp:
-            time_until_exp = token_exp - current_time
-            cache_ttl = min(_CACHE_TTL, time_until_exp)
-        else:
-            cache_ttl = _CACHE_TTL
-
-        if cache_ttl > 0:
-            _cache_user(token, user_info, cache_ttl)
+        # Cache the user info (TTLCache handles expiration automatically)
+        _cache_user(token, user_info)
 
         return user_info
 

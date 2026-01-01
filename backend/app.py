@@ -87,7 +87,9 @@ origins += [
 ]
 
 # Add additional origins from environment variable (comma-separated)
-# Use CORS_EXTRA_ORIGINS for custom dev IPs, e.g.: CORS_EXTRA_ORIGINS=http://10.0.0.195.nip.io:3000
+# SECURITY WARNING: CORS_EXTRA_ORIGINS is for LOCAL DEVELOPMENT ONLY.
+# Do NOT set this in production - it can bypass CORS security.
+# Example: CORS_EXTRA_ORIGINS=http://10.0.0.195.nip.io:3000
 extra_origins = os.getenv("CORS_EXTRA_ORIGINS", "")
 if extra_origins:
     for origin in extra_origins.split(","):

@@ -257,6 +257,7 @@ def mock_users_collection():
     """Mock collection for users testing"""
     mock = MagicMock()
     mock.find_one = AsyncMock()
+    mock.find_one_and_update = AsyncMock()
     mock.count_documents = AsyncMock()
     mock.insert_one = AsyncMock()
     mock.update_one = AsyncMock()
@@ -289,9 +290,9 @@ def mock_auth(mock_users_collection):
 
     from bson import ObjectId
 
-    # Mock user document returned from DB
+    # Mock user document returned from DB (using find_one_and_update for atomic upsert)
     mock_user_id = ObjectId()
-    mock_users_collection.find_one.return_value = {
+    mock_users_collection.find_one_and_update.return_value = {
         "_id": mock_user_id,
         "email": "test@example.com",
         "name": "Test User",
