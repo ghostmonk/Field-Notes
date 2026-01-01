@@ -19,8 +19,10 @@ os.environ.setdefault("ADMIN_EMAIL", "admin@test.com")
 
 from database import (
     get_collection,
+    get_comments_collection,
     get_pages_collection,
     get_projects_collection,
+    get_reactions_collection,
     get_users_collection,
 )
 from fastapi import FastAPI
@@ -28,6 +30,7 @@ from fastapi.testclient import TestClient
 
 # Create a test app without lifespan to avoid DB connections during startup
 # Import routers directly to avoid the lifespan event
+from handlers.engagement import router as engagement_router
 from handlers.pages import router as pages_router
 from handlers.projects import router as projects_router
 from handlers.stories import router as stories_router
@@ -43,6 +46,7 @@ test_app.include_router(users_router)
 test_app.include_router(video_processing_router)
 test_app.include_router(pages_router)
 test_app.include_router(projects_router)
+test_app.include_router(engagement_router)
 
 
 @pytest.fixture
@@ -354,3 +358,51 @@ def mock_auth(mock_users_collection):
 def auth_headers():
     """Standard auth headers for testing"""
     return {"Authorization": "Bearer valid_token"}
+
+
+@pytest.fixture
+def mock_reactions_collection():
+    """Mock collection for reactions testing"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    mock.find = MagicMock()  # Returns cursor synchronously
+    mock.count_documents = AsyncMock()
+    mock.insert_one = AsyncMock()
+    mock.delete_one = AsyncMock()
+    return mock
+
+
+@pytest.fixture
+def mock_comments_collection():
+    """Mock collection for comments testing"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    mock.find = MagicMock()  # Returns cursor synchronously
+    mock.count_documents = AsyncMock()
+    mock.insert_one = AsyncMock()
+    mock.update_one = AsyncMock()
+    return mock
+
+
+@pytest.fixture
+def override_engagement_database(mock_reactions_collection, mock_comments_collection):
+    """Override engagement collections to use mocks"""
+
+    async def get_mock_reactions_collection():
+        return mock_reactions_collection
+
+    async def get_mock_comments_collection():
+        return mock_comments_collection
+
+    test_app.dependency_overrides[get_reactions_collection] = get_mock_reactions_collection
+    test_app.dependency_overrides[get_comments_collection] = get_mock_comments_collection
+    yield mock_reactions_collection, mock_comments_collection
+    test_app.dependency_overrides.pop(get_reactions_collection, None)
+    test_app.dependency_overrides.pop(get_comments_collection, None)
+
+
+@pytest_asyncio.fixture
+async def engagement_async_client(override_engagement_database):
+    """Async test client for engagement tests"""
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+        yield ac
