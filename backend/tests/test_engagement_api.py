@@ -1,5 +1,7 @@
 """Tests for engagement API endpoints."""
 
+from datetime import datetime, timezone
+
 import pytest
 from bson import ObjectId
 from unittest.mock import MagicMock
@@ -135,3 +137,73 @@ class TestReactionsAPI:
             json={"reaction_tag": "thumbup"},
         )
         assert response.status_code == 401
+
+
+class TestCommentsAPI:
+    """Tests for comments endpoints."""
+
+    @pytest.mark.asyncio
+    async def test_get_comments_empty(self, engagement_async_client, override_engagement_database):
+        """Test getting comments when none exist."""
+        mock_comments_collection = override_engagement_database[1]
+        mock_cursor = MockAsyncCursor([])
+        mock_cursor.sort = MagicMock(return_value=mock_cursor)
+        mock_comments_collection.find.return_value = mock_cursor
+
+        response = await engagement_async_client.get(
+            "/api/engagement/story/507f1f77bcf86cd799439011/comments"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["comments"] == []
+
+    @pytest.mark.asyncio
+    async def test_get_comments_with_replies(
+        self, engagement_async_client, override_engagement_database
+    ):
+        """Test getting comments with nested replies."""
+        mock_comments_collection = override_engagement_database[1]
+        target_id = "507f1f77bcf86cd799439011"
+        parent_id = ObjectId()
+        reply_id = ObjectId()
+
+        mock_cursor = MockAsyncCursor([
+            {
+                "_id": parent_id,
+                "target_type": "story",
+                "target_id": target_id,
+                "parent_id": None,
+                "user_id": "user1",
+                "user_name": "Alice",
+                "user_avatar": None,
+                "content": "Great post!",
+                "mentions": [],
+                "created_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+                "updated_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+                "deleted_at": None,
+            },
+            {
+                "_id": reply_id,
+                "target_type": "story",
+                "target_id": target_id,
+                "parent_id": str(parent_id),
+                "user_id": "user2",
+                "user_name": "Bob",
+                "user_avatar": None,
+                "content": "Thanks!",
+                "mentions": [],
+                "created_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+                "updated_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+                "deleted_at": None,
+            },
+        ])
+        mock_cursor.sort = MagicMock(return_value=mock_cursor)
+        mock_comments_collection.find.return_value = mock_cursor
+
+        response = await engagement_async_client.get(
+            f"/api/engagement/story/{target_id}/comments"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["comments"]) == 1  # Only top-level
+        assert len(data["comments"][0]["replies"]) == 1  # One reply

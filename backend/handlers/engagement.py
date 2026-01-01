@@ -130,3 +130,66 @@ async def toggle_reaction(
         result = await reactions_collection.insert_one(doc)
         logger.info_with_context("Reaction added", {"reaction_id": str(result.inserted_id)})
         return {"added": True, "reaction_tag": reaction.reaction_tag}
+
+
+@router.get("/{target_type}/{target_id}/comments")
+async def get_comments(
+    request: Request,
+    target_type: str,
+    target_id: str,
+    comments_collection: AsyncIOMotorCollection = Depends(get_comments_collection),
+) -> dict:
+    """Get comments for a target with nested replies. Public endpoint."""
+    validate_target_type(target_type, "comments")
+
+    if not ObjectId.is_valid(target_id):
+        raise HTTPException(status_code=400, detail="Invalid target ID format")
+
+    logger.info_with_context(
+        "Fetching comments",
+        {"target_type": target_type, "target_id": target_id},
+    )
+
+    # Get all non-deleted comments for this target
+    cursor = comments_collection.find({
+        "target_type": target_type,
+        "target_id": target_id,
+        "deleted_at": None,
+    }).sort("created_at", 1)
+
+    all_comments = await cursor.to_list(length=1000)
+
+    # Build nested structure
+    comments_by_id: dict[str, dict] = {}
+    top_level: list[dict] = []
+
+    for comment in all_comments:
+        comment_dict = {
+            "id": str(comment["_id"]),
+            "target_type": comment["target_type"],
+            "target_id": comment["target_id"],
+            "parent_id": comment.get("parent_id"),
+            "user_id": comment["user_id"],
+            "user_name": comment["user_name"],
+            "user_avatar": comment.get("user_avatar"),
+            "content": comment["content"],
+            "mentions": comment.get("mentions", []),
+            "created_at": comment["created_at"].isoformat(),
+            "updated_at": comment["updated_at"].isoformat(),
+            "deleted_at": None,
+            "replies": [],
+        }
+        comments_by_id[str(comment["_id"])] = comment_dict
+
+        if comment.get("parent_id") is None:
+            top_level.append(comment_dict)
+
+    # Attach replies to parents
+    for comment in all_comments:
+        parent_id = comment.get("parent_id")
+        if parent_id and parent_id in comments_by_id:
+            comments_by_id[parent_id]["replies"].append(
+                comments_by_id[str(comment["_id"])]
+            )
+
+    return {"comments": top_level}
