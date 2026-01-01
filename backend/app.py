@@ -9,12 +9,17 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from glogger import logger
 from handlers.backfill import backfill_published_flag
+from handlers.migrations import run_migrations
 from handlers.pages import router as pages_router
 from handlers.projects import router as projects_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
+from handlers.users import router as users_router
 from handlers.video_processing import router as video_processing_router
 from middleware.logging_middleware import LoggingMiddleware
+from middleware.rate_limit import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse
 
@@ -50,6 +55,9 @@ async def lifespan(app: FastAPI):
     # Ensure database indexes exist
     await ensure_indexes()
 
+    # Run database migrations
+    await run_migrations()
+
     yield  # This is where the app runs
 
     # Cleanup database connections
@@ -60,15 +68,45 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(LoggingMiddleware)
+
+# CORS origins configuration
+# Production domains
 origins = [
     "https://api.ghostmonk.com",
     "https://ghostmonk.com",
     "https://www.ghostmonk.com",
+]
+# Local development origins (localhost and Docker service names)
+origins += [
     "http://localhost:3000",
     "http://localhost:5001",
     "http://frontend:3000",
 ]
+
+# Add additional origins from environment variable (comma-separated)
+# SECURITY WARNING: CORS_EXTRA_ORIGINS is for LOCAL DEVELOPMENT ONLY.
+# Do NOT set this in production - it can bypass CORS security.
+# Example: CORS_EXTRA_ORIGINS=http://10.0.0.195.nip.io:3000
+extra_origins = os.getenv("CORS_EXTRA_ORIGINS", "")
+if extra_origins:
+    for origin in extra_origins.split(","):
+        origin = origin.strip()
+        if not origin:
+            continue
+        # Validate origin format (must be http:// or https:// URL)
+        if not origin.startswith(("http://", "https://")):
+            logger.warning(
+                f"Invalid CORS origin ignored (must start with http:// or https://): {origin}"
+            )
+            continue
+        # Block wildcards and dangerous patterns
+        if "*" in origin or ".." in origin:
+            logger.warning(f"Invalid CORS origin ignored (wildcards not allowed): {origin}")
+            continue
+        origins.append(origin)
 
 app.add_middleware(
     CORSMiddleware,
@@ -185,6 +223,7 @@ app.include_router(stories_router)
 app.include_router(pages_router)
 app.include_router(projects_router)
 app.include_router(uploads_router)
+app.include_router(users_router)
 app.include_router(video_processing_router)
 
 if __name__ == "__main__":

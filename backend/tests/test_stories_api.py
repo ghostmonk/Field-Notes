@@ -3,7 +3,6 @@ Integration tests for Stories API endpoints
 """
 
 from datetime import datetime, timezone
-from unittest.mock import patch
 
 import pytest
 from bson import ObjectId
@@ -147,7 +146,9 @@ class TestStoriesAuthenticatedEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_get_story_by_id_success(self, async_client: AsyncClient, override_database):
+    async def test_get_story_by_id_success(
+        self, async_client: AsyncClient, override_database, mock_auth
+    ):
         """Test successful retrieval of story by ID with auth"""
         # Use fixed datetime for consistent testing
         now = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
@@ -166,17 +167,9 @@ class TestStoriesAuthenticatedEndpoints:
         # Configure the mock collection provided by the fixture
         override_database.find_one.return_value = test_story
 
-        # Mock the auth decorator
-        with patch("decorators.auth.requests.get") as mock_auth:
-            mock_auth.return_value.status_code = 200
-            mock_auth.return_value.json.return_value = {
-                "scope": "https://www.googleapis.com/auth/userinfo.email",
-                "exp": 9999999999,  # Far future expiry
-            }
-
-            response = await async_client.get(
-                f"/stories/{str(story_id)}", headers={"Authorization": "Bearer valid_token"}
-            )
+        response = await async_client.get(
+            f"/stories/{str(story_id)}", headers={"Authorization": "Bearer valid_token"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -184,18 +177,13 @@ class TestStoriesAuthenticatedEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_get_story_by_id_invalid_id(self, async_client: AsyncClient):
+    async def test_get_story_by_id_invalid_id(
+        self, async_client: AsyncClient, override_database, mock_auth
+    ):
         """Test retrieval with invalid ObjectId format"""
-        with patch("decorators.auth.requests.get") as mock_auth:
-            mock_auth.return_value.status_code = 200
-            mock_auth.return_value.json.return_value = {
-                "scope": "https://www.googleapis.com/auth/userinfo.email",
-                "exp": 9999999999,
-            }
-
-            response = await async_client.get(
-                "/stories/invalid_id", headers={"Authorization": "Bearer valid_token"}
-            )
+        response = await async_client.get(
+            "/stories/invalid_id", headers={"Authorization": "Bearer valid_token"}
+        )
 
         assert response.status_code == 400
         data = response.json()
@@ -213,7 +201,9 @@ class TestStoriesAuthenticatedEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_create_story_success(self, async_client: AsyncClient, override_database):
+    async def test_create_story_success(
+        self, async_client: AsyncClient, override_database, mock_auth
+    ):
         """Test successful story creation with auth"""
         story_data = {"title": "New Story", "content": "New content", "is_published": True}
 
@@ -239,16 +229,9 @@ class TestStoriesAuthenticatedEndpoints:
             created_story,
         ]  # First None for slug check, then return story
 
-        with patch("decorators.auth.requests.get") as mock_auth:
-            mock_auth.return_value.status_code = 200
-            mock_auth.return_value.json.return_value = {
-                "scope": "https://www.googleapis.com/auth/userinfo.email",
-                "exp": 9999999999,
-            }
-
-            response = await async_client.post(
-                "/stories", json=story_data, headers={"Authorization": "Bearer valid_token"}
-            )
+        response = await async_client.post(
+            "/stories", json=story_data, headers={"Authorization": "Bearer valid_token"}
+        )
 
         assert response.status_code == 201
         data = response.json()
@@ -256,7 +239,9 @@ class TestStoriesAuthenticatedEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_create_story_validation_error(self, async_client: AsyncClient):
+    async def test_create_story_validation_error(
+        self, async_client: AsyncClient, override_database, mock_auth
+    ):
         """Test story creation with validation errors"""
         invalid_story_data = {
             "title": "",  # Empty title should fail validation
@@ -264,16 +249,9 @@ class TestStoriesAuthenticatedEndpoints:
             "is_published": True,
         }
 
-        with patch("decorators.auth.requests.get") as mock_auth:
-            mock_auth.return_value.status_code = 200
-            mock_auth.return_value.json.return_value = {
-                "scope": "https://www.googleapis.com/auth/userinfo.email",
-                "exp": 9999999999,
-            }
-
-            response = await async_client.post(
-                "/stories", json=invalid_story_data, headers={"Authorization": "Bearer valid_token"}
-            )
+        response = await async_client.post(
+            "/stories", json=invalid_story_data, headers={"Authorization": "Bearer valid_token"}
+        )
 
         assert response.status_code == 422
 
@@ -300,7 +278,9 @@ class TestStoriesAuthenticatedEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_delete_story_success(self, async_client: AsyncClient, override_database):
+    async def test_delete_story_success(
+        self, async_client: AsyncClient, override_database, mock_auth
+    ):
         """Test successful story deletion with auth"""
         story_id = ObjectId()
 
@@ -322,37 +302,25 @@ class TestStoriesAuthenticatedEndpoints:
         override_database.find_one.return_value = existing_story
         override_database.update_one.return_value.modified_count = 1
 
-        with patch("decorators.auth.requests.get") as mock_auth:
-            mock_auth.return_value.status_code = 200
-            mock_auth.return_value.json.return_value = {
-                "scope": "https://www.googleapis.com/auth/userinfo.email",
-                "exp": 9999999999,
-            }
-
-            response = await async_client.delete(
-                f"/stories/{str(story_id)}", headers={"Authorization": "Bearer valid_token"}
-            )
+        response = await async_client.delete(
+            f"/stories/{str(story_id)}", headers={"Authorization": "Bearer valid_token"}
+        )
 
         assert response.status_code == 204  # No content for successful deletion
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_delete_story_not_found(self, async_client: AsyncClient, override_database):
+    async def test_delete_story_not_found(
+        self, async_client: AsyncClient, override_database, mock_auth
+    ):
         """Test deleting non-existent story"""
         story_id = ObjectId()
 
         # Configure the mock collection provided by the fixture
         override_database.find_one.return_value = None  # Story not found
 
-        with patch("decorators.auth.requests.get") as mock_auth:
-            mock_auth.return_value.status_code = 200
-            mock_auth.return_value.json.return_value = {
-                "scope": "https://www.googleapis.com/auth/userinfo.email",
-                "exp": 9999999999,
-            }
-
-            response = await async_client.delete(
-                f"/stories/{str(story_id)}", headers={"Authorization": "Bearer valid_token"}
-            )
+        response = await async_client.delete(
+            f"/stories/{str(story_id)}", headers={"Authorization": "Bearer valid_token"}
+        )
 
         assert response.status_code == 404

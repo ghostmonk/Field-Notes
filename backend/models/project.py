@@ -71,6 +71,7 @@ class ProjectResponse(ProjectBase):
     slug: str
     createdDate: datetime
     updatedDate: datetime
+    user_id: str | None = None
 
     @field_validator("createdDate", "updatedDate")
     def ensure_utc(cls, value: datetime | None) -> datetime | None:
@@ -96,5 +97,6 @@ class ProjectCard(BaseModel):
     github_url: Optional[str]
     live_url: Optional[str]
     is_featured: bool
+    user_id: str | None = None
 
     model_config = ConfigDict(from_attributes=True)

@@ -48,7 +48,7 @@ export default function TopNav() {
                                 </Link>
                             );
                         })}
-                        {session && (
+                        {session?.user?.role === 'admin' && (
                             <Link href="/editor" className="nav__link" data-testid="nav-new-story-link">
                                 <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
                                 <span>New Story</span>
@@ -98,7 +98,7 @@ export default function TopNav() {
             {mobileMenuOpen && (
                 <div className="nav__mobile-menu" data-testid="mobile-menu">
                     <div className="nav__mobile-links">
-                        {session && (
+                        {session?.user?.role === 'admin' && (
                             <Link
                                 href="/editor"
                                 className="nav__mobile-link"

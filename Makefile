@@ -169,7 +169,7 @@ dev-backend:
 dev-frontend:
 	export $$(cat .env | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs) && \
 	if [ -f .env.local ]; then export $$(cat .env.local | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs); fi && \
-	cd frontend && PORT=3000 npm run dev
+	cd frontend && PORT=3000 npx next dev -H 0.0.0.0
 
 # Cleanup
 clean:

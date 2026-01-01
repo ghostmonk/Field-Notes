@@ -63,10 +63,10 @@ export class HomePage extends BasePage {
 
   /**
    * Get the number of visible stories.
+   * Uses count() which is more reliable than all().length for timing.
    */
   async getStoryCount(): Promise<number> {
-    const cards = await this.getStoryCards();
-    return cards.length;
+    return this.page.locator('[data-testid^="story-card-"]').count();
   }
 
   /**

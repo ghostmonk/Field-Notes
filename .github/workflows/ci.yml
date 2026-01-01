@@ -68,6 +68,7 @@ jobs:
           MONGO_APP_NAME: test-app
           MONGO_HOST: test.mongodb.net
           MONGO_DB_NAME: test-db
+          ADMIN_EMAIL: test@example.com
         run: |
           cd backend
           echo "Running tests..."

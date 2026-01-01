@@ -8,6 +8,7 @@ from motor.motor_asyncio import (
     AsyncIOMotorCollection,
     AsyncIOMotorDatabase,
 )
+from pymongo.errors import OperationFailure
 
 client: AsyncIOMotorClient | None = None
 _connection_lock = asyncio.Lock()
@@ -105,39 +106,98 @@ async def get_projects_collection() -> AsyncIOMotorCollection:
     return db["projects"]
 
 
+async def get_users_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["users"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
     Indexes are created with background=True to avoid blocking.
-    Unique index creation may fail if duplicates exist - this is logged but not fatal.
+    Unique index creation may fail if duplicates exist - this is logged as an error
+    and tracked, but does not prevent application startup.
     """
     db = await get_database()
+    failed_indexes: list[str] = []
 
-    async def safe_create_index(collection, keys, **kwargs):
-        """Create index, logging errors but not failing startup."""
+    async def safe_create_index(collection, keys, **kwargs) -> bool:
+        """Create index, returning success status.
+
+        Handles specific error cases:
+        - Index already exists (code 85/86): Returns True (idempotent success)
+        - Duplicate key errors: Returns False, logs error (data issue)
+        - Other OperationFailure: Re-raised (permission issues, connection problems)
+
+        Returns:
+            True if index was created or already exists, False if creation failed.
+        """
+        index_name = kwargs.get("name", str(keys))
         try:
             await collection.create_index(keys, background=True, **kwargs)
+            return True
+        except OperationFailure as e:
+            # Error codes: 85 = IndexOptionsConflict, 86 = IndexKeySpecsConflict
+            # These mean index already exists with same/different options - not fatal
+            if e.code in (85, 86):
+                logger.debug(f"Index {index_name} already exists on {collection.name}")
+                return True
+            # Error code 11000 = DuplicateKey - data integrity issue
+            elif e.code == 11000:
+                logger.error(
+                    f"FAILED to create unique index {index_name} on {collection.name}: "
+                    f"duplicate values exist. Data must be fixed before index can be created."
+                )
+                return False
+            else:
+                # Connection issues, permission errors, etc. - re-raise
+                logger.error(f"Failed to create index {index_name} on {collection.name}: {e}")
+                raise
         except Exception as e:
-            index_name = kwargs.get("name", str(keys))
-            logger.warning(f"Failed to create index {index_name} on {collection.name}: {e}")
+            # Unexpected errors - log and re-raise
+            logger.error(f"Unexpected error creating index {index_name} on {collection.name}: {e}")
+            raise
 
     # Pages indexes
     pages = db["pages"]
-    await safe_create_index(pages, "page_type", unique=True)
+    if not await safe_create_index(pages, "page_type", unique=True):
+        failed_indexes.append("pages.page_type")
     await safe_create_index(pages, "is_published")
+    await safe_create_index(pages, "user_id")
 
     # Projects indexes
     projects = db["projects"]
-    await safe_create_index(projects, "slug", unique=True)
+    if not await safe_create_index(projects, "slug", unique=True):
+        failed_indexes.append("projects.slug")
     await safe_create_index(projects, [("is_published", 1), ("is_featured", -1)])
     await safe_create_index(projects, [("is_published", 1), ("createdDate", -1)])
+    await safe_create_index(projects, "user_id")
 
     # Stories indexes
     stories = db["stories"]
-    await safe_create_index(stories, "slug", unique=True)
+    if not await safe_create_index(stories, "slug", unique=True):
+        failed_indexes.append("stories.slug")
     await safe_create_index(stories, [("is_published", 1), ("date", -1)])
+    await safe_create_index(stories, "user_id")
 
-    logger.info("Database indexes ensured")
+    # Users indexes
+    users = db["users"]
+    if not await safe_create_index(users, "email", unique=True):
+        failed_indexes.append("users.email")
+    await safe_create_index(
+        users,
+        [("auth_providers.provider", 1), ("auth_providers.provider_user_id", 1)],
+        name="auth_provider_lookup",
+    )
+
+    if failed_indexes:
+        logger.error(
+            f"Database startup completed with {len(failed_indexes)} failed index(es): "
+            f"{', '.join(failed_indexes)}. Application may have degraded performance or "
+            f"data integrity issues until these are resolved."
+        )
+    else:
+        logger.info("Database indexes ensured")
 
 
 def _get_variable(key: str) -> str:

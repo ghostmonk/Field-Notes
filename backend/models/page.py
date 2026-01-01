@@ -39,6 +39,7 @@ class PageResponse(PageBase):
     id: str
     createdDate: datetime
     updatedDate: datetime
+    user_id: str | None = None
 
     @field_validator("createdDate", "updatedDate")
     def ensure_utc(cls, value: datetime | None) -> datetime | None:

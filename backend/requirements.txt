@@ -7,7 +7,9 @@
 annotated-types==0.7.0
     # via pydantic
 anyio==4.9.0
-    # via starlette
+    # via
+    #   httpx
+    #   starlette
 beautifulsoup4==4.13.4
     # via google
 cachetools==5.5.2
@@ -15,13 +17,22 @@ cachetools==5.5.2
     #   -r requirements.in
     #   google-auth
 certifi==2025.6.15
-    # via requests
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
 charset-normalizer==3.4.2
     # via requests
 click==8.2.1
     # via uvicorn
+deprecated==1.3.1
+    # via limits
 dnspython==2.7.0
-    # via pymongo
+    # via
+    #   email-validator
+    #   pymongo
+email-validator==2.3.0
+    # via pydantic
 fastapi==0.115.12
     # via -r requirements.in
 google==3.0.0
@@ -75,17 +86,29 @@ grpcio==1.73.0
 grpcio-status==1.73.0
     # via google-api-core
 h11==0.16.0
-    # via uvicorn
+    # via
+    #   httpcore
+    #   uvicorn
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via -r requirements.in
 idna==3.10
     # via
     #   anyio
+    #   email-validator
+    #   httpx
     #   requests
 importlib-metadata==8.7.0
     # via opentelemetry-api
+limits==5.6.0
+    # via slowapi
 motor==3.7.1
     # via -r requirements.in
 opentelemetry-api==1.34.1
     # via google-cloud-logging
+packaging==25.0
+    # via limits
 pillow==11.2.1
     # via -r requirements.in
 proto-plus==1.26.1
@@ -109,7 +132,7 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.2
     # via google-auth
-pydantic==2.11.4
+pydantic[email]==2.11.4
     # via
     #   -r requirements.in
     #   fastapi
@@ -128,6 +151,8 @@ requests==2.32.4
     #   google-cloud-storage
 rsa==4.9.1
     # via google-auth
+slowapi==0.1.9
+    # via -r requirements.in
 sniffio==1.3.1
     # via anyio
 soupsieve==2.7
@@ -138,6 +163,7 @@ typing-extensions==4.14.0
     # via
     #   beautifulsoup4
     #   fastapi
+    #   limits
     #   opentelemetry-api
     #   pydantic
     #   pydantic-core
@@ -148,5 +174,7 @@ urllib3==2.4.0
     # via requests
 uvicorn==0.34.2
     # via -r requirements.in
+wrapt==2.0.1
+    # via deprecated
 zipp==3.23.0
     # via importlib-metadata

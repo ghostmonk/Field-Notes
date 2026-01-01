@@ -1,12 +1,14 @@
 # Production dependencies
 fastapi==0.115.12
+slowapi==0.1.9
 cachetools==5.5.2
 python-dotenv==1.1.0
 google-cloud-logging==3.12.1
 uvicorn==0.34.2
-pydantic==2.11.4
+pydantic[email]==2.11.4
 google-auth==2.40.1
 requests
+httpx
 google
 motor==3.7.1
 google-cloud-storage==2.16.0

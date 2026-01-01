@@ -7,10 +7,11 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from database import get_projects_collection
-from decorators.auth import requires_auth, verify_auth
+from decorators.auth import check_write_permission, requires_auth, verify_auth
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
 from models.project import ProjectCard, ProjectCreate, ProjectResponse, ProjectUpdate
+from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
 from utils import find_many_and_convert, find_one_and_convert, generate_unique_slug
@@ -62,6 +63,7 @@ async def get_projects(
             "github_url": 1,
             "live_url": 1,
             "is_featured": 1,
+            "user_id": 1,
         }
 
         projects = await find_many_and_convert(
@@ -221,6 +223,8 @@ async def create_project(
 ):
     """Create a new project."""
     try:
+        user: UserInfo = request.state.user
+
         logger.info_with_context(
             "Creating new project",
             {
@@ -228,6 +232,7 @@ async def create_project(
                 "technologies": project.technologies,
                 "is_published": project.is_published,
                 "is_featured": project.is_featured,
+                "user_id": user.id,
             },
         )
 
@@ -239,6 +244,7 @@ async def create_project(
             "slug": slug,
             "createdDate": current_time,
             "updatedDate": current_time,
+            "user_id": user.id,
         }
 
         result = await collection.insert_one(document)
@@ -308,6 +314,8 @@ async def update_project(
 ):
     """Update a project."""
     try:
+        user: UserInfo = request.state.user
+
         if not ObjectId.is_valid(project_id):
             logger.warning_with_context(
                 "Invalid project ID format for update", {"project_id": project_id}
@@ -319,6 +327,7 @@ async def update_project(
             {
                 "project_id": project_id,
                 "title": project.title,
+                "user_id": user.id,
             },
         )
 
@@ -331,6 +340,20 @@ async def update_project(
         if not existing_project:
             logger.warning_with_context("Project not found for update", {"project_id": project_id})
             raise HTTPException(status_code=404, detail="Project not found")
+
+        # Check write permission
+        if not check_write_permission(user, existing_project.user_id):
+            logger.warning_with_context(
+                "Permission denied for project update",
+                {
+                    "project_id": project_id,
+                    "user_id": user.id,
+                    "owner_id": existing_project.user_id,
+                },
+            )
+            raise HTTPException(
+                status_code=403, detail="You don't have permission to edit this project"
+            )
 
         current_time = datetime.now(timezone.utc)
 
@@ -417,13 +440,17 @@ async def delete_project(
 ):
     """Soft delete a project."""
     try:
+        user: UserInfo = request.state.user
+
         if not ObjectId.is_valid(project_id):
             logger.warning_with_context(
                 "Invalid project ID format for delete", {"project_id": project_id}
             )
             raise HTTPException(status_code=400, detail="Invalid project ID format")
 
-        logger.info_with_context("Soft deleting project", {"project_id": project_id})
+        logger.info_with_context(
+            "Soft deleting project", {"project_id": project_id, "user_id": user.id}
+        )
 
         existing_project = await find_one_and_convert(
             collection,
@@ -434,6 +461,20 @@ async def delete_project(
         if not existing_project:
             logger.warning_with_context("Project not found for delete", {"project_id": project_id})
             raise HTTPException(status_code=404, detail="Project not found")
+
+        # Check write permission
+        if not check_write_permission(user, existing_project.user_id):
+            logger.warning_with_context(
+                "Permission denied for project delete",
+                {
+                    "project_id": project_id,
+                    "user_id": user.id,
+                    "owner_id": existing_project.user_id,
+                },
+            )
+            raise HTTPException(
+                status_code=403, detail="You don't have permission to delete this project"
+            )
 
         result = await collection.update_one(
             {"_id": ObjectId(project_id)}, {"$set": {"deleted": True}}
