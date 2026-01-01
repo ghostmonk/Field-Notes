@@ -1,12 +1,16 @@
 """Engagement handlers for reactions and comments."""
 
+from datetime import datetime, timezone
+
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from config.engagement import ENGAGEMENT_ENABLED_TYPES
 from database import get_comments_collection, get_reactions_collection
+from decorators.auth import requires_auth
 from glogger import logger
-from models.reaction import ReactionCounts
+from models.reaction import ReactionCounts, ReactionCreate
+from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 router = APIRouter(prefix="/api/engagement")
@@ -71,3 +75,58 @@ async def get_reactions(
         user_reactions = [r["reaction_tag"] for r in reactions if r["user_id"] == user_id]
 
     return ReactionCounts(counts=counts, user_reactions=user_reactions, details=details)
+
+
+@router.post("/{target_type}/{target_id}/reactions")
+@requires_auth
+async def toggle_reaction(
+    request: Request,
+    target_type: str,
+    target_id: str,
+    reaction: ReactionCreate,
+    reactions_collection: AsyncIOMotorCollection = Depends(get_reactions_collection),
+) -> dict:
+    """Toggle a reaction (add if missing, remove if exists). Requires auth."""
+    validate_target_type(target_type, "reactions")
+
+    if not ObjectId.is_valid(target_id):
+        raise HTTPException(status_code=400, detail="Invalid target ID format")
+
+    user: UserInfo = request.state.user
+
+    logger.info_with_context(
+        "Toggling reaction",
+        {
+            "target_type": target_type,
+            "target_id": target_id,
+            "user_id": user.id,
+            "reaction_tag": reaction.reaction_tag,
+        },
+    )
+
+    # Check if reaction already exists
+    existing = await reactions_collection.find_one({
+        "target_type": target_type,
+        "target_id": target_id,
+        "user_id": user.id,
+        "reaction_tag": reaction.reaction_tag,
+    })
+
+    if existing:
+        # Remove the reaction
+        await reactions_collection.delete_one({"_id": existing["_id"]})
+        logger.info_with_context("Reaction removed", {"reaction_id": str(existing["_id"])})
+        return {"added": False, "reaction_tag": reaction.reaction_tag}
+    else:
+        # Add the reaction
+        doc = {
+            "target_type": target_type,
+            "target_id": target_id,
+            "user_id": user.id,
+            "user_name": user.name,
+            "reaction_tag": reaction.reaction_tag,
+            "created_at": datetime.now(timezone.utc),
+        }
+        result = await reactions_collection.insert_one(doc)
+        logger.info_with_context("Reaction added", {"reaction_id": str(result.inserted_id)})
+        return {"added": True, "reaction_tag": reaction.reaction_tag}

@@ -2,6 +2,7 @@
 
 import pytest
 from bson import ObjectId
+from unittest.mock import MagicMock
 
 
 class MockAsyncCursor:
@@ -80,3 +81,57 @@ class TestReactionsAPI:
         assert response.status_code == 200
         data = response.json()
         assert data["counts"]["thumbup"] == 2
+
+    @pytest.mark.asyncio
+    async def test_toggle_reaction_add(
+        self, engagement_async_client, mock_reactions_collection, mock_auth, auth_headers
+    ):
+        """Test adding a new reaction."""
+        target_id = "507f1f77bcf86cd799439011"
+
+        # Mock: reaction doesn't exist yet
+        mock_reactions_collection.find_one.return_value = None
+        mock_reactions_collection.insert_one.return_value = MagicMock(
+            inserted_id=ObjectId()
+        )
+
+        response = await engagement_async_client.post(
+            f"/api/engagement/story/{target_id}/reactions",
+            json={"reaction_tag": "thumbup"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["added"] is True
+
+    @pytest.mark.asyncio
+    async def test_toggle_reaction_remove(
+        self, engagement_async_client, mock_reactions_collection, mock_auth, auth_headers
+    ):
+        """Test removing an existing reaction."""
+        target_id = "507f1f77bcf86cd799439011"
+
+        # Mock: reaction already exists
+        mock_reactions_collection.find_one.return_value = {
+            "_id": ObjectId(),
+            "reaction_tag": "thumbup",
+        }
+        mock_reactions_collection.delete_one.return_value = MagicMock(deleted_count=1)
+
+        response = await engagement_async_client.post(
+            f"/api/engagement/story/{target_id}/reactions",
+            json={"reaction_tag": "thumbup"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["added"] is False
+
+    @pytest.mark.asyncio
+    async def test_toggle_reaction_unauthorized(self, engagement_async_client):
+        """Test that unauthenticated users cannot react."""
+        response = await engagement_async_client.post(
+            "/api/engagement/story/507f1f77bcf86cd799439011/reactions",
+            json={"reaction_tag": "thumbup"},
+        )
+        assert response.status_code == 401
