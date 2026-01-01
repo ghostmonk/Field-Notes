@@ -1,17 +1,40 @@
 import type { NextConfig } from "next";
 
+// Parse allowed dev origins from environment variable (comma-separated)
+const allowedDevOrigins = process.env.NODE_ENV === 'development'
+    ? (process.env.ALLOWED_DEV_ORIGINS?.split(',').filter(Boolean) || [])
+    : [];
+
 const nextConfig: NextConfig = {
     reactStrictMode: true,
     output: 'standalone',
     outputFileTracingRoot: __dirname,
-    allowedDevOrigins: ['10.0.0.195', '10.0.0.195.nip.io'],
+
+    // Only apply in development - origins configured via ALLOWED_DEV_ORIGINS env var
+    ...(allowedDevOrigins.length > 0 && { allowedDevOrigins }),
+
     typescript: {
         ignoreBuildErrors: false,
     },
+
+    // Note: ESLint runs separately via `npm run lint`, not during Next.js build
+    // (Next.js 16 removed the eslint config option)
+
     experimental: {
         serverActions: {
             bodySizeLimit: '4mb'
         },
+    },
+
+    // Exclude cheerio from client bundle (server-side only for HTML parsing)
+    webpack: (config, { isServer }) => {
+        if (!isServer) {
+            config.resolve.fallback = {
+                ...config.resolve.fallback,
+                cheerio: false,
+            };
+        }
+        return config;
     },
 
 
