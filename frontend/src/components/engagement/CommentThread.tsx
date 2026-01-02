@@ -44,7 +44,7 @@ export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps
   };
 
   return (
-    <div className="border-l-2 border-gray-200 pl-4 py-2">
+    <div className="border-l-2 border-gray-200 dark:border-gray-600 pl-4 py-2">
       <div className="flex items-start gap-3">
         {comment.user_avatar ? (
           <Image
@@ -66,7 +66,7 @@ export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps
             <span className="text-gray-500 text-sm">{formatDate(comment.created_at)}</span>
           </div>
 
-          <p className="mt-1 text-gray-800">{comment.content}</p>
+          <p className="mt-1 text-gray-800 dark:text-gray-200">{comment.content}</p>
 
           <div className="mt-2 flex items-center gap-4 text-sm">
             {session && !comment.parent_id && (
@@ -93,7 +93,7 @@ export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder="Write a reply..."
-                className="w-full p-2 border rounded-lg resize-none"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg resize-none"
                 rows={2}
               />
               <div className="mt-2 flex gap-2">
