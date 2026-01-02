@@ -3,14 +3,18 @@
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Request
-
 from config.engagement import ENGAGEMENT_ENABLED_TYPES
 from database import get_comments_collection, get_reactions_collection
 from decorators.auth import requires_auth
+from fastapi import APIRouter, Depends, HTTPException, Request
 from glogger import logger
 from models.comment import CommentCreate
-from models.reaction import BulkCountsRequest, BulkCountsResponse, ReactionCounts, ReactionCreate
+from models.reaction import (
+    BulkCountsRequest,
+    BulkCountsResponse,
+    ReactionCounts,
+    ReactionCreate,
+)
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 
@@ -22,12 +26,18 @@ def validate_target_type(target_type: str, feature: str) -> None:
     if target_type not in ENGAGEMENT_ENABLED_TYPES:
         raise HTTPException(
             status_code=422,
-            detail={"error": "invalid_target_type", "message": f"Unknown target type: {target_type}"},
+            detail={
+                "error": "invalid_target_type",
+                "message": f"Unknown target type: {target_type}",
+            },
         )
     if not ENGAGEMENT_ENABLED_TYPES[target_type].get(feature, False):
         raise HTTPException(
             status_code=422,
-            detail={"error": "feature_disabled", "message": f"{feature} disabled for {target_type}"},
+            detail={
+                "error": "feature_disabled",
+                "message": f"{feature} disabled for {target_type}",
+            },
         )
 
 
@@ -50,9 +60,7 @@ async def get_reactions(
     )
 
     # Get all reactions for this target
-    cursor = reactions_collection.find(
-        {"target_type": target_type, "target_id": target_id}
-    )
+    cursor = reactions_collection.find({"target_type": target_type, "target_id": target_id})
     reactions = await cursor.to_list(length=1000)
 
     # Build counts and details
@@ -64,10 +72,12 @@ async def get_reactions(
         counts[tag] = counts.get(tag, 0) + 1
         if tag not in details:
             details[tag] = []
-        details[tag].append({
-            "user_id": reaction["user_id"],
-            "user_name": reaction["user_name"],
-        })
+        details[tag].append(
+            {
+                "user_id": reaction["user_id"],
+                "user_name": reaction["user_name"],
+            }
+        )
 
     # Get current user's reactions if authenticated
     user_reactions: list[str] = []
@@ -106,12 +116,14 @@ async def toggle_reaction(
     )
 
     # Check if reaction already exists
-    existing = await reactions_collection.find_one({
-        "target_type": target_type,
-        "target_id": target_id,
-        "user_id": user.id,
-        "reaction_tag": reaction.reaction_tag,
-    })
+    existing = await reactions_collection.find_one(
+        {
+            "target_type": target_type,
+            "target_id": target_id,
+            "user_id": user.id,
+            "reaction_tag": reaction.reaction_tag,
+        }
+    )
 
     if existing:
         # Remove the reaction
@@ -152,11 +164,13 @@ async def get_comments(
     )
 
     # Get all non-deleted comments for this target
-    cursor = comments_collection.find({
-        "target_type": target_type,
-        "target_id": target_id,
-        "deleted_at": None,
-    }).sort("created_at", 1)
+    cursor = comments_collection.find(
+        {
+            "target_type": target_type,
+            "target_id": target_id,
+            "deleted_at": None,
+        }
+    ).sort("created_at", 1)
 
     all_comments = await cursor.to_list(length=1000)
 
@@ -189,9 +203,7 @@ async def get_comments(
     for comment in all_comments:
         parent_id = comment.get("parent_id")
         if parent_id and parent_id in comments_by_id:
-            comments_by_id[parent_id]["replies"].append(
-                comments_by_id[str(comment["_id"])]
-            )
+            comments_by_id[parent_id]["replies"].append(comments_by_id[str(comment["_id"])])
 
     return {"comments": top_level}
 
@@ -215,13 +227,15 @@ async def create_comment(
     if comment.parent_id:
         if not ObjectId.is_valid(comment.parent_id):
             raise HTTPException(status_code=400, detail="Invalid parent ID format")
-        parent = await comments_collection.find_one({
-            "_id": ObjectId(comment.parent_id),
-            "target_type": target_type,
-            "target_id": target_id,
-            "parent_id": None,  # Must be top-level
-            "deleted_at": None,
-        })
+        parent = await comments_collection.find_one(
+            {
+                "_id": ObjectId(comment.parent_id),
+                "target_type": target_type,
+                "target_id": target_id,
+                "parent_id": None,  # Must be top-level
+                "deleted_at": None,
+            }
+        )
         if not parent:
             raise HTTPException(status_code=404, detail="Parent comment not found")
 
@@ -287,10 +301,12 @@ async def delete_comment(
 
     user: UserInfo = request.state.user
 
-    comment = await comments_collection.find_one({
-        "_id": ObjectId(comment_id),
-        "deleted_at": None,
-    })
+    comment = await comments_collection.find_one(
+        {
+            "_id": ObjectId(comment_id),
+            "deleted_at": None,
+        }
+    )
 
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -347,11 +363,13 @@ async def get_bulk_counts(
         # Get comment count
         comment_count = 0
         if ENGAGEMENT_ENABLED_TYPES.get(target_type, {}).get("comments", False):
-            comment_count = await comments_collection.count_documents({
-                "target_type": target_type,
-                "target_id": target_id,
-                "deleted_at": None,
-            })
+            comment_count = await comments_collection.count_documents(
+                {
+                    "target_type": target_type,
+                    "target_id": target_id,
+                    "deleted_at": None,
+                }
+            )
 
         result[key] = {
             "reactions": reaction_counts,

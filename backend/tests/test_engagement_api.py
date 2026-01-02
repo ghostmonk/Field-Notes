@@ -1,10 +1,10 @@
 """Tests for engagement API endpoints."""
 
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 import pytest
 from bson import ObjectId
-from unittest.mock import MagicMock
 
 
 class MockAsyncCursor:
@@ -77,9 +77,7 @@ class TestReactionsAPI:
         )
         mock_reactions_collection.find.return_value = mock_cursor
 
-        response = await engagement_async_client.get(
-            f"/api/engagement/story/{target_id}/reactions"
-        )
+        response = await engagement_async_client.get(f"/api/engagement/story/{target_id}/reactions")
         assert response.status_code == 200
         data = response.json()
         assert data["counts"]["thumbup"] == 2
@@ -93,9 +91,7 @@ class TestReactionsAPI:
 
         # Mock: reaction doesn't exist yet
         mock_reactions_collection.find_one.return_value = None
-        mock_reactions_collection.insert_one.return_value = MagicMock(
-            inserted_id=ObjectId()
-        )
+        mock_reactions_collection.insert_one.return_value = MagicMock(inserted_id=ObjectId())
 
         response = await engagement_async_client.post(
             f"/api/engagement/story/{target_id}/reactions",
@@ -167,42 +163,42 @@ class TestCommentsAPI:
         parent_id = ObjectId()
         reply_id = ObjectId()
 
-        mock_cursor = MockAsyncCursor([
-            {
-                "_id": parent_id,
-                "target_type": "story",
-                "target_id": target_id,
-                "parent_id": None,
-                "user_id": "user1",
-                "user_name": "Alice",
-                "user_avatar": None,
-                "content": "Great post!",
-                "mentions": [],
-                "created_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
-                "updated_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
-                "deleted_at": None,
-            },
-            {
-                "_id": reply_id,
-                "target_type": "story",
-                "target_id": target_id,
-                "parent_id": str(parent_id),
-                "user_id": "user2",
-                "user_name": "Bob",
-                "user_avatar": None,
-                "content": "Thanks!",
-                "mentions": [],
-                "created_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
-                "updated_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
-                "deleted_at": None,
-            },
-        ])
+        mock_cursor = MockAsyncCursor(
+            [
+                {
+                    "_id": parent_id,
+                    "target_type": "story",
+                    "target_id": target_id,
+                    "parent_id": None,
+                    "user_id": "user1",
+                    "user_name": "Alice",
+                    "user_avatar": None,
+                    "content": "Great post!",
+                    "mentions": [],
+                    "created_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+                    "updated_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+                    "deleted_at": None,
+                },
+                {
+                    "_id": reply_id,
+                    "target_type": "story",
+                    "target_id": target_id,
+                    "parent_id": str(parent_id),
+                    "user_id": "user2",
+                    "user_name": "Bob",
+                    "user_avatar": None,
+                    "content": "Thanks!",
+                    "mentions": [],
+                    "created_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+                    "updated_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+                    "deleted_at": None,
+                },
+            ]
+        )
         mock_cursor.sort = MagicMock(return_value=mock_cursor)
         mock_comments_collection.find.return_value = mock_cursor
 
-        response = await engagement_async_client.get(
-            f"/api/engagement/story/{target_id}/comments"
-        )
+        response = await engagement_async_client.get(f"/api/engagement/story/{target_id}/comments")
         assert response.status_code == 200
         data = response.json()
         assert len(data["comments"]) == 1  # Only top-level
@@ -219,9 +215,7 @@ class TestCommentsAPI:
         # Get mock_comments_collection from override_engagement_database
         mock_comments_collection = override_engagement_database[1]
 
-        mock_comments_collection.insert_one.return_value = MagicMock(
-            inserted_id=new_comment_id
-        )
+        mock_comments_collection.insert_one.return_value = MagicMock(inserted_id=new_comment_id)
         mock_comments_collection.find_one.return_value = {
             "_id": new_comment_id,
             "target_type": "story",
@@ -247,7 +241,9 @@ class TestCommentsAPI:
         assert data["content"] == "This is my comment"
 
     @pytest.mark.asyncio
-    async def test_create_comment_unauthorized(self, engagement_async_client, override_engagement_database):
+    async def test_create_comment_unauthorized(
+        self, engagement_async_client, override_engagement_database
+    ):
         """Test that unauthenticated users cannot comment."""
         response = await engagement_async_client.post(
             "/api/engagement/story/507f1f77bcf86cd799439011/comments",
@@ -257,7 +253,12 @@ class TestCommentsAPI:
 
     @pytest.mark.asyncio
     async def test_delete_own_comment(
-        self, engagement_async_client, mock_auth, auth_headers, override_engagement_database, mock_users_collection
+        self,
+        engagement_async_client,
+        mock_auth,
+        auth_headers,
+        override_engagement_database,
+        mock_users_collection,
     ):
         """Test soft-deleting own comment."""
         comment_id = ObjectId()
@@ -308,7 +309,9 @@ class TestCommentsAPI:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_delete_comment_unauthorized(self, engagement_async_client, override_engagement_database):
+    async def test_delete_comment_unauthorized(
+        self, engagement_async_client, override_engagement_database
+    ):
         """Test that unauthenticated users cannot delete comments."""
         comment_id = ObjectId()
         response = await engagement_async_client.delete(
@@ -345,10 +348,12 @@ class TestBulkCountsAPI:
         mock_reactions_collection, mock_comments_collection = override_engagement_database
 
         # Mock reactions aggregation - returns count by tag
-        mock_reactions_cursor = MockAsyncCursor([
-            {"_id": "thumbup", "count": 5},
-            {"_id": "heart", "count": 3},
-        ])
+        mock_reactions_cursor = MockAsyncCursor(
+            [
+                {"_id": "thumbup", "count": 5},
+                {"_id": "heart", "count": 3},
+            ]
+        )
         mock_reactions_collection.aggregate = MagicMock(return_value=mock_reactions_cursor)
 
         # Mock comments count
@@ -368,7 +373,9 @@ class TestBulkCountsAPI:
         assert counts["comment_count"] == 7
 
     @pytest.mark.asyncio
-    async def test_bulk_counts_empty_targets(self, engagement_async_client, override_engagement_database):
+    async def test_bulk_counts_empty_targets(
+        self, engagement_async_client, override_engagement_database
+    ):
         """Test bulk counts with empty targets list."""
         response = await engagement_async_client.post(
             "/api/engagement/bulk/counts",
@@ -379,7 +386,9 @@ class TestBulkCountsAPI:
         assert data["counts"] == {}
 
     @pytest.mark.asyncio
-    async def test_bulk_counts_multiple_targets(self, engagement_async_client, override_engagement_database):
+    async def test_bulk_counts_multiple_targets(
+        self, engagement_async_client, override_engagement_database
+    ):
         """Test getting counts for multiple targets."""
         mock_reactions_collection, mock_comments_collection = override_engagement_database
 
@@ -422,7 +431,9 @@ class TestBulkCountsAPI:
         assert "story:507f1f77bcf86cd799439012" in data["counts"]
 
     @pytest.mark.asyncio
-    async def test_bulk_counts_skips_invalid_targets(self, engagement_async_client, override_engagement_database):
+    async def test_bulk_counts_skips_invalid_targets(
+        self, engagement_async_client, override_engagement_database
+    ):
         """Test that invalid targets (missing type or id) are skipped."""
         mock_reactions_collection, mock_comments_collection = override_engagement_database
 
