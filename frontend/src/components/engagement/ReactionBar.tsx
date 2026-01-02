@@ -1,0 +1,110 @@
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { ReactionCounts, ReactionTag } from '@/types/api';
+import { engagementConfig } from '@/config/engagement.config';
+
+interface ReactionBarProps {
+  reactions: ReactionCounts | null;
+  onToggle: (tag: ReactionTag) => Promise<void>;
+  compact?: boolean;
+}
+
+const REACTION_ICONS: Record<string, string> = {
+  thumbup: '\uD83D\uDC4D',
+  heart: '\u2764\uFE0F',
+  surprise: '\uD83D\uDE2E',
+  celebrate: '\uD83C\uDF89',
+  insightful: '\uD83D\uDCA1',
+};
+
+export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBarProps) {
+  const { data: session } = useSession();
+  const [showPicker, setShowPicker] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleToggle = async (tag: ReactionTag) => {
+    if (!session) return;
+    setIsLoading(true);
+    try {
+      await onToggle(tag);
+    } finally {
+      setIsLoading(false);
+      setShowPicker(false);
+    }
+  };
+
+  const userReactions = reactions?.user_reactions || [];
+  const counts = reactions?.counts || {};
+
+  // In compact mode, show only counts
+  if (compact) {
+    const totalReactions = Object.values(counts).reduce((a, b) => a + b, 0);
+    return (
+      <div className="flex items-center gap-2 text-sm text-gray-500">
+        {totalReactions > 0 && (
+          <span className="flex items-center gap-1">
+            {Object.entries(counts)
+              .slice(0, 3)
+              .map(([tag]) => (
+                <span key={tag}>{REACTION_ICONS[tag]}</span>
+              ))}
+            <span>{totalReactions}</span>
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex items-center gap-2">
+      {/* Show existing reactions with counts */}
+      {Object.entries(counts).map(([tag, count]) => (
+        <button
+          key={tag}
+          onClick={() => handleToggle(tag as ReactionTag)}
+          disabled={isLoading || !session}
+          className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-colors ${
+            userReactions.includes(tag)
+              ? 'bg-blue-100 text-blue-700'
+              : 'bg-gray-100 hover:bg-gray-200'
+          }`}
+          title={
+            reactions?.details[tag]
+              ?.map((u) => u.user_name)
+              .join(', ') || ''
+          }
+        >
+          <span>{REACTION_ICONS[tag]}</span>
+          <span>{count}</span>
+        </button>
+      ))}
+
+      {/* Add reaction button */}
+      {session && (
+        <div className="relative">
+          <button
+            onClick={() => setShowPicker(!showPicker)}
+            className="px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm"
+          >
+            +
+          </button>
+
+          {showPicker && (
+            <div className="absolute bottom-full left-0 mb-2 p-2 bg-white rounded-lg shadow-lg border flex gap-1">
+              {engagementConfig.reactionTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleToggle(tag)}
+                  disabled={isLoading}
+                  className="p-2 hover:bg-gray-100 rounded"
+                >
+                  {REACTION_ICONS[tag]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
