@@ -39,10 +39,16 @@ export function CommentSection({
     return <div className="py-4 text-gray-500">Loading comments...</div>;
   }
 
+  // Count all comments including replies
+  const totalComments = comments.reduce(
+    (total, comment) => total + 1 + (comment.replies?.length || 0),
+    0
+  );
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">
-        Comments {comments.length > 0 && `(${comments.length})`}
+        Comments {totalComments > 0 && `(${totalComments})`}
       </h3>
 
       {/* New comment input */}
