@@ -79,3 +79,11 @@ Place `gcp-credentials.json` in project root.
 - Follow established patterns in each technology stack
 - Use the virtual environment for backend Python work
 - Check formatting before committing changes
+
+## Security Requirements
+
+- Always sanitize user input before storing (use `html.escape()` for text content in Python)
+- Never trust client-side validation alone - validate and sanitize on the backend
+- Escape user-generated content that will be displayed (React does this by default, but be careful with `dangerouslySetInnerHTML`)
+- Use parameterized queries for database operations (MongoDB driver handles this, but never construct queries with string concatenation)
+- Authenticate and authorize all mutation endpoints
