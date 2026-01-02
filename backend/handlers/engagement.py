@@ -421,7 +421,7 @@ async def get_bulk_counts(
     # Single aggregation for all comment counts
     if comment_targets:
         pipeline = [
-            {"$match": {"$or": comment_targets, "deleted_at": None}},
+            {"$match": {"$and": [{"$or": comment_targets}, {"deleted_at": None}]}},
             {
                 "$group": {
                     "_id": {"target_type": "$target_type", "target_id": "$target_id"},
