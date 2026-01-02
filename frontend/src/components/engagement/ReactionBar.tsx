@@ -56,14 +56,14 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
   }
 
   return (
-    <div className="relative flex items-center gap-2">
+    <div className="relative flex items-center gap-1 md:gap-2">
       {/* Show existing reactions with counts */}
       {Object.entries(counts).map(([tag, count]) => (
         <button
           key={tag}
           onClick={() => handleToggle(tag as ReactionTag)}
           disabled={isLoading || !session}
-          className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-colors ${
+          className={`flex items-center gap-0.5 md:gap-1 px-1.5 md:px-2 py-1 rounded-full text-sm transition-colors ${
             userReactions.includes(tag)
               ? 'ring-2 ring-blue-500'
               : 'hover:opacity-75'

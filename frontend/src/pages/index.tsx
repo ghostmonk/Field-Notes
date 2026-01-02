@@ -14,16 +14,19 @@ const Home: React.FC<HomeProps> = ({ initialStories, error }) => {
     return (
         <>
             <Head>
-                <title>Turbulence</title>
-                <meta name="description" content="Stories and Such - Ghostmonk: Turbulence!"/>
-                <meta name="keywords" content="Ghostmonk, Turbulence, News, Updates"/>
+                <title>Ghostmonk</title>
+                <meta name="description" content="Sharing Stories, Projects and Ideas"/>
+                <meta name="keywords" content="Ghostmonk, blog, stories, projects"/>
             </Head>
 
             {/* Skeleton showcase for testing - add ?skeleton=test to URL */}
             <SkeletonShowcase />
             
             <div style={{margin: '0 auto', maxWidth: '800px', padding: '0 1rem'}}>
-                <h1 className="page-title text-blue-500">Turbulence</h1>
+                <h1 className="page-title text-blue-500">Ghostmonk</h1>
+                <p className="text-center mb-8" style={{ color: 'var(--color-text-secondary)' }}>
+                    Sharing Stories, Projects and Ideas
+                </p>
                 <Stories initialData={initialStories} initialError={error} />
             </div>
         </>

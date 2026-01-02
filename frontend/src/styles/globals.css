@@ -521,7 +521,7 @@ button.btn--primary:hover:not(:disabled) {
 /* Bottom Navigation (Mobile Only) */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
+  bottom: 2rem; /* Above the fixed footer */
   left: 0;
   right: 0;
   z-index: 50;
@@ -628,7 +628,7 @@ button.btn--primary:hover:not(:disabled) {
 
 /* Bottom nav content offset */
 .pb-bottom-nav {
-  padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  padding-bottom: calc(56px + 2rem + env(safe-area-inset-bottom)); /* nav height + footer height + safe area */
 }
 
 .grid {
