@@ -65,9 +65,10 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
           disabled={isLoading || !session}
           className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-colors ${
             userReactions.includes(tag)
-              ? 'bg-blue-100 text-blue-700'
-              : 'bg-gray-100 hover:bg-gray-200'
+              ? 'ring-2 ring-blue-500'
+              : 'hover:opacity-75'
           }`}
+          style={{ color: 'var(--color-text-secondary)' }}
           title={
             reactions?.details[tag]
               ?.map((u) => u.user_name)
@@ -84,19 +85,28 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
         <div className="relative">
           <button
             onClick={() => setShowPicker(!showPicker)}
-            className="px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-sm"
+            className="px-2 py-1 rounded-full text-sm hover:opacity-75"
+            style={{ color: 'var(--color-text-secondary)' }}
           >
             +
           </button>
 
           {showPicker && (
-            <div className="absolute bottom-full left-0 mb-2 p-2 bg-white rounded-lg shadow-lg border flex gap-1">
+            <div
+              className="absolute bottom-full left-0 mb-2 p-2 rounded-lg shadow-lg flex gap-1"
+              style={{
+                backgroundColor: 'var(--color-surface-secondary)',
+                borderColor: 'var(--color-border-primary)',
+                borderWidth: '1px',
+                borderStyle: 'solid'
+              }}
+            >
               {engagementConfig.reactionTags.map((tag) => (
                 <button
                   key={tag}
                   onClick={() => handleToggle(tag)}
                   disabled={isLoading}
-                  className="p-2 hover:bg-gray-100 rounded"
+                  className="p-2 hover:opacity-75 rounded"
                 >
                   {REACTION_ICONS[tag]}
                 </button>
