@@ -87,3 +87,4 @@ Place `gcp-credentials.json` in project root.
 - Escape user-generated content that will be displayed (React does this by default, but be careful with `dangerouslySetInnerHTML`)
 - Use parameterized queries for database operations (MongoDB driver handles this, but never construct queries with string concatenation)
 - Authenticate and authorize all mutation endpoints
+- Rate limit all mutation endpoints to human-realistic rates (e.g., 5-10 requests/minute for user actions like comments, reactions)

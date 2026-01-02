@@ -9,6 +9,7 @@ from database import get_comments_collection, get_reactions_collection
 from decorators.auth import requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from glogger import logger
+from middleware.rate_limit import limiter
 from models.comment import CommentCreate
 from models.reaction import (
     BulkCountsRequest,
@@ -90,6 +91,7 @@ async def get_reactions(
 
 
 @router.post("/{target_type}/{target_id}/reactions")
+@limiter.limit("10/minute")
 @requires_auth
 async def toggle_reaction(
     request: Request,
@@ -210,6 +212,7 @@ async def get_comments(
 
 
 @router.post("/{target_type}/{target_id}/comments", status_code=201)
+@limiter.limit("3/minute")
 @requires_auth
 async def create_comment(
     request: Request,
@@ -297,6 +300,7 @@ async def create_comment(
 
 
 @router.delete("/comments/{comment_id}", status_code=204)
+@limiter.limit("10/minute")
 @requires_auth
 async def delete_comment(
     request: Request,
