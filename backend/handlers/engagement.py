@@ -282,7 +282,8 @@ async def create_comment(
         },
     )
 
-    # Sanitize user input to prevent XSS
+    # Escape HTML entities for storage - frontend decodes for display
+    # This provides defense-in-depth: escaped in DB + React auto-escapes on render
     sanitized_content = html.escape(comment.content)
     sanitized_mentions = [
         {"user_id": m.user_id, "user_name": html.escape(m.user_name)} for m in comment.mentions

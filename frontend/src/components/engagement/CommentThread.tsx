@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
+import { decode } from 'he';
 import { Comment } from '@/types/api';
 
 interface CommentThreadProps {
@@ -66,7 +67,7 @@ export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps
             <span className="text-gray-500 text-sm">{formatDate(comment.created_at)}</span>
           </div>
 
-          <p className="mt-1" style={{ color: 'var(--color-text-primary)' }}>{comment.content}</p>
+          <p className="mt-1" style={{ color: 'var(--color-text-primary)' }}>{decode(comment.content)}</p>
 
           <div className="mt-2 flex items-center gap-4 text-sm">
             {session && !comment.parent_id && (
