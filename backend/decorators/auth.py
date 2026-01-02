@@ -89,6 +89,7 @@ async def get_or_create_user(
     return UserInfo(
         id=str(user_doc["_id"]),
         email=user_doc["email"],
+        name=user_doc.get("name", user_doc["email"].split("@")[0]),
         role=user_doc.get("role", "commenter"),
     )
 
