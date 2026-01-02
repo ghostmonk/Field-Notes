@@ -368,8 +368,14 @@ class TestBulkCountsAPI:
         # Mock reactions aggregation - returns count grouped by target and tag
         mock_reactions_cursor = MockAsyncCursor(
             [
-                {"_id": {"target_type": "story", "target_id": target_id, "tag": "thumbup"}, "count": 5},
-                {"_id": {"target_type": "story", "target_id": target_id, "tag": "heart"}, "count": 3},
+                {
+                    "_id": {"target_type": "story", "target_id": target_id, "tag": "thumbup"},
+                    "count": 5,
+                },
+                {
+                    "_id": {"target_type": "story", "target_id": target_id, "tag": "heart"},
+                    "count": 3,
+                },
             ]
         )
         mock_reactions_collection.aggregate = MagicMock(return_value=mock_reactions_cursor)
@@ -418,8 +424,14 @@ class TestBulkCountsAPI:
         # Mock reactions aggregation - returns all results in single query
         mock_reactions_cursor = MockAsyncCursor(
             [
-                {"_id": {"target_type": "story", "target_id": target_id_1, "tag": "thumbup"}, "count": 2},
-                {"_id": {"target_type": "story", "target_id": target_id_2, "tag": "heart"}, "count": 1},
+                {
+                    "_id": {"target_type": "story", "target_id": target_id_1, "tag": "thumbup"},
+                    "count": 2,
+                },
+                {
+                    "_id": {"target_type": "story", "target_id": target_id_2, "tag": "heart"},
+                    "count": 1,
+                },
             ]
         )
         mock_reactions_collection.aggregate = MagicMock(return_value=mock_reactions_cursor)

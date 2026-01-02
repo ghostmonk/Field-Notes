@@ -401,7 +401,10 @@ def mock_stories_collection():
 
 @pytest.fixture
 def override_engagement_database(
-    mock_reactions_collection, mock_comments_collection, mock_stories_collection, mock_projects_collection
+    mock_reactions_collection,
+    mock_comments_collection,
+    mock_stories_collection,
+    mock_projects_collection,
 ):
     """Override engagement collections to use mocks"""
     from unittest.mock import patch
@@ -419,7 +422,10 @@ def override_engagement_database(
         return mock_projects_collection
 
     # Default: target exists and is published
-    mock_projects_collection.find_one.return_value = {"_id": "507f1f77bcf86cd799439011", "is_published": True}
+    mock_projects_collection.find_one.return_value = {
+        "_id": "507f1f77bcf86cd799439011",
+        "is_published": True,
+    }
 
     test_app.dependency_overrides[get_reactions_collection] = get_mock_reactions_collection
     test_app.dependency_overrides[get_comments_collection] = get_mock_comments_collection

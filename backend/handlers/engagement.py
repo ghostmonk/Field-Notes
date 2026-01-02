@@ -59,14 +59,10 @@ async def validate_target_exists(target_type: str, target_id: str) -> None:
     """Validate that the target exists and is published."""
     if target_type == "story":
         collection = await get_collection()
-        target = await collection.find_one(
-            {"_id": ObjectId(target_id), "is_published": True}
-        )
+        target = await collection.find_one({"_id": ObjectId(target_id), "is_published": True})
     elif target_type == "project":
         collection = await get_projects_collection()
-        target = await collection.find_one(
-            {"_id": ObjectId(target_id), "is_published": True}
-        )
+        target = await collection.find_one({"_id": ObjectId(target_id), "is_published": True})
     else:
         return  # Unknown types already rejected by validate_target_type
 
@@ -289,8 +285,7 @@ async def create_comment(
     # Sanitize user input to prevent XSS
     sanitized_content = html.escape(comment.content)
     sanitized_mentions = [
-        {"user_id": m.user_id, "user_name": html.escape(m.user_name)}
-        for m in comment.mentions
+        {"user_id": m.user_id, "user_name": html.escape(m.user_name)} for m in comment.mentions
     ]
 
     doc = {
