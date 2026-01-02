@@ -150,4 +150,64 @@ export interface PaginatedResponse<T> {
     total: number;
     limit: number;
     offset: number;
+}
+
+/**
+ * Engagement types for reactions and comments
+ */
+
+export type ReactionTag = 'thumbup' | 'heart' | 'surprise' | 'celebrate' | 'insightful';
+
+export interface Mention {
+  user_id: string;
+  user_name: string;
+}
+
+export interface ReactionCounts {
+  counts: Record<string, number>;
+  user_reactions: string[];
+  details: Record<string, Array<{ user_id: string; user_name: string }>>;
+}
+
+export interface ToggleReactionRequest {
+  reaction_tag: ReactionTag;
+}
+
+export interface ToggleReactionResponse {
+  added: boolean;
+  reaction_tag: ReactionTag;
+}
+
+export interface Comment {
+  id: string;
+  target_type: string;
+  target_id: string;
+  parent_id: string | null;
+  user_id: string;
+  user_name: string;
+  user_avatar: string | null;
+  content: string;
+  mentions: Mention[];
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  replies: Comment[];
+}
+
+export interface CreateCommentRequest {
+  content: string;
+  parent_id: string | null;
+  mentions: Mention[];
+}
+
+export interface CommentsResponse {
+  comments: Comment[];
+}
+
+export interface BulkCountsRequest {
+  targets: Array<{ type: string; id: string }>;
+}
+
+export interface BulkCountsResponse {
+  counts: Record<string, { reactions: Record<string, number>; comment_count: number }>;
 } 
