@@ -346,28 +346,32 @@ class TestBulkCountsAPI:
     async def test_bulk_counts(self, engagement_async_client, override_engagement_database):
         """Test getting counts for multiple targets."""
         mock_reactions_collection, mock_comments_collection = override_engagement_database
+        target_id = "507f1f77bcf86cd799439011"
 
-        # Mock reactions aggregation - returns count by tag
+        # Mock reactions aggregation - returns count grouped by target and tag
         mock_reactions_cursor = MockAsyncCursor(
             [
-                {"_id": "thumbup", "count": 5},
-                {"_id": "heart", "count": 3},
+                {"_id": {"target_type": "story", "target_id": target_id, "tag": "thumbup"}, "count": 5},
+                {"_id": {"target_type": "story", "target_id": target_id, "tag": "heart"}, "count": 3},
             ]
         )
         mock_reactions_collection.aggregate = MagicMock(return_value=mock_reactions_cursor)
 
-        # Mock comments count
-        mock_comments_collection.count_documents.return_value = 7
+        # Mock comments aggregation - returns count grouped by target
+        mock_comments_cursor = MockAsyncCursor(
+            [{"_id": {"target_type": "story", "target_id": target_id}, "count": 7}]
+        )
+        mock_comments_collection.aggregate = MagicMock(return_value=mock_comments_cursor)
 
         response = await engagement_async_client.post(
             "/api/engagement/bulk/counts",
-            json={"targets": [{"type": "story", "id": "507f1f77bcf86cd799439011"}]},
+            json={"targets": [{"type": "story", "id": target_id}]},
         )
         assert response.status_code == 200
         data = response.json()
         assert "counts" in data
-        assert "story:507f1f77bcf86cd799439011" in data["counts"]
-        counts = data["counts"]["story:507f1f77bcf86cd799439011"]
+        assert f"story:{target_id}" in data["counts"]
+        counts = data["counts"][f"story:{target_id}"]
         assert counts["reactions"]["thumbup"] == 5
         assert counts["reactions"]["heart"] == 3
         assert counts["comment_count"] == 7
@@ -389,46 +393,46 @@ class TestBulkCountsAPI:
     async def test_bulk_counts_multiple_targets(
         self, engagement_async_client, override_engagement_database
     ):
-        """Test getting counts for multiple targets."""
+        """Test getting counts for multiple targets with single batched query."""
         mock_reactions_collection, mock_comments_collection = override_engagement_database
+        target_id_1 = "507f1f77bcf86cd799439011"
+        target_id_2 = "507f1f77bcf86cd799439012"
 
-        # Track call counts for aggregate
-        aggregate_call_count = 0
+        # Mock reactions aggregation - returns all results in single query
+        mock_reactions_cursor = MockAsyncCursor(
+            [
+                {"_id": {"target_type": "story", "target_id": target_id_1, "tag": "thumbup"}, "count": 2},
+                {"_id": {"target_type": "story", "target_id": target_id_2, "tag": "heart"}, "count": 1},
+            ]
+        )
+        mock_reactions_collection.aggregate = MagicMock(return_value=mock_reactions_cursor)
 
-        def mock_aggregate(pipeline):
-            nonlocal aggregate_call_count
-            aggregate_call_count += 1
-            if aggregate_call_count == 1:
-                return MockAsyncCursor([{"_id": "thumbup", "count": 2}])
-            else:
-                return MockAsyncCursor([{"_id": "heart", "count": 1}])
-
-        mock_reactions_collection.aggregate = MagicMock(side_effect=mock_aggregate)
-
-        # Track call counts for count_documents
-        count_call_count = 0
-
-        async def mock_count_documents(query):
-            nonlocal count_call_count
-            count_call_count += 1
-            return count_call_count * 3  # Return 3, 6 for two calls
-
-        mock_comments_collection.count_documents = mock_count_documents
+        # Mock comments aggregation - returns all results in single query
+        mock_comments_cursor = MockAsyncCursor(
+            [
+                {"_id": {"target_type": "story", "target_id": target_id_1}, "count": 3},
+                {"_id": {"target_type": "story", "target_id": target_id_2}, "count": 6},
+            ]
+        )
+        mock_comments_collection.aggregate = MagicMock(return_value=mock_comments_cursor)
 
         response = await engagement_async_client.post(
             "/api/engagement/bulk/counts",
             json={
                 "targets": [
-                    {"type": "story", "id": "507f1f77bcf86cd799439011"},
-                    {"type": "story", "id": "507f1f77bcf86cd799439012"},
+                    {"type": "story", "id": target_id_1},
+                    {"type": "story", "id": target_id_2},
                 ]
             },
         )
         assert response.status_code == 200
         data = response.json()
         assert len(data["counts"]) == 2
-        assert "story:507f1f77bcf86cd799439011" in data["counts"]
-        assert "story:507f1f77bcf86cd799439012" in data["counts"]
+        assert f"story:{target_id_1}" in data["counts"]
+        assert f"story:{target_id_2}" in data["counts"]
+        # Verify aggregate was called only once per collection (batched)
+        assert mock_reactions_collection.aggregate.call_count == 1
+        assert mock_comments_collection.aggregate.call_count == 1
 
     @pytest.mark.asyncio
     async def test_bulk_counts_skips_invalid_targets(
@@ -438,7 +442,7 @@ class TestBulkCountsAPI:
         mock_reactions_collection, mock_comments_collection = override_engagement_database
 
         mock_reactions_collection.aggregate = MagicMock(return_value=MockAsyncCursor([]))
-        mock_comments_collection.count_documents.return_value = 0
+        mock_comments_collection.aggregate = MagicMock(return_value=MockAsyncCursor([]))
 
         response = await engagement_async_client.post(
             "/api/engagement/bulk/counts",

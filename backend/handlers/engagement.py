@@ -339,7 +339,10 @@ async def get_bulk_counts(
     comments_collection: AsyncIOMotorCollection = Depends(get_comments_collection),
 ) -> BulkCountsResponse:
     """Get reaction counts and comment counts for multiple targets. Public endpoint."""
-    result: dict[str, dict] = {}
+    # Filter and validate targets, group by enabled features
+    reaction_targets: list[dict[str, str]] = []
+    comment_targets: list[dict[str, str]] = []
+    all_keys: set[str] = set()
 
     for target in body.targets:
         target_type = target.get("type", "")
@@ -349,31 +352,50 @@ async def get_bulk_counts(
             continue
 
         key = f"{target_type}:{target_id}"
+        all_keys.add(key)
 
-        # Get reaction counts
-        reaction_counts: dict[str, int] = {}
-        if ENGAGEMENT_ENABLED_TYPES.get(target_type, {}).get("reactions", False):
-            pipeline = [
-                {"$match": {"target_type": target_type, "target_id": target_id}},
-                {"$group": {"_id": "$reaction_tag", "count": {"$sum": 1}}},
-            ]
-            async for doc in reactions_collection.aggregate(pipeline):
-                reaction_counts[doc["_id"]] = doc["count"]
+        config = ENGAGEMENT_ENABLED_TYPES.get(target_type, {})
+        if config.get("reactions", False):
+            reaction_targets.append({"target_type": target_type, "target_id": target_id})
+        if config.get("comments", False):
+            comment_targets.append({"target_type": target_type, "target_id": target_id})
 
-        # Get comment count
-        comment_count = 0
-        if ENGAGEMENT_ENABLED_TYPES.get(target_type, {}).get("comments", False):
-            comment_count = await comments_collection.count_documents(
-                {
-                    "target_type": target_type,
-                    "target_id": target_id,
-                    "deleted_at": None,
+    # Initialize result with empty counts for all requested targets
+    result: dict[str, dict] = {key: {"reactions": {}, "comment_count": 0} for key in all_keys}
+
+    # Single aggregation for all reaction counts
+    if reaction_targets:
+        pipeline = [
+            {"$match": {"$or": reaction_targets}},
+            {
+                "$group": {
+                    "_id": {
+                        "target_type": "$target_type",
+                        "target_id": "$target_id",
+                        "tag": "$reaction_tag",
+                    },
+                    "count": {"$sum": 1},
                 }
-            )
+            },
+        ]
+        async for doc in reactions_collection.aggregate(pipeline):
+            key = f"{doc['_id']['target_type']}:{doc['_id']['target_id']}"
+            tag = doc["_id"]["tag"]
+            result[key]["reactions"][tag] = doc["count"]
 
-        result[key] = {
-            "reactions": reaction_counts,
-            "comment_count": comment_count,
-        }
+    # Single aggregation for all comment counts
+    if comment_targets:
+        pipeline = [
+            {"$match": {"$or": comment_targets, "deleted_at": None}},
+            {
+                "$group": {
+                    "_id": {"target_type": "$target_type", "target_id": "$target_id"},
+                    "count": {"$sum": 1},
+                }
+            },
+        ]
+        async for doc in comments_collection.aggregate(pipeline):
+            key = f"{doc['_id']['target_type']}:{doc['_id']['target_id']}"
+            result[key]["comment_count"] = doc["count"]
 
     return BulkCountsResponse(counts=result)
