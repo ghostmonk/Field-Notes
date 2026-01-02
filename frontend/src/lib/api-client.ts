@@ -12,7 +12,15 @@ import {
   ProjectCard,
   Project,
   CreateProjectRequest,
-  UpdateProjectRequest
+  UpdateProjectRequest,
+  ReactionCounts,
+  ToggleReactionRequest,
+  ToggleReactionResponse,
+  CommentsResponse,
+  CreateCommentRequest,
+  Comment,
+  BulkCountsRequest,
+  BulkCountsResponse,
 } from '@/types/api';
 import { ApiRequestError } from '@/types/error';
 
@@ -148,6 +156,15 @@ const apiRoutes = {
     update: (id: string) => `/api/projects/${id}`,
     delete: (id: string) => `/api/projects/${id}`,
   },
+  engagement: {
+    reactions: (targetType: string, targetId: string) =>
+      `/api/engagement/${targetType}/${targetId}/reactions`,
+    comments: (targetType: string, targetId: string) =>
+      `/api/engagement/${targetType}/${targetId}/comments`,
+    deleteComment: (commentId: string) =>
+      `/api/engagement/comments/${commentId}`,
+    bulkCounts: () => '/api/engagement/bulk/counts',
+  },
 };
 
 interface PaginationParams {
@@ -257,6 +274,41 @@ const apiClient = {
         method: 'DELETE',
         token
       }),
+  },
+
+  /**
+   * Engagement methods (reactions and comments)
+   */
+  engagement: {
+    getReactions: (targetType: string, targetId: string, token?: string) =>
+      fetchApi<ReactionCounts>(apiRoutes.engagement.reactions(targetType, targetId), { token }),
+
+    toggleReaction: (targetType: string, targetId: string, data: ToggleReactionRequest, token: string) =>
+      fetchApi<ToggleReactionResponse, ToggleReactionRequest>(
+        apiRoutes.engagement.reactions(targetType, targetId),
+        { method: 'POST', body: data, token }
+      ),
+
+    getComments: (targetType: string, targetId: string) =>
+      fetchApi<CommentsResponse>(apiRoutes.engagement.comments(targetType, targetId)),
+
+    createComment: (targetType: string, targetId: string, data: CreateCommentRequest, token: string) =>
+      fetchApi<Comment, CreateCommentRequest>(
+        apiRoutes.engagement.comments(targetType, targetId),
+        { method: 'POST', body: data, token }
+      ),
+
+    deleteComment: (commentId: string, token: string) =>
+      fetchApi<void>(apiRoutes.engagement.deleteComment(commentId), {
+        method: 'DELETE',
+        token
+      }),
+
+    getBulkCounts: (data: BulkCountsRequest) =>
+      fetchApi<BulkCountsResponse, BulkCountsRequest>(
+        apiRoutes.engagement.bulkCounts(),
+        { method: 'POST', body: data }
+      ),
   },
 
 };

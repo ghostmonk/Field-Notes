@@ -58,4 +58,5 @@ class UserInfo(BaseModel):
 
     id: str
     email: EmailStr
+    name: str
     role: UserRole

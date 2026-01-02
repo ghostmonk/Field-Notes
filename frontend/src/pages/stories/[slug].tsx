@@ -8,12 +8,36 @@ import { Story } from '@/types/api';
 import { LazyStoryContent } from '@/components/LazyStoryContent';
 import { extractImageFromContentServer, getDefaultOGImage } from '@/utils/extractImageFromContent';
 import { getBaseUrl } from '@/utils/urls';
+import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/components/engagement';
 
 interface StoryPageProps {
   story: Story | null;
   error?: string;
   ogImage: string;
   excerpt: string;
+}
+
+function StoryEngagement() {
+  const { reactions, comments, isLoading, toggleReaction, addComment, deleteComment } = useEngagementContext();
+
+  return (
+    <>
+      <div className="mt-8 border-t pt-8">
+        <ReactionBar
+          reactions={reactions}
+          onToggle={toggleReaction}
+        />
+      </div>
+      <div className="mt-8">
+        <CommentSection
+          comments={comments}
+          onAddComment={addComment}
+          onDeleteComment={deleteComment}
+          isLoading={isLoading}
+        />
+      </div>
+    </>
+  );
 }
 
 export default function StoryPage({ story, error, ogImage, excerpt }: StoryPageProps) {
@@ -67,30 +91,34 @@ export default function StoryPage({ story, error, ogImage, excerpt }: StoryPageP
           &larr; Back to all stories
         </Link>
 
-        <article className="card" data-testid="story-article">
-          <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
-          
-          <div className="flex items-center text-sm mb-8">
-            <span className="text-gray-400">{formatDate(story.createdDate)}</span>
-            {story.updatedDate !== story.createdDate && (
-              <span className="text-gray-400 text-xs ml-2 opacity-70">
-                (Updated: {formatDate(story.updatedDate)})
-              </span>
-            )}
-          </div>
-          
-          <LazyStoryContent
-            content={story.content}
-            className="prose--card lg:prose-lg dark:prose-invert dark:text-gray-200"
-            data-testid="story-content"
-          />
-          
-          <div className="mt-10 pt-6">
-            <Link href="/" className="btn btn--secondary btn--sm">
-              &larr; Back to all stories
-            </Link>
-          </div>
-        </article>
+        <EngagementProvider targetType="story" targetId={story.id}>
+          <article className="card" data-testid="story-article">
+            <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
+
+            <div className="flex items-center text-sm mb-8">
+              <span className="text-gray-400">{formatDate(story.createdDate)}</span>
+              {story.updatedDate !== story.createdDate && (
+                <span className="text-gray-400 text-xs ml-2 opacity-70">
+                  (Updated: {formatDate(story.updatedDate)})
+                </span>
+              )}
+            </div>
+
+            <LazyStoryContent
+              content={story.content}
+              className="prose--card lg:prose-lg dark:prose-invert dark:text-gray-200"
+              data-testid="story-content"
+            />
+
+            <StoryEngagement />
+
+            <div className="mt-10 pt-6">
+              <Link href="/" className="btn btn--secondary btn--sm">
+                &larr; Back to all stories
+              </Link>
+            </div>
+          </article>
+        </EngagementProvider>
       </div>
     </>
   );

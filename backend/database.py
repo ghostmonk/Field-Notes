@@ -111,6 +111,16 @@ async def get_users_collection() -> AsyncIOMotorCollection:
     return db["users"]
 
 
+async def get_reactions_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["reactions"]
+
+
+async def get_comments_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["comments"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
@@ -189,6 +199,22 @@ async def ensure_indexes() -> None:
         [("auth_providers.provider", 1), ("auth_providers.provider_user_id", 1)],
         name="auth_provider_lookup",
     )
+
+    # Reactions indexes
+    reactions = db["reactions"]
+    await safe_create_index(reactions, [("target_type", 1), ("target_id", 1)])
+    if not await safe_create_index(
+        reactions,
+        [("target_type", 1), ("target_id", 1), ("user_id", 1), ("reaction_tag", 1)],
+        unique=True,
+        name="unique_user_reaction",
+    ):
+        failed_indexes.append("reactions.unique_user_reaction")
+
+    # Comments indexes
+    comments = db["comments"]
+    await safe_create_index(comments, [("target_type", 1), ("target_id", 1)])
+    await safe_create_index(comments, "parent_id")
 
     if failed_indexes:
         logger.error(
