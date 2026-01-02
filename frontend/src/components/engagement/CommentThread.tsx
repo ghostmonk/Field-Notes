@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { Comment } from '@/types/api';
 
 interface CommentThreadProps {
@@ -46,10 +47,12 @@ export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps
     <div className="border-l-2 border-gray-200 pl-4 py-2">
       <div className="flex items-start gap-3">
         {comment.user_avatar ? (
-          <img
+          <Image
             src={comment.user_avatar}
             alt={comment.user_name}
-            className="w-8 h-8 rounded-full"
+            width={32}
+            height={32}
+            className="rounded-full"
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
