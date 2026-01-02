@@ -138,12 +138,12 @@ const StoryItem = React.memo(({
                         </div>
                     </Link>
                     {engagementCounts && (
-                        <div className="mt-4 flex items-center gap-4 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        <div className="mt-4 flex items-center justify-end gap-4 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                             {Object.entries(engagementCounts.reactions).length > 0 && (
-                                <span className="flex items-center gap-1">
+                                <span className="flex items-center gap-3">
                                     {Object.entries(engagementCounts.reactions).map(([tag, count]) => (
-                                        <span key={tag} className="flex items-center">
-                                            {REACTION_ICONS[tag]}{count}
+                                        <span key={tag} className="flex items-center gap-1">
+                                            {REACTION_ICONS[tag]} {count}
                                         </span>
                                     ))}
                                 </span>
