@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { useSession } from 'next-auth/react';
@@ -6,10 +6,19 @@ import type { Session } from 'next-auth';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { formatDate } from "@/utils/formatDate";
-import { Story, PaginatedResponse } from '@/types/api';
+import { Story, PaginatedResponse, BulkCountsResponse } from '@/types/api';
 import { useFetchStories, useStoryMutations } from '@/hooks/stories';
 import { StoriesListSkeleton } from '@/components/LoadingSkeletons';
 import { LazyStoryContent } from '@/components/LazyStoryContent';
+import apiClient from '@/lib/api-client';
+
+const REACTION_ICONS: Record<string, string> = {
+    thumbup: '👍',
+    heart: '❤️',
+    surprise: '😮',
+    celebrate: '🎉',
+    insightful: '💡',
+};
 
 /**
  * Safely gets the story URL based on the slug
@@ -31,18 +40,25 @@ const canEditStory = (session: Session | null, story: Story): boolean => {
     return false;
 };
 
+interface EngagementCounts {
+    reactions: Record<string, number>;
+    comment_count: number;
+}
+
 const StoryItem = React.memo(({
     story,
     session,
     onEdit,
     onDelete,
-    deleteLoading
+    deleteLoading,
+    engagementCounts
 }: {
     story: Story,
     session: Session | null,
     onEdit: (story: Story) => void,
     onDelete: (story: Story) => Promise<void>,
-    deleteLoading: boolean
+    deleteLoading: boolean,
+    engagementCounts?: EngagementCounts
 }) => {
     const isDraft = !story.is_published;
     const storyPath = getStoryPath(story);
@@ -109,17 +125,35 @@ const StoryItem = React.memo(({
             </div>
             
             {!isDraft && (
-                <Link href={storyPath} className="block" data-testid={`story-content-link-${story.id}`}>
-                    <LazyStoryContent
-                        content={story.content}
-                        className="story-content prose--card"
-                    />
-                    <div className="mt-4">
-                        <span className="btn btn--secondary btn--sm" data-testid={`story-read-more-${story.id}`}>
-                            Read full story →
-                        </span>
-                    </div>
-                </Link>
+                <>
+                    <Link href={storyPath} className="block" data-testid={`story-content-link-${story.id}`}>
+                        <LazyStoryContent
+                            content={story.content}
+                            className="story-content prose--card"
+                        />
+                        <div className="mt-4">
+                            <span className="btn btn--secondary btn--sm" data-testid={`story-read-more-${story.id}`}>
+                                Read full story →
+                            </span>
+                        </div>
+                    </Link>
+                    {engagementCounts && (
+                        <div className="mt-4 flex items-center gap-4 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                            {Object.entries(engagementCounts.reactions).length > 0 && (
+                                <span className="flex items-center gap-1">
+                                    {Object.entries(engagementCounts.reactions).map(([tag, count]) => (
+                                        <span key={tag} className="flex items-center">
+                                            {REACTION_ICONS[tag]}{count}
+                                        </span>
+                                    ))}
+                                </span>
+                            )}
+                            {engagementCounts.comment_count > 0 && (
+                                <span>💬 {engagementCounts.comment_count}</span>
+                            )}
+                        </div>
+                    )}
+                </>
             )}
             {isDraft && (
                 <LazyStoryContent 
@@ -141,21 +175,39 @@ interface StoriesProps {
 const Stories: React.FC<StoriesProps> = ({ initialData, initialError }) => {
     const { data: session } = useSession();
     const router = useRouter();
-    const { 
-        stories, 
-        loading, 
-        error, 
-        fetchStories, 
-        hasMore, 
-        resetStories 
+    const {
+        stories,
+        loading,
+        error,
+        fetchStories,
+        hasMore,
+        resetStories
     } = useFetchStories({ initialData, initialError });
     const { deleteStory, loading: deleteLoading } = useStoryMutations();
-    
+    const [engagementCounts, setEngagementCounts] = useState<BulkCountsResponse['counts']>({});
+
     // Initialize data on component mount
-    
     useEffect(() => {
         resetStories();
     }, [resetStories]);
+
+    // Fetch engagement counts when stories change
+    useEffect(() => {
+        const publishedStories = stories.filter(s => s.is_published);
+        if (publishedStories.length === 0) return;
+
+        const fetchCounts = async () => {
+            try {
+                const targets = publishedStories.map(s => ({ type: 'story', id: s.id }));
+                const response = await apiClient.engagement.getBulkCounts({ targets });
+                setEngagementCounts(response.counts);
+            } catch (err) {
+                console.error('Failed to fetch engagement counts:', err);
+            }
+        };
+
+        fetchCounts();
+    }, [stories]);
 
     // Create stable callbacks for event handlers
     const handleEdit = useCallback((story: Story) => {
@@ -196,9 +248,10 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError }) => {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 deleteLoading={deleteLoading}
+                engagementCounts={engagementCounts[`story:${story.id}`]}
             />
         ));
-    }, [stories, session, handleEdit, handleDelete, deleteLoading]);
+    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts]);
 
     // Handle error state
     if (error) {
