@@ -48,6 +48,13 @@ def validate_target_type(target_type: str, feature: str) -> None:
         )
 
 
+def validate_object_id(value: str, name: str = "ID") -> ObjectId:
+    """Validate and convert string to ObjectId."""
+    if not ObjectId.is_valid(value):
+        raise HTTPException(status_code=400, detail=f"Invalid {name} format")
+    return ObjectId(value)
+
+
 async def validate_target_exists(target_type: str, target_id: str) -> None:
     """Validate that the target exists and is published."""
     if target_type == "story":
@@ -82,9 +89,7 @@ async def get_reactions(
 ) -> ReactionCounts:
     """Get reactions for a target. Public endpoint."""
     validate_target_type(target_type, "reactions")
-
-    if not ObjectId.is_valid(target_id):
-        raise HTTPException(status_code=400, detail="Invalid target ID format")
+    validate_object_id(target_id, "target ID")
 
     logger.info_with_context(
         "Fetching reactions",
@@ -132,10 +137,7 @@ async def toggle_reaction(
 ) -> dict:
     """Toggle a reaction (add if missing, remove if exists). Requires auth."""
     validate_target_type(target_type, "reactions")
-
-    if not ObjectId.is_valid(target_id):
-        raise HTTPException(status_code=400, detail="Invalid target ID format")
-
+    validate_object_id(target_id, "target ID")
     await validate_target_exists(target_type, target_id)
 
     user: UserInfo = request.state.user
@@ -189,9 +191,7 @@ async def get_comments(
 ) -> dict:
     """Get comments for a target with nested replies. Public endpoint."""
     validate_target_type(target_type, "comments")
-
-    if not ObjectId.is_valid(target_id):
-        raise HTTPException(status_code=400, detail="Invalid target ID format")
+    validate_object_id(target_id, "target ID")
 
     logger.info_with_context(
         "Fetching comments",
@@ -255,19 +255,15 @@ async def create_comment(
 ) -> dict:
     """Create a new comment. Requires auth."""
     validate_target_type(target_type, "comments")
-
-    if not ObjectId.is_valid(target_id):
-        raise HTTPException(status_code=400, detail="Invalid target ID format")
-
+    validate_object_id(target_id, "target ID")
     await validate_target_exists(target_type, target_id)
 
     # Validate parent_id if provided (must be a top-level comment)
     if comment.parent_id:
-        if not ObjectId.is_valid(comment.parent_id):
-            raise HTTPException(status_code=400, detail="Invalid parent ID format")
+        parent_oid = validate_object_id(comment.parent_id, "parent ID")
         parent = await comments_collection.find_one(
             {
-                "_id": ObjectId(comment.parent_id),
+                "_id": parent_oid,
                 "target_type": target_type,
                 "target_id": target_id,
                 "parent_id": None,  # Must be top-level
@@ -342,14 +338,12 @@ async def delete_comment(
     comments_collection: AsyncIOMotorCollection = Depends(get_comments_collection),
 ):
     """Soft delete a comment. Users can only delete their own comments."""
-    if not ObjectId.is_valid(comment_id):
-        raise HTTPException(status_code=400, detail="Invalid comment ID format")
-
+    comment_oid = validate_object_id(comment_id, "comment ID")
     user: UserInfo = request.state.user
 
     comment = await comments_collection.find_one(
         {
-            "_id": ObjectId(comment_id),
+            "_id": comment_oid,
             "deleted_at": None,
         }
     )
@@ -370,7 +364,7 @@ async def delete_comment(
     )
 
     await comments_collection.update_one(
-        {"_id": ObjectId(comment_id)},
+        {"_id": comment_oid},
         {"$set": {"deleted_at": datetime.now(timezone.utc)}},
     )
 
