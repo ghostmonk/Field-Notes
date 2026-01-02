@@ -134,6 +134,23 @@ class TestReactionsAPI:
         )
         assert response.status_code == 401
 
+    @pytest.mark.asyncio
+    async def test_toggle_reaction_target_not_found(
+        self, engagement_async_client, mock_auth, auth_headers, mock_stories_collection
+    ):
+        """Test that reacting to non-existent target returns 404."""
+        # Mock: target doesn't exist
+        mock_stories_collection.find_one.return_value = None
+
+        response = await engagement_async_client.post(
+            "/api/engagement/story/507f1f77bcf86cd799439011/reactions",
+            json={"reaction_tag": "thumbup"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 404
+        data = response.json()
+        assert data["detail"]["error"] == "target_not_found"
+
 
 class TestCommentsAPI:
     """Tests for comments endpoints."""

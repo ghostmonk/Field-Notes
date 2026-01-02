@@ -5,7 +5,12 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from config.engagement import ENGAGEMENT_ENABLED_TYPES
-from database import get_comments_collection, get_reactions_collection
+from database import (
+    get_collection,
+    get_comments_collection,
+    get_projects_collection,
+    get_reactions_collection,
+)
 from decorators.auth import requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from glogger import logger
@@ -39,6 +44,31 @@ def validate_target_type(target_type: str, feature: str) -> None:
             detail={
                 "error": "feature_disabled",
                 "message": f"{feature} disabled for {target_type}",
+            },
+        )
+
+
+async def validate_target_exists(target_type: str, target_id: str) -> None:
+    """Validate that the target exists and is published."""
+    if target_type == "story":
+        collection = await get_collection()
+        target = await collection.find_one(
+            {"_id": ObjectId(target_id), "is_published": True}
+        )
+    elif target_type == "project":
+        collection = await get_projects_collection()
+        target = await collection.find_one(
+            {"_id": ObjectId(target_id), "is_published": True}
+        )
+    else:
+        return  # Unknown types already rejected by validate_target_type
+
+    if not target:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": "target_not_found",
+                "message": f"{target_type} not found or not published",
             },
         )
 
@@ -105,6 +135,8 @@ async def toggle_reaction(
 
     if not ObjectId.is_valid(target_id):
         raise HTTPException(status_code=400, detail="Invalid target ID format")
+
+    await validate_target_exists(target_type, target_id)
 
     user: UserInfo = request.state.user
 
@@ -226,6 +258,8 @@ async def create_comment(
 
     if not ObjectId.is_valid(target_id):
         raise HTTPException(status_code=400, detail="Invalid target ID format")
+
+    await validate_target_exists(target_type, target_id)
 
     # Validate parent_id if provided (must be a top-level comment)
     if comment.parent_id:

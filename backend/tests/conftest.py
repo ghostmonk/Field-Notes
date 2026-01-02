@@ -390,8 +390,21 @@ def mock_comments_collection():
 
 
 @pytest.fixture
-def override_engagement_database(mock_reactions_collection, mock_comments_collection):
+def mock_stories_collection():
+    """Mock collection for stories (used by engagement target validation)"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    # Default: target exists and is published
+    mock.find_one.return_value = {"_id": "507f1f77bcf86cd799439011", "is_published": True}
+    return mock
+
+
+@pytest.fixture
+def override_engagement_database(
+    mock_reactions_collection, mock_comments_collection, mock_stories_collection, mock_projects_collection
+):
     """Override engagement collections to use mocks"""
+    from unittest.mock import patch
 
     async def get_mock_reactions_collection():
         return mock_reactions_collection
@@ -399,9 +412,25 @@ def override_engagement_database(mock_reactions_collection, mock_comments_collec
     async def get_mock_comments_collection():
         return mock_comments_collection
 
+    async def get_mock_stories_collection():
+        return mock_stories_collection
+
+    async def get_mock_projects_coll():
+        return mock_projects_collection
+
+    # Default: target exists and is published
+    mock_projects_collection.find_one.return_value = {"_id": "507f1f77bcf86cd799439011", "is_published": True}
+
     test_app.dependency_overrides[get_reactions_collection] = get_mock_reactions_collection
     test_app.dependency_overrides[get_comments_collection] = get_mock_comments_collection
-    yield mock_reactions_collection, mock_comments_collection
+
+    # Patch module-level imports for validate_target_exists (not dependency injected)
+    with (
+        patch("handlers.engagement.get_collection", get_mock_stories_collection),
+        patch("handlers.engagement.get_projects_collection", get_mock_projects_coll),
+    ):
+        yield mock_reactions_collection, mock_comments_collection
+
     test_app.dependency_overrides.pop(get_reactions_collection, None)
     test_app.dependency_overrides.pop(get_comments_collection, None)
 
