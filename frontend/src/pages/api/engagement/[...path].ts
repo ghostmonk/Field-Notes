@@ -25,11 +25,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         const token = await getToken({ req });
 
-        // Allow public read endpoints without auth
-        const isPublicEndpoint = pathArray.join('/') === 'bulk/counts';
+        // GET requests are always public (reactions/comments viewing)
+        // POST to bulk/counts is also public (read-only operation using POST for request body)
+        const isPublicPostEndpoint = pathArray.join('/') === 'bulk/counts';
 
-        // Require authentication for mutation operations (except public read endpoints)
-        if (req.method !== 'GET' && !isPublicEndpoint && (!token || !token.accessToken)) {
+        // Require authentication for mutation operations only
+        if (req.method !== 'GET' && !isPublicPostEndpoint && (!token || !token.accessToken)) {
             return res.status(401).json({
                 detail: 'Not authenticated',
                 error: 'Authentication required'
