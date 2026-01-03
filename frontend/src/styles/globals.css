@@ -172,7 +172,7 @@ h6 {
   line-height: var(--line-height-tight);
   margin: 0;
   text-align: center;
-  margin-bottom: var(--space-3xl);
+  margin-bottom: 0.5em;
   padding-top: var(--space-2xl);
 }
 
@@ -536,6 +536,8 @@ button.btn--primary:hover:not(:disabled) {
   /* Fix for mobile browsers with dynamic viewport */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  /* Allow clicks to pass through to content below, except on nav items */
+  pointer-events: none;
 }
 
 /* Hide bottom nav on desktop */
@@ -580,6 +582,8 @@ button.btn--primary:hover:not(:disabled) {
   color: var(--color-text-secondary);
   transition: var(--transition-colors);
   position: relative;
+  /* Re-enable pointer events on nav items */
+  pointer-events: auto;
 }
 
 .bottom-nav__item:hover {

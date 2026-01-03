@@ -1,4 +1,4 @@
-.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui clean docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend
+.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend install-frontend
 
 # Virtual environment configuration
 VENV_DEFAULT := $(HOME)/Documents/venvs/turbulence
@@ -100,6 +100,9 @@ format-check:
 lint-frontend:
 	cd frontend && npm run lint
 
+install-frontend:
+	cd frontend && npm install
+
 # Testing
 test:
 	. $(VENV_ACTIVATE) && pytest
@@ -187,6 +190,9 @@ clean:
 	find . -type d -name "dist" -exec rm -r {} +
 	find . -type d -name "build" -exec rm -r {} +
 
+clean-frontend:
+	rm -rf frontend/node_modules frontend/.next
+
 # Nuke all Docker resources for a clean slate
 nuke:
 	docker-compose down -v --rmi all --remove-orphans
@@ -206,6 +212,7 @@ help:
 	@echo "  format           - Format code with black/isort and lint with flake8"
 	@echo "  format-check     - Check formatting and linting without making changes"
 	@echo "  lint-frontend    - Run ESLint on frontend code"
+	@echo "  install-frontend - Install frontend npm dependencies"
 	@echo "  test             - Run all tests"
 	@echo "  test-unit        - Run only unit tests"
 	@echo "  test-integration - Run only integration tests"
@@ -221,4 +228,5 @@ help:
 	@echo "  dev-backend      - Start backend development server"
 	@echo "  dev-frontend     - Start frontend development server"
 	@echo "  clean            - Clean up Python cache files and build artifacts"
+	@echo "  clean-frontend   - Remove frontend node_modules and .next cache"
 	@echo "  docker-nuke      - Nuke all Docker resources for a clean slate"

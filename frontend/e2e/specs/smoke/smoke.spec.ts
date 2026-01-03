@@ -14,7 +14,7 @@ test.describe('Smoke Tests', () => {
 
     // Verify page title
     const title = await homePage.getTitle();
-    expect(title).toContain('Turbulence');
+    expect(title).toContain('Ghostmonk');
   });
 
   test('home page displays stories list', async ({ mockApiPage }) => {

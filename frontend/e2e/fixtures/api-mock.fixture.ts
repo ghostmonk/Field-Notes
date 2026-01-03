@@ -4,11 +4,16 @@ import {
   sampleStories as sharedStories,
   samplePages as sharedPages,
   sampleProjects as sharedProjects,
+  sampleReactions as sharedReactions,
+  sampleComments as sharedComments,
   FIXED_TIMESTAMP,
   TestStory,
   TestPage,
   TestProject,
+  TestReactionCounts,
+  TestComment,
   projectToCard,
+  createTestComment,
 } from '../test-data';
 
 /**
@@ -102,6 +107,8 @@ export interface ApiMockOptions {
   stories?: MockStory[];
   pages?: TestPage[];
   projects?: TestProject[];
+  reactions?: TestReactionCounts;
+  comments?: TestComment[];
   failRequests?: boolean;
   networkDelay?: number;
 }
@@ -114,6 +121,8 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
     stories = [sampleStories.published, sampleStories.draft],
     pages = sharedPages,
     projects = sharedProjects,
+    reactions = sharedReactions,
+    comments = sharedComments,
     failRequests = false,
     networkDelay = 0,
   } = options;
@@ -487,6 +496,124 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ status: 'ok' }),
+    });
+  });
+
+  // Mock engagement reactions endpoint (GET and POST)
+  await page.route('**/api/engagement/*/*/reactions', async (route) => {
+    await maybeDelay();
+    const method = route.request().method();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    if (method === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(reactions),
+      });
+    } else if (method === 'POST') {
+      const body = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          added: true,
+          reaction_tag: body.reaction_tag,
+        }),
+      });
+    }
+  });
+
+  // Mock engagement comments endpoint (GET and POST)
+  await page.route('**/api/engagement/*/*/comments', async (route) => {
+    await maybeDelay();
+    const method = route.request().method();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    if (method === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ comments }),
+      });
+    } else if (method === 'POST') {
+      const body = route.request().postDataJSON();
+      const newComment = createTestComment({
+        content: body.content,
+        parent_id: body.parent_id,
+      });
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify(newComment),
+      });
+    }
+  });
+
+  // Mock delete comment endpoint
+  await page.route('**/api/engagement/comments/*', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    if (route.request().method() === 'DELETE') {
+      await route.fulfill({
+        status: 204,
+      });
+    }
+  });
+
+  // Mock bulk counts endpoint
+  await page.route('**/api/engagement/bulk/counts', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const body = route.request().postDataJSON();
+    const counts: Record<string, { reactions: Record<string, number>; comment_count: number }> = {};
+
+    for (const target of body.targets) {
+      const key = `${target.type}:${target.id}`;
+      counts[key] = {
+        reactions: reactions.counts,
+        comment_count: comments.length,
+      };
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ counts }),
     });
   });
 }

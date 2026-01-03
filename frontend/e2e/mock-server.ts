@@ -1,5 +1,14 @@
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
-import { sampleStories, samplePages, sampleProjects, projectToCard, FIXED_TIMESTAMP } from './test-data';
+import {
+  sampleStories,
+  samplePages,
+  sampleProjects,
+  projectToCard,
+  FIXED_TIMESTAMP,
+  sampleReactions,
+  sampleComments,
+  createTestComment,
+} from './test-data';
 
 const app = express();
 
@@ -230,6 +239,57 @@ app.put('/projects/:id', (req: Request, res: Response) => {
 // DELETE /projects/:id - Delete project
 app.delete('/projects/:id', (req: Request, res: Response) => {
   res.status(204).send();
+});
+
+// ============================================================================
+// Engagement (Reactions & Comments)
+// ============================================================================
+
+// GET /engagement/:targetType/:targetId/reactions - Get reactions for a target
+app.get('/engagement/:targetType/:targetId/reactions', (req: Request, res: Response) => {
+  res.json(sampleReactions);
+});
+
+// POST /engagement/:targetType/:targetId/reactions - Add/toggle reaction
+app.post('/engagement/:targetType/:targetId/reactions', (req: Request, res: Response) => {
+  res.json({
+    added: true,
+    reaction_tag: req.body.reaction_tag,
+  });
+});
+
+// GET /engagement/:targetType/:targetId/comments - Get comments for a target
+app.get('/engagement/:targetType/:targetId/comments', (req: Request, res: Response) => {
+  res.json({ comments: sampleComments });
+});
+
+// POST /engagement/:targetType/:targetId/comments - Create a comment
+app.post('/engagement/:targetType/:targetId/comments', (req: Request, res: Response) => {
+  const newComment = createTestComment({
+    content: req.body.content,
+    parent_id: req.body.parent_id,
+  });
+  res.status(201).json(newComment);
+});
+
+// DELETE /engagement/comments/:commentId - Delete a comment
+app.delete('/engagement/comments/:commentId', (req: Request, res: Response) => {
+  res.status(204).send();
+});
+
+// POST /engagement/bulk/counts - Get bulk engagement counts
+app.post('/engagement/bulk/counts', (req: Request, res: Response) => {
+  const counts: Record<string, { reactions: Record<string, number>; comment_count: number }> = {};
+
+  for (const target of req.body.targets) {
+    const key = `${target.type}:${target.id}`;
+    counts[key] = {
+      reactions: sampleReactions.counts,
+      comment_count: sampleComments.length,
+    };
+  }
+
+  res.json({ counts });
 });
 
 // Health check

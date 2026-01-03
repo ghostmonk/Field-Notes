@@ -1,6 +1,5 @@
 """Engagement handlers for reactions and comments."""
 
-import html
 from datetime import datetime, timezone
 
 from bson import ObjectId
@@ -282,12 +281,7 @@ async def create_comment(
         },
     )
 
-    # Sanitize user input to prevent XSS
-    sanitized_content = html.escape(comment.content)
-    sanitized_mentions = [
-        {"user_id": m.user_id, "user_name": html.escape(m.user_name)} for m in comment.mentions
-    ]
-
+    # Store raw user input - React auto-escapes on render for XSS protection
     doc = {
         "target_type": target_type,
         "target_id": target_id,
@@ -295,8 +289,8 @@ async def create_comment(
         "user_id": user.id,
         "user_name": user.name,
         "user_avatar": getattr(user, "avatar_url", None),
-        "content": sanitized_content,
-        "mentions": sanitized_mentions,
+        "content": comment.content,
+        "mentions": [{"user_id": m.user_id, "user_name": m.user_name} for m in comment.mentions],
         "created_at": now,
         "updated_at": now,
         "deleted_at": None,
