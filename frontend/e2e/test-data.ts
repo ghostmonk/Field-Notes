@@ -271,3 +271,144 @@ export function projectToCard(project: TestProject): TestProjectCard {
     is_featured: project.is_featured,
   };
 }
+
+// ============================================================================
+// Engagement (Reactions & Comments)
+// ============================================================================
+
+export interface TestReactionCounts {
+  counts: Record<string, number>;
+  user_reactions: string[];
+  details: Record<string, Array<{ user_id: string; user_name: string }>>;
+}
+
+export interface TestComment {
+  id: string;
+  target_type: string;
+  target_id: string;
+  parent_id: string | null;
+  user_id: string;
+  user_name: string;
+  user_avatar: string | null;
+  content: string;
+  mentions: Array<{ user_id: string; user_name: string }>;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  replies: TestComment[];
+}
+
+export const TEST_COMMENT_IDS = {
+  PARENT: 'comment-1',
+  REPLY: 'comment-2',
+  WITH_SPECIAL_CHARS: 'comment-3',
+} as const;
+
+/**
+ * Sample reactions for a story.
+ */
+export const sampleReactions: TestReactionCounts = {
+  counts: {
+    thumbup: 3,
+    heart: 2,
+  },
+  user_reactions: [],
+  details: {
+    thumbup: [
+      { user_id: 'user-1', user_name: 'Alice' },
+      { user_id: 'user-2', user_name: 'Bob' },
+      { user_id: 'user-3', user_name: "O'Brien" },
+    ],
+    heart: [
+      { user_id: 'user-1', user_name: 'Alice' },
+      { user_id: 'user-4', user_name: 'José' },
+    ],
+  },
+};
+
+/**
+ * Sample comments for a story.
+ * Raw content stored in DB - React auto-escapes on render for XSS protection.
+ */
+export const sampleComments: TestComment[] = [
+  {
+    id: TEST_COMMENT_IDS.PARENT,
+    target_type: 'story',
+    target_id: TEST_STORY_IDS.PUBLISHED,
+    parent_id: null,
+    user_id: 'user-1',
+    user_name: 'Alice',
+    user_avatar: null,
+    content: 'Great story!',
+    mentions: [],
+    created_at: FIXED_TIMESTAMP,
+    updated_at: FIXED_TIMESTAMP,
+    deleted_at: null,
+    replies: [
+      {
+        id: TEST_COMMENT_IDS.REPLY,
+        target_type: 'story',
+        target_id: TEST_STORY_IDS.PUBLISHED,
+        parent_id: TEST_COMMENT_IDS.PARENT,
+        user_id: 'user-2',
+        user_name: 'Bob',
+        user_avatar: null,
+        content: 'I agree!',
+        mentions: [],
+        created_at: FIXED_TIMESTAMP,
+        updated_at: FIXED_TIMESTAMP,
+        deleted_at: null,
+        replies: [],
+      },
+    ],
+  },
+  {
+    id: TEST_COMMENT_IDS.WITH_SPECIAL_CHARS,
+    target_type: 'story',
+    target_id: TEST_STORY_IDS.PUBLISHED,
+    parent_id: null,
+    user_id: 'user-3',
+    user_name: "O'Brien",
+    user_avatar: null,
+    content: "Let's go! <script>alert('xss')</script>", // Raw content - React escapes on render
+    mentions: [],
+    created_at: FIXED_TIMESTAMP,
+    updated_at: FIXED_TIMESTAMP,
+    deleted_at: null,
+    replies: [],
+  },
+];
+
+/**
+ * Helper to create mock reaction counts.
+ */
+export function createTestReactions(overrides: Partial<TestReactionCounts> = {}): TestReactionCounts {
+  return {
+    counts: {},
+    user_reactions: [],
+    details: {},
+    ...overrides,
+  };
+}
+
+/**
+ * Helper to create a mock comment.
+ */
+export function createTestComment(overrides: Partial<TestComment> = {}): TestComment {
+  return {
+    id: `comment-${Date.now()}`,
+    target_type: 'story',
+    target_id: TEST_STORY_IDS.PUBLISHED,
+    parent_id: null,
+    user_id: 'test-user',
+    user_name: 'Test User',
+    user_avatar: null,
+    content: 'Test comment',
+    mentions: [],
+    created_at: FIXED_TIMESTAMP,
+    updated_at: FIXED_TIMESTAMP,
+    deleted_at: null,
+    replies: [],
+    ...overrides,
+  };
+}

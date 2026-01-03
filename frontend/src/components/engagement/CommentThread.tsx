@@ -1,7 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { decode } from 'he';
 import { Comment } from '@/types/api';
 
 interface CommentThreadProps {
@@ -15,10 +14,6 @@ export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Memoize decoded values to avoid unnecessary re-computation
-  const decodedUserName = useMemo(() => decode(comment.user_name), [comment.user_name]);
-  const decodedContent = useMemo(() => decode(comment.content), [comment.content]);
 
   const user = session?.user;
   const isOwner = user?.email && comment.user_id === user.email;
@@ -54,24 +49,24 @@ export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps
         {comment.user_avatar ? (
           <Image
             src={comment.user_avatar}
-            alt={decodedUserName}
+            alt={comment.user_name}
             width={32}
             height={32}
             className="rounded-full"
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-            {decodedUserName[0]}
+            {comment.user_name[0]}
           </div>
         )}
 
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium">{decodedUserName}</span>
+            <span className="font-medium">{comment.user_name}</span>
             <span className="text-gray-500 text-sm">{formatDate(comment.created_at)}</span>
           </div>
 
-          <p className="mt-1" style={{ color: 'var(--color-text-primary)' }}>{decodedContent}</p>
+          <p className="mt-1" style={{ color: 'var(--color-text-primary)' }}>{comment.content}</p>
 
           <div className="mt-2 flex items-center gap-4 text-sm">
             {session && !comment.parent_id && (
