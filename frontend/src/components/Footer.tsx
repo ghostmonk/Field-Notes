@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
 
     return (
         <footer
-            className="fixed left-0 right-0 bottom-0 py-2 px-4 text-xs z-[60]"
+            className="fixed left-0 right-0 bottom-0 py-2 px-4 text-xs z-10"
             style={{
                 backgroundColor: 'var(--color-surface-primary)',
                 borderTop: '1px solid var(--color-border-primary)',
