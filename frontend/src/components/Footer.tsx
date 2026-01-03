@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
 
     return (
         <footer
-            className="fixed left-0 right-0 bottom-0 py-2 px-4 text-xs z-10"
+            className="fixed left-0 right-0 bottom-0 py-2 px-4 text-xs z-[55] pointer-events-none"
             style={{
                 backgroundColor: 'var(--color-surface-primary)',
                 borderTop: '1px solid var(--color-border-primary)',
@@ -14,12 +14,12 @@ const Footer: React.FC = () => {
             }}
         >
             <div className="container mx-auto flex justify-between items-center">
-                <span>&copy; {currentYear} Ghostmonk</span>
+                <span className="pointer-events-auto">&copy; {currentYear} Ghostmonk</span>
                 <div className="flex gap-4">
-                    <Link href="/privacy" className="hover:underline">
+                    <Link href="/privacy" className="hover:underline pointer-events-auto">
                         Privacy
                     </Link>
-                    <Link href="/terms" className="hover:underline">
+                    <Link href="/terms" className="hover:underline pointer-events-auto">
                         Terms
                     </Link>
                 </div>
