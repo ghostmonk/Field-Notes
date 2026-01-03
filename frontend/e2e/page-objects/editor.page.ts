@@ -99,10 +99,11 @@ export class EditorPage extends BasePage {
 
   /**
    * Click cancel button and wait for navigation.
+   * Uses 'commit' waitUntil since Next.js router.push is client-side navigation.
    */
   async cancel() {
     await Promise.all([
-      this.page.waitForURL('**/'),
+      this.page.waitForURL('**/', { waitUntil: 'commit' }),
       this.cancelButton.click(),
     ]);
   }
