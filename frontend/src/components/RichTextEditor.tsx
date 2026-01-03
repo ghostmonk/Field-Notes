@@ -11,12 +11,13 @@ import { useImageUpload, useVideoUpload } from '@/hooks/uploads';
 interface RichTextEditorProps {
     onChange: (content: string) => void;
     content?: string;
+    actionSlot?: React.ReactNode;
 }
 
 /**
  * TipTap-based rich text editor with image and video upload support.
  */
-export default function RichTextEditor({ onChange, content = "" }: RichTextEditorProps) {
+export default function RichTextEditor({ onChange, content = "", actionSlot }: RichTextEditorProps) {
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -165,6 +166,11 @@ export default function RichTextEditor({ onChange, content = "" }: RichTextEdito
                     data-testid="video-upload-input"
                 />
             </div>
+            {actionSlot && (
+                <div className="mb-2 flex flex-wrap items-center gap-4">
+                    {actionSlot}
+                </div>
+            )}
             <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
         </div>
     );

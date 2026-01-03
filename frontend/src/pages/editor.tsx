@@ -49,7 +49,7 @@ export default function EditorPage() {
         </div>
       )}
 
-      <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4 max-w-4xl mx-auto">
+      <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
         <TitleInput
           value={story.title || ''}
           onChange={setTitle}
@@ -59,19 +59,21 @@ export default function EditorPage() {
         <ContentEditor
           content={story.content || ''}
           onChange={setContent}
-        />
-
-        <PublishToggle
-          checked={story.is_published || false}
-          onChange={setPublished}
-          disabled={isSaving}
-        />
-
-        <FormActions
-          isLoading={isLoading}
-          isSaving={isSaving}
-          isPublished={story.is_published || false}
-          onCancel={() => router.push('/')}
+          actionSlot={
+            <>
+              <PublishToggle
+                checked={story.is_published || false}
+                onChange={setPublished}
+                disabled={isSaving}
+              />
+              <FormActions
+                isLoading={isLoading}
+                isSaving={isSaving}
+                isPublished={story.is_published || false}
+                onCancel={() => router.push('/')}
+              />
+            </>
+          }
         />
       </form>
     </div>
@@ -160,9 +162,11 @@ function TitleInput({
 function ContentEditor({
   content,
   onChange,
+  actionSlot,
 }: {
   content: string;
   onChange: (content: string) => void;
+  actionSlot?: React.ReactNode;
 }) {
   return (
     <div>
@@ -170,7 +174,7 @@ function ContentEditor({
         Content
       </label>
       <div className="mt-1">
-        <RichTextEditor content={content} onChange={onChange} />
+        <RichTextEditor content={content} onChange={onChange} actionSlot={actionSlot} />
       </div>
     </div>
   );
