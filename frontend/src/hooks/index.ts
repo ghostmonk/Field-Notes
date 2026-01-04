@@ -2,15 +2,15 @@
  * Application hooks - re-exports from focused modules.
  */
 
-// Story hooks
-export { useFetchStories, useFetchStory, useStoryMutations } from './stories';
+// Story hooks (now in modules/stories)
+export { useFetchStories, useFetchStory, useStoryMutations } from '@/modules/stories/hooks';
 export type {
   UseFetchStoriesOptions,
   UseFetchStoriesReturn,
   UseFetchStoryReturn,
   UseStoryMutationsReturn,
   MutationErrorDetails,
-} from './stories';
+} from '@/modules/stories/hooks';
 
 // Upload hooks
 export { useFileUpload, useImageUpload, useVideoUpload } from './uploads';
