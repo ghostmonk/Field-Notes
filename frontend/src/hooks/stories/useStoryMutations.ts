@@ -4,7 +4,7 @@
 import { useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import apiClient from '@/lib/api-client';
+import apiClient from '@/shared/lib/api-client';
 import { ApiRequestError } from '@/types/error';
 import { Story, CreateStoryRequest } from '@/types/api';
 import { ErrorService } from '@/services/errorService';

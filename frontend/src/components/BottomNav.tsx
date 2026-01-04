@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useActiveSection } from '@/hooks/useActiveSection';
-import { SECTIONS, SectionConfig } from '@/lib/navigation';
+import { SECTIONS, SectionConfig } from '@/shared/lib/navigation';
 import { HiHome, HiUser, HiFolder, HiMail } from 'react-icons/hi';
 
 const iconMap: Record<SectionConfig['icon'], React.ComponentType<{ className?: string }>> = {

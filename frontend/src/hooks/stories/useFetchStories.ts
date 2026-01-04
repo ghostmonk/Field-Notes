@@ -4,7 +4,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import apiClient from '@/lib/api-client';
+import apiClient from '@/shared/lib/api-client';
 import { ApiRequestError } from '@/types/error';
 import { Story, PaginatedResponse } from '@/types/api';
 

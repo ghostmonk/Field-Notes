@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import apiClient from '@/lib/api-client';
+import apiClient from '@/shared/lib/api-client';
 import { ReactionCounts, Comment, ReactionTag } from '@/types/api';
 import { engagementConfig } from '@/config/engagement.config';
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import Head from 'next/head';
-import apiClient from '@/lib/api-client';
+import apiClient from '@/shared/lib/api-client';
 import { Page } from '@/types/api';
 
 const ContactPage: React.FC = () => {

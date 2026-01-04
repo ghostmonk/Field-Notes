@@ -5,7 +5,7 @@
  * and chooses the appropriate provider (console, structured JSON, etc.)
  */
 
-import { Logger, LoggerFactory, autoConfigureLogging } from '@/lib/logging';
+import { Logger, LoggerFactory, autoConfigureLogging } from '@/shared/lib/logging';
 
 let _factory: LoggerFactory | null = null;
 let _initPromise: Promise<LoggerFactory> | null = null;
