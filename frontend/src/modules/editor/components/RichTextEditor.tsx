@@ -5,7 +5,7 @@ import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import { VideoExtension } from './VideoExtension';
 import { ErrorService } from '@/services/errorService';
-import { ErrorDisplay } from './ErrorDisplay';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { useImageUpload, useVideoUpload } from '@/hooks/uploads';
 
 interface RichTextEditorProps {

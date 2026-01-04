@@ -1,10 +1,10 @@
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
-import { useStoryEditor } from '@/hooks/editor';
+import { useStoryEditor } from '@/modules/editor';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 
-const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), { ssr: false });
+const RichTextEditor = dynamic(() => import('@/modules/editor/components/RichTextEditor'), { ssr: false });
 
 /**
  * Story editor page for creating and editing stories.
