@@ -1,0 +1,169 @@
+# Adding a Module
+
+This guide walks through creating a new feature module following the established patterns.
+
+## Module Structure
+
+Every module follows this structure:
+
+```
+modules/your-module/
+├── components/           # UI components
+│   ├── YourComponent.tsx
+│   └── index.ts          # Barrel export
+├── hooks/                # Business logic
+│   ├── useYourHook.ts
+│   └── index.ts
+├── pages/                # Page compositions (optional)
+│   ├── YourPage.tsx
+│   └── index.ts
+└── index.ts              # Module public API
+```
+
+## Step-by-Step Guide
+
+### 1. Create the folder structure
+
+```bash
+mkdir -p frontend/src/modules/your-module/{components,hooks}
+```
+
+### 2. Create your first component
+
+```tsx
+// modules/your-module/components/YourComponent.tsx
+interface YourComponentProps {
+  title: string;
+  onAction: () => void;
+}
+
+export function YourComponent({ title, onAction }: YourComponentProps) {
+  return (
+    <div className="card">
+      <h2>{title}</h2>
+      <button onClick={onAction}>Action</button>
+    </div>
+  );
+}
+```
+
+### 3. Create a hook for logic
+
+```tsx
+// modules/your-module/hooks/useYourHook.ts
+import { useState, useCallback } from 'react';
+
+export interface UseYourHookReturn {
+  data: string[];
+  isLoading: boolean;
+  addItem: (item: string) => void;
+}
+
+export function useYourHook(): UseYourHookReturn {
+  const [data, setData] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const addItem = useCallback((item: string) => {
+    setData(prev => [...prev, item]);
+  }, []);
+
+  return { data, isLoading, addItem };
+}
+```
+
+### 4. Create barrel exports
+
+```tsx
+// modules/your-module/components/index.ts
+export { YourComponent } from './YourComponent';
+```
+
+```tsx
+// modules/your-module/hooks/index.ts
+export { useYourHook } from './useYourHook';
+export type { UseYourHookReturn } from './useYourHook';
+```
+
+```tsx
+// modules/your-module/index.ts
+// Components
+export * from './components';
+
+// Hooks
+export * from './hooks';
+```
+
+### 5. Use in a page
+
+```tsx
+// pages/your-page.tsx
+import { YourComponent, useYourHook } from '@/modules/your-module';
+
+export default function YourPage() {
+  const { data, addItem } = useYourHook();
+
+  return (
+    <YourComponent
+      title="My Feature"
+      onAction={() => addItem('new item')}
+    />
+  );
+}
+```
+
+## Best Practices
+
+### Keep modules focused
+Each module should represent one feature or domain. If a module grows too large, consider splitting it.
+
+### Use barrel exports
+Always export through `index.ts` files. External code should import from the module root:
+
+```tsx
+// Good
+import { StoryList } from '@/modules/stories';
+
+// Avoid
+import { StoryList } from '@/modules/stories/components/StoryList';
+```
+
+### Internal imports use relative paths
+Within a module, use relative imports to avoid circular dependencies:
+
+```tsx
+// Inside modules/stories/components/StoryCard.tsx
+import { useStoryData } from '../hooks';  // relative
+```
+
+### Types belong with their feature
+Keep types close to the code that uses them:
+
+```tsx
+// modules/stories/hooks/useFetchStory.ts
+export interface UseFetchStoryReturn {
+  story: Story | null;
+  isLoading: boolean;
+  error: Error | null;
+}
+```
+
+## When to Create a Module
+
+Create a new module when:
+- Building a distinct feature (stories, editor, engagement)
+- The feature has its own components AND hooks
+- The code would be used from multiple pages
+
+Don't create a module for:
+- Shared utilities (use `shared/utils/`)
+- Generic UI components (use `shared/components/`)
+- One-off page-specific code (keep in the page file)
+
+## Existing Modules
+
+| Module | Purpose |
+|--------|---------|
+| `stories` | Story listing and display |
+| `editor` | Rich text editor for content creation |
+| `engagement` | Reactions and comments system |
+| `static` | Static pages (About, Contact, Terms, Privacy) |

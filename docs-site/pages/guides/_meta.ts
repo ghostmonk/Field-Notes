@@ -1,3 +1,5 @@
 export default {
-  index: 'Overview'
+  index: 'Overview',
+  'adding-a-module': 'Adding a Module',
+  'ssr-patterns': 'SSR Patterns'
 }

@@ -4,8 +4,21 @@ Practical guides for working in this codebase.
 
 ## Available Guides
 
-*Guides will be added as the refactor progresses:*
+- [Adding a Module](/guides/adding-a-module) - Create a new feature module
+- [SSR Patterns](/guides/ssr-patterns) - Server-side rendering patterns
 
-- Adding a Module (coming in Phase 4+)
-- Creating Components (coming in Phase 4+)
-- SSR Patterns (coming in Phase 7)
+## Quick Reference
+
+### Creating a new feature
+
+1. Create module folder: `modules/your-feature/`
+2. Add components in `components/`
+3. Add hooks in `hooks/`
+4. Create barrel exports in `index.ts`
+5. Import from `@/modules/your-feature`
+
+### Adding SSR to a page
+
+1. Create SSR handler in `rendering/server/`
+2. Export from `rendering/server/index.ts`
+3. Use in page: `export const getServerSideProps = yourSSRHandler`
