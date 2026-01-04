@@ -1,0 +1,67 @@
+# Folder Structure
+
+```
+frontend/src/
+│
+├── pages/                    # ROUTING LAYER (thin)
+│   ├── api/                  # API routes
+│   └── [routes].tsx          # SSR + compose from modules
+│
+├── modules/                  # FEATURE MODULES
+│   ├── stories/              # Story feature
+│   │   ├── components/       # UI for this module
+│   │   ├── hooks/            # Logic for this module
+│   │   ├── pages/            # Page compositions
+│   │   ├── types/            # Types scoped to module
+│   │   └── index.ts          # Public API
+│   ├── editor/
+│   ├── engagement/
+│   └── static/
+│
+├── shared/                   # CROSS-MODULE CODE
+│   ├── components/           # Reusable UI
+│   ├── hooks/                # Shared logic
+│   ├── lib/                  # Infrastructure
+│   ├── types/                # Shared types
+│   └── utils/                # Pure functions
+│
+├── rendering/                # SSR PATTERNS
+│   ├── server/               # getServerSideProps helpers
+│   └── client/               # Client-only patterns
+│
+└── layout/                   # APP SHELL
+    ├── Layout.tsx
+    ├── TopNav.tsx
+    └── Footer.tsx
+```
+
+## Module Structure
+
+Each module is self-contained:
+
+```
+modules/stories/
+├── components/
+│   ├── StoryCard.tsx
+│   ├── StoryContent.tsx
+│   └── index.ts
+├── hooks/
+│   ├── useFetchStory.ts
+│   └── index.ts
+├── pages/
+│   ├── StoryPage.tsx
+│   └── index.ts
+├── types/
+│   └── story.ts
+└── index.ts                  # Public exports
+```
+
+## Decision Guide
+
+| Question | Answer | Location |
+|----------|--------|----------|
+| Used by 2+ modules? | Yes | `shared/` |
+| Composes a full view? | Yes | `modules/*/pages/` |
+| Feature-specific? | Yes | `modules/*/components/` |
+| Pure function, no side effects? | Yes | `shared/utils/` |
+| External service integration? | Yes | `shared/lib/` |

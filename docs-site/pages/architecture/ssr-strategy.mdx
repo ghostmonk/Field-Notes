@@ -1,0 +1,70 @@
+# SSR Strategy
+
+Next.js offers three rendering modes. The architecture makes the choice visible and intentional.
+
+## Rendering Modes
+
+| Mode | When Code Runs | Use When |
+|------|----------------|----------|
+| **SSR** (`getServerSideProps`) | Server, every request | Auth-protected pages, real-time data |
+| **SSG** (`getStaticProps`) | Server, build time | Public content that rarely changes |
+| **CSR** (client-side) | Browser only | Interactive features, user-specific UI |
+
+## Pattern: Thin Page Files
+
+Page files handle routing and SSR decisions only. All composition happens in modules.
+
+### Before (mixed concerns)
+
+```tsx
+// pages/stories/[slug].tsx - 197 lines, does 5 things
+export default function StoryPage({ story, error }) {
+  // Error handling, SEO, layout, content, engagement...
+}
+
+export const getServerSideProps = async (ctx) => {
+  // Fetch logic, error handling, data processing...
+}
+```
+
+### After (single responsibility)
+
+```tsx
+// pages/stories/[slug].tsx - ~20 lines
+import { getStorySSR } from '@/rendering/server/stories';
+import { StoryPage } from '@/modules/stories';
+
+export const getServerSideProps = getStorySSR;
+
+export default function Page(props) {
+  return <StoryPage {...props} />;
+}
+```
+
+## SSR Helpers
+
+The `rendering/server/` folder contains reusable SSR patterns:
+
+```tsx
+// rendering/server/stories.ts
+export const getStorySSR: GetServerSideProps = async (ctx) => {
+  const { slug } = ctx.params || {};
+
+  if (!slug || typeof slug !== 'string') {
+    return { props: createErrorProps('Story not found') };
+  }
+
+  try {
+    const story = await fetchStoryBySlug(slug);
+    const { ogImage, excerpt } = await processStoryData(story);
+    return { props: { story, ogImage, excerpt } };
+  } catch (error) {
+    return { props: createErrorProps(error.message) };
+  }
+};
+```
+
+This pattern makes SSR logic:
+- **Testable** - Pure function, no React needed
+- **Reusable** - Same pattern across pages
+- **Explicit** - Clear what runs on server vs client
