@@ -1,0 +1,6 @@
+export default {
+  index: 'Introduction',
+  architecture: 'Architecture',
+  adr: 'Decision Records',
+  guides: 'Guides'
+}

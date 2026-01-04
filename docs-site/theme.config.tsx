@@ -10,11 +10,13 @@ const config: DocsThemeConfig = {
   footer: {
     content: 'Turbulence Documentation',
   },
-  useNextSeoProps() {
-    return {
-      titleTemplate: '%s – Turbulence Docs',
-    }
-  },
+  head: (
+    <>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta property="og:title" content="Turbulence Docs" />
+      <meta property="og:description" content="Documentation for Turbulence - a modern blog/content management system" />
+    </>
+  ),
 }
 
 export default config
