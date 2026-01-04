@@ -1,7 +1,7 @@
 import '../styles/globals.css';
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
-import Layout from "@/components/Layout";
+import { Layout } from "@/layout";
 import React, { useEffect, useState } from "react";
 import Head from "next/head";
 import { configureDOMPurify } from '@/shared/utils/sanitizer';
