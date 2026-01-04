@@ -8,7 +8,7 @@ import { Story } from '@/shared/types/api';
 import { LazyStoryContent } from '@/modules/stories';
 import { extractImageFromContentServer, getDefaultOGImage } from '@/shared/utils/extractImageFromContent';
 import { getBaseUrl } from '@/shared/utils/urls';
-import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/components/engagement';
+import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
 
 interface StoryPageProps {
   story: Story | null;
