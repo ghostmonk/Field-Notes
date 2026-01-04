@@ -12,6 +12,12 @@ from models.project import (
     ProjectResponse,
     ProjectUpdate,
 )
+from models.navlink import (
+    NavLinkBase,
+    NavLinkCreate,
+    NavLinkResponse,
+    NavLinkUpdate,
+)
 from models.section import (
     SectionBase,
     SectionCreate,
@@ -750,3 +756,80 @@ class TestSectionResponse:
         )
         assert section.id == "507f1f77bcf86cd799439011"
         assert section.createdDate.tzinfo is not None
+
+
+class TestNavLinkBase:
+    """Tests for NavLinkBase model."""
+
+    @pytest.mark.unit
+    def test_valid_navlink_base(self):
+        """Test creating a valid NavLinkBase."""
+        link = NavLinkBase(
+            label="GitHub",
+            url="https://github.com/user",
+            sort_order=0,
+        )
+        assert link.label == "GitHub"
+        assert link.url == "https://github.com/user"
+        assert link.sort_order == 0
+        assert link.is_published is True
+
+    @pytest.mark.unit
+    def test_navlink_internal_url(self):
+        """Test creating a navlink with internal path."""
+        link = NavLinkBase(
+            label="About",
+            url="/about",
+            sort_order=1,
+        )
+        assert link.url == "/about"
+
+    @pytest.mark.unit
+    def test_navlink_label_required(self):
+        """Test that label is required."""
+        with pytest.raises(ValidationError):
+            NavLinkBase(url="/about", sort_order=0)
+
+
+class TestNavLinkCreate:
+    """Tests for NavLinkCreate model."""
+
+    @pytest.mark.unit
+    def test_valid_navlink_create(self):
+        """Test creating a valid NavLinkCreate."""
+        link = NavLinkCreate(
+            label="Contact",
+            url="/contact",
+            sort_order=2,
+        )
+        assert link.label == "Contact"
+
+
+class TestNavLinkUpdate:
+    """Tests for NavLinkUpdate model."""
+
+    @pytest.mark.unit
+    def test_navlink_update_partial(self):
+        """Test updating with partial data."""
+        update = NavLinkUpdate(label="New Label")
+        assert update.label == "New Label"
+        assert update.url is None
+
+
+class TestNavLinkResponse:
+    """Tests for NavLinkResponse model."""
+
+    @pytest.mark.unit
+    def test_valid_navlink_response(self):
+        """Test creating a valid NavLinkResponse."""
+        now = datetime.now(timezone.utc)
+        link = NavLinkResponse(
+            id="507f1f77bcf86cd799439011",
+            label="GitHub",
+            url="https://github.com/user",
+            sort_order=0,
+            is_published=True,
+            createdDate=now,
+            updatedDate=now,
+        )
+        assert link.id == "507f1f77bcf86cd799439011"
