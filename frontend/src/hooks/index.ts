@@ -22,9 +22,9 @@ export type {
   UseVideoUploadReturn,
 } from './uploads';
 
-// Editor hooks
-export { useStoryEditor } from './editor';
-export type { UseStoryEditorReturn } from './editor';
+// Editor hooks (now in modules/editor)
+export { useStoryEditor } from '@/modules/editor/hooks';
+export type { UseStoryEditorReturn } from '@/modules/editor/hooks';
 
 // Client-side storage
 export { default as useClientSideStorage } from './useClientSideStorage';
