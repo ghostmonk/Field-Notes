@@ -5,9 +5,10 @@
 
 import { getBaseUrl } from '@/shared/utils/urls';
 import { getDefaultOGImage, extractImageFromContentServer } from '@/shared/utils/extractImageFromContent';
+import { Story } from '@/shared/types/api';
 
 export interface StorySSRProps {
-  story: any | null;
+  story: Story | null;
   error?: string;
   ogImage: string;
   excerpt: string;
@@ -29,7 +30,7 @@ export function createStoryErrorProps(error: string, excerpt?: string): StorySSR
  * Processes story data on the server for SSR.
  * Extracts OG image and creates excerpt from content.
  */
-export async function processStoryDataSSR(story: any): Promise<{ ogImage: string; excerpt: string }> {
+export async function processStoryDataSSR(story: Story): Promise<{ ogImage: string; excerpt: string }> {
   const extractedImage = await extractImageFromContentServer(story.content);
   let excerpt = '';
 
