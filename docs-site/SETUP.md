@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-Visit http://localhost:3000/turbulence
+Visit http://localhost:3000/Field-Notes
 
 ## Building
 
@@ -29,4 +29,4 @@ Output is in `out/` directory.
 
 ## URL
 
-Once deployed: `https://yourusername.github.io/turbulence`
+Once deployed: `https://ghostmonk.github.io/Field-Notes`

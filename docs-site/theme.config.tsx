@@ -4,9 +4,9 @@ import { DocsThemeConfig } from 'nextra-theme-docs'
 const config: DocsThemeConfig = {
   logo: <span style={{ fontWeight: 700 }}>Turbulence Docs</span>,
   project: {
-    link: 'https://github.com/yourusername/turbulence',
+    link: 'https://github.com/ghostmonk/Field-Notes',
   },
-  docsRepositoryBase: 'https://github.com/yourusername/turbulence/tree/main/docs-site',
+  docsRepositoryBase: 'https://github.com/ghostmonk/Field-Notes/tree/main/docs-site',
   footer: {
     content: 'Turbulence Documentation',
   },

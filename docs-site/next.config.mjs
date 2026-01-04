@@ -7,7 +7,7 @@ const withNextra = nextra({
 
 export default withNextra({
   output: 'export',
-  basePath: '/turbulence',
+  basePath: '/Field-Notes',
   images: {
     unoptimized: true,
   },
