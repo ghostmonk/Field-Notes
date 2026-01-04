@@ -1,0 +1,245 @@
+# Dynamic Sections Implementation Design
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Replace hardcoded site structure with a configuration-driven system where admins can create sections, content types, and navigation dynamically.
+
+**Architecture:** Section-based hierarchy stored in MongoDB, with extensible display types and content types implemented as React components. Navigation renders from section tree.
+
+**Tech Stack:** Next.js (frontend), FastAPI (backend), MongoDB, TypeScript, TipTap editor
+
+**GitHub Issue:** #70 - Future Extensibility
+
+---
+
+## Design Decisions
+
+| Concept | Decision |
+|---------|----------|
+| **Hierarchy** | Unlimited nesting via `parent_id` |
+| **Section model** | `display_type` (how to render) + `content_type` (what items are) |
+| **Type extensibility** | Developer adds React components + registers them |
+| **Content ownership** | Single - each item belongs to one section |
+| **Main nav** | Built from section hierarchy, flyouts for children + actions |
+| **Hamburger nav** | Separate curated `NavLink` list |
+| **Quick wizard** | 3-tap mobile creation: name -> type -> placement |
+| **Full editor** | Tree view with drag reorder, detailed config forms |
+| **URL routing** | Dynamic `[...slugPath]` catches all, resolves via section tree |
+| **Permissions** | Admin-only for now, extensible later |
+
+---
+
+## Core Data Models
+
+### Section
+
+```typescript
+interface Section {
+  id: string;
+  slug: string;              // URL segment: "blog", "photography"
+  title: string;             // Display name
+  parent_id: string | null;  // null = top-level, otherwise nested
+  display_type: DisplayType; // "feed" | "card-grid" | "static-page" | "gallery"
+  content_type: ContentType; // "story" | "project" | "page" | "podcast" | etc.
+  nav_visibility: "main" | "secondary" | "hidden";
+  sort_order: number;        // Position in sibling list
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+### NavLink (hamburger menu)
+
+```typescript
+interface NavLink {
+  id: string;
+  label: string;
+  url: string;          // Internal path or external URL
+  sort_order: number;
+  is_published: boolean;
+}
+```
+
+### Content Items
+
+Existing models (`Story`, `Project`, `Page`) gain a `section_id` field:
+
+```typescript
+interface Story {
+  // ... existing fields
+  section_id: string;  // Links to parent section
+}
+```
+
+---
+
+## Display Type Registry
+
+| Type | Description | Use case |
+|------|-------------|----------|
+| `feed` | Infinite scroll list | Blog, essays, podcasts |
+| `card-grid` | Grid of cards linking to detail pages | Projects, experiments |
+| `static-page` | Single content block, no children list | About, contact |
+| `gallery` | Image-focused grid/masonry | Photography |
+
+```typescript
+const displayRegistry = {
+  feed: FeedDisplay,
+  'card-grid': CardGridDisplay,
+  'static-page': StaticPageDisplay,
+  gallery: GalleryDisplay,
+};
+```
+
+---
+
+## Content Type Registry
+
+```typescript
+const contentRegistry = {
+  story: {
+    listItem: StoryCard,
+    detail: StoryDetail,
+    editor: StoryEditor,
+  },
+  project: {
+    listItem: ProjectCard,
+    detail: ProjectDetail,
+    editor: ProjectEditor,
+  },
+  // Future types added here
+};
+```
+
+---
+
+## URL Routing
+
+Dynamic catch-all route: `/[...slugPath]`
+
+Resolution:
+1. Parse slug path: `/creative-work/photography/portraits`
+2. Walk sections table to resolve each segment
+3. Load section config (display_type, content_type)
+4. If extra segment -> treat as content item slug
+5. Render appropriate display or detail component
+
+---
+
+## Navigation Structure
+
+**Main nav:** Renders from section hierarchy where `nav_visibility = "main"`
+- Flyouts show child sections + "New [Item]" action for admins
+
+**Hamburger menu:** Separate `NavLink` collection, manually curated
+
+---
+
+## Quick Wizard Flow (Mobile)
+
+1. Tap + -> Enter section name
+2. Pick type from icons (Feed, Grid, Page, Gallery)
+3. Choose nav placement (Main, Secondary, Hidden)
+4. Section created with sensible defaults
+
+---
+
+## Out of Scope (Future PRs)
+
+- Permission system (editor roles per section)
+- Rename turbulence -> field-notes
+- Form content type (contact forms)
+- Advanced content types (podcast player, experiments)
+
+---
+
+## Incremental Deployment Strategy
+
+Each phase is independently deployable without breaking the existing site.
+
+### Phase 1: Foundation (Backend)
+- Ensure `make dev-backend` works with local MongoDB
+- Create `sections` collection with indexes
+- Create `nav_links` collection
+- Add Section and NavLink models/handlers
+- Add section CRUD API endpoints
+- **Checkpoint:** API works, existing site unchanged
+
+### Phase 2: Migration Infrastructure
+- Create migration scripts framework
+- Seed initial sections from hardcoded structure (blog, about, projects, contact)
+- Add `section_id` to existing Story, Project, Page models
+- Backfill `section_id` on existing content
+- **Checkpoint:** Data migrated, existing site unchanged
+
+### Phase 3: Display Registry (Frontend)
+- Create display type registry pattern
+- Extract existing displays into registry components (FeedDisplay, CardGridDisplay, StaticPageDisplay)
+- Create content type registry pattern
+- **Checkpoint:** Existing pages render via registry, no behavior change
+
+### Phase 4: Dynamic Routing
+- Create `[...slugPath]` catch-all route
+- Implement section path resolution
+- Route existing URLs through new system
+- Keep old routes as fallbacks during transition
+- **Checkpoint:** URLs work through new router, old routes still work
+
+### Phase 5: Navigation from Database
+- Create navigation API endpoint
+- Replace hardcoded SECTIONS array with API fetch
+- Render main nav from section hierarchy
+- Add flyout support for nested sections
+- **Checkpoint:** Navigation renders from DB, looks the same
+
+### Phase 6: Quick Wizard
+- Create mobile-friendly section creation wizard
+- Add "+" button to nav for admins
+- 3-step wizard: name -> type -> placement
+- **Checkpoint:** Admins can create sections on mobile
+
+### Phase 7: Full Admin Editor
+- Create `/admin/sections` route
+- Tree view with drag-and-drop reordering
+- Section edit form (all fields)
+- NavLink (hamburger) management
+- **Checkpoint:** Full section management UI
+
+### Phase 8: Documentation
+- Update docs-site with new architecture
+- Add ADR for dynamic content management
+- Update folder-structure.mdx
+- Add guide for creating new content types
+- **Checkpoint:** Docs complete
+
+---
+
+## Docs-Site Updates Required
+
+Throughout implementation, update:
+
+- `docs-site/pages/architecture/overview.mdx` - Section-based architecture
+- `docs-site/pages/architecture/folder-structure.mdx` - New registry patterns
+- `docs-site/pages/architecture/future-direction.mdx` - Mark as implemented
+- `docs-site/pages/guides/adding-a-module.mdx` - Update for section-based approach
+- New: `docs-site/pages/guides/creating-content-types.mdx`
+- New: `docs-site/pages/adr/0005-dynamic-sections.mdx`
+
+---
+
+## Testing Strategy
+
+Each phase includes:
+- Unit tests for new models/handlers
+- Integration tests for API endpoints
+- Frontend component tests where applicable
+- Manual verification against production data (read-only)
+
+---
+
+## Rollback Plan
+
+- Feature flag for new routing (can fall back to hardcoded routes)
+- Old SECTIONS array kept until Phase 5 verified
+- Database migrations are additive (section_id can be null during transition)
