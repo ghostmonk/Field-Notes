@@ -1,21 +1,11 @@
 import React from 'react';
-import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import { formatDate } from '@/shared/utils/formatDate';
 import { getStoryUrl } from '@/shared/utils/urls';
-import { Story } from '@/shared/types/api';
 import { LazyStoryContent } from '@/modules/stories';
-import { extractImageFromContentServer, getDefaultOGImage } from '@/shared/utils/extractImageFromContent';
-import { getBaseUrl } from '@/shared/utils/urls';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
-
-interface StoryPageProps {
-  story: Story | null;
-  error?: string;
-  ogImage: string;
-  excerpt: string;
-}
+import { getStorySSR, StorySSRProps } from '@/rendering/server';
 
 function StoryEngagement() {
   const { reactions, comments, isLoading, toggleReaction, addComment, deleteComment } = useEngagementContext();
@@ -40,7 +30,7 @@ function StoryEngagement() {
   );
 }
 
-export default function StoryPage({ story, error, ogImage, excerpt }: StoryPageProps) {
+export default function StoryPage({ story, error, ogImage, excerpt }: StorySSRProps) {
   const canonicalUrl = story?.slug ? getStoryUrl(story.slug) : '';
   
   if (error) {
@@ -124,74 +114,5 @@ export default function StoryPage({ story, error, ogImage, excerpt }: StoryPageP
   );
 }
 
-function createErrorProps(error: string, excerpt?: string): StoryPageProps {
-  return {
-    story: null,
-    error,
-    ogImage: `${getBaseUrl()}${getDefaultOGImage()}`,
-    excerpt: excerpt || 'Browse stories and updates on Turbulence'
-  };
-}
-
-async function processStoryDataSSR(story: any): Promise<{ ogImage: string; excerpt: string }> {
-  const extractedImage = await extractImageFromContentServer(story.content);
-  let excerpt = '';
-  try {
-    const cheerio = await import('cheerio');
-    const $ = cheerio.load(story.content);
-    $('script, style').remove();
-    const text = $.text();
-    const normalized = text.replace(/\s+/g, ' ').trim();
-    const metaLength = 157;
-    excerpt = normalized.length > metaLength ? normalized.substring(0, metaLength) + '...' : normalized;
-  } catch (error) {
-    console.error('Error creating excerpt:', error);
-    excerpt = 'Browse stories and updates on Turbulence';
-  }
-  
-  let ogImage = extractedImage;
-  if (ogImage && ogImage.startsWith('/')) {
-    ogImage = `${getBaseUrl()}${ogImage}`;
-  }
-  ogImage = ogImage || `${getBaseUrl()}${getDefaultOGImage()}`;
-  
-  return { ogImage, excerpt };
-}
-
-export const getServerSideProps: GetServerSideProps<StoryPageProps> = async (context) => {
-  const { slug } = context.params || {};
-
-  if (!slug || typeof slug !== 'string') {
-    return { props: createErrorProps('Story not found') };
-  }
-
-  try {
-    // Use the API endpoint directly since we're on the server
-    const apiUrl = `${process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL}/stories/slug/${slug}`;
-    const response = await fetch(apiUrl);
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        return { props: createErrorProps('Story not found') };
-      }
-      
-      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-      return { props: createErrorProps(errorData.detail || `Error: ${response.statusText}`) };
-    }
-    
-    const story = await response.json();
-    const { ogImage, excerpt } = await processStoryDataSSR(story);
-    
-    return {
-      props: {
-        story,
-        ogImage,
-        excerpt
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching story by slug:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to load story';
-    return { props: createErrorProps(errorMessage) };
-  }
-}; 
+// SSR handler from rendering module
+export const getServerSideProps = getStorySSR;
