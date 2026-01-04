@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { formatDate } from '@/shared/utils/formatDate';
 import { getStoryUrl } from '@/shared/utils/urls';
 import { Story } from '@/shared/types/api';
-import { LazyStoryContent } from '@/components/LazyStoryContent';
+import { LazyStoryContent } from '@/modules/stories';
 import { extractImageFromContentServer, getDefaultOGImage } from '@/shared/utils/extractImageFromContent';
 import { getBaseUrl } from '@/shared/utils/urls';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/components/engagement';

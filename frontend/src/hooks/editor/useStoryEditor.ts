@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import { Story } from '@/shared/types/api';
 import { isTokenExpired } from '@/shared/lib/auth';
-import { useFetchStory, useStoryMutations } from '@/hooks/stories';
+import { useFetchStory, useStoryMutations } from '@/modules/stories/hooks';
 import { logger } from '@/shared/utils/logger';
 
 const EMPTY_STORY: Partial<Story> = {

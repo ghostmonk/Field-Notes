@@ -1,7 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
 import { GetStaticProps } from 'next';
-import Stories from '@/components/Stories';
+import { StoryList } from '@/modules/stories';
 import { SkeletonShowcase } from '@/components/LoadingSkeletons';
 import { Story, PaginatedResponse } from '@/shared/types/api';
 
@@ -27,7 +27,7 @@ const Home: React.FC<HomeProps> = ({ initialStories, error }) => {
                 <p className="text-center mb-8" style={{ color: 'var(--color-text-secondary)' }}>
                     Sharing Stories, Projects and Ideas
                 </p>
-                <Stories initialData={initialStories} initialError={error} />
+                <StoryList initialData={initialStories} initialError={error} />
             </div>
         </>
     );

@@ -7,9 +7,9 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { formatDate } from "@/shared/utils/formatDate";
 import { Story, PaginatedResponse, BulkCountsResponse } from '@/shared/types/api';
-import { useFetchStories, useStoryMutations } from '@/hooks/stories';
+import { useFetchStories, useStoryMutations } from '../hooks';
 import { StoriesListSkeleton } from '@/components/LoadingSkeletons';
-import { LazyStoryContent } from '@/components/LazyStoryContent';
+import { LazyStoryContent } from './LazyStoryContent';
 import apiClient from '@/shared/lib/api-client';
 
 const REACTION_ICONS: Record<string, string> = {
