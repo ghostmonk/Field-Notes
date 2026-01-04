@@ -1,0 +1,180 @@
+# SSR Patterns
+
+This guide covers server-side rendering patterns used in the codebase.
+
+## Overview
+
+Next.js offers three rendering modes:
+
+| Mode | When Code Runs | Use When |
+|------|----------------|----------|
+| **SSR** (`getServerSideProps`) | Server, every request | Dynamic data, SEO-critical |
+| **SSG** (`getStaticProps`) | Server, build time | Static content |
+| **CSR** (client-side) | Browser only | Interactive features |
+
+## The Rendering Module
+
+SSR logic lives in `rendering/server/`:
+
+```
+rendering/
+├── server/
+│   ├── helpers.ts     # Shared utilities
+│   ├── stories.ts     # Story-specific SSR
+│   └── index.ts       # Barrel exports
+└── index.ts
+```
+
+## Using SSR Helpers
+
+### For Story Pages
+
+```tsx
+// pages/stories/[slug].tsx
+import { getStorySSR, StorySSRProps } from '@/rendering/server';
+
+export default function StoryPage({ story, error, ogImage, excerpt }: StorySSRProps) {
+  if (error) return <ErrorState error={error} />;
+  return <StoryContent story={story} />;
+}
+
+// Delegate SSR to the rendering module
+export const getServerSideProps = getStorySSR;
+```
+
+### Creating New SSR Handlers
+
+To add SSR for a new page type:
+
+```tsx
+// rendering/server/projects.ts
+import { GetServerSideProps } from 'next';
+import { createErrorProps } from './helpers';
+
+export interface ProjectSSRProps {
+  project: Project | null;
+  error?: string;
+}
+
+export const getProjectSSR: GetServerSideProps<ProjectSSRProps> = async (context) => {
+  const { slug } = context.params || {};
+
+  if (!slug || typeof slug !== 'string') {
+    return { props: { project: null, error: 'Project not found' } };
+  }
+
+  try {
+    const apiUrl = `${process.env.BACKEND_URL}/projects/slug/${slug}`;
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      return { props: { project: null, error: 'Project not found' } };
+    }
+
+    const project = await response.json();
+    return { props: { project } };
+  } catch (error) {
+    return { props: { project: null, error: 'Failed to load project' } };
+  }
+};
+```
+
+Then export from the barrel:
+
+```tsx
+// rendering/server/index.ts
+export { getProjectSSR, type ProjectSSRProps } from './projects';
+```
+
+## Helper Functions
+
+### createStoryErrorProps
+
+Creates standardized error props with fallback OG images:
+
+```tsx
+import { createStoryErrorProps } from '@/rendering/server';
+
+// Returns { story: null, error: 'message', ogImage: '...', excerpt: '...' }
+const errorProps = createStoryErrorProps('Story not found');
+```
+
+### processStoryDataSSR
+
+Extracts OG image and excerpt from story content:
+
+```tsx
+import { processStoryDataSSR } from '@/rendering/server';
+
+const { ogImage, excerpt } = await processStoryDataSSR(story);
+```
+
+## Best Practices
+
+### Keep page files thin
+
+Page files should only handle routing and SSR delegation:
+
+```tsx
+// Good - thin page file
+import { getStorySSR, StorySSRProps } from '@/rendering/server';
+import { StoryPage } from '@/modules/stories';
+
+export default function Page(props: StorySSRProps) {
+  return <StoryPage {...props} />;
+}
+
+export const getServerSideProps = getStorySSR;
+```
+
+### Use environment variables for backend URLs
+
+```tsx
+const apiUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
+```
+
+- `BACKEND_URL` - Server-side only, more secure
+- `NEXT_PUBLIC_API_URL` - Available client-side, fallback
+
+### Handle errors gracefully
+
+Always return valid props, even on error:
+
+```tsx
+try {
+  // fetch data
+} catch (error) {
+  return { props: { data: null, error: 'Failed to load' } };
+}
+```
+
+### SEO considerations
+
+For SEO-critical pages, include OG meta in SSR props:
+
+```tsx
+return {
+  props: {
+    story,
+    ogImage: extractedImage || defaultImage,
+    excerpt: firstParagraph,
+  }
+};
+```
+
+## When to Use Each Pattern
+
+### Use SSR (`getServerSideProps`) when:
+- Page needs fresh data on every request
+- SEO is critical (story pages, public content)
+- Data changes frequently
+
+### Use SSG (`getStaticProps`) when:
+- Content rarely changes
+- Can be rebuilt periodically (`revalidate`)
+- Example: home page story list
+
+### Use CSR (client-side) when:
+- Data is user-specific
+- Real-time updates needed
+- Example: engagement (reactions, comments)
