@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
-import { apiLogger } from '@/utils/logger';
+import { apiLogger } from '@/shared/utils/logger';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;

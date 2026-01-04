@@ -4,7 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import Layout from "@/components/Layout";
 import React, { useEffect, useState } from "react";
 import Head from "next/head";
-import { configureDOMPurify } from '@/utils/sanitizer';
+import { configureDOMPurify } from '@/shared/utils/sanitizer';
 import keepAliveService from '@/lib/keep-alive';
 import { BackendWarmupBanner } from '@/components/LoadingSkeletons';
 

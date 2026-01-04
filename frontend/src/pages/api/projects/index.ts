@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
-import { apiLogger } from '@/utils/logger';
+import { apiLogger } from '@/shared/utils/logger';
 
 // Simple in-memory cache for projects
 const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();

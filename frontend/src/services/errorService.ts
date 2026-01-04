@@ -3,7 +3,7 @@
  */
 
 import { ApiRequestError, ErrorCode, StandardErrorResponse, ErrorSeverity, ERROR_SEVERITY_MAP, RequestDetails } from '@/types/error';
-import { logger } from '@/utils/logger';
+import { logger } from '@/shared/utils/logger';
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object';

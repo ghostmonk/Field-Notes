@@ -4,7 +4,7 @@
 import { useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { useFileUpload, UseFileUploadReturn } from './useFileUpload';
-import { validateVideoFile, createFileValidationError, ALLOWED_VIDEO_TYPES } from '@/utils/uploadUtils';
+import { validateVideoFile, createFileValidationError, ALLOWED_VIDEO_TYPES } from '@/shared/utils/uploadUtils';
 
 export interface UseVideoUploadReturn extends UseFileUploadReturn {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;

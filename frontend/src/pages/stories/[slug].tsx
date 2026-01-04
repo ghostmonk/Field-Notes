@@ -2,12 +2,12 @@ import React from 'react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import { formatDate } from '@/utils/formatDate';
-import { getStoryUrl } from '@/utils/urls';
+import { formatDate } from '@/shared/utils/formatDate';
+import { getStoryUrl } from '@/shared/utils/urls';
 import { Story } from '@/types/api';
 import { LazyStoryContent } from '@/components/LazyStoryContent';
-import { extractImageFromContentServer, getDefaultOGImage } from '@/utils/extractImageFromContent';
-import { getBaseUrl } from '@/utils/urls';
+import { extractImageFromContentServer, getDefaultOGImage } from '@/shared/utils/extractImageFromContent';
+import { getBaseUrl } from '@/shared/utils/urls';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/components/engagement';
 
 interface StoryPageProps {

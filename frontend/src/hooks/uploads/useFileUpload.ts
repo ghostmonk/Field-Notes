@@ -4,7 +4,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { ApiRequestError, StandardErrorResponse } from '@/types/error';
 import { ErrorService } from '@/services/errorService';
-import { logger } from '@/utils/logger';
+import { logger } from '@/shared/utils/logger';
 
 export interface UploadResponse {
   urls: string[];
