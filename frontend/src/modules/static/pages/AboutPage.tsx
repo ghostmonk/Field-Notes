@@ -50,6 +50,7 @@ export const AboutPage: React.FC = () => {
                 {!loading && page && (
                     <div className="card">
                         <div className="prose prose--card">
+                            {/* Admin-controlled CMS content - DOMPurify sanitization is appropriate here */}
                             <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.content) }} />
                         </div>
                     </div>
