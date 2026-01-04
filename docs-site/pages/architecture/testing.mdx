@@ -1,0 +1,53 @@
+# Testing Strategy
+
+The module structure enables testing by separating concerns.
+
+## Testing Pyramid
+
+```
+         ╱╲
+        ╱  ╲         E2E Tests (Playwright)
+       ╱ 5% ╲        Full user flows, critical paths only
+      ╱──────╲
+     ╱        ╲      Integration Tests
+    ╱   15%    ╲     Module pages with mocked APIs
+   ╱────────────╲
+  ╱              ╲   Unit Tests
+ ╱      80%       ╲  Hooks, utils, components in isolation
+╱──────────────────╲
+```
+
+## What Gets Tested Where
+
+| Layer | What to Test | How |
+|-------|--------------|-----|
+| `utils/` | Pure functions | Unit tests - input/output |
+| `hooks/` | State logic, API calls | Unit tests with mocked fetch |
+| `components/` | Rendering, interactions | Component tests (Testing Library) |
+| `modules/*/pages/` | Composition, error states | Integration tests |
+| `rendering/server/` | SSR logic | Unit tests (no browser needed) |
+| Full flows | Critical user journeys | E2E (Playwright) |
+
+## Test File Convention
+
+Tests live next to the code they test:
+
+```
+modules/stories/
+├── components/
+│   ├── StoryCard.tsx
+│   └── StoryCard.test.tsx
+├── hooks/
+│   ├── useFetchStory.ts
+│   └── useFetchStory.test.ts
+└── pages/
+    ├── StoryPage.tsx
+    └── StoryPage.test.tsx
+```
+
+## Why This Structure Enables Testing
+
+1. **SSR logic is extractable** - `rendering/server/` can be unit tested without Next.js
+2. **Hooks are isolated** - Test data fetching without rendering components
+3. **Components receive props** - No internal fetching = easy to test with mock data
+4. **Modules have boundaries** - Test a module in isolation by mocking dependencies

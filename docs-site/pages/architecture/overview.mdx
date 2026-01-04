@@ -1,0 +1,31 @@
+# Architecture Overview
+
+## Guiding Principles
+
+### Patterns Over Frameworks
+
+Every architectural decision is explained in terms of the underlying pattern first, then how React/Next.js expresses it. "Separation of concerns" is the pattern; "custom hooks for logic, components for UI" is the React expression.
+
+### Explicit Over Implicit
+
+React has many "magic" conventions (file-based routing, automatic code splitting, hydration). The documentation makes these explicit - what happens, when, and why it matters.
+
+### One Way to Do Things
+
+React offers many paths to the same outcome. This architecture documents ONE chosen pattern for each concern, with reasoning. No guessing.
+
+### Teachable and Transferable
+
+Each pattern documented here should be applicable to other projects with minimal translation. The docs serve as a template, not just a reference.
+
+## Layer Responsibilities
+
+| Layer | Purpose | Data Flow |
+|-------|---------|-----------|
+| `pages/` | Routing, SSR decisions | Receives SSR data, passes to modules |
+| `modules/` | Feature implementation | Composes shared components, uses hooks |
+| `shared/` | Reusable code | Imported by modules |
+| `rendering/` | SSR/CSR patterns | Used by pages |
+| `layout/` | App shell | Wraps all pages |
+
+**Data flows DOWN through layers.** Pages compose modules. Modules compose shared. Never upward.

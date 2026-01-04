@@ -1,0 +1,68 @@
+# Component Patterns
+
+Three types of components, each with a clear role.
+
+## 1. Page Components
+
+Location: `modules/*/pages/`
+
+Compose features into a complete view. No direct data fetching - receive data via props from SSR or use hooks.
+
+```tsx
+// modules/stories/pages/StoryPage.tsx
+export function StoryPage({ story, error, ogImage, excerpt }: StoryPageProps) {
+  if (error) return <ErrorState error={error} />;
+
+  return (
+    <>
+      <StoryMeta story={story} ogImage={ogImage} excerpt={excerpt} />
+      <StoryLayout>
+        <StoryContent story={story} />
+        <StoryEngagement />
+      </StoryLayout>
+    </>
+  );
+}
+```
+
+**Pattern:** Composition only. Handles error/loading states. Delegates everything else.
+
+## 2. Feature Components
+
+Location: `modules/*/components/`
+
+Implement specific functionality. May use hooks for logic. Scoped to their module.
+
+```tsx
+// modules/engagement/components/ReactionBar.tsx
+export function ReactionBar({ reactions, onToggle }: ReactionBarProps) {
+  return (
+    <div className="flex gap-2">
+      {reactions.map(r => (
+        <ReactionButton key={r.type} reaction={r} onToggle={onToggle} />
+      ))}
+    </div>
+  );
+}
+```
+
+**Pattern:** Receives data via props. Calls callbacks for actions. Testable in isolation.
+
+## 3. Shared Components
+
+Location: `shared/components/`
+
+Generic, reusable UI. No business logic. Used by 2+ modules.
+
+```tsx
+// shared/components/Button.tsx
+export function Button({ variant, size, children, ...props }: ButtonProps) {
+  return (
+    <button className={getButtonStyles(variant, size)} {...props}>
+      {children}
+    </button>
+  );
+}
+```
+
+**Pattern:** Pure presentation. Configurable via props. No knowledge of domain.

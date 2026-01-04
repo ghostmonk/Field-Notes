@@ -1,0 +1,47 @@
+# Future Direction: field-notes Monorepo
+
+This architecture is designed to eventually live inside a larger monorepo.
+
+## Target Structure
+
+```
+field-notes/                        # Monorepo root
+├── apps/
+│   ├── ghostmonk/                  # This app (renamed from turbulence)
+│   │   ├── frontend/
+│   │   └── backend/
+│   │
+│   ├── atomicballoon/              # Future app
+│   │   ├── frontend/
+│   │   └── backend/
+│   │
+│   └── docs/                       # Documentation site
+│
+├── packages/                       # Shared across apps
+│   ├── ui/                         # Shared component library
+│   ├── core/                       # Shared business logic
+│   ├── config/                     # Shared configs
+│   └── types/                      # Shared type definitions
+│
+└── package.json                    # Turborepo workspace
+```
+
+## Why This Matters Now
+
+The current refactor keeps module boundaries clean so extraction is straightforward:
+
+1. **Modules are self-contained** - Each module can become a package
+2. **Shared code is isolated** - `shared/` maps to `packages/`
+3. **Clear public APIs** - Each module exports through `index.ts`
+
+## When to Extract
+
+Extract to `packages/` when:
+- Code is used by both ghostmonk and atomicballoon
+- The abstraction is stable and well-tested
+- Benefits outweigh the coordination overhead
+
+Keep in app when:
+- Only one app uses it
+- Still evolving rapidly
+- App-specific customization needed
