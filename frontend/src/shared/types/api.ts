@@ -120,15 +120,6 @@ export interface CreateProjectRequest {
 export type UpdateProjectRequest = Partial<CreateProjectRequest>;
 
 /**
- * API error response
- */
-export interface ApiError {
-    detail: string;
-    status?: number;
-    error?: string;
-}
-
-/**
  * Request payload for creating a new story
  */
 export interface CreateStoryRequest {
