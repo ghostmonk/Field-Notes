@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react';
-import { useEngagement } from '@/hooks/useEngagement';
+import { useEngagement } from '../hooks/useEngagement';
 import { ReactionCounts, Comment, ReactionTag, Mention } from '@/shared/types/api';
 
 interface EngagementContextValue {
