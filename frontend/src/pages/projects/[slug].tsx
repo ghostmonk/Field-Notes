@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import apiClient from '@/shared/lib/api-client';
-import { Project } from '@/types/api';
+import { Project } from '@/shared/types/api';
 
 const ProjectDetailPage: React.FC = () => {
     const router = useRouter();

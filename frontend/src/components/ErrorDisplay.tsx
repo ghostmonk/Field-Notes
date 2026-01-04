@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ErrorDisplayProps, ErrorSeverity, StandardErrorResponse } from '@/types/error';
+import { ErrorDisplayProps, ErrorSeverity, StandardErrorResponse } from '@/shared/types/error';
 import { ErrorService } from '@/services/errorService';
 
 /**

@@ -6,7 +6,7 @@ import type { Session } from 'next-auth';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { formatDate } from "@/shared/utils/formatDate";
-import { Story, PaginatedResponse, BulkCountsResponse } from '@/types/api';
+import { Story, PaginatedResponse, BulkCountsResponse } from '@/shared/types/api';
 import { useFetchStories, useStoryMutations } from '@/hooks/stories';
 import { StoriesListSkeleton } from '@/components/LoadingSkeletons';
 import { LazyStoryContent } from '@/components/LazyStoryContent';

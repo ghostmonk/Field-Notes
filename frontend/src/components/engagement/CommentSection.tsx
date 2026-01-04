@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Comment } from '@/types/api';
+import { Comment } from '@/shared/types/api';
 import { CommentThread } from './CommentThread';
 
 interface CommentSectionProps {

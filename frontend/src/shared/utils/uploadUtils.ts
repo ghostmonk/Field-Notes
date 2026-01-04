@@ -2,7 +2,7 @@
  * Upload utilities and constants
  */
 
-import { StandardErrorResponse, ErrorCode } from '@/types/error';
+import { StandardErrorResponse, ErrorCode } from '@/shared/types/error';
 
 // File size limits (in bytes)
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB

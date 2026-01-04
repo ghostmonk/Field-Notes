@@ -5,8 +5,8 @@ import { useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import apiClient from '@/shared/lib/api-client';
-import { ApiRequestError } from '@/types/error';
-import { Story, CreateStoryRequest } from '@/types/api';
+import { ApiRequestError } from '@/shared/types/error';
+import { Story, CreateStoryRequest } from '@/shared/types/api';
 import { ErrorService } from '@/services/errorService';
 
 export interface MutationErrorDetails {

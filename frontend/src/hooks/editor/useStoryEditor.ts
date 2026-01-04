@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
-import { Story } from '@/types/api';
+import { Story } from '@/shared/types/api';
 import { isTokenExpired } from '@/shared/lib/auth';
 import { useFetchStory, useStoryMutations } from '@/hooks/stories';
 import { logger } from '@/shared/utils/logger';

@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { formatDate } from '@/shared/utils/formatDate';
 import { getStoryUrl } from '@/shared/utils/urls';
-import { Story } from '@/types/api';
+import { Story } from '@/shared/types/api';
 import { LazyStoryContent } from '@/components/LazyStoryContent';
 import { extractImageFromContentServer, getDefaultOGImage } from '@/shared/utils/extractImageFromContent';
 import { getBaseUrl } from '@/shared/utils/urls';

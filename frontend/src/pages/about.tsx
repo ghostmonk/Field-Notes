@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import Head from 'next/head';
 import apiClient from '@/shared/lib/api-client';
-import { Page } from '@/types/api';
+import { Page } from '@/shared/types/api';
 
 const AboutPage: React.FC = () => {
     const [page, setPage] = useState<Page | null>(null);
