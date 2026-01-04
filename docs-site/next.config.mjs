@@ -9,6 +9,6 @@ export default withNextra({
   output: 'export',
   basePath: '/Field-Notes',
   images: {
-    unoptimized: true,
+    unoptimized: true, // Required for static export to GitHub Pages
   },
 })

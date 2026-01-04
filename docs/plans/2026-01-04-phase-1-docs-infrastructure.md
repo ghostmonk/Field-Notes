@@ -69,7 +69,7 @@ const withNextra = nextra({
 
 export default withNextra({
   output: 'export',
-  basePath: '/turbulence',
+  basePath: '/Field-Notes',
   images: {
     unoptimized: true,
   },
@@ -87,9 +87,9 @@ import { DocsThemeConfig } from 'nextra-theme-docs'
 const config: DocsThemeConfig = {
   logo: <span style={{ fontWeight: 700 }}>Turbulence Docs</span>,
   project: {
-    link: 'https://github.com/yourusername/turbulence',
+    link: 'https://github.com/ghostmonk/Field-Notes',
   },
-  docsRepositoryBase: 'https://github.com/yourusername/turbulence/tree/main/docs-site',
+  docsRepositoryBase: 'https://github.com/ghostmonk/Field-Notes/tree/main/docs-site',
   footer: {
     content: 'Turbulence Documentation',
   },
@@ -709,10 +709,10 @@ Expected: Build succeeds, `out/` directory created with static HTML.
 
 **Step 4: Verify basePath**
 
-Check that `out/` contains files at `/turbulence/` path:
+Check that `out/` contains files at `/Field-Notes/` path:
 
 ```bash
-ls out/turbulence/
+ls out/Field-Notes/
 ```
 
 Expected: `index.html`, `architecture/`, etc.
@@ -838,7 +838,7 @@ npm install
 npm run dev
 ```
 
-Visit http://localhost:3000/turbulence
+Visit http://localhost:3000/Field-Notes
 
 ## Building
 
@@ -850,7 +850,7 @@ Output is in `out/` directory.
 
 ## URL
 
-Once deployed: `https://yourusername.github.io/turbulence`
+Once deployed: `https://ghostmonk.github.io/Field-Notes`
 ```
 
 **Step 2: Commit**
@@ -917,7 +917,7 @@ Sets up Nextra documentation site with GitHub Pages deployment.
 - Initializes Nextra project in `docs-site/`
 - Adds architecture documentation (overview, folder structure, component patterns, SSR, testing, future direction)
 - Adds GitHub Actions workflow for automatic deployment
-- Docs will be available at `yourusername.github.io/turbulence`
+- Docs will be available at `ghostmonk.github.io/Field-Notes`
 
 ## Phase 1 of Frontend Architecture Refactor
 
