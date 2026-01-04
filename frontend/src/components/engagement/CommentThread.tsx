@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { Comment } from '@/types/api';
+import { Comment } from '@/shared/types/api';
 
 interface CommentThreadProps {
   comment: Comment;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { ReactionCounts, ReactionTag } from '@/types/api';
+import { ReactionCounts, ReactionTag } from '@/shared/types/api';
 import { engagementConfig } from '@/config/engagement.config';
 
 interface ReactionBarProps {

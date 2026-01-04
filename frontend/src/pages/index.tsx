@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { GetStaticProps } from 'next';
 import Stories from '@/components/Stories';
 import { SkeletonShowcase } from '@/components/LoadingSkeletons';
-import { Story, PaginatedResponse } from '@/types/api';
+import { Story, PaginatedResponse } from '@/shared/types/api';
 
 interface HomeProps {
     initialStories?: PaginatedResponse<Story>;

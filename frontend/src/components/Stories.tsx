@@ -5,12 +5,12 @@ import { useSession } from 'next-auth/react';
 import type { Session } from 'next-auth';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { formatDate } from "@/utils/formatDate";
-import { Story, PaginatedResponse, BulkCountsResponse } from '@/types/api';
+import { formatDate } from "@/shared/utils/formatDate";
+import { Story, PaginatedResponse, BulkCountsResponse } from '@/shared/types/api';
 import { useFetchStories, useStoryMutations } from '@/hooks/stories';
 import { StoriesListSkeleton } from '@/components/LoadingSkeletons';
 import { LazyStoryContent } from '@/components/LazyStoryContent';
-import apiClient from '@/lib/api-client';
+import apiClient from '@/shared/lib/api-client';
 
 const REACTION_ICONS: Record<string, string> = {
     thumbup: '👍',

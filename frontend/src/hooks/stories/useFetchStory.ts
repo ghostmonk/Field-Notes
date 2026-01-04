@@ -3,9 +3,9 @@
  */
 import { useState, useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import apiClient from '@/lib/api-client';
-import { ApiRequestError } from '@/types/error';
-import { Story } from '@/types/api';
+import apiClient from '@/shared/lib/api-client';
+import { ApiRequestError } from '@/shared/types/error';
+import { Story } from '@/shared/types/api';
 
 export interface UseFetchStoryReturn {
   story: Story | null;

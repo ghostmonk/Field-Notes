@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
-import apiClient from '@/lib/api-client';
-import { ProjectCard } from '@/types/api';
+import apiClient from '@/shared/lib/api-client';
+import { ProjectCard } from '@/shared/types/api';
 
 const ProjectsPage: React.FC = () => {
     const [projects, setProjects] = useState<ProjectCard[]>([]);

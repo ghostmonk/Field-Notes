@@ -2,8 +2,8 @@
  * Centralized error handling service for the frontend
  */
 
-import { ApiRequestError, ErrorCode, StandardErrorResponse, ErrorSeverity, ERROR_SEVERITY_MAP, RequestDetails } from '@/types/error';
-import { logger } from '@/utils/logger';
+import { ApiRequestError, ErrorCode, StandardErrorResponse, ErrorSeverity, ERROR_SEVERITY_MAP, RequestDetails } from '@/shared/types/error';
+import { logger } from '@/shared/utils/logger';
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object';

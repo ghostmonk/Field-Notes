@@ -2,7 +2,7 @@ import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState } from "react";
-import { SECTIONS, SectionConfig } from "@/lib/navigation";
+import { SECTIONS, SectionConfig } from "@/shared/lib/navigation";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm } from "react-icons/hi";
 

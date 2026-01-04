@@ -21,8 +21,8 @@ import {
   Comment,
   BulkCountsRequest,
   BulkCountsResponse,
-} from '@/types/api';
-import { ApiRequestError } from '@/types/error';
+} from '@/shared/types/api';
+import { ApiRequestError } from '@/shared/types/error';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -313,5 +313,5 @@ const apiClient = {
 
 };
 
-export { ApiRequestError, apiClient };
+export { apiClient };
 export default apiClient; 
