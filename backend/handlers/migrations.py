@@ -9,6 +9,7 @@ from database import (
     get_collection,
     get_pages_collection,
     get_projects_collection,
+    get_sections_collection,
     get_users_collection,
 )
 from glogger import logger
@@ -18,11 +19,60 @@ ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 if not ADMIN_EMAIL:
     raise ValueError("ADMIN_EMAIL environment variable is required")
 
+# Initial sections matching hardcoded frontend SECTIONS array
+INITIAL_SECTIONS = [
+    {
+        "title": "Blog",
+        "slug": "blog",
+        "parent_id": None,
+        "display_type": "feed",
+        "content_type": "story",
+        "nav_visibility": "main",
+        "sort_order": 0,
+        "is_published": True,
+        "is_deleted": False,
+    },
+    {
+        "title": "About",
+        "slug": "about",
+        "parent_id": None,
+        "display_type": "static-page",
+        "content_type": "page",
+        "nav_visibility": "main",
+        "sort_order": 1,
+        "is_published": True,
+        "is_deleted": False,
+    },
+    {
+        "title": "Projects",
+        "slug": "projects",
+        "parent_id": None,
+        "display_type": "card-grid",
+        "content_type": "project",
+        "nav_visibility": "main",
+        "sort_order": 2,
+        "is_published": True,
+        "is_deleted": False,
+    },
+    {
+        "title": "Contact",
+        "slug": "contact",
+        "parent_id": None,
+        "display_type": "static-page",
+        "content_type": "page",
+        "nav_visibility": "main",
+        "sort_order": 3,
+        "is_published": True,
+        "is_deleted": False,
+    },
+]
+
 
 async def run_migrations():
     """Run all pending migrations at startup."""
     await migrate_create_admin_user()
     await migrate_add_user_id_to_content()
+    await migrate_seed_initial_sections()
     logger.info("Migrations completed")
 
 
@@ -112,3 +162,33 @@ async def migrate_add_user_id_to_content():
 
     except Exception:
         logger.exception("Error during content ownership migration")
+
+
+async def migrate_seed_initial_sections():
+    """
+    Migration: Seed initial sections from hardcoded structure.
+    Idempotent - skips if sections already exist.
+    """
+    try:
+        sections_collection = await get_sections_collection()
+
+        existing_count = await sections_collection.count_documents({"is_deleted": False})
+        if existing_count > 0:
+            logger.info(f"Migration: {existing_count} sections already exist, skipping seed")
+            return
+
+        current_time = datetime.now(timezone.utc)
+        sections_to_insert = []
+        for section in INITIAL_SECTIONS:
+            section_with_timestamps = {
+                **section,
+                "createdDate": current_time,
+                "updatedDate": current_time,
+            }
+            sections_to_insert.append(section_with_timestamps)
+
+        result = await sections_collection.insert_many(sections_to_insert)
+        logger.info(f"Migration: Seeded {len(result.inserted_ids)} initial sections")
+
+    except Exception:
+        logger.exception("Error seeding initial sections")
