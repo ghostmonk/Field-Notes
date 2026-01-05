@@ -211,3 +211,23 @@ class TestBackfillSectionId:
             await migrate_backfill_section_id()
 
         mock_stories.update_many.assert_not_called()
+
+
+class TestMigrationIntegration:
+    """Integration tests for the full migration flow."""
+
+    @pytest.mark.asyncio
+    async def test_run_migrations_calls_all_migrations(self):
+        """run_migrations should call all migration functions in order."""
+        with patch("handlers.migrations.migrate_create_admin_user", new_callable=AsyncMock) as mock_admin, \
+             patch("handlers.migrations.migrate_add_user_id_to_content", new_callable=AsyncMock) as mock_user_id, \
+             patch("handlers.migrations.migrate_seed_initial_sections", new_callable=AsyncMock) as mock_seed, \
+             patch("handlers.migrations.migrate_backfill_section_id", new_callable=AsyncMock) as mock_backfill:
+
+            from handlers.migrations import run_migrations
+            await run_migrations()
+
+            mock_admin.assert_called_once()
+            mock_user_id.assert_called_once()
+            mock_seed.assert_called_once()
+            mock_backfill.assert_called_once()
