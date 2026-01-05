@@ -20,6 +20,7 @@ os.environ.setdefault("ADMIN_EMAIL", "admin@test.com")
 from database import (
     get_collection,
     get_comments_collection,
+    get_navlinks_collection,
     get_pages_collection,
     get_projects_collection,
     get_reactions_collection,
@@ -32,6 +33,7 @@ from fastapi.testclient import TestClient
 # Create a test app without lifespan to avoid DB connections during startup
 # Import routers directly to avoid the lifespan event
 from handlers.engagement import router as engagement_router
+from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
 from handlers.projects import router as projects_router
 from handlers.sections import router as sections_router
@@ -49,6 +51,7 @@ test_app.include_router(video_processing_router)
 test_app.include_router(pages_router)
 test_app.include_router(projects_router)
 test_app.include_router(sections_router)
+test_app.include_router(navlinks_router)
 test_app.include_router(engagement_router)
 
 
@@ -493,6 +496,51 @@ def sample_section_data():
         "display_type": "feed",
         "content_type": "story",
         "nav_visibility": "main",
+        "sort_order": 0,
+        "is_published": True,
+        "createdDate": fixed_datetime,
+        "updatedDate": fixed_datetime,
+    }
+
+
+@pytest.fixture
+def mock_navlinks_collection():
+    """Mock collection for navlinks testing"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    mock.count_documents = AsyncMock()
+    mock.insert_one = AsyncMock()
+    mock.update_one = AsyncMock()
+    mock.delete_one = AsyncMock()
+    return mock
+
+
+@pytest.fixture
+def override_navlinks_database(mock_navlinks_collection):
+    """Override the navlinks collection to use mocks"""
+
+    async def get_mock_navlinks_collection():
+        return mock_navlinks_collection
+
+    test_app.dependency_overrides[get_navlinks_collection] = get_mock_navlinks_collection
+    yield mock_navlinks_collection
+    test_app.dependency_overrides.pop(get_navlinks_collection, None)
+
+
+@pytest_asyncio.fixture
+async def navlinks_async_client(override_navlinks_database):
+    """Async test client for navlinks tests"""
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+        yield ac
+
+
+@pytest.fixture
+def sample_navlink_data():
+    """Sample navlink data for testing"""
+    fixed_datetime = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    return {
+        "label": "GitHub",
+        "url": "https://github.com/example",
         "sort_order": 0,
         "is_published": True,
         "createdDate": fixed_datetime,
