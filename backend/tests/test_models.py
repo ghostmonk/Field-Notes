@@ -930,3 +930,38 @@ class TestProjectSectionId:
             section_id="section-456",
         )
         assert card.section_id == "section-456"
+
+
+class TestPageSectionId:
+    """Test section_id field in Page models."""
+
+    @pytest.mark.unit
+    def test_page_response_with_section_id(self):
+        """PageResponse should include optional section_id."""
+        now = datetime.now(timezone.utc)
+        page = PageResponse(
+            id="123",
+            title="About Page",
+            content="About content",
+            page_type="about",
+            is_published=True,
+            createdDate=now,
+            updatedDate=now,
+            section_id="section-789",
+        )
+        assert page.section_id == "section-789"
+
+    @pytest.mark.unit
+    def test_page_response_without_section_id(self):
+        """PageResponse should work without section_id (nullable)."""
+        now = datetime.now(timezone.utc)
+        page = PageResponse(
+            id="123",
+            title="About Page",
+            content="About content",
+            page_type="about",
+            is_published=True,
+            createdDate=now,
+            updatedDate=now,
+        )
+        assert page.section_id is None
