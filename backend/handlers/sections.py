@@ -7,10 +7,10 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from database import get_sections_collection
-from decorators.auth import requires_auth, verify_auth
+from decorators.auth import check_write_permission, requires_auth, verify_auth
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
-from models.section import SectionCreate, SectionResponse
+from models.section import SectionCreate, SectionResponse, SectionUpdate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
@@ -310,6 +310,239 @@ async def create_section(
             status_code=500,
             detail={
                 "message": "An error occurred while creating the section",
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+            },
+        )
+
+
+@router.put("/sections/{section_id}", response_model=SectionResponse)
+@requires_auth
+async def update_section(
+    request: Request,
+    section_id: str,
+    section: SectionUpdate,
+    collection: AsyncIOMotorCollection = Depends(get_sections_collection),
+):
+    """Update a section.
+
+    Args:
+        section_id: The section ID to update
+        section: Section data with only fields to update
+
+    Returns:
+        The updated section
+    """
+    try:
+        user: UserInfo = request.state.user
+
+        if not ObjectId.is_valid(section_id):
+            logger.warning_with_context(
+                "Invalid section ID format for update", {"section_id": section_id}
+            )
+            raise HTTPException(status_code=400, detail="Invalid section ID format")
+
+        logger.info_with_context(
+            "Updating section",
+            {
+                "section_id": section_id,
+                "user_id": user.id,
+            },
+        )
+
+        existing_section = await find_one_and_convert(
+            collection, {"_id": ObjectId(section_id), "deleted": {"$ne": True}}, SectionResponse
+        )
+
+        if not existing_section:
+            logger.warning_with_context("Section not found for update", {"section_id": section_id})
+            raise HTTPException(status_code=404, detail="Section not found")
+
+        # Check write permission
+        if not check_write_permission(user, existing_section.user_id):
+            logger.warning_with_context(
+                "Permission denied for section update",
+                {
+                    "section_id": section_id,
+                    "user_id": user.id,
+                    "owner_id": existing_section.user_id,
+                },
+            )
+            raise HTTPException(
+                status_code=403, detail="You don't have permission to edit this section"
+            )
+
+        current_time = datetime.now(timezone.utc)
+
+        # Get only the fields that were actually provided (not None)
+        update_data = section.model_dump(exclude_unset=True)
+
+        # If title changed, regenerate the slug
+        if "title" in update_data and update_data["title"] != existing_section.title:
+            update_data["slug"] = await generate_unique_slug(
+                collection, update_data["title"], ObjectId(section_id)
+            )
+
+        update_data["updatedDate"] = current_time
+
+        result = await collection.update_one({"_id": ObjectId(section_id)}, {"$set": update_data})
+
+        if result.modified_count == 0:
+            logger.error_with_context(
+                "Failed to update section - no documents modified",
+                {
+                    "section_id": section_id,
+                    "matched_count": result.matched_count,
+                    "modified_count": result.modified_count,
+                },
+            )
+            raise HTTPException(status_code=500, detail="Failed to update section")
+
+        updated_section = await find_one_and_convert(
+            collection, {"_id": ObjectId(section_id)}, SectionResponse
+        )
+
+        if not updated_section:
+            logger.error_with_context(
+                "Failed to retrieve updated section", {"section_id": section_id}
+            )
+            raise HTTPException(status_code=500, detail="Failed to retrieve updated section")
+
+        logger.info_with_context(
+            "Section updated successfully",
+            {
+                "section_id": section_id,
+                "title": updated_section.title,
+                "slug": updated_section.slug,
+            },
+        )
+
+        return updated_section
+
+    except ValidationError as e:
+        error_details = e.errors() if hasattr(e, "errors") else str(e)
+        logger.error_with_context(
+            "Section validation error",
+            {"section_id": section_id, "validation_errors": error_details},
+        )
+        raise HTTPException(
+            status_code=400,
+            detail={"message": "Invalid section data", "validation_errors": error_details},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception_with_context(
+            "Error updating section",
+            {
+                "section_id": section_id,
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+                "traceback": traceback.format_exc(),
+            },
+        )
+
+        logger.log_request_response(request, error=e)
+
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "An error occurred while updating the section",
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+            },
+        )
+
+
+@router.delete("/sections/{section_id}", status_code=204)
+@requires_auth
+async def delete_section(
+    request: Request,
+    section_id: str,
+    collection: AsyncIOMotorCollection = Depends(get_sections_collection),
+):
+    """Soft delete a section.
+
+    Args:
+        section_id: The section ID to delete
+
+    Returns:
+        204 No Content on success
+    """
+    try:
+        user: UserInfo = request.state.user
+
+        if not ObjectId.is_valid(section_id):
+            logger.warning_with_context(
+                "Invalid section ID format for delete", {"section_id": section_id}
+            )
+            raise HTTPException(status_code=400, detail="Invalid section ID format")
+
+        logger.info_with_context(
+            "Soft deleting section", {"section_id": section_id, "user_id": user.id}
+        )
+
+        existing_section = await find_one_and_convert(
+            collection, {"_id": ObjectId(section_id), "deleted": {"$ne": True}}, SectionResponse
+        )
+
+        if not existing_section:
+            logger.warning_with_context("Section not found for delete", {"section_id": section_id})
+            raise HTTPException(status_code=404, detail="Section not found")
+
+        # Check write permission
+        if not check_write_permission(user, existing_section.user_id):
+            logger.warning_with_context(
+                "Permission denied for section delete",
+                {
+                    "section_id": section_id,
+                    "user_id": user.id,
+                    "owner_id": existing_section.user_id,
+                },
+            )
+            raise HTTPException(
+                status_code=403, detail="You don't have permission to delete this section"
+            )
+
+        result = await collection.update_one(
+            {"_id": ObjectId(section_id)}, {"$set": {"deleted": True}}
+        )
+
+        if result.modified_count == 0:
+            logger.error_with_context(
+                "Failed to delete section - no documents modified",
+                {
+                    "section_id": section_id,
+                    "matched_count": result.matched_count,
+                    "modified_count": result.modified_count,
+                },
+            )
+            raise HTTPException(status_code=500, detail="Failed to delete section")
+
+        logger.info_with_context(
+            "Section soft deleted successfully",
+            {"section_id": section_id, "title": existing_section.title},
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception_with_context(
+            "Error deleting section",
+            {
+                "section_id": section_id,
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+                "traceback": traceback.format_exc(),
+            },
+        )
+
+        logger.log_request_response(request, error=e)
+
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "An error occurred while deleting the section",
                 "error_type": type(e).__name__,
                 "error_details": str(e),
             },

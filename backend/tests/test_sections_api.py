@@ -279,3 +279,139 @@ class TestCreateSection:
         )
 
         assert response.status_code == 422
+
+
+class TestUpdateSection:
+    """Tests for PUT /sections/{section_id} endpoint."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_update_section_success(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Test successful section update."""
+        section_id = ObjectId("507f1f77bcf86cd799439011")
+        sample_doc = {
+            "_id": section_id,
+            **sample_section_data,
+            "user_id": "mock_user_id",
+        }
+        # First find_one for checking section exists, second for returning updated
+        override_sections_database.find_one.side_effect = [
+            sample_doc,  # Existing section check
+            None,  # Slug uniqueness check
+            {**sample_doc, "title": "Updated Blog", "slug": "updated-blog"},  # Updated section
+        ]
+        override_sections_database.update_one.return_value = MagicMock(modified_count=1)
+
+        response = await sections_async_client.put(
+            "/sections/507f1f77bcf86cd799439011",
+            json={"title": "Updated Blog"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_update_section_not_found(
+        self,
+        sections_async_client,
+        override_sections_database,
+        mock_auth,
+        auth_headers,
+    ):
+        """Test updating non-existent section."""
+        override_sections_database.find_one.return_value = None
+
+        response = await sections_async_client.put(
+            "/sections/507f1f77bcf86cd799439011",
+            json={"title": "Updated Blog"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 404
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_update_section_unauthorized(
+        self,
+        sections_async_client,
+        override_sections_database,
+    ):
+        """Test section update without auth."""
+        response = await sections_async_client.put(
+            "/sections/507f1f77bcf86cd799439011",
+            json={"title": "Updated Blog"},
+        )
+
+        assert response.status_code == 401
+
+
+class TestDeleteSection:
+    """Tests for DELETE /sections/{section_id} endpoint."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_delete_section_success(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Test successful section deletion."""
+        section_id = ObjectId("507f1f77bcf86cd799439011")
+        sample_doc = {
+            "_id": section_id,
+            **sample_section_data,
+            "user_id": "mock_user_id",
+        }
+        override_sections_database.find_one.return_value = sample_doc
+        override_sections_database.update_one.return_value = MagicMock(modified_count=1)
+
+        response = await sections_async_client.delete(
+            "/sections/507f1f77bcf86cd799439011",
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 204
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_delete_section_not_found(
+        self,
+        sections_async_client,
+        override_sections_database,
+        mock_auth,
+        auth_headers,
+    ):
+        """Test deleting non-existent section."""
+        override_sections_database.find_one.return_value = None
+
+        response = await sections_async_client.delete(
+            "/sections/507f1f77bcf86cd799439011",
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 404
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_delete_section_unauthorized(
+        self,
+        sections_async_client,
+        override_sections_database,
+    ):
+        """Test section delete without auth."""
+        response = await sections_async_client.delete(
+            "/sections/507f1f77bcf86cd799439011",
+        )
+
+        assert response.status_code == 401

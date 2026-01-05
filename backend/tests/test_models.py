@@ -5,18 +5,18 @@ Unit tests for Pydantic models
 from datetime import datetime, timezone
 
 import pytest
+from models.navlink import (
+    NavLinkBase,
+    NavLinkCreate,
+    NavLinkResponse,
+    NavLinkUpdate,
+)
 from models.page import PageBase, PageResponse, PageUpdate
 from models.project import (
     ProjectBase,
     ProjectCard,
     ProjectResponse,
     ProjectUpdate,
-)
-from models.navlink import (
-    NavLinkBase,
-    NavLinkCreate,
-    NavLinkResponse,
-    NavLinkUpdate,
 )
 from models.section import (
     SectionBase,
