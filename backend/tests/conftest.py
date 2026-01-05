@@ -23,6 +23,7 @@ from database import (
     get_pages_collection,
     get_projects_collection,
     get_reactions_collection,
+    get_sections_collection,
     get_users_collection,
 )
 from fastapi import FastAPI
@@ -33,6 +34,7 @@ from fastapi.testclient import TestClient
 from handlers.engagement import router as engagement_router
 from handlers.pages import router as pages_router
 from handlers.projects import router as projects_router
+from handlers.sections import router as sections_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
@@ -46,6 +48,7 @@ test_app.include_router(users_router)
 test_app.include_router(video_processing_router)
 test_app.include_router(pages_router)
 test_app.include_router(projects_router)
+test_app.include_router(sections_router)
 test_app.include_router(engagement_router)
 
 
@@ -446,3 +449,52 @@ async def engagement_async_client(override_engagement_database):
     """Async test client for engagement tests"""
     async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture
+def mock_sections_collection():
+    """Mock collection for sections testing"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    mock.count_documents = AsyncMock()
+    mock.insert_one = AsyncMock()
+    mock.update_one = AsyncMock()
+    mock.delete_one = AsyncMock()
+    return mock
+
+
+@pytest.fixture
+def override_sections_database(mock_sections_collection):
+    """Override the sections collection to use mocks"""
+
+    async def get_mock_sections_collection():
+        return mock_sections_collection
+
+    test_app.dependency_overrides[get_sections_collection] = get_mock_sections_collection
+    yield mock_sections_collection
+    test_app.dependency_overrides.pop(get_sections_collection, None)
+
+
+@pytest_asyncio.fixture
+async def sections_async_client(override_sections_database):
+    """Async test client for sections tests"""
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+        yield ac
+
+
+@pytest.fixture
+def sample_section_data():
+    """Sample section data for testing"""
+    fixed_datetime = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    return {
+        "title": "Blog",
+        "slug": "blog",
+        "parent_id": None,
+        "display_type": "feed",
+        "content_type": "story",
+        "nav_visibility": "main",
+        "sort_order": 0,
+        "is_published": True,
+        "createdDate": fixed_datetime,
+        "updatedDate": fixed_datetime,
+    }
