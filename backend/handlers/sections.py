@@ -3,15 +3,18 @@ API handlers for sections (dynamic site structure).
 """
 
 import traceback
+from datetime import datetime, timezone
 
 from bson import ObjectId
 from database import get_sections_collection
 from decorators.auth import requires_auth, verify_auth
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
-from models.section import SectionResponse
+from models.section import SectionCreate, SectionResponse
+from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
-from utils import find_many_and_convert, find_one_and_convert
+from pydantic import ValidationError
+from utils import find_many_and_convert, find_one_and_convert, generate_unique_slug
 
 router = APIRouter()
 
@@ -206,6 +209,107 @@ async def get_section(
             status_code=500,
             detail={
                 "message": "An error occurred while fetching the section",
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+            },
+        )
+
+
+@router.post("/sections", response_model=SectionResponse, status_code=201)
+@requires_auth
+async def create_section(
+    request: Request,
+    section: SectionCreate,
+    collection: AsyncIOMotorCollection = Depends(get_sections_collection),
+):
+    """Create a new section.
+
+    Args:
+        section: Section data to create
+
+    Returns:
+        The created section
+    """
+    try:
+        user: UserInfo = request.state.user
+
+        logger.info_with_context(
+            "Creating new section",
+            {
+                "title": section.title,
+                "display_type": section.display_type,
+                "content_type": section.content_type,
+                "user_id": user.id,
+            },
+        )
+
+        current_time = datetime.now(timezone.utc)
+
+        # Generate a unique slug for the new section
+        slug = await generate_unique_slug(collection, section.title)
+
+        document = {
+            **section.model_dump(),
+            "slug": slug,
+            "createdDate": current_time,
+            "updatedDate": current_time,
+            "user_id": user.id,
+        }
+
+        result = await collection.insert_one(document)
+        section_id = str(result.inserted_id)
+        logger.info_with_context(
+            "Inserted section document", {"section_id": section_id, "slug": slug}
+        )
+
+        created_section = await find_one_and_convert(
+            collection, {"_id": result.inserted_id}, SectionResponse
+        )
+
+        if not created_section:
+            logger.error_with_context(
+                "Failed to retrieve created section", {"section_id": section_id}
+            )
+            raise HTTPException(status_code=500, detail="Failed to retrieve created section")
+
+        logger.info_with_context(
+            "Section created successfully",
+            {
+                "section_id": section_id,
+                "title": created_section.title,
+                "slug": created_section.slug,
+            },
+        )
+
+        return created_section
+
+    except ValidationError as e:
+        error_details = e.errors() if hasattr(e, "errors") else str(e)
+        logger.error_with_context(
+            "Section validation error during creation", {"validation_errors": error_details}
+        )
+        raise HTTPException(
+            status_code=400,
+            detail={"message": "Invalid section data", "validation_errors": error_details},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception_with_context(
+            "Error creating section",
+            {
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+                "traceback": traceback.format_exc(),
+                "section_title": getattr(section, "title", "Unknown"),
+            },
+        )
+        logger.log_request_response(request, error=e)
+
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "An error occurred while creating the section",
                 "error_type": type(e).__name__,
                 "error_details": str(e),
             },

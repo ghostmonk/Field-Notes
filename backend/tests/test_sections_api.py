@@ -2,6 +2,8 @@
 API tests for Sections endpoints.
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 from bson import ObjectId
 from tests.test_utils import MockCursor
@@ -191,3 +193,89 @@ class TestSectionsPublicEndpoints:
 
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
+
+
+class TestCreateSection:
+    """Tests for POST /sections endpoint."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_section_success(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Test successful section creation."""
+        from bson import ObjectId
+
+        section_id = ObjectId("507f1f77bcf86cd799439011")
+
+        # Setup mocks for slug uniqueness check, insert, and find
+        override_sections_database.find_one.side_effect = [
+            None,  # First call: slug uniqueness check (no existing slug)
+            {
+                **sample_section_data,
+                "_id": section_id,
+                "slug": "blog",
+            },  # Second call: retrieve created section
+        ]
+        override_sections_database.insert_one.return_value = MagicMock(inserted_id=section_id)
+
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Blog",
+                "display_type": "feed",
+                "content_type": "story",
+                "nav_visibility": "main",
+                "sort_order": 0,
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["title"] == "Blog"
+        assert data["slug"] == "blog"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_section_unauthorized(
+        self, sections_async_client, override_sections_database
+    ):
+        """Test section creation without auth."""
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Blog",
+                "display_type": "feed",
+                "content_type": "story",
+            },
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_section_invalid_display_type(
+        self,
+        sections_async_client,
+        override_sections_database,
+        mock_auth,
+        auth_headers,
+    ):
+        """Test section creation with invalid display_type."""
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Blog",
+                "display_type": "invalid",
+                "content_type": "story",
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 422
