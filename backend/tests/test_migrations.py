@@ -1,6 +1,6 @@
 """Tests for database migrations."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from handlers.migrations import INITIAL_SECTIONS, migrate_seed_initial_sections
@@ -71,3 +71,143 @@ class TestSeedInitialSections:
         mock_collection.insert_many.assert_called_once()
         call_args = mock_collection.insert_many.call_args[0][0]
         assert len(call_args) == 4
+
+
+class TestBackfillSectionId:
+    """Test section_id backfill migration."""
+
+    @pytest.mark.asyncio
+    async def test_backfill_stories_with_blog_section(self):
+        """Stories without section_id should get blog section's ID."""
+        blog_section = {"_id": "blog-section-id", "slug": "blog"}
+
+        mock_sections = AsyncMock()
+
+        def find_one_side_effect(query):
+            slug = query.get("slug")
+            if slug == "blog":
+                return blog_section
+            return None
+
+        mock_sections.find_one = AsyncMock(side_effect=find_one_side_effect)
+
+        mock_stories = AsyncMock()
+        mock_stories.update_many = AsyncMock(return_value=MagicMock(modified_count=5))
+
+        mock_pages = AsyncMock()
+        mock_pages.update_many = AsyncMock(return_value=MagicMock(modified_count=0))
+
+        with (
+            patch("handlers.migrations.get_sections_collection", return_value=mock_sections),
+            patch("handlers.migrations.get_collection", return_value=mock_stories),
+            patch("handlers.migrations.get_projects_collection", return_value=AsyncMock()),
+            patch("handlers.migrations.get_pages_collection", return_value=mock_pages),
+        ):
+            from handlers.migrations import migrate_backfill_section_id
+
+            await migrate_backfill_section_id()
+
+        mock_stories.update_many.assert_called_once()
+        call_args = mock_stories.update_many.call_args
+        assert call_args[0][0] == {"section_id": {"$exists": False}}
+        assert call_args[0][1] == {"$set": {"section_id": "blog-section-id"}}
+
+    @pytest.mark.asyncio
+    async def test_backfill_projects_with_projects_section(self):
+        """Projects without section_id should get projects section's ID."""
+        projects_section = {"_id": "projects-section-id", "slug": "projects"}
+
+        mock_sections = AsyncMock()
+
+        def find_one_side_effect(query):
+            slug = query.get("slug")
+            if slug == "projects":
+                return projects_section
+            return None
+
+        mock_sections.find_one = AsyncMock(side_effect=find_one_side_effect)
+
+        mock_projects = AsyncMock()
+        mock_projects.update_many = AsyncMock(return_value=MagicMock(modified_count=3))
+
+        mock_stories = AsyncMock()
+        mock_stories.update_many = AsyncMock(return_value=MagicMock(modified_count=0))
+
+        mock_pages = AsyncMock()
+        mock_pages.update_many = AsyncMock(return_value=MagicMock(modified_count=0))
+
+        with (
+            patch("handlers.migrations.get_sections_collection", return_value=mock_sections),
+            patch("handlers.migrations.get_projects_collection", return_value=mock_projects),
+            patch("handlers.migrations.get_collection", return_value=mock_stories),
+            patch("handlers.migrations.get_pages_collection", return_value=mock_pages),
+        ):
+            from handlers.migrations import migrate_backfill_section_id
+
+            await migrate_backfill_section_id()
+
+        mock_projects.update_many.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_backfill_pages_by_page_type(self):
+        """Pages should be assigned to about or contact section based on page_type."""
+        about_section = {"_id": "about-section-id", "slug": "about"}
+        contact_section = {"_id": "contact-section-id", "slug": "contact"}
+
+        mock_sections = AsyncMock()
+
+        def find_one_side_effect(query):
+            slug = query.get("slug")
+            if slug == "about":
+                return about_section
+            elif slug == "contact":
+                return contact_section
+            return None
+
+        mock_sections.find_one = AsyncMock(side_effect=find_one_side_effect)
+
+        mock_pages = AsyncMock()
+        mock_pages.update_many = AsyncMock(return_value=MagicMock(modified_count=1))
+
+        mock_stories = AsyncMock()
+        mock_stories.update_many = AsyncMock(return_value=MagicMock(modified_count=0))
+
+        mock_projects = AsyncMock()
+        mock_projects.update_many = AsyncMock(return_value=MagicMock(modified_count=0))
+
+        with (
+            patch("handlers.migrations.get_sections_collection", return_value=mock_sections),
+            patch("handlers.migrations.get_pages_collection", return_value=mock_pages),
+            patch("handlers.migrations.get_collection", return_value=mock_stories),
+            patch("handlers.migrations.get_projects_collection", return_value=mock_projects),
+        ):
+            from handlers.migrations import migrate_backfill_section_id
+
+            await migrate_backfill_section_id()
+
+        # Should call update_many at least twice for pages (about and contact)
+        assert mock_pages.update_many.call_count >= 2
+
+    @pytest.mark.asyncio
+    async def test_backfill_skips_if_section_not_found(self):
+        """Migration should handle missing sections gracefully."""
+        mock_sections = AsyncMock()
+        mock_sections.find_one = AsyncMock(return_value=None)
+
+        mock_stories = AsyncMock()
+        mock_stories.update_many = AsyncMock()
+
+        mock_pages = AsyncMock()
+        mock_pages.update_many = AsyncMock()
+
+        with (
+            patch("handlers.migrations.get_sections_collection", return_value=mock_sections),
+            patch("handlers.migrations.get_collection", return_value=mock_stories),
+            patch("handlers.migrations.get_projects_collection", return_value=AsyncMock()),
+            patch("handlers.migrations.get_pages_collection", return_value=mock_pages),
+        ):
+            from handlers.migrations import migrate_backfill_section_id
+
+            await migrate_backfill_section_id()
+
+        mock_stories.update_many.assert_not_called()

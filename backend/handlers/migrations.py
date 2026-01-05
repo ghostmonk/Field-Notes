@@ -73,6 +73,7 @@ async def run_migrations():
     await migrate_create_admin_user()
     await migrate_add_user_id_to_content()
     await migrate_seed_initial_sections()
+    await migrate_backfill_section_id()
     logger.info("Migrations completed")
 
 
@@ -192,3 +193,74 @@ async def migrate_seed_initial_sections():
 
     except Exception:
         logger.exception("Error seeding initial sections")
+
+
+async def migrate_backfill_section_id():
+    """
+    Migration: Backfill section_id on existing content.
+    - Stories -> blog section
+    - Projects -> projects section
+    - Pages -> about or contact section (based on page_type)
+    """
+    try:
+        sections_collection = await get_sections_collection()
+
+        # Backfill stories with blog section
+        blog_section = await sections_collection.find_one({"slug": "blog", "is_deleted": False})
+        if blog_section:
+            stories_collection = await get_collection()
+            result = await stories_collection.update_many(
+                {"section_id": {"$exists": False}},
+                {"$set": {"section_id": str(blog_section["_id"])}},
+            )
+            if result.modified_count > 0:
+                logger.info(f"Migration: Backfilled section_id on {result.modified_count} stories")
+        else:
+            logger.warning("Migration: Blog section not found, skipping story backfill")
+
+        # Backfill projects with projects section
+        projects_section = await sections_collection.find_one(
+            {"slug": "projects", "is_deleted": False}
+        )
+        if projects_section:
+            projects_collection = await get_projects_collection()
+            result = await projects_collection.update_many(
+                {"section_id": {"$exists": False}},
+                {"$set": {"section_id": str(projects_section["_id"])}},
+            )
+            if result.modified_count > 0:
+                logger.info(f"Migration: Backfilled section_id on {result.modified_count} projects")
+        else:
+            logger.warning("Migration: Projects section not found, skipping project backfill")
+
+        # Backfill pages by page_type
+        pages_collection = await get_pages_collection()
+
+        about_section = await sections_collection.find_one({"slug": "about", "is_deleted": False})
+        if about_section:
+            result = await pages_collection.update_many(
+                {"page_type": "about", "section_id": {"$exists": False}},
+                {"$set": {"section_id": str(about_section["_id"])}},
+            )
+            if result.modified_count > 0:
+                logger.info(
+                    f"Migration: Backfilled section_id on {result.modified_count} about pages"
+                )
+
+        contact_section = await sections_collection.find_one(
+            {"slug": "contact", "is_deleted": False}
+        )
+        if contact_section:
+            result = await pages_collection.update_many(
+                {"page_type": "contact", "section_id": {"$exists": False}},
+                {"$set": {"section_id": str(contact_section["_id"])}},
+            )
+            if result.modified_count > 0:
+                logger.info(
+                    f"Migration: Backfilled section_id on {result.modified_count} contact pages"
+                )
+
+        logger.info("Migration: Section ID backfill completed")
+
+    except Exception:
+        logger.exception("Error backfilling section_id")
