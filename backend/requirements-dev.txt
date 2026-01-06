@@ -33,6 +33,7 @@ click==8.2.1
     # via
     #   black
     #   pip-tools
+    #   pymongo-migrate
     #   uvicorn
 coverage[toml]==7.9.1
     # via pytest-cov
@@ -185,7 +186,11 @@ pydantic-core==2.41.5
 pyflakes==3.3.2
     # via flake8
 pymongo==4.13.1
-    # via motor
+    # via
+    #   motor
+    #   pymongo-migrate
+pymongo-migrate==1.0.0
+    # via -r /Users/ghostmonk/Documents/code/turbulence/backend/requirements.in
 pyproject-hooks==1.2.0
     # via
     #   build

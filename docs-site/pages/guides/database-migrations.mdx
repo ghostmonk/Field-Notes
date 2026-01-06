@@ -1,0 +1,275 @@
+# Database Migrations
+
+This guide covers the database migration system used in Turbulence. Migrations are managed using [pymongo-migrate](https://github.com/pymongo-migrate/pymongo-migrate), a lightweight migration framework for MongoDB.
+
+## Overview
+
+Migrations handle schema changes and data transformations in the MongoDB database. They are:
+
+- **Versioned**: Each migration has a unique name and explicit dependencies
+- **Ordered**: Dependencies ensure migrations run in the correct sequence
+- **Reversible**: Each migration includes both `upgrade` and `downgrade` functions
+- **Idempotent**: Migrations check state before making changes
+
+## Running Migrations
+
+### Prerequisites
+
+Ensure your environment has:
+- Python virtual environment activated
+- `MONGO_URI` set in `.env` file
+- `ADMIN_EMAIL` set (required for user-related migrations)
+
+### Commands
+
+```bash
+# Run all pending migrations
+make migrate
+
+# Show migration status
+make migrate-status
+
+# Rollback the last applied migration
+make migrate-down
+```
+
+### Migration Status Output
+
+```
+Applied migrations:
+  ✓ 0001_create_admin_user
+  ✓ 0002_add_user_id_to_content
+  ✓ 0003_seed_initial_sections
+  ✓ 0004_backfill_section_id
+
+Pending migrations:
+  (none)
+```
+
+## Migration File Structure
+
+Migrations live in `backend/migrations/` and follow this naming convention:
+
+```
+NNNN_descriptive_name.py
+```
+
+Where `NNNN` is a zero-padded sequence number (0001, 0002, etc.).
+
+### Anatomy of a Migration
+
+```python
+"""
+Brief description of what this migration does.
+"""
+import pymongo
+
+name = "0005_your_migration_name"
+dependencies = ["0004_backfill_section_id"]
+
+
+def upgrade(db: "pymongo.database.Database"):
+    """Apply the migration."""
+    # Your upgrade logic here
+    pass
+
+
+def downgrade(db: "pymongo.database.Database"):
+    """Reverse the migration."""
+    # Your downgrade logic here
+    pass
+```
+
+### Required Attributes
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `name` | `str` | Unique migration identifier (must match filename without `.py`) |
+| `dependencies` | `list[str]` | List of migration names that must run first |
+| `upgrade` | `function` | Applies the migration |
+| `downgrade` | `function` | Reverses the migration |
+
+## Creating a New Migration
+
+### Step 1: Create the file
+
+```bash
+touch backend/migrations/0005_your_migration_name.py
+```
+
+### Step 2: Add the boilerplate
+
+```python
+"""
+Description of what this migration does.
+"""
+import pymongo
+
+name = "0005_your_migration_name"
+dependencies = ["0004_backfill_section_id"]  # Previous migration
+
+
+def upgrade(db: "pymongo.database.Database"):
+    """Apply the migration."""
+    pass
+
+
+def downgrade(db: "pymongo.database.Database"):
+    """Reverse the migration."""
+    pass
+```
+
+### Step 3: Implement the logic
+
+Example: Adding a new field to all documents in a collection
+
+```python
+def upgrade(db: "pymongo.database.Database"):
+    """Add 'featured' field to all stories."""
+    db["stories"].update_many(
+        {"featured": {"$exists": False}},
+        {"$set": {"featured": False}},
+    )
+
+
+def downgrade(db: "pymongo.database.Database"):
+    """Remove 'featured' field from all stories."""
+    db["stories"].update_many({}, {"$unset": {"featured": ""}})
+```
+
+### Step 4: Test the migration
+
+```bash
+# Run format check
+make format-check
+
+# Run tests
+make test
+
+# Apply the migration
+make migrate
+
+# Verify with status
+make migrate-status
+```
+
+## Best Practices
+
+### Make migrations idempotent
+
+Check if the change has already been applied before making it:
+
+```python
+def upgrade(db: "pymongo.database.Database"):
+    # Check before insert
+    existing = db["sections"].count_documents({"slug": "blog"})
+    if existing > 0:
+        return  # Already seeded
+
+    # Safe to insert
+    db["sections"].insert_one({"slug": "blog", ...})
+```
+
+### Handle missing data gracefully
+
+```python
+def upgrade(db: "pymongo.database.Database"):
+    section = db["sections"].find_one({"slug": "blog"})
+    if not section:
+        # Log warning or skip, don't raise
+        return
+
+    # Continue with migration
+    db["stories"].update_many(...)
+```
+
+### Keep migrations focused
+
+One logical change per migration. Don't combine unrelated changes.
+
+```python
+# Good: Single purpose
+name = "0005_add_featured_flag"
+
+# Bad: Multiple unrelated changes
+name = "0005_add_featured_and_fix_dates_and_update_users"
+```
+
+### Use environment variables for configuration
+
+```python
+import os
+
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+
+def upgrade(db: "pymongo.database.Database"):
+    if not ADMIN_EMAIL:
+        raise ValueError("ADMIN_EMAIL environment variable is required")
+    # Continue...
+```
+
+### Write reversible downgrades
+
+Every `upgrade` should have a corresponding `downgrade` that fully reverses it:
+
+```python
+def upgrade(db: "pymongo.database.Database"):
+    db["stories"].update_many({}, {"$set": {"version": 2}})
+
+
+def downgrade(db: "pymongo.database.Database"):
+    db["stories"].update_many({}, {"$unset": {"version": ""}})
+```
+
+## Existing Migrations
+
+| Migration | Purpose |
+|-----------|---------|
+| `0001_create_admin_user` | Creates the admin user from `ADMIN_EMAIL` |
+| `0002_add_user_id_to_content` | Associates existing content with admin user |
+| `0003_seed_initial_sections` | Seeds Blog, About, Projects, Contact sections |
+| `0004_backfill_section_id` | Links existing content to their sections |
+
+## Troubleshooting
+
+### Migration fails with "ADMIN_EMAIL required"
+
+Ensure `ADMIN_EMAIL` is set in your `.env` file:
+
+```bash
+ADMIN_EMAIL=your-email@example.com
+```
+
+### Migration shows as applied but data is wrong
+
+1. Check if the migration was partially applied
+2. Run `make migrate-down` to rollback
+3. Fix the issue and run `make migrate` again
+
+### Database connection fails
+
+Verify `MONGO_URI` in your `.env` file:
+
+```bash
+MONGO_URI=mongodb://user:pass@localhost:27017/turbulence
+```
+
+### pymongo-migrate command not found
+
+Ensure dependencies are installed:
+
+```bash
+make deps-dev
+```
+
+## Database Independence Note
+
+This migration framework is MongoDB-specific. The `pymongo-migrate` tool and migration syntax use MongoDB operations directly (`find_one`, `update_many`, `insert_many`, etc.).
+
+If migrating to a different database system in the future, the migration framework and individual migrations would need to be rewritten. The application code (handlers, models) is designed to be more database-agnostic through the repository pattern.
+
+## Further Reading
+
+- [pymongo-migrate documentation](https://github.com/pymongo-migrate/pymongo-migrate)
+- [MongoDB Update Operators](https://www.mongodb.com/docs/manual/reference/operator/update/)
+- [Architecture Overview](/architecture/overview)

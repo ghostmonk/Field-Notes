@@ -1,0 +1,100 @@
+# Migration Infrastructure
+
+**Release Date:** January 2026
+**Branch:** `ghostmonk/migration-infrastructure`
+**Related Issue:** [#70 - Dynamic Sections](https://github.com/ghostmonk/turbulence/issues/70)
+
+## Summary
+
+This release introduces a formal database migration framework using [pymongo-migrate](https://github.com/pymongo-migrate/pymongo-migrate). Migrations are now versioned, ordered, and reversible, replacing the previous ad-hoc approach.
+
+## Changes
+
+### New Features
+
+- **pymongo-migrate integration**: Formal migration framework with CLI support
+- **Migration commands**: `make migrate`, `make migrate-status`, `make migrate-down`
+- **Section ID linking**: Content models now support `section_id` for dynamic section association
+- **Initial section seeding**: Blog, About, Projects, Contact sections created via migration
+
+### Backend Changes
+
+| File | Change |
+|------|--------|
+| `backend/migrations/0001_create_admin_user.py` | Create admin user from `ADMIN_EMAIL` |
+| `backend/migrations/0002_add_user_id_to_content.py` | Associate content with admin user |
+| `backend/migrations/0003_seed_initial_sections.py` | Seed initial sections |
+| `backend/migrations/0004_backfill_section_id.py` | Link content to sections |
+| `backend/models/story.py` | Added `section_id: str \| None` |
+| `backend/models/project.py` | Added `section_id: str \| None` |
+| `backend/models/page.py` | Added `section_id: str \| None` |
+| `backend/database.py` | Added `section_id` indexes |
+| `backend/requirements.in` | Added `pymongo-migrate==1.0.0` |
+| `backend/app.py` | Removed ad-hoc migration calls from startup |
+| `Makefile` | Added migration targets |
+
+### Removed
+
+- `backend/handlers/migrations.py` - Replaced by formal migration files
+
+## Migration Guide
+
+### For New Deployments
+
+Migrations run automatically when you execute:
+
+```bash
+make migrate
+```
+
+### For Existing Deployments
+
+1. Ensure `ADMIN_EMAIL` is set in `.env`
+2. Run migrations:
+   ```bash
+   make migrate
+   ```
+3. Verify status:
+   ```bash
+   make migrate-status
+   ```
+
+### Environment Variables Required
+
+| Variable | Description |
+|----------|-------------|
+| `ADMIN_EMAIL` | Email for the admin user (required) |
+| `MONGO_URI` | MongoDB connection string (required) |
+
+## Database Schema Changes
+
+### New Fields
+
+| Collection | Field | Type | Description |
+|------------|-------|------|-------------|
+| `stories` | `section_id` | `string \| null` | Reference to sections collection |
+| `projects` | `section_id` | `string \| null` | Reference to sections collection |
+| `pages` | `section_id` | `string \| null` | Reference to sections collection |
+
+### New Indexes
+
+| Collection | Index | Purpose |
+|------------|-------|---------|
+| `stories` | `section_id` | Query stories by section |
+| `projects` | `section_id` | Query projects by section |
+| `pages` | `section_id` | Query pages by section |
+
+## Breaking Changes
+
+None. All changes are additive and backward-compatible.
+
+## Known Limitations
+
+- Migration framework is MongoDB-specific (pymongo-migrate)
+- If switching databases, migrations would need to be rewritten
+- Application code remains database-agnostic through repository pattern
+
+## Related Documentation
+
+- [Database Migrations Guide](/guides/database-migrations)
+- [Architecture Overview](/architecture/overview)
