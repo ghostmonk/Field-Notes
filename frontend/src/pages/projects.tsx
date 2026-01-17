@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import Image from 'next/image';
-import Link from 'next/link';
 import apiClient from '@/shared/lib/api-client';
-import { ProjectCard } from '@/shared/types/api';
+import { ProjectCard as ProjectCardType } from '@/shared/types/api';
+import { ProjectCard } from '@/modules/projects';
 
 const ProjectsPage: React.FC = () => {
-    const [projects, setProjects] = useState<ProjectCard[]>([]);
+    const [projects, setProjects] = useState<ProjectCardType[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -53,57 +52,7 @@ const ProjectsPage: React.FC = () => {
                 {!loading && !error && projects.length > 0 && (
                     <div className="grid grid--responsive">
                         {projects.map((project) => (
-                            <Link
-                                key={project.id}
-                                href={`/projects/${project.slug}`}
-                                className="card card--hoverable card--link"
-                            >
-                                {project.image_url && (
-                                    <Image
-                                        src={project.image_url}
-                                        alt={project.title}
-                                        width={400}
-                                        height={160}
-                                        className="project-image"
-                                    />
-                                )}
-
-                                <h3 className="section-title mb-sm">
-                                    {project.title}
-                                    {project.is_featured && (
-                                        <span className="badge--featured">
-                                            Featured
-                                        </span>
-                                    )}
-                                </h3>
-
-                                <p className="text-text-secondary mb-lg">
-                                    {project.summary}
-                                </p>
-
-                                {project.technologies.length > 0 && (
-                                    <div className="tech-tags">
-                                        {project.technologies.map((tech) => (
-                                            <span key={tech} className="tech-tag">
-                                                {tech}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <div className="project-links">
-                                    {project.github_url && (
-                                        <span className="text-text-secondary text-sm">
-                                            GitHub
-                                        </span>
-                                    )}
-                                    {project.live_url && (
-                                        <span className="text-text-secondary text-sm">
-                                            Live Demo
-                                        </span>
-                                    )}
-                                </div>
-                            </Link>
+                            <ProjectCard key={project.id} project={project} />
                         ))}
                     </div>
                 )}
