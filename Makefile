@@ -57,13 +57,13 @@ venv-clean:
 # Database migrations (pymongo-migrate)
 # Requires MONGO_URI environment variable set
 migrate:
-	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && cd backend && pymongo-migrate migrate -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && set +a && cd backend && pymongo-migrate migrate -u "$$MONGO_URI" -m migrations
 
 migrate-status:
-	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && cd backend && pymongo-migrate show -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && set +a && cd backend && pymongo-migrate show -u "$$MONGO_URI" -m migrations
 
 migrate-down:
-	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && cd backend && pymongo-migrate downgrade -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && set +a && cd backend && pymongo-migrate downgrade -u "$$MONGO_URI" -m migrations
 
 # Dependency management with pip-tools
 deps-compile:
