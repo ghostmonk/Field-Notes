@@ -59,23 +59,19 @@ INITIAL_SECTIONS = [
 
 def upgrade(db: "pymongo.database.Database"):
     sections = db["sections"]
-
-    existing = sections.count_documents({"is_deleted": False})
-    if existing > 0:
-        return
-
     current_time = datetime.now(timezone.utc)
-    docs = []
-    for section in INITIAL_SECTIONS:
-        docs.append(
+
+    for section_def in INITIAL_SECTIONS:
+        existing = sections.find_one({"slug": section_def["slug"], "is_deleted": False})
+        if existing:
+            continue
+        sections.insert_one(
             {
-                **section,
+                **section_def,
                 "createdDate": current_time,
                 "updatedDate": current_time,
             }
         )
-
-    sections.insert_many(docs)
 
 
 def downgrade(db: "pymongo.database.Database"):
