@@ -10,7 +10,9 @@ from database import get_navlinks_collection
 from decorators.auth import requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
+from middleware.rate_limit import limiter
 from models.navlink import NavLinkCreate, NavLinkResponse, NavLinkUpdate
+from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
 from utils import find_many_and_convert, find_one_and_convert
@@ -152,6 +154,7 @@ async def get_navlink(
 
 
 @router.post("/navlinks", response_model=NavLinkResponse, status_code=201)
+@limiter.limit("10/minute")
 @requires_auth
 async def create_navlink(
     request: Request,
@@ -241,6 +244,7 @@ async def create_navlink(
 
 
 @router.put("/navlinks/{navlink_id}", response_model=NavLinkResponse)
+@limiter.limit("10/minute")
 @requires_auth
 async def update_navlink(
     request: Request,
@@ -258,6 +262,10 @@ async def update_navlink(
         The updated navlink
     """
     try:
+        user: UserInfo = request.state.user
+        if user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
         if not ObjectId.is_valid(navlink_id):
             logger.warning_with_context(
                 "Invalid navlink ID format for update", {"navlink_id": navlink_id}
@@ -266,7 +274,7 @@ async def update_navlink(
 
         logger.info_with_context(
             "Updating navlink",
-            {"navlink_id": navlink_id},
+            {"navlink_id": navlink_id, "user_id": user.id},
         )
 
         existing_navlink = await find_one_and_convert(
@@ -352,6 +360,7 @@ async def update_navlink(
 
 
 @router.delete("/navlinks/{navlink_id}", status_code=204)
+@limiter.limit("5/minute")
 @requires_auth
 async def delete_navlink(
     request: Request,
@@ -367,13 +376,17 @@ async def delete_navlink(
         204 No Content on success
     """
     try:
+        user: UserInfo = request.state.user
+        if user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
         if not ObjectId.is_valid(navlink_id):
             logger.warning_with_context(
                 "Invalid navlink ID format for delete", {"navlink_id": navlink_id}
             )
             raise HTTPException(status_code=400, detail="Invalid navlink ID format")
 
-        logger.info_with_context("Deleting navlink", {"navlink_id": navlink_id})
+        logger.info_with_context("Deleting navlink", {"navlink_id": navlink_id, "user_id": user.id})
 
         existing_navlink = await find_one_and_convert(
             collection, {"_id": ObjectId(navlink_id)}, NavLinkResponse

@@ -372,6 +372,75 @@ def auth_headers():
 
 
 @pytest.fixture
+def mock_auth_commenter(mock_users_collection):
+    """Mock authentication for a non-admin (commenter) user.
+
+    Same as mock_auth but returns role='commenter' instead of 'admin'.
+    """
+    from unittest.mock import patch
+
+    from bson import ObjectId
+    from decorators.auth import _token_cache
+
+    _token_cache.clear()
+
+    mock_user_id = ObjectId()
+    mock_users_collection.find_one_and_update.return_value = {
+        "_id": mock_user_id,
+        "email": "commenter@example.com",
+        "name": "Commenter User",
+        "role": "commenter",
+        "auth_providers": [],
+    }
+
+    async def get_mock_users_collection():
+        return mock_users_collection
+
+    class MockResponse:
+        def __init__(self, status_code, json_data):
+            self.status_code = status_code
+            self._json_data = json_data
+
+        def json(self):
+            return self._json_data
+
+    class MockAsyncClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            pass
+
+        async def get(self, url, **kwargs):
+            if "tokeninfo" in url:
+                return MockResponse(
+                    200,
+                    {
+                        "scope": "https://www.googleapis.com/auth/userinfo.email",
+                        "exp": 9999999999,
+                        "email": "commenter@example.com",
+                        "sub": "google-commenter-id-456",
+                    },
+                )
+            elif "userinfo" in url:
+                return MockResponse(
+                    200,
+                    {
+                        "email": "commenter@example.com",
+                        "name": "Commenter User",
+                        "picture": "https://example.com/avatar2.jpg",
+                    },
+                )
+            return MockResponse(404, {})
+
+    with (
+        patch("decorators.auth.httpx.AsyncClient", MockAsyncClient),
+        patch("decorators.auth.get_users_collection", get_mock_users_collection),
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_reactions_collection():
     """Mock collection for reactions testing"""
     mock = MagicMock()

@@ -10,6 +10,7 @@ from database import get_sections_collection
 from decorators.auth import check_write_permission, requires_auth, verify_auth
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
+from middleware.rate_limit import limiter
 from models.section import SectionCreate, SectionResponse, SectionUpdate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -47,8 +48,16 @@ async def get_sections(
         if not include_unpublished:
             query["is_published"] = True
         if parent_id is not None:
+            if parent_id != "null" and not ObjectId.is_valid(parent_id):
+                raise HTTPException(status_code=400, detail="Invalid parent_id format")
             query["parent_id"] = parent_id
         if nav_visibility is not None:
+            allowed = {"main", "secondary", "hidden"}
+            if nav_visibility not in allowed:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid nav_visibility. Must be one of: {', '.join(sorted(allowed))}",
+                )
             query["nav_visibility"] = nav_visibility
 
         sort = [("sort_order", 1), ("createdDate", -1)]
@@ -216,6 +225,7 @@ async def get_section(
 
 
 @router.post("/sections", response_model=SectionResponse, status_code=201)
+@limiter.limit("10/minute")
 @requires_auth
 async def create_section(
     request: Request,
@@ -317,6 +327,7 @@ async def create_section(
 
 
 @router.put("/sections/{section_id}", response_model=SectionResponse)
+@limiter.limit("10/minute")
 @requires_auth
 async def update_section(
     request: Request,
@@ -455,6 +466,7 @@ async def update_section(
 
 
 @router.delete("/sections/{section_id}", status_code=204)
+@limiter.limit("5/minute")
 @requires_auth
 async def delete_section(
     request: Request,
