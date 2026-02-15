@@ -1,0 +1,155 @@
+# Creating Content Types
+
+How to add a new content type to the dynamic sections system.
+
+## Overview
+
+The registry pattern maps **content types** (what data looks like) to **display types** (how it renders). Adding a new content type means:
+
+1. Define the data model
+2. Create list and detail components
+3. Register them in the content registry
+
+## Step 1: Data Model
+
+Add your type to `shared/types/api.ts`:
+
+```typescript
+export interface Recipe {
+    id: string;
+    title: string;
+    slug: string;
+    content: string;
+    ingredients: string[];
+    is_published: boolean;
+    createdDate: string;
+    updatedDate: string;
+}
+```
+
+## Step 2: Create Module
+
+Create your module under `modules/your-type/`:
+
+```
+modules/recipes/
+├── index.ts
+└── components/
+    ├── index.ts
+    ├── RecipeCard.tsx
+    └── RecipeDetail.tsx
+```
+
+### List Component (RecipeCard)
+
+```typescript
+import React from 'react';
+import Link from 'next/link';
+import { Recipe } from '@/shared/types/api';
+
+interface RecipeCardProps {
+    recipe: Recipe;
+}
+
+export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
+    return (
+        <Link href={`/recipes/${recipe.slug}`} className="card card--hoverable card--link">
+            <h3 className="section-title mb-sm">{recipe.title}</h3>
+            <div className="tech-tags">
+                {recipe.ingredients.slice(0, 5).map((ing) => (
+                    <span key={ing} className="tech-tag">{ing}</span>
+                ))}
+            </div>
+        </Link>
+    );
+};
+```
+
+### Detail Component (RecipeDetail)
+
+```typescript
+import React from 'react';
+import DOMPurify from 'isomorphic-dompurify';
+import { Recipe } from '@/shared/types/api';
+
+interface RecipeDetailProps {
+    recipe: Recipe;
+}
+
+export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe }) => {
+    return (
+        <>
+            <h1 className="page-title">{recipe.title}</h1>
+            <ul>
+                {recipe.ingredients.map((ing) => (
+                    <li key={ing}>{ing}</li>
+                ))}
+            </ul>
+            <div className="card">
+                <div className="prose prose--card">
+                    <div dangerouslySetInnerHTML=&#123;&#123; __html: DOMPurify.sanitize(recipe.content) &#125;&#125; />
+                </div>
+            </div>
+        </>
+    );
+};
+```
+
+### Barrel Exports
+
+```typescript
+// components/index.ts
+export { RecipeCard } from './RecipeCard';
+export { RecipeDetail } from './RecipeDetail';
+
+// index.ts
+export * from './components';
+```
+
+## Step 3: Register
+
+Add the content type to `modules/registry/types.ts`:
+
+```typescript
+export type ContentType = 'story' | 'project' | 'page' | 'recipe';
+```
+
+Add the components to `modules/registry/contentRegistry.ts`:
+
+```typescript
+import { RecipeCard, RecipeDetail } from '@/modules/recipes';
+
+export const contentRegistry: Record<ContentType, ContentEntry> = {
+    // ... existing entries
+    recipe: {
+        listItem: RecipeCard,
+        detail: RecipeDetail,
+    },
+};
+```
+
+## Step 4: Backend
+
+Add the corresponding backend model, handler, and API endpoints following existing patterns in `backend/models/` and `backend/handlers/`.
+
+Add `'recipe'` to the `ContentType` literal in `backend/models/section.py`.
+
+## Display Types
+
+Content types render inside display types. The available display types are:
+
+| Display Type | Component | Use Case |
+|---|---|---|
+| `feed` | `FeedDisplay` | Infinite scroll list (stories) |
+| `card-grid` | `CardGridDisplay` | Responsive grid (projects) |
+| `static-page` | `StaticPageDisplay` | Single content block (about, contact) |
+
+When creating a section that uses your content type, choose the display type that fits. A recipe section might use `card-grid` for browsing or `feed` for a chronological list.
+
+## Existing Content Types
+
+| Type | List Component | Detail Component | Typical Display |
+|---|---|---|---|
+| `story` | `StoryCard` | `StoryDetail` | feed |
+| `project` | `ProjectCard` | `ProjectDetail` | card-grid |
+| `page` | none | none | static-page |

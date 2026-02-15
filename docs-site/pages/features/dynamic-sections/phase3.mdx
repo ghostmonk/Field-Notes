@@ -1,0 +1,164 @@
+# Phase 3: Display Registry
+
+**Goal:** Extract existing display components into a registry pattern, enabling dynamic section rendering in Phase 4.
+
+**Status:** Design complete, ready for implementation
+
+---
+
+## Design Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Registry location | `modules/registry/` | Dedicated module, discoverable |
+| Data flow | Props-based | Keeps displays pure/testable, SSR in pages |
+| Content components | Extract StoryCard, ProjectCard | Clean abstraction |
+| Gallery display | Skip for now | YAGNI - different beast |
+| Loading/empty states | Parent handles | Displays stay focused |
+| Type safety | Minimal interfaces | Content registry typed, displays flexible |
+
+---
+
+## Registry Module Structure
+
+```
+frontend/src/modules/registry/
+├── index.ts                    # Public exports
+├── types.ts                    # TypeScript interfaces
+├── contentRegistry.ts          # Content type registry
+├── displayRegistry.ts          # Display type registry
+└── displays/
+    ├── FeedDisplay.tsx
+    ├── CardGridDisplay.tsx
+    ├── StaticPageDisplay.tsx
+    └── index.ts
+```
+
+---
+
+## Type Definitions
+
+```typescript
+// types.ts
+export type DisplayType = 'feed' | 'card-grid' | 'static-page';
+export type ContentType = 'story' | 'project' | 'page';
+
+export interface ContentEntry<T> {
+  listItem: React.ComponentType<{ item: T }> | null;
+  detail: React.ComponentType<{ item: T }> | null;
+}
+```
+
+---
+
+## Content Registry
+
+```typescript
+// contentRegistry.ts
+import { StoryCard, StoryDetail } from '@/modules/stories';
+import { ProjectCard, ProjectDetail } from '@/modules/projects';
+
+export const contentRegistry = {
+  story: {
+    listItem: StoryCard,
+    detail: StoryDetail,
+  },
+  project: {
+    listItem: ProjectCard,
+    detail: ProjectDetail,
+  },
+  page: {
+    listItem: null,
+    detail: null,
+  },
+};
+```
+
+---
+
+## Display Registry
+
+```typescript
+// displayRegistry.ts
+import { FeedDisplay, CardGridDisplay, StaticPageDisplay } from './displays';
+
+export const displayRegistry = {
+  'feed': FeedDisplay,
+  'card-grid': CardGridDisplay,
+  'static-page': StaticPageDisplay,
+};
+```
+
+---
+
+## Display Components
+
+### FeedDisplay
+
+Infinite scroll list, extracted from `StoryList`.
+
+```typescript
+interface FeedDisplayProps<T> {
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+  onLoadMore: () => void;
+  hasMore: boolean;
+}
+```
+
+### CardGridDisplay
+
+Responsive grid, extracted from `projects.tsx`.
+
+```typescript
+interface CardGridDisplayProps<T> {
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+}
+```
+
+### StaticPageDisplay
+
+Single content block for static pages.
+
+```typescript
+interface StaticPageDisplayProps {
+  content: string;
+  title?: string;
+}
+```
+
+---
+
+## Component Extraction
+
+| Component | Current Location | Extract To |
+|-----------|------------------|------------|
+| Story list item | Inline in `StoryList.tsx` | `StoryCard.tsx` |
+| Story detail | `pages/stories/[slug].tsx` | `StoryDetail.tsx` |
+| Project card | Inline in `pages/projects.tsx` | `ProjectCard.tsx` |
+| Project detail | `pages/projects/[slug].tsx` | `ProjectDetail.tsx` |
+
+Components stay in their domain modules. Registry imports and maps them.
+
+---
+
+## Success Criteria
+
+1. All existing pages render identically
+2. `modules/registry/` exports both registries
+3. `modules/projects/` module exists with extracted components
+4. `StoryList` uses `StoryCard` internally
+5. `projects.tsx` uses `ProjectCard` internally
+6. All existing tests pass
+7. Guide exists at `/guides/creating-content-types`
+
+---
+
+## What Phase 3 Does NOT Do
+
+- Change any URLs
+- Fetch sections from database
+- Use registries dynamically
+
+Phase 4 wires registries to dynamic routing.
