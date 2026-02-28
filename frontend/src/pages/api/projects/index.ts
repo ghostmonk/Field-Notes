@@ -7,8 +7,8 @@ const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function getCacheKey(req: NextApiRequest): string {
-    const { limit, offset, featured_only } = req.query;
-    return `projects:${limit || 'all'}:${offset || 0}:${featured_only || 'false'}`;
+    const { limit, offset, featured_only, section_id } = req.query;
+    return `projects:${limit || 'all'}:${offset || 0}:${featured_only || 'false'}:${section_id || 'none'}`;
 }
 
 function getFromCache(key: string): any | null {
@@ -99,6 +99,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
             if (req.query.featured_only === 'true') {
                 params.append('featured_only', 'true');
+            }
+            if (req.query.section_id) {
+                params.append('section_id', req.query.section_id.toString());
             }
             if (token?.accessToken) {
                 params.append('include_unpublished', 'true');

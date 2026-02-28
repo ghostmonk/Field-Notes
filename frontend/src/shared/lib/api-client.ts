@@ -13,6 +13,7 @@ import {
   Project,
   CreateProjectRequest,
   UpdateProjectRequest,
+  Section,
   ReactionCounts,
   ToggleReactionRequest,
   ToggleReactionResponse,
@@ -156,6 +157,9 @@ const apiRoutes = {
     update: (id: string) => `/api/projects/${id}`,
     delete: (id: string) => `/api/projects/${id}`,
   },
+  sections: {
+    getBySlug: (slug: string) => `/api/sections/by-slug/${slug}`,
+  },
   engagement: {
     reactions: (targetType: string, targetId: string) =>
       `/api/engagement/${targetType}/${targetId}/reactions`,
@@ -276,6 +280,14 @@ const apiClient = {
         method: 'DELETE',
         token
       }),
+  },
+
+  /**
+   * Section methods
+   */
+  sections: {
+    getBySlug: (slug: string) =>
+      fetchApi<Section>(apiRoutes.sections.getBySlug(slug)),
   },
 
   /**
