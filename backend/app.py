@@ -11,8 +11,10 @@ from glogger import logger
 from handlers.backfill import backfill_published_flag
 from handlers.engagement import router as engagement_router
 from handlers.migrations import run_migrations
+from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
 from handlers.projects import router as projects_router
+from handlers.sections import router as sections_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
@@ -223,6 +225,8 @@ async def warmup():
 app.include_router(stories_router)
 app.include_router(pages_router)
 app.include_router(projects_router)
+app.include_router(sections_router)
+app.include_router(navlinks_router)
 app.include_router(uploads_router)
 app.include_router(users_router)
 app.include_router(video_processing_router)

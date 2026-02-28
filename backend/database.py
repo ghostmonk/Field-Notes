@@ -121,6 +121,16 @@ async def get_comments_collection() -> AsyncIOMotorCollection:
     return db["comments"]
 
 
+async def get_sections_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["sections"]
+
+
+async def get_navlinks_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["navlinks"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
@@ -215,6 +225,19 @@ async def ensure_indexes() -> None:
     comments = db["comments"]
     await safe_create_index(comments, [("target_type", 1), ("target_id", 1)])
     await safe_create_index(comments, "parent_id")
+
+    # Sections indexes
+    sections = db["sections"]
+    if not await safe_create_index(sections, "slug", unique=True):
+        failed_indexes.append("sections.slug")
+    await safe_create_index(sections, "parent_id")
+    await safe_create_index(sections, [("nav_visibility", 1), ("sort_order", 1)])
+    await safe_create_index(sections, [("is_published", 1), ("sort_order", 1)])
+
+    # NavLinks indexes
+    navlinks = db["navlinks"]
+    await safe_create_index(navlinks, [("sort_order", 1)])
+    await safe_create_index(navlinks, "is_published")
 
     if failed_indexes:
         logger.error(
