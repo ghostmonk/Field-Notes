@@ -1,4 +1,4 @@
-.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend install-frontend
+.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend install-frontend migrate migrate-status migrate-down
 
 # Virtual environment configuration
 VENV_DEFAULT := $(HOME)/Documents/venvs/turbulence
@@ -53,6 +53,17 @@ venv:
 venv-clean:
 	@echo "Removing virtual environment at $(VENV_PATH)"
 	rm -rf $(VENV_PATH)
+
+# Database migrations (pymongo-migrate)
+# Requires MONGO_URI environment variable set
+migrate:
+	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && cd backend && pymongo-migrate migrate -u "$$MONGO_URI" -m migrations
+
+migrate-status:
+	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && cd backend && pymongo-migrate show -u "$$MONGO_URI" -m migrations
+
+migrate-down:
+	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && cd backend && pymongo-migrate downgrade -u "$$MONGO_URI" -m migrations
 
 # Dependency management with pip-tools
 deps-compile:
@@ -230,3 +241,6 @@ help:
 	@echo "  clean            - Clean up Python cache files and build artifacts"
 	@echo "  clean-frontend   - Remove frontend node_modules and .next cache"
 	@echo "  docker-nuke      - Nuke all Docker resources for a clean slate"
+	@echo "  migrate          - Run database migrations"
+	@echo "  migrate-status   - Show migration status"
+	@echo "  migrate-down     - Rollback last migration"

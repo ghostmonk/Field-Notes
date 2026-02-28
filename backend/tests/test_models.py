@@ -833,3 +833,135 @@ class TestNavLinkResponse:
             updatedDate=now,
         )
         assert link.id == "507f1f77bcf86cd799439011"
+
+
+class TestStorySectionId:
+    """Test section_id field in Story models."""
+
+    @pytest.mark.unit
+    def test_story_base_without_section_id(self):
+        """StoryBase should work without section_id (backwards compatible)."""
+        story = StoryCreate(
+            title="Test Story",
+            content="Test content",
+            is_published=True,
+        )
+        assert story.title == "Test Story"
+
+    @pytest.mark.unit
+    def test_story_response_with_section_id(self):
+        """StoryResponse should include optional section_id."""
+        now = datetime.now(timezone.utc)
+        story = StoryResponse(
+            id="123",
+            title="Test Story",
+            content="Test content",
+            is_published=True,
+            slug="test-story",
+            createdDate=now,
+            updatedDate=now,
+            section_id="section-123",
+        )
+        assert story.section_id == "section-123"
+
+    @pytest.mark.unit
+    def test_story_response_without_section_id(self):
+        """StoryResponse should work without section_id (nullable)."""
+        now = datetime.now(timezone.utc)
+        story = StoryResponse(
+            id="123",
+            title="Test Story",
+            content="Test content",
+            is_published=True,
+            slug="test-story",
+            createdDate=now,
+            updatedDate=now,
+        )
+        assert story.section_id is None
+
+
+class TestProjectSectionId:
+    """Test section_id field in Project models."""
+
+    @pytest.mark.unit
+    def test_project_response_with_section_id(self):
+        """ProjectResponse should include optional section_id."""
+        now = datetime.now(timezone.utc)
+        project = ProjectResponse(
+            id="123",
+            title="Test Project",
+            summary="A test project",
+            content="Full project description",
+            slug="test-project",
+            createdDate=now,
+            updatedDate=now,
+            section_id="section-456",
+        )
+        assert project.section_id == "section-456"
+
+    @pytest.mark.unit
+    def test_project_response_without_section_id(self):
+        """ProjectResponse should work without section_id (nullable)."""
+        now = datetime.now(timezone.utc)
+        project = ProjectResponse(
+            id="123",
+            title="Test Project",
+            summary="A test project",
+            content="Full project description",
+            slug="test-project",
+            createdDate=now,
+            updatedDate=now,
+        )
+        assert project.section_id is None
+
+    @pytest.mark.unit
+    def test_project_card_with_section_id(self):
+        """ProjectCard should include optional section_id."""
+        card = ProjectCard(
+            id="123",
+            title="Test Project",
+            slug="test-project",
+            summary="A test project",
+            technologies=["Python"],
+            image_url=None,
+            github_url=None,
+            live_url=None,
+            is_featured=False,
+            section_id="section-456",
+        )
+        assert card.section_id == "section-456"
+
+
+class TestPageSectionId:
+    """Test section_id field in Page models."""
+
+    @pytest.mark.unit
+    def test_page_response_with_section_id(self):
+        """PageResponse should include optional section_id."""
+        now = datetime.now(timezone.utc)
+        page = PageResponse(
+            id="123",
+            title="About Page",
+            content="About content",
+            page_type="about",
+            is_published=True,
+            createdDate=now,
+            updatedDate=now,
+            section_id="section-789",
+        )
+        assert page.section_id == "section-789"
+
+    @pytest.mark.unit
+    def test_page_response_without_section_id(self):
+        """PageResponse should work without section_id (nullable)."""
+        now = datetime.now(timezone.utc)
+        page = PageResponse(
+            id="123",
+            title="About Page",
+            content="About content",
+            page_type="about",
+            is_published=True,
+            createdDate=now,
+            updatedDate=now,
+        )
+        assert page.section_id is None

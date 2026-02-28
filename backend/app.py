@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from glogger import logger
 from handlers.backfill import backfill_published_flag
 from handlers.engagement import router as engagement_router
-from handlers.migrations import run_migrations
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
 from handlers.projects import router as projects_router
@@ -57,9 +56,6 @@ async def lifespan(app: FastAPI):
 
     # Ensure database indexes exist
     await ensure_indexes()
-
-    # Run database migrations
-    await run_migrations()
 
     yield  # This is where the app runs
 
