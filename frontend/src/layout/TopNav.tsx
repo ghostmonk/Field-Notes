@@ -2,12 +2,12 @@ import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState } from "react";
-import { SECTIONS, SectionConfig } from "@/shared/lib/navigation";
+import { SECTIONS, NavSectionConfig } from "@/shared/lib/navigation";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm } from "react-icons/hi";
 
 // Icon mapping for section navigation items defined in SECTIONS config
-const iconMap: Record<SectionConfig['icon'], React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<NavSectionConfig['icon'], React.ComponentType<{ className?: string }>> = {
     home: HiHome,
     user: HiUser,
     folder: HiFolder,

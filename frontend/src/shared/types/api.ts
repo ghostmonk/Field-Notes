@@ -144,6 +144,28 @@ export interface PaginatedResponse<T> {
 }
 
 /**
+ * Section types for dynamic routing
+ */
+export type DisplayType = 'feed' | 'card-grid' | 'static-page' | 'gallery';
+export type SectionContentType = 'story' | 'project' | 'page' | 'image';
+export type NavVisibility = 'main' | 'secondary' | 'hidden';
+
+export interface Section {
+    id: string;
+    title: string;
+    slug: string;
+    display_type: DisplayType;
+    content_type: SectionContentType;
+    nav_visibility: NavVisibility;
+    sort_order: number;
+    is_published: boolean;
+    parent_id: string | null;
+    createdDate: string;
+    updatedDate: string;
+    user_id?: string;
+}
+
+/**
  * Engagement types for reactions and comments
  */
 

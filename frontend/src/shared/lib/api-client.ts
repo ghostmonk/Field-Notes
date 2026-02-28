@@ -171,12 +171,14 @@ interface PaginationParams {
   limit?: number;
   offset?: number;
   include_drafts?: boolean;
+  section_id?: string;
 }
 
 interface ProjectPaginationParams {
   limit?: number;
   offset?: number;
   featured_only?: boolean;
+  section_id?: string;
 }
 
 /**
