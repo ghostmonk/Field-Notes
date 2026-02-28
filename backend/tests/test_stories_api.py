@@ -91,7 +91,9 @@ class TestStoriesPublicEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_get_stories_filtered_by_section_id(self, async_client: AsyncClient, override_database):
+    async def test_get_stories_filtered_by_section_id(
+        self, async_client: AsyncClient, override_database
+    ):
         """Test filtering stories by section_id"""
         now = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         section_id = ObjectId()
