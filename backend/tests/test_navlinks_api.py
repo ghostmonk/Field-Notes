@@ -167,6 +167,70 @@ class TestCreateNavLink:
         assert response.status_code == 401
 
 
+class TestNavLinkUrlValidation:
+    """Tests for NavLink URL validation."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_navlink_with_internal_path(
+        self,
+        navlinks_async_client,
+        override_navlinks_database,
+        sample_navlink_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Internal paths (starting with /) should be accepted."""
+        navlink_id = ObjectId()
+        override_navlinks_database.find_one.return_value = {
+            **sample_navlink_data,
+            "_id": navlink_id,
+            "url": "/about",
+        }
+        override_navlinks_database.insert_one.return_value = MagicMock(inserted_id=navlink_id)
+
+        response = await navlinks_async_client.post(
+            "/navlinks",
+            json={"label": "About", "url": "/about"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 201
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_navlink_rejects_javascript_url(
+        self,
+        navlinks_async_client,
+        override_navlinks_database,
+        mock_auth,
+        auth_headers,
+    ):
+        """javascript: URLs should be rejected."""
+        response = await navlinks_async_client.post(
+            "/navlinks",
+            json={"label": "XSS", "url": "javascript:alert(1)"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_navlink_rejects_data_url(
+        self,
+        navlinks_async_client,
+        override_navlinks_database,
+        mock_auth,
+        auth_headers,
+    ):
+        """data: URLs should be rejected."""
+        response = await navlinks_async_client.post(
+            "/navlinks",
+            json={"label": "Data", "url": "data:text/html,<h1>hi</h1>"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 422
+
+
 class TestUpdateNavLink:
     """Tests for PUT /navlinks/{navlink_id} endpoint."""
 
@@ -236,6 +300,23 @@ class TestUpdateNavLink:
 
         assert response.status_code == 401
 
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_update_navlink_forbidden_for_commenter(
+        self,
+        navlinks_async_client,
+        override_navlinks_database,
+        mock_auth_commenter,
+        auth_headers,
+    ):
+        """Non-admin users should get 403 on navlink update."""
+        response = await navlinks_async_client.put(
+            "/navlinks/507f1f77bcf86cd799439011",
+            json={"label": "Updated"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 403
+
 
 class TestDeleteNavLink:
     """Tests for DELETE /navlinks/{navlink_id} endpoint."""
@@ -298,3 +379,19 @@ class TestDeleteNavLink:
         )
 
         assert response.status_code == 401
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_delete_navlink_forbidden_for_commenter(
+        self,
+        navlinks_async_client,
+        override_navlinks_database,
+        mock_auth_commenter,
+        auth_headers,
+    ):
+        """Non-admin users should get 403 on navlink delete."""
+        response = await navlinks_async_client.delete(
+            "/navlinks/507f1f77bcf86cd799439011",
+            headers=auth_headers,
+        )
+        assert response.status_code == 403

@@ -4,6 +4,8 @@ import importlib.util
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
+
 
 def load_migration(name: str):
     """Load a migration module by name."""
@@ -87,56 +89,68 @@ class TestSeedInitialSections:
         assert contact["display_type"] == "static-page"
         assert contact["content_type"] == "page"
 
-    def test_seed_skips_if_sections_exist(self):
-        """Migration should skip if sections already exist."""
+    def test_seed_skips_existing_sections_individually(self):
+        """Migration should skip sections that already exist by slug."""
         m3 = load_migration("0003_seed_initial_sections")
 
         mock_sections = MagicMock()
-        mock_sections.count_documents.return_value = 4
+        # blog exists, about does not, projects exists, contact does not
+        existing_blog = {"_id": "blog-id", "slug": "blog"}
+        existing_projects = {"_id": "projects-id", "slug": "projects"}
+
+        def find_one_side_effect(query):
+            slug = query.get("slug")
+            if slug == "blog":
+                return existing_blog
+            elif slug == "projects":
+                return existing_projects
+            return None
+
+        mock_sections.find_one.side_effect = find_one_side_effect
 
         mock_db = MagicMock()
         mock_db.__getitem__ = MagicMock(return_value=mock_sections)
 
         m3.upgrade(mock_db)
 
-        mock_sections.insert_many.assert_not_called()
+        # Should insert only the 2 missing sections (about, contact)
+        assert mock_sections.insert_one.call_count == 2
 
-    def test_seed_inserts_if_no_sections(self):
-        """Migration should insert sections if none exist."""
+    def test_seed_inserts_all_if_none_exist(self):
+        """Migration should insert all sections if none exist."""
         m3 = load_migration("0003_seed_initial_sections")
 
         mock_sections = MagicMock()
-        mock_sections.count_documents.return_value = 0
+        mock_sections.find_one.return_value = None
 
         mock_db = MagicMock()
         mock_db.__getitem__ = MagicMock(return_value=mock_sections)
 
         m3.upgrade(mock_db)
 
-        mock_sections.insert_many.assert_called_once()
-        call_args = mock_sections.insert_many.call_args[0][0]
-        assert len(call_args) == 4
+        assert mock_sections.insert_one.call_count == 4
+
+    def test_seed_inserts_none_if_all_exist(self):
+        """Migration should skip entirely if all sections exist."""
+        m3 = load_migration("0003_seed_initial_sections")
+
+        mock_sections = MagicMock()
+        mock_sections.find_one.return_value = {"_id": "some-id", "slug": "exists"}
+
+        mock_db = MagicMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_sections)
+
+        m3.upgrade(mock_db)
+
+        mock_sections.insert_one.assert_not_called()
 
 
 class TestBackfillSectionId:
     """Test section_id backfill migration."""
 
-    def test_backfill_stories_with_blog_section(self):
-        """Stories without section_id should get blog section's ID."""
-        m4 = load_migration("0004_backfill_section_id")
-
-        blog_section = {"_id": "blog-section-id", "slug": "blog"}
-
+    def _make_mock_db(self):
+        """Create a mock DB with sections, stories, projects, pages collections."""
         mock_sections = MagicMock()
-
-        def find_one_side_effect(query):
-            slug = query.get("slug")
-            if slug == "blog":
-                return blog_section
-            return None
-
-        mock_sections.find_one.side_effect = find_one_side_effect
-
         mock_stories = MagicMock()
         mock_projects = MagicMock()
         mock_pages = MagicMock()
@@ -155,6 +169,59 @@ class TestBackfillSectionId:
             return MagicMock()
 
         mock_db.__getitem__ = MagicMock(side_effect=getitem)
+        return mock_db, mock_sections, mock_stories, mock_projects, mock_pages
+
+    def test_backfill_stores_objectid_not_string(self):
+        """section_id should be stored as ObjectId, not str(ObjectId)."""
+        from bson import ObjectId
+
+        m4 = load_migration("0004_backfill_section_id")
+
+        blog_id = ObjectId()
+        projects_id = ObjectId()
+        about_id = ObjectId()
+        contact_id = ObjectId()
+
+        mock_db, mock_sections, mock_stories, mock_projects, mock_pages = self._make_mock_db()
+
+        def find_one_side_effect(query):
+            slug = query.get("slug")
+            if slug == "blog":
+                return {"_id": blog_id, "slug": "blog"}
+            elif slug == "projects":
+                return {"_id": projects_id, "slug": "projects"}
+            elif slug == "about":
+                return {"_id": about_id, "slug": "about"}
+            elif slug == "contact":
+                return {"_id": contact_id, "slug": "contact"}
+            return None
+
+        mock_sections.find_one.side_effect = find_one_side_effect
+
+        m4.upgrade(mock_db)
+
+        # Verify ObjectId is stored, not string
+        stories_call = mock_stories.update_many.call_args
+        assert stories_call[0][1] == {"$set": {"section_id": blog_id}}
+        assert isinstance(stories_call[0][1]["$set"]["section_id"], ObjectId)
+
+    def test_backfill_stories_with_blog_section(self):
+        """Stories without section_id should get blog section's ID."""
+        m4 = load_migration("0004_backfill_section_id")
+
+        mock_db, mock_sections, mock_stories, mock_projects, mock_pages = self._make_mock_db()
+
+        def find_one_side_effect(query):
+            slug = query.get("slug")
+            sections = {
+                "blog": {"_id": "blog-section-id", "slug": "blog"},
+                "projects": {"_id": "projects-section-id", "slug": "projects"},
+                "about": {"_id": "about-section-id", "slug": "about"},
+                "contact": {"_id": "contact-section-id", "slug": "contact"},
+            }
+            return sections.get(slug)
+
+        mock_sections.find_one.side_effect = find_one_side_effect
 
         m4.upgrade(mock_db)
 
@@ -167,36 +234,19 @@ class TestBackfillSectionId:
         """Projects without section_id should get projects section's ID."""
         m4 = load_migration("0004_backfill_section_id")
 
-        projects_section = {"_id": "projects-section-id", "slug": "projects"}
-
-        mock_sections = MagicMock()
+        mock_db, mock_sections, mock_stories, mock_projects, mock_pages = self._make_mock_db()
 
         def find_one_side_effect(query):
             slug = query.get("slug")
-            if slug == "projects":
-                return projects_section
-            return None
+            sections = {
+                "blog": {"_id": "blog-id", "slug": "blog"},
+                "projects": {"_id": "projects-section-id", "slug": "projects"},
+                "about": {"_id": "about-id", "slug": "about"},
+                "contact": {"_id": "contact-id", "slug": "contact"},
+            }
+            return sections.get(slug)
 
         mock_sections.find_one.side_effect = find_one_side_effect
-
-        mock_stories = MagicMock()
-        mock_projects = MagicMock()
-        mock_pages = MagicMock()
-
-        mock_db = MagicMock()
-
-        def getitem(name):
-            if name == "sections":
-                return mock_sections
-            elif name == "stories":
-                return mock_stories
-            elif name == "projects":
-                return mock_projects
-            elif name == "pages":
-                return mock_pages
-            return MagicMock()
-
-        mock_db.__getitem__ = MagicMock(side_effect=getitem)
 
         m4.upgrade(mock_db)
 
@@ -206,74 +256,34 @@ class TestBackfillSectionId:
         """Pages should be assigned to about or contact section based on page_type."""
         m4 = load_migration("0004_backfill_section_id")
 
-        about_section = {"_id": "about-section-id", "slug": "about"}
-        contact_section = {"_id": "contact-section-id", "slug": "contact"}
-
-        mock_sections = MagicMock()
+        mock_db, mock_sections, mock_stories, mock_projects, mock_pages = self._make_mock_db()
 
         def find_one_side_effect(query):
             slug = query.get("slug")
-            if slug == "about":
-                return about_section
-            elif slug == "contact":
-                return contact_section
-            return None
+            sections = {
+                "blog": {"_id": "blog-id", "slug": "blog"},
+                "projects": {"_id": "projects-id", "slug": "projects"},
+                "about": {"_id": "about-section-id", "slug": "about"},
+                "contact": {"_id": "contact-section-id", "slug": "contact"},
+            }
+            return sections.get(slug)
 
         mock_sections.find_one.side_effect = find_one_side_effect
 
-        mock_stories = MagicMock()
-        mock_projects = MagicMock()
-        mock_pages = MagicMock()
-
-        mock_db = MagicMock()
-
-        def getitem(name):
-            if name == "sections":
-                return mock_sections
-            elif name == "stories":
-                return mock_stories
-            elif name == "projects":
-                return mock_projects
-            elif name == "pages":
-                return mock_pages
-            return MagicMock()
-
-        mock_db.__getitem__ = MagicMock(side_effect=getitem)
-
         m4.upgrade(mock_db)
 
-        # Should call update_many at least twice for pages (about and contact)
-        assert mock_pages.update_many.call_count >= 2
+        # Should call update_many twice for pages (about and contact)
+        assert mock_pages.update_many.call_count == 2
 
-    def test_backfill_skips_if_section_not_found(self):
-        """Migration should handle missing sections gracefully."""
+    def test_backfill_raises_if_section_not_found(self):
+        """Migration should raise ValueError if required sections are missing."""
         m4 = load_migration("0004_backfill_section_id")
 
-        mock_sections = MagicMock()
+        mock_db, mock_sections, mock_stories, mock_projects, mock_pages = self._make_mock_db()
         mock_sections.find_one.return_value = None
 
-        mock_stories = MagicMock()
-        mock_projects = MagicMock()
-        mock_pages = MagicMock()
-
-        mock_db = MagicMock()
-
-        def getitem(name):
-            if name == "sections":
-                return mock_sections
-            elif name == "stories":
-                return mock_stories
-            elif name == "projects":
-                return mock_projects
-            elif name == "pages":
-                return mock_pages
-            return MagicMock()
-
-        mock_db.__getitem__ = MagicMock(side_effect=getitem)
-
-        m4.upgrade(mock_db)
-
-        mock_stories.update_many.assert_not_called()
+        with pytest.raises(ValueError, match="Required section 'blog' not found"):
+            m4.upgrade(mock_db)
 
 
 class TestDowngradeMigrations:

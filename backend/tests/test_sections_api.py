@@ -111,6 +111,38 @@ class TestSectionsPublicEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
+    async def test_get_sections_invalid_nav_visibility(
+        self, sections_async_client, override_sections_database
+    ):
+        """Test sections endpoint rejects invalid nav_visibility"""
+        response = await sections_async_client.get("/sections?nav_visibility=invalid")
+        assert response.status_code == 400
+        assert "nav_visibility" in response.json()["detail"].lower()
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_get_sections_invalid_parent_id(
+        self, sections_async_client, override_sections_database
+    ):
+        """Test sections endpoint rejects invalid parent_id format"""
+        response = await sections_async_client.get("/sections?parent_id=not-an-objectid")
+        assert response.status_code == 400
+        assert "parent_id" in response.json()["detail"].lower()
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_get_sections_parent_id_null_allowed(
+        self, sections_async_client, override_sections_database
+    ):
+        """Test sections endpoint accepts parent_id=null for root sections"""
+        override_sections_database.count_documents.return_value = 0
+        override_sections_database.find.return_value = MockCursor([])
+
+        response = await sections_async_client.get("/sections?parent_id=null")
+        assert response.status_code == 200
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
     async def test_get_section_by_id_success(
         self,
         sections_async_client,

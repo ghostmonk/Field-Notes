@@ -1,9 +1,7 @@
-import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { formatDate } from '@/shared/utils/formatDate';
 import { getStoryUrl } from '@/shared/utils/urls';
-import { LazyStoryContent } from '@/modules/stories';
+import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
 import { getStorySSR, StorySSRProps } from '@/rendering/server';
 
@@ -32,7 +30,7 @@ function StoryEngagement() {
 
 export default function StoryPage({ story, error, ogImage, excerpt }: StorySSRProps) {
   const canonicalUrl = story?.slug ? getStoryUrl(story.slug) : '';
-  
+
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="story-error">
@@ -75,31 +73,14 @@ export default function StoryPage({ story, error, ogImage, excerpt }: StorySSRPr
         <meta name="twitter:image" content={ogImage} />
         <link rel="canonical" href={canonicalUrl} />
       </Head>
-      
+
       <div style={{margin: '0 auto', maxWidth: '800px', padding: '2rem 1rem'}}>
         <Link href="/" className="inline-block mb-8 btn btn--secondary btn--sm" data-testid="story-back-link">
           &larr; Back to all stories
         </Link>
 
         <EngagementProvider targetType="story" targetId={story.id}>
-          <article className="card" data-testid="story-article">
-            <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
-
-            <div className="flex items-center text-sm mb-8">
-              <span className="text-gray-400">{formatDate(story.createdDate)}</span>
-              {story.updatedDate !== story.createdDate && (
-                <span className="text-gray-400 text-xs ml-2 opacity-70">
-                  (Updated: {formatDate(story.updatedDate)})
-                </span>
-              )}
-            </div>
-
-            <LazyStoryContent
-              content={story.content}
-              className="prose--card lg:prose-lg dark:prose-invert dark:text-gray-200"
-              data-testid="story-content"
-            />
-
+          <StoryDetail story={story}>
             <StoryEngagement />
 
             <div className="mt-10 pt-6">
@@ -107,7 +88,7 @@ export default function StoryPage({ story, error, ogImage, excerpt }: StorySSRPr
                 &larr; Back to all stories
               </Link>
             </div>
-          </article>
+          </StoryDetail>
         </EngagementProvider>
       </div>
     </>

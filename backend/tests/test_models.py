@@ -790,6 +790,30 @@ class TestNavLinkBase:
         with pytest.raises(ValidationError):
             NavLinkBase(url="/about", sort_order=0)
 
+    @pytest.mark.unit
+    def test_navlink_rejects_javascript_url(self):
+        """Test that javascript: URLs are rejected."""
+        with pytest.raises(ValidationError, match="http or https"):
+            NavLinkBase(label="XSS", url="javascript:alert(1)")
+
+    @pytest.mark.unit
+    def test_navlink_rejects_data_url(self):
+        """Test that data: URLs are rejected."""
+        with pytest.raises(ValidationError, match="http or https"):
+            NavLinkBase(label="Data", url="data:text/html,<h1>test</h1>")
+
+    @pytest.mark.unit
+    def test_navlink_accepts_https_url(self):
+        """Test that https URLs are accepted."""
+        link = NavLinkBase(label="Site", url="https://example.com/path")
+        assert link.url == "https://example.com/path"
+
+    @pytest.mark.unit
+    def test_navlink_accepts_http_url(self):
+        """Test that http URLs are accepted."""
+        link = NavLinkBase(label="Site", url="http://example.com")
+        assert link.url == "http://example.com"
+
 
 class TestNavLinkCreate:
     """Tests for NavLinkCreate model."""
