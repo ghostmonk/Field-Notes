@@ -1,0 +1,116 @@
+# Phase 4: Dynamic Routing
+
+**Status:** Implemented
+
+## Goal
+
+Replace hardcoded page routes with a single catch-all route (`[...slugPath]`) that resolves sections from the database and renders content using the display/content registries from Phase 3.
+
+## Routing Pattern
+
+All content pages flow through `pages/[...slugPath].tsx`. Two URL shapes:
+
+| Shape | Example | Behavior |
+|-------|---------|----------|
+| **Section list** | `/stories` | Resolve section by slug, render display component with content list |
+| **Content detail** | `/stories/my-post` | Resolve section by first segment, fetch item by second segment, render detail component |
+
+Static pages (`/about`, `/contact`) are sections with `display_type: static-page`. Single segment, no detail view.
+
+## Path Resolution
+
+Flat paths only (single-segment section slugs). Nested hierarchy deferred to a future phase.
+
+```
+/stories         → slugPath = ['stories']       → section lookup → list view
+/stories/my-post → slugPath = ['stories', 'my-post'] → section lookup + content fetch → detail view
+/about           → slugPath = ['about']         → section lookup → static page render
+```
+
+The `parent_id` field on sections already supports nesting. Only the resolution logic needs to expand when that's added.
+
+## Data Fetching
+
+### Server-Side (getServerSideProps)
+
+1. Extract first segment from `slugPath`
+2. Call `GET /sections/by-slug/{slug}` to resolve section config
+3. If not found, return 404
+4. Based on segment count:
+   - **One segment + static-page**: Fetch page content for that section
+   - **One segment + list display**: Fetch first page of content items with `?section_id=`
+   - **Two segments**: Fetch single content item by slug
+
+### Client-Side (Infinite Scroll)
+
+A generic `useFetchContent(contentType, sectionId, initialItems)` hook handles pagination after the initial SSR page. This replaces the story-specific `useFetchStories` pattern with a content-type-agnostic version.
+
+- FeedDisplay and CardGridDisplay use `onLoadMore` / `hasMore` from the hook
+- StaticPageDisplay does not paginate
+
+## Component Wiring
+
+### List View
+
+```
+section.display_type → displayRegistry → FeedDisplay / CardGridDisplay / StaticPageDisplay
+section.content_type → contentRegistry → { listItem: StoryCard / ProjectCard }
+```
+
+The display component receives items and a `renderItem` function that uses the registry's `listItem` component.
+
+### Detail View
+
+```
+section.content_type → contentRegistry → { detail: StoryDetail / ProjectDetail }
+```
+
+The detail component renders directly with the fetched item.
+
+## Page Component Props
+
+```typescript
+interface SectionPageProps {
+  section: Section;
+  view: 'list' | 'detail' | 'static-page';
+  initialListData?: PaginatedResponse<any>;  // list view (SSR first page)
+  detailItem?: Story | Project | null;       // detail view
+  pageContent?: Page | null;                 // static page view
+  ogImage?: string;
+  excerpt?: string;
+  error?: string;
+}
+```
+
+## Backend Changes
+
+- Add `section_id` query parameter to `GET /stories` and `GET /projects` endpoints
+- No new endpoints, models, or collections
+
+## Frontend Changes
+
+### New Files
+- `pages/[...slugPath].tsx` — catch-all route
+- `modules/registry/hooks/useFetchContent.ts` — generic infinite scroll hook
+
+### Removed Files
+- `pages/about.tsx`
+- `pages/contact.tsx`
+- `pages/projects.tsx`
+- `pages/projects/[slug].tsx`
+- `pages/stories/[slug].tsx`
+
+### Unchanged
+- `pages/index.tsx` (home page)
+- `pages/editor.tsx` (authoring tool)
+- `pages/privacy.tsx`, `pages/terms.tsx` (legal pages)
+- All `pages/api/` routes
+
+## Checkpoint
+
+- All existing URLs render identical content through the catch-all
+- Section config drives display type and content type selection
+- Infinite scroll works on list views
+- Static pages render through StaticPageDisplay
+- Old route files are removed
+- Documentation updated

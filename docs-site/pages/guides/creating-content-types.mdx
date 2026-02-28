@@ -146,6 +146,24 @@ Content types render inside display types. The available display types are:
 
 When creating a section that uses your content type, choose the display type that fits. A recipe section might use `card-grid` for browsing or `feed` for a chronological list.
 
+## Step 5: Routing (Automatic)
+
+As of Phase 4, the `[...slugPath]` catch-all route handles all section URLs automatically. Once you:
+
+1. Create a section in the database with your content type
+2. Register the components in the content registry
+3. Add a fetcher for your content type in `modules/registry/hooks/useFetchContent.ts`
+4. Add API endpoints and proxy routes for the new content type
+
+The catch-all route will:
+- Resolve the section by slug
+- Fetch content using the `useFetchContent` hook
+- Render list views via `displayRegistry[section.display_type]` with your `listItem` component
+- Render detail views via your `detail` component
+- Handle SSR, OG meta tags, and infinite scroll
+
+No new page files needed.
+
 ## Existing Content Types
 
 | Type | List Component | Detail Component | Typical Display |
