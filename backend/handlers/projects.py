@@ -26,6 +26,7 @@ async def get_projects(
     offset: int = Query(0, ge=0),
     include_unpublished: bool = Query(False),
     featured_only: bool = Query(False),
+    section_id: str | None = Query(None),
     collection: AsyncIOMotorCollection = Depends(get_projects_collection),
 ):
     """Get all projects as cards for listing."""
@@ -39,6 +40,8 @@ async def get_projects(
             query["is_published"] = True
         if featured_only:
             query["is_featured"] = True
+        if section_id:
+            query["section_id"] = ObjectId(section_id)
 
         sort = [("sort_order", 1), ("createdDate", -1)]
 
