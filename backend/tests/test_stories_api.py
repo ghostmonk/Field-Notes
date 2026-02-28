@@ -91,6 +91,38 @@ class TestStoriesPublicEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
+    async def test_get_stories_filtered_by_section_id(self, async_client: AsyncClient, override_database):
+        """Test filtering stories by section_id"""
+        now = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        section_id = ObjectId()
+        test_stories = [
+            {
+                "_id": ObjectId(),
+                "title": "Story in section",
+                "content": "Content",
+                "is_published": True,
+                "slug": "story-in-section",
+                "date": now,
+                "createdDate": now,
+                "updatedDate": now,
+                "deleted": False,
+                "section_id": str(section_id),
+            },
+        ]
+
+        override_database.count_documents.return_value = 1
+        override_database.find.return_value = MockCursor(test_stories)
+
+        response = await async_client.get(f"/stories?section_id={str(section_id)}")
+        assert response.status_code == 200
+
+        # Verify the query included section_id filter
+        call_args = override_database.find.call_args
+        query = call_args[0][0] if call_args[0] else call_args[1].get("filter", {})
+        assert "section_id" in query
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
     async def test_get_story_by_slug_success(self, async_client: AsyncClient, override_database):
         """Test successful retrieval of story by slug"""
         # Use fixed datetime for consistent testing

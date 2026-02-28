@@ -22,12 +22,15 @@ async def get_stories(
     limit: int = Query(10, ge=1, le=50),
     offset: int = Query(0, ge=0),
     include_drafts: bool = Query(False),
+    section_id: str | None = Query(None),
     collection: AsyncIOMotorCollection = Depends(get_collection),
 ):
     try:
         query = {"deleted": {"$ne": True}}
         if not include_drafts:
             query["is_published"] = True
+        if section_id:
+            query["section_id"] = ObjectId(section_id)
         sort = {"createdDate": -1}
 
         logger.info_with_context(
