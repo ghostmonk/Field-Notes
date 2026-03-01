@@ -273,6 +273,86 @@ export function projectToCard(project: TestProject): TestProjectCard {
 }
 
 // ============================================================================
+// Sections
+// ============================================================================
+
+export interface TestSection {
+  id: string;
+  title: string;
+  slug: string;
+  parent_id: string | null;
+  display_type: string;
+  content_type: string;
+  nav_visibility: string;
+  sort_order: number;
+  is_published: boolean;
+  createdDate: string;
+  updatedDate: string;
+}
+
+export const TEST_SECTION_IDS = {
+  BLOG: 'section-blog',
+  ABOUT: 'section-about',
+  PROJECTS: 'section-projects',
+  CONTACT: 'section-contact',
+} as const;
+
+export const sampleSections: TestSection[] = [
+  {
+    id: TEST_SECTION_IDS.BLOG,
+    title: 'Blog',
+    slug: 'blog',
+    parent_id: null,
+    display_type: 'feed',
+    content_type: 'story',
+    nav_visibility: 'main',
+    sort_order: 0,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+  {
+    id: TEST_SECTION_IDS.ABOUT,
+    title: 'About',
+    slug: 'about',
+    parent_id: null,
+    display_type: 'static-page',
+    content_type: 'page',
+    nav_visibility: 'main',
+    sort_order: 1,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+  {
+    id: TEST_SECTION_IDS.PROJECTS,
+    title: 'Projects',
+    slug: 'projects',
+    parent_id: null,
+    display_type: 'card-grid',
+    content_type: 'project',
+    nav_visibility: 'main',
+    sort_order: 2,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+  {
+    id: TEST_SECTION_IDS.CONTACT,
+    title: 'Contact',
+    slug: 'contact',
+    parent_id: null,
+    display_type: 'static-page',
+    content_type: 'page',
+    nav_visibility: 'main',
+    sort_order: 3,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+];
+
+// ============================================================================
 // Engagement (Reactions & Comments)
 // ============================================================================
 

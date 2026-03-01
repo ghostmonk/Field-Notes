@@ -34,14 +34,14 @@ export class StoryDetailPage extends BasePage {
    * Navigate to a story by slug.
    */
   async gotoBySlug(slug: string) {
-    await super.goto(`/stories/${slug}`);
+    await super.goto(`/blog/${slug}`);
   }
 
   /**
    * Navigate to a story by ID.
    */
   async gotoById(id: string) {
-    await super.goto(`/stories/${id}`);
+    await super.goto(`/blog/${id}`);
   }
 
   /**

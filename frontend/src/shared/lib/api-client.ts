@@ -159,6 +159,7 @@ const apiRoutes = {
   },
   sections: {
     getBySlug: (slug: string) => `/api/sections/by-slug/${slug}`,
+    navigation: () => '/api/sections/navigation',
   },
   engagement: {
     reactions: (targetType: string, targetId: string) =>
@@ -288,6 +289,9 @@ const apiClient = {
   sections: {
     getBySlug: (slug: string) =>
       fetchApi<Section>(apiRoutes.sections.getBySlug(slug)),
+
+    navigation: () =>
+      fetchApi<PaginatedResponse<Section>>(apiRoutes.sections.navigation()),
   },
 
   /**

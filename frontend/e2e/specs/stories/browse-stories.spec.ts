@@ -83,7 +83,7 @@ test.describe('Browse Stories', () => {
     await storyCard.clickTitle();
 
     // Should navigate to story page
-    expect(homePage.url).toContain('/stories/');
+    expect(homePage.url).toContain('/blog/');
   });
 
   test('clicking read more navigates to story detail', async ({ mockApiPage }) => {
@@ -96,6 +96,6 @@ test.describe('Browse Stories', () => {
     await storyCard.clickReadMore();
 
     // Should navigate to story page
-    expect(homePage.url).toContain('/stories/');
+    expect(homePage.url).toContain('/blog/');
   });
 });

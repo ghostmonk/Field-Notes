@@ -69,7 +69,7 @@ export class StoryCardComponent {
    */
   async clickReadMore() {
     await Promise.all([
-      this.page.waitForURL('**/stories/**'),
+      this.page.waitForURL('**/blog/**'),
       this.readMoreButton.click(),
     ]);
   }
@@ -79,7 +79,7 @@ export class StoryCardComponent {
    */
   async clickTitle() {
     await Promise.all([
-      this.page.waitForURL('**/stories/**'),
+      this.page.waitForURL('**/blog/**'),
       this.titleLink.click(),
     ]);
   }

@@ -3,6 +3,7 @@ import {
   sampleStories,
   samplePages,
   sampleProjects,
+  sampleSections,
   projectToCard,
   FIXED_TIMESTAMP,
   sampleReactions,
@@ -290,6 +291,37 @@ app.post('/engagement/bulk/counts', (req: Request, res: Response) => {
   }
 
   res.json({ counts });
+});
+
+// ============================================================================
+// Sections
+// ============================================================================
+
+const sections = [...sampleSections];
+
+// GET /sections - List sections with optional nav_visibility filter
+app.get('/sections', (req: Request, res: Response) => {
+  const navVisibility = req.query.nav_visibility as string | undefined;
+  let filtered = sections.filter((s) => s.is_published);
+  if (navVisibility) {
+    filtered = filtered.filter((s) => s.nav_visibility === navVisibility);
+  }
+  res.json({
+    items: filtered,
+    total: filtered.length,
+    limit: 20,
+    offset: 0,
+  });
+});
+
+// GET /sections/by-slug/:slug - Get section by slug
+app.get('/sections/by-slug/:slug', (req: Request, res: Response) => {
+  const section = sections.find((s) => s.slug === req.params.slug && s.is_published);
+  if (section) {
+    res.json(section);
+  } else {
+    res.status(404).json({ detail: 'Section not found' });
+  }
 });
 
 // Health check

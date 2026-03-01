@@ -9,10 +9,12 @@ export { createMockStory, createMockStoriesResponse, sampleStories, setupApiMock
 export {
   TEST_STORY_IDS,
   TEST_STORY_SLUGS,
+  TEST_SECTION_IDS,
   TEST_COMMENT_IDS,
+  sampleSections,
   sampleReactions,
   sampleComments,
   createTestReactions,
   createTestComment,
 } from '../test-data';
-export type { TestReactionCounts, TestComment } from '../test-data';
+export type { TestSection, TestReactionCounts, TestComment } from '../test-data';

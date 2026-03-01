@@ -77,7 +77,7 @@ test.describe('Smoke Tests', () => {
     await homePage.nav.goToBlog();
 
     // Should still be on home page
-    expect(homePage.url).toMatch(/\/$/);
+    expect(homePage.url).toMatch(/\/(blog)?$/);
   });
 
   test('all section links are present', async ({ mockApiPage }) => {
