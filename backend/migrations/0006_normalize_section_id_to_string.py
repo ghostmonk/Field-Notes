@@ -7,9 +7,8 @@ to strings for consistency. Idempotent — safe to run regardless of
 whether 0004 ran before or after the fix.
 """
 
-from bson import ObjectId
-
 import pymongo
+from bson import ObjectId
 
 name = "0006_normalize_section_id_to_string"
 dependencies = ["0005_seed_test_data"]
