@@ -270,7 +270,9 @@ class TestStoriesAuthenticatedEndpoints:
         # Mock get_db for section lookup in add_story
         mock_db = AsyncMock()
         mock_sections = AsyncMock()
-        mock_sections.find_one = AsyncMock(return_value={"_id": section_id, "content_type": "story"})
+        mock_sections.find_one = AsyncMock(
+            return_value={"_id": section_id, "content_type": "story"}
+        )
         mock_db.__getitem__ = lambda self, key: mock_sections
 
         with patch("handlers.stories.get_db", return_value=mock_db):
