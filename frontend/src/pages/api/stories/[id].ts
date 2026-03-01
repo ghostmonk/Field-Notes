@@ -45,17 +45,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (!token?.accessToken) {
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
-            
+
             // Only allow deletion by ID, not by slug
             if (!isObjectId) {
                 return res.status(400).json({ detail: 'Cannot delete by slug, ID required', error: 'Invalid request' });
             }
-            
+
             const response = await fetch(apiUrl, {
                 method: 'DELETE',
                 headers,
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
                 return res.status(response.status).json({
@@ -63,24 +63,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     status: response.status
                 });
             }
-            
+
+            try { await res.revalidate('/'); } catch { /* non-fatal */ }
             return res.status(204).end();
         } else if (req.method === 'PUT') {
             if (!token?.accessToken) {
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
-            
+
             // Only allow updates by ID, not by slug
             if (!isObjectId) {
                 return res.status(400).json({ detail: 'Cannot update by slug, ID required', error: 'Invalid request' });
             }
-            
+
             const response = await fetch(apiUrl, {
                 method: 'PUT',
                 headers,
                 body: JSON.stringify(req.body),
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
                 return res.status(response.status).json({
@@ -88,8 +89,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     status: response.status
                 });
             }
-            
+
             const data = await response.json();
+            try { await res.revalidate('/'); } catch { /* non-fatal */ }
             return res.status(200).json(data);
         } else if (req.method === 'GET') {
             const response = await fetch(apiUrl, { headers });

@@ -15,10 +15,7 @@ function fetchNavSections(): Promise<NavSectionItem[]> {
             cachedSections = items.length > 0 ? items : FALLBACK_SECTIONS;
             return cachedSections;
         })
-        .catch(() => {
-            cachedSections = FALLBACK_SECTIONS;
-            return cachedSections;
-        })
+        .catch(() => FALLBACK_SECTIONS)
         .finally(() => {
             fetchPromise = null;
         });

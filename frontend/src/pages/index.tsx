@@ -37,17 +37,17 @@ const Home: React.FC<HomeProps> = ({ initialStories, storySectionSlug, error }) 
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
     try {
         const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-        
+
         if (!backendUrl) {
             return {
                 props: {
                     error: 'Backend URL not configured'
                 },
-                revalidate: 60 // Try again in 1 minute
+                revalidate: 60,
             };
         }
 
-        // Fetch initial stories for SSG
+        // Fetch initial stories for ISR
         const response = await fetch(`${backendUrl}/stories?limit=5&offset=0&include_drafts=false`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -80,16 +80,16 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
                 initialStories: data,
                 storySectionSlug: storySectionSlug || null,
             },
-            revalidate: 300 // Revalidate every 5 minutes
+            revalidate: 300,
         };
     } catch (error) {
         console.error('Error in getStaticProps:', error);
-        
+
         return {
             props: {
                 error: error instanceof Error ? error.message : 'Failed to load stories'
             },
-            revalidate: 60 // Try again in 1 minute
+            revalidate: 60,
         };
     }
 };

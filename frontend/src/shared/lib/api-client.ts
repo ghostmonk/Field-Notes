@@ -199,33 +199,33 @@ const apiClient = {
    * Story methods
    */
   stories: {
-    list: (token?: string, pagination?: PaginationParams) => 
-      fetchApi<PaginatedResponse<Story>>(apiRoutes.stories.list(), { 
+    list: (token?: string, pagination?: PaginationParams) =>
+      fetchApi<PaginatedResponse<Story>>(apiRoutes.stories.list(), {
         token,
-        params: pagination as Record<string, string | number>
+        params: pagination as Record<string, string | number>,
       }),
-    
-    getById: (id: string, token: string) => 
+
+    getById: (id: string, token: string) =>
       fetchApi<Story>(apiRoutes.stories.getById(id), { token }),
-    
-    create: (data: CreateStoryRequest, token: string) => 
-      fetchApi<Story, CreateStoryRequest>(apiRoutes.stories.create(), { 
-        method: 'POST', 
-        body: data, 
-        token 
+
+    create: (data: CreateStoryRequest, token: string) =>
+      fetchApi<Story, CreateStoryRequest>(apiRoutes.stories.create(), {
+        method: 'POST',
+        body: data,
+        token,
       }),
-    
-    update: (id: string, data: Partial<Story>, token: string) => 
-      fetchApi<Story, Partial<Story>>(apiRoutes.stories.update(id), { 
-        method: 'PUT', 
-        body: data, 
-        token 
+
+    update: (id: string, data: Partial<Story>, token: string) =>
+      fetchApi<Story, Partial<Story>>(apiRoutes.stories.update(id), {
+        method: 'PUT',
+        body: data,
+        token,
       }),
-    
+
     delete: (id: string, token: string) =>
       fetchApi<Story>(apiRoutes.stories.delete(id), {
         method: 'DELETE',
-        token
+        token,
       }),
   },
 
