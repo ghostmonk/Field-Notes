@@ -8,23 +8,28 @@ Eliminate emojis, filler, hype, soft asks, conversational transitions, and all c
 
 ## Project Overview
 
-Turbulence is a modern blog/content management system with a Next.js frontend and FastAPI backend. It allows authenticated users to create and publish rich text content with image uploads via Google Cloud Storage.
+Turbulence is a modern blog/content management system with a Next.js frontend and FastAPI backend. It allows authenticated users to create and publish rich text content with image and video uploads. Supports section-based dynamic routing, pluggable display types, and project portfolios.
 
 ## Architecture
 
 **Frontend**: Next.js app (TypeScript) in `/frontend/`
 - NextAuth.js for Google OAuth
-- TipTap rich text editor with image support
-- Tailwind CSS styling
+- TipTap rich text editor with image and video support
+- Tailwind CSS styling with dark mode
 - React hooks for state management
+- Dynamic routing via catch-all `[...slugPath]` route
+- Content/display registry for pluggable section rendering
 
 **Backend**: FastAPI app (Python) in `/backend/`
 - Google OAuth token validation
 - MongoDB (motor driver) for persistence
-- Google Cloud Storage for image uploads
+- File uploads: Google Cloud Storage (production), local filesystem (development)
 - Google Cloud Logging
+- pymongo-migrate for schema evolution
 
 **Database**: MongoDB (containerized locally, Atlas in production)
+- `sections` collection drives routing and display configuration
+- Content collections (`stories`, `projects`, `pages`) linked via `section_id`
 
 **Authentication Flow**: Google OAuth → NextAuth.js (frontend) → Token validation (backend)
 
@@ -64,18 +69,31 @@ make test    # Run Python tests with pytest
 
 Required environment variables in `.env`:
 - MongoDB connection (`MONGO_USER`, `MONGO_PASSWORD`, etc.)
-- Google Cloud Storage (`GCS_BUCKET_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`)
+- Google Cloud Storage (`GCS_BUCKET_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`) — production only
+- Local uploads (`LOCAL_STORAGE_PATH`) — development only, set instead of GCS vars
 - Google OAuth (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
 - NextAuth (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`)
 
-Place `gcp-credentials.json` in project root.
+Place `gcp-credentials.json` in project root (production only). Docker Compose sets `LOCAL_STORAGE_PATH=/app/local-uploads` automatically.
 
 ## Key Implementation Details
 
-**Story Model**: Core content entity with `published` status flag for public visibility
-**Image Uploads**: Via GCS with proxy option through Next.js API routes
-**CORS Configuration**: Hardcoded origins in `backend/app.py` for production domains
-**Logging**: Google Cloud Logging integrated throughout backend with custom middleware
+**Dynamic Routing**: Single catch-all route `frontend/src/pages/[...slugPath].tsx` resolves all section URLs. `getServerSideProps` fetches the section config from `/sections/slug/<path>`, then fetches content based on `content_type` and `display_type`.
+
+**Content & Display Registry**: `frontend/src/modules/registry/` contains a pluggable system mapping `display_type` values (`feed`, `card-grid`, `static-page`) to React display components. Content fetchers are keyed by `content_type` (`story`, `project`, `page`). New section types require only a registry entry.
+
+**Section Model**: Sections define site structure. Each has `slug`, `title`, `display_type`, `content_type`, `nav_visibility`. Seeded via migration `0003_seed_initial_sections`. Content documents reference their section via `section_id` (stored as string).
+
+**Story Model**: Core content entity with `is_published` status flag for public visibility. Linked to a section via `section_id`.
+
+**File Uploads**: Production uses GCS with proxy option through Next.js API routes. Local development uses filesystem storage at `LOCAL_STORAGE_PATH` (no GCS credentials required). Backend auto-selects storage backend based on which env vars are set.
+
+**Video Uploads**: TipTap `VideoExtension` renders `<video>` nodes. Upload hook (`useVideoUpload`) builds final HTML with embedded `<video>` tag in a single `setContent` call to avoid race conditions with the editor's content sync effect.
+
+**Migrations**: `backend/migrations/` uses pymongo-migrate format. Each migration has `name`, `dependencies`, `upgrade`, `downgrade`. Run via `make migrate-up` / `make migrate-down`.
+
+**CORS Configuration**: Hardcoded origins in `backend/app.py` for production domains.
+**Logging**: Google Cloud Logging integrated throughout backend with custom middleware.
 
 ## Development Guidelines
 

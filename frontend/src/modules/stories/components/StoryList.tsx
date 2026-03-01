@@ -12,9 +12,10 @@ import apiClient from '@/shared/lib/api-client';
 interface StoriesProps {
     initialData?: PaginatedResponse<Story>;
     initialError?: string;
+    basePath?: string;
 }
 
-const Stories: React.FC<StoriesProps> = ({ initialData, initialError }) => {
+const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }) => {
     const { data: session } = useSession();
     const router = useRouter();
     const {
@@ -28,27 +29,24 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError }) => {
     const { deleteStory, loading: deleteLoading } = useStoryMutations();
     const [engagementCounts, setEngagementCounts] = useState<BulkCountsResponse['counts']>({});
 
-    // Initialize data on component mount
-    useEffect(() => {
-        resetStories();
-    }, [resetStories]);
-
-    // Fetch engagement counts when stories change
+    // Fetch engagement counts only for newly loaded stories
     useEffect(() => {
         const publishedStories = stories.filter(s => s.is_published);
-        if (publishedStories.length === 0) return;
+        const newStories = publishedStories.filter(s => !engagementCounts[`story:${s.id}`]);
+        if (newStories.length === 0) return;
 
         const fetchCounts = async () => {
             try {
-                const targets = publishedStories.map(s => ({ type: 'story', id: s.id }));
+                const targets = newStories.map(s => ({ type: 'story', id: s.id }));
                 const response = await apiClient.engagement.getBulkCounts({ targets });
-                setEngagementCounts(response.counts);
+                setEngagementCounts(prev => ({ ...prev, ...response.counts }));
             } catch (err) {
                 console.error('Failed to fetch engagement counts:', err);
             }
         };
 
         fetchCounts();
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- engagementCounts excluded to avoid refetch loop
     }, [stories]);
 
     // Create stable callbacks for event handlers
@@ -91,9 +89,10 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError }) => {
                 onDelete={handleDelete}
                 deleteLoading={deleteLoading}
                 engagementCounts={engagementCounts[`story:${story.id}`]}
+                basePath={basePath}
             />
         ));
-    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts]);
+    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath]);
 
     // Handle error state
     if (error) {

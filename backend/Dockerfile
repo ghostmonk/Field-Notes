@@ -16,5 +16,5 @@ ENV PORT=8080
 
 EXPOSE ${PORT}
 
-CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "pymongo-migrate migrate -u \"$MONGO_URI\" -m migrations && uvicorn app:app --host 0.0.0.0 --port ${PORT}"]
 

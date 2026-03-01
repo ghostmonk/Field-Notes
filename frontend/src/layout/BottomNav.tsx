@@ -1,10 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { useActiveSection } from '@/hooks/useActiveSection';
-import { SECTIONS, SectionConfig } from '@/shared/lib/navigation';
+import { SECTIONS, NavSectionConfig } from '@/shared/lib/navigation';
 import { HiHome, HiUser, HiFolder, HiMail } from 'react-icons/hi';
 
-const iconMap: Record<SectionConfig['icon'], React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<NavSectionConfig['icon'], React.ComponentType<{ className?: string }>> = {
     home: HiHome,
     user: HiUser,
     folder: HiFolder,
@@ -12,7 +12,7 @@ const iconMap: Record<SectionConfig['icon'], React.ComponentType<{ className?: s
 };
 
 interface NavItemProps {
-    section: SectionConfig;
+    section: NavSectionConfig;
     isActive: boolean;
 }
 

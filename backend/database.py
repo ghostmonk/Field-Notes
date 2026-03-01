@@ -28,26 +28,31 @@ async def get_database() -> AsyncIOMotorDatabase:
 
 
 async def _create_client() -> AsyncIOMotorClient:
-    """Create MongoDB client with connection pooling and optimizations"""
+    """Create MongoDB client with connection pooling and optimizations.
 
-    user = _get_variable("MONGO_USER")
-    password = _get_variable("MONGO_PASSWORD")
-    cluster = _get_variable("MONGO_CLUSTER")
-    app_name = _get_variable("MONGO_APP_NAME")
-    host = _get_variable("MONGO_HOST")
+    If MONGO_URI is set, uses it directly (for local dev or custom deployments).
+    Otherwise, constructs an Atlas connection string from individual env vars.
+    """
+    mongo_uri = os.getenv("MONGO_URI")
 
-    # Optimized connection string with connection pooling
-    mongo_uri = (
-        f"mongodb+srv://{user}:{password}@{cluster}.{host}/"
-        f"?retryWrites=true&w=majority&appName={app_name}"
-        f"&maxPoolSize=20"  # Max connections in pool
-        f"&minPoolSize=5"  # Min connections to maintain
-        f"&maxIdleTimeMS=60000"  # Close connections after 1 minute idle
-        f"&serverSelectionTimeoutMS=5000"  # 5 second timeout
-        f"&connectTimeoutMS=10000"  # 10 second connection timeout
-        f"&socketTimeoutMS=30000"  # 30 second socket timeout
-        f"&heartbeatFrequencyMS=10000"  # Heartbeat every 10 seconds
-    )
+    if not mongo_uri:
+        user = _get_variable("MONGO_USER")
+        password = _get_variable("MONGO_PASSWORD")
+        cluster = _get_variable("MONGO_CLUSTER")
+        app_name = _get_variable("MONGO_APP_NAME")
+        host = _get_variable("MONGO_HOST")
+
+        mongo_uri = (
+            f"mongodb+srv://{user}:{password}@{cluster}.{host}/"
+            f"?retryWrites=true&w=majority&appName={app_name}"
+            f"&maxPoolSize=20"
+            f"&minPoolSize=5"
+            f"&maxIdleTimeMS=60000"
+            f"&serverSelectionTimeoutMS=5000"
+            f"&connectTimeoutMS=10000"
+            f"&socketTimeoutMS=30000"
+            f"&heartbeatFrequencyMS=10000"
+        )
 
     try:
         new_client = AsyncIOMotorClient(mongo_uri)

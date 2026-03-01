@@ -32,27 +32,27 @@ def upgrade(db: "pymongo.database.Database"):
     about = _get_section(sections, "about")
     contact = _get_section(sections, "contact")
 
-    # Stories -> blog (store as ObjectId for native MongoDB indexing)
+    # Stories -> blog (store as string to match Pydantic models)
     db["stories"].update_many(
         {"section_id": {"$exists": False}},
-        {"$set": {"section_id": blog["_id"]}},
+        {"$set": {"section_id": str(blog["_id"])}},
     )
 
     # Projects -> projects
     db["projects"].update_many(
         {"section_id": {"$exists": False}},
-        {"$set": {"section_id": projects_section["_id"]}},
+        {"$set": {"section_id": str(projects_section["_id"])}},
     )
 
     # Pages -> about/contact by page_type
     db["pages"].update_many(
         {"page_type": "about", "section_id": {"$exists": False}},
-        {"$set": {"section_id": about["_id"]}},
+        {"$set": {"section_id": str(about["_id"])}},
     )
 
     db["pages"].update_many(
         {"page_type": "contact", "section_id": {"$exists": False}},
-        {"$set": {"section_id": contact["_id"]}},
+        {"$set": {"section_id": str(contact["_id"])}},
     )
 
 

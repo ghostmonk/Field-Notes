@@ -43,10 +43,11 @@ export function useFetchStories(options: UseFetchStoriesOptions = {}): UseFetchS
 
   // Refs to track state without triggering re-renders
   const offsetRef = useRef(initialData?.items.length || 0);
-  const isMountedRef = useRef(false);
   const tokenRef = useRef(session?.accessToken);
   const loadingRef = useRef(loading);
   const hasMoreRef = useRef(hasMore);
+  const prevTokenRef = useRef(session?.accessToken);
+  const initialFetchDoneRef = useRef(false);
 
   // Sync refs with state
   useEffect(() => { loadingRef.current = loading; }, [loading]);
@@ -58,8 +59,7 @@ export function useFetchStories(options: UseFetchStoriesOptions = {}): UseFetchS
 
     if (reset) {
       offsetRef.current = 0;
-      setStories([]);
-      setHasMore(true);
+      // Don't clear items here — keep showing current data until response arrives
       hasMoreRef.current = true;
     }
 
@@ -92,19 +92,18 @@ export function useFetchStories(options: UseFetchStoriesOptions = {}): UseFetchS
     }
   }, [session?.accessToken]);
 
-  // Initial fetch on mount
+  // Always fetch fresh data on mount
   useEffect(() => {
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
-      if (!initialData || initialData.items.length === 0) {
-        fetchStoriesInternal(true);
-      }
-    }
-  }, [fetchStoriesInternal, initialData]);
+    fetchStoriesInternal(true);
+    initialFetchDoneRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only fetch; fetchStoriesInternal is stable via refs
+  }, []);
 
-  // Refetch when token changes
+  // Refetch when token changes (login/logout)
   useEffect(() => {
-    if (isMountedRef.current) {
+    if (!initialFetchDoneRef.current) return;
+    if (prevTokenRef.current !== session?.accessToken) {
+      prevTokenRef.current = session?.accessToken;
       fetchStoriesInternal(true);
     }
   }, [session?.accessToken, fetchStoriesInternal]);

@@ -5,12 +5,13 @@ import { ProjectCard as ProjectCardType } from '@/shared/types/api';
 
 interface ProjectCardProps {
     project: ProjectCardType;
+    basePath?: string;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+export const ProjectCard: React.FC<ProjectCardProps> = ({ project, basePath }) => {
     return (
         <Link
-            href={`/projects/${project.slug}`}
+            href={`${basePath || '/projects'}/${project.slug}`}
             className="card card--hoverable card--link"
         >
             {project.image_url && (

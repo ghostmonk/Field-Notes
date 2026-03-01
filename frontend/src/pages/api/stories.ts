@@ -8,8 +8,8 @@ const CACHE_TTL = 2 * 60 * 1000; // 2 minutes for stories
 const PUBLIC_CACHE_TTL = 5 * 60 * 1000; // 5 minutes for public stories
 
 function getCacheKey(req: NextApiRequest): string {
-    const { limit, offset, include_drafts } = req.query;
-    return `stories:${limit || 'all'}:${offset || 0}:${include_drafts || 'false'}`;
+    const { limit, offset, include_drafts, section_id } = req.query;
+    return `stories:${limit || 'all'}:${offset || 0}:${include_drafts || 'false'}:${section_id || 'none'}`;
 }
 
 function getFromCache(key: string): any | null {
@@ -112,7 +112,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (req.query.offset) {
                 params.append('offset', req.query.offset.toString());
             }
-            
+
+            if (req.query.section_id) {
+                params.append('section_id', req.query.section_id.toString());
+            }
+
             if (token?.accessToken) {
                 params.append('include_drafts', 'true');
             }

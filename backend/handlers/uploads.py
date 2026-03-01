@@ -1,6 +1,7 @@
 import base64
 import io
 import json
+import mimetypes
 import os
 import traceback
 import uuid
@@ -12,8 +13,6 @@ from decorators.auth import requires_auth
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse, StreamingResponse
 from glogger import logger
-from google.cloud import storage
-from google.oauth2 import service_account
 from models.error import (
     ErrorCode,
     create_upload_error_response,
@@ -38,9 +37,17 @@ MAX_IMAGE_LENGTH = 1200
 IMAGE_SIZES = [1200, 750, 500]
 OUTPUT_FORMAT = "webp"
 
+LOCAL_STORAGE_PATH = os.environ.get("LOCAL_STORAGE_PATH")
+
+mimetypes.add_type("image/webp", ".webp")
+
 GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
-if not GCS_BUCKET_NAME:
+if not GCS_BUCKET_NAME and not LOCAL_STORAGE_PATH:
     raise ValueError("GCS_BUCKET_NAME environment variable not set")
+
+if not LOCAL_STORAGE_PATH:
+    from google.cloud import storage
+    from google.oauth2 import service_account
 
 # Allowed origins for CORS
 ALLOWED_ORIGINS = [
@@ -102,18 +109,20 @@ async def get_media(request: Request, filename: str, size: int | None = None):
     try:
         logger.info(f"Media request received: {filename}, size: {size}")
 
-        # Log request headers to help debug mobile issues
-        user_agent = request.headers.get("user-agent", "Unknown")
-        logger.info(f"User-Agent: {user_agent}")
-
-        bucket = get_gcs_bucket()
-
         if size and size in IMAGE_SIZES:
             base_name, extension = os.path.splitext(filename)
             sized_filename = f"{base_name}_{size}{extension}"
             blob_path = construct_blob_path(sized_filename)
         else:
             blob_path = construct_blob_path(filename)
+
+        if LOCAL_STORAGE_PATH:
+            return _serve_local_file(blob_path, request)
+
+        user_agent = request.headers.get("user-agent", "Unknown")
+        logger.info(f"User-Agent: {user_agent}")
+
+        bucket = get_gcs_bucket()
 
         logger.info(f"Looking for blob at path: {blob_path}")
         blob = bucket.blob(blob_path)
@@ -142,6 +151,21 @@ async def get_media(request: Request, filename: str, size: int | None = None):
     except Exception as e:
         logger.error(f"Error in get_media for {filename}: {str(e)}")
         handle_error(e, "accessing media")
+
+
+def _serve_local_file(blob_path: str, request: Request):
+    from fastapi.responses import FileResponse
+
+    file_path = os.path.realpath(os.path.join(LOCAL_STORAGE_PATH, blob_path))
+    storage_root = os.path.realpath(LOCAL_STORAGE_PATH)
+    if not file_path.startswith(storage_root + os.sep):
+        raise HTTPException(status_code=403, detail="Access denied")
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Media file not found")
+    content_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+    response = FileResponse(file_path, media_type=content_type)
+    set_media_response_headers(response, request)
+    return response
 
 
 async def process_single_file(file: UploadFile, bucket) -> ProcessedMediaFile:
@@ -184,7 +208,7 @@ async def process_image_file(
         )
         resized_image = resize_image(contents, size)
 
-        blob_path, _ = await upload_to_gcs(
+        blob_path, _ = await upload_file(
             resized_image, sized_filename, f"image/{OUTPUT_FORMAT}", bucket
         )
 
@@ -215,7 +239,7 @@ async def process_video_file(
     validate_video(file.content_type, file_size)
     new_filename = generate_unique_filename(file.filename)
 
-    blob_path, _ = await upload_to_gcs(contents, new_filename, file.content_type, bucket)
+    blob_path, _ = await upload_file(contents, new_filename, file.content_type, bucket)
 
     # Create video processing job entry
     try:
@@ -271,7 +295,7 @@ async def upload_media(request: Request, files: List[UploadFile] = File(...)) ->
         urls = []
         srcsets = []
         dimensions = []
-        bucket = get_gcs_bucket()
+        bucket = None if LOCAL_STORAGE_PATH else get_gcs_bucket()
 
         for file in files:
             try:
@@ -367,8 +391,14 @@ def get_gcs_bucket():
     return storage_client.bucket(GCS_BUCKET_NAME)
 
 
-async def upload_to_gcs(file_content, filename, content_type, bucket) -> Tuple[str, str]:
+async def upload_file(file_content, filename, content_type, bucket) -> Tuple[str, str]:
     blob_path = construct_blob_path(filename)
+    if LOCAL_STORAGE_PATH:
+        file_path = os.path.join(LOCAL_STORAGE_PATH, blob_path)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "wb") as f:
+            f.write(file_content if isinstance(file_content, bytes) else file_content)
+        return blob_path, f"/uploads/{filename}"
     blob = bucket.blob(blob_path)
     blob.content_type = content_type
     blob.upload_from_string(file_content, content_type=content_type)

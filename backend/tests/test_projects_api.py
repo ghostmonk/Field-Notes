@@ -60,6 +60,40 @@ class TestProjectsPublicEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
+    async def test_get_projects_filtered_by_section_id(
+        self, projects_async_client, override_projects_database
+    ):
+        """Test filtering projects by section_id"""
+        section_id = ObjectId()
+        test_projects = [
+            {
+                "_id": ObjectId(),
+                "title": "Project in section",
+                "slug": "project-in-section",
+                "summary": "Summary",
+                "technologies": ["Python"],
+                "image_url": None,
+                "github_url": None,
+                "live_url": None,
+                "is_featured": False,
+                "is_published": True,
+                "deleted": False,
+                "section_id": str(section_id),
+            },
+        ]
+
+        override_projects_database.count_documents.return_value = 1
+        override_projects_database.find.return_value = MockCursor(test_projects)
+
+        response = await projects_async_client.get(f"/projects?section_id={str(section_id)}")
+        assert response.status_code == 200
+
+        call_args = override_projects_database.find.call_args
+        query = call_args[0][0] if call_args[0] else call_args[1].get("filter", {})
+        assert query.get("section_id") == str(section_id)
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
     async def test_get_projects_featured_only(
         self, projects_async_client, override_projects_database, sample_project_data
     ):
