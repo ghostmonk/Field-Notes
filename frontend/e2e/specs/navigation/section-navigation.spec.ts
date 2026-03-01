@@ -51,7 +51,7 @@ test.describe('Section Navigation', () => {
       await aboutPage.goto();
       await aboutPage.nav.goToBlog();
 
-      expect(mockApiPage.url()).toMatch(/\/$/);
+      expect(mockApiPage.url()).toMatch(/\/(blog)?$/);
     });
   });
 
@@ -80,7 +80,7 @@ test.describe('Section Navigation', () => {
       await contactPage.goto();
       await contactPage.nav.goToBlog();
 
-      expect(mockApiPage.url()).toMatch(/\/$/);
+      expect(mockApiPage.url()).toMatch(/\/(blog)?$/);
     });
   });
 });

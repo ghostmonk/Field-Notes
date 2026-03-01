@@ -56,7 +56,7 @@ export class TopNavComponent {
    */
   async goToBlog() {
     await Promise.all([
-      this.page.waitForURL('**/'),
+      this.page.waitForURL(/\/(blog)?$/),
       this.blogLink.click(),
     ]);
   }

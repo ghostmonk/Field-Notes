@@ -20,7 +20,7 @@ test.describe('View Story', () => {
     await storyCard.clickTitle();
 
     // Verify URL changed to story page
-    expect(homePage.url).toContain('/stories/');
+    expect(homePage.url).toContain('/blog/');
   });
 
   test('clicking read more navigates to story', async ({ mockApiPage }) => {
@@ -31,7 +31,7 @@ test.describe('View Story', () => {
     const storyCard = homePage.getStoryCard(TEST_STORY_IDS.PUBLISHED);
     await storyCard.clickReadMore();
 
-    expect(homePage.url).toContain('/stories/');
+    expect(homePage.url).toContain('/blog/');
   });
 
   // SSR tests - these use the mock server (not page.route interception)
@@ -44,10 +44,10 @@ test.describe('View Story', () => {
       await expect(storyPage.title).toHaveText('My Published Story');
     });
 
-    test('shows error for non-existent story', async ({ page }) => {
+    test('shows 404 for non-existent story', async ({ page }) => {
       const storyPage = new StoryDetailPage(page);
       await storyPage.gotoBySlug('non-existent-story');
-      await expect(storyPage.errorContainer).toBeVisible();
+      await expect(page.locator('text=404')).toBeVisible();
     });
   });
 });

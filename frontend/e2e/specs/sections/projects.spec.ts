@@ -178,11 +178,8 @@ test.describe('Projects Page', () => {
 
       await detailPage.goto('non-existent-project');
 
-      // Wait for error state to appear
-      await mockApiPage.waitForTimeout(1000);
-
-      const isNotFound = await detailPage.isNotFound();
-      expect(isNotFound).toBe(true);
+      // Phase 5 catch-all returns notFound: true, showing Next.js 404 page
+      await expect(mockApiPage.locator('text=404')).toBeVisible();
     });
   });
 });

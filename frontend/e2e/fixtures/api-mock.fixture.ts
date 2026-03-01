@@ -4,12 +4,14 @@ import {
   sampleStories as sharedStories,
   samplePages as sharedPages,
   sampleProjects as sharedProjects,
+  sampleSections as sharedSections,
   sampleReactions as sharedReactions,
   sampleComments as sharedComments,
   FIXED_TIMESTAMP,
   TestStory,
   TestPage,
   TestProject,
+  TestSection,
   TestReactionCounts,
   TestComment,
   projectToCard,
@@ -107,6 +109,7 @@ export interface ApiMockOptions {
   stories?: MockStory[];
   pages?: TestPage[];
   projects?: TestProject[];
+  sections?: TestSection[];
   reactions?: TestReactionCounts;
   comments?: TestComment[];
   failRequests?: boolean;
@@ -121,6 +124,7 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
     stories = [sampleStories.published, sampleStories.draft],
     pages = sharedPages,
     projects = sharedProjects,
+    sections = sharedSections,
     reactions = sharedReactions,
     comments = sharedComments,
     failRequests = false,
@@ -582,6 +586,66 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
     if (route.request().method() === 'DELETE') {
       await route.fulfill({
         status: 204,
+      });
+    }
+  });
+
+  // Mock sections navigation endpoint (used by useNavSections hook)
+  await page.route('**/api/sections/navigation', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const navSections = sections.filter((s) => s.nav_visibility === 'main' && s.is_published);
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        items: navSections,
+        total: navSections.length,
+        limit: 20,
+        offset: 0,
+      }),
+    });
+  });
+
+  // Mock sections by-slug endpoint
+  await page.route('**/api/sections/by-slug/**', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const urlObj = new URL(route.request().url());
+    const pathParts = urlObj.pathname.split('/');
+    const slug = pathParts[pathParts.length - 1];
+    const section = sections.find((s) => s.slug === slug && s.is_published);
+
+    if (section) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(section),
+      });
+    } else {
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Section not found' }),
       });
     }
   });
