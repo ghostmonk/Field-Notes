@@ -10,7 +10,7 @@ whether 0004 ran before or after the fix.
 import pymongo
 
 name = "0006_normalize_section_id_to_string"
-dependencies = ["0004_backfill_section_id"]
+dependencies = ["0005_seed_test_data"]
 
 COLLECTIONS = ["stories", "projects", "pages"]
 
