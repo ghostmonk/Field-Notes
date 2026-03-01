@@ -314,3 +314,4 @@ playwright-report/
 .roomodes
 .worktrees/
 local-uploads/
+*.tsbuildinfo

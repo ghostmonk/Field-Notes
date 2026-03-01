@@ -346,7 +346,8 @@ async def add_story(
         section_id = None
         db = await get_db()
         default_section = await db["sections"].find_one(
-            {"content_type": "story", "is_deleted": {"$ne": True}}
+            {"content_type": "story", "is_deleted": {"$ne": True}},
+            sort=[("sort_order", 1)],
         )
         if default_section:
             section_id = str(default_section["_id"])

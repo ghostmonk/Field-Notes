@@ -65,23 +65,25 @@ function SectionListView({ section, initialListData }: { section: Section; initi
         initialData: initialListData,
     });
 
-    // Fetch engagement counts for stories
+    // Fetch engagement counts only for newly loaded stories
     useEffect(() => {
         if (contentType !== 'story') return;
         const publishedStories = (items as Story[]).filter(s => s.is_published);
-        if (publishedStories.length === 0) return;
+        const newStories = publishedStories.filter(s => !engagementCounts[`story:${s.id}`]);
+        if (newStories.length === 0) return;
 
         const fetchCounts = async () => {
             try {
-                const targets = publishedStories.map(s => ({ type: 'story', id: s.id }));
+                const targets = newStories.map(s => ({ type: 'story', id: s.id }));
                 const response = await apiClient.engagement.getBulkCounts({ targets });
-                setEngagementCounts(response.counts);
+                setEngagementCounts(prev => ({ ...prev, ...response.counts }));
             } catch (err) {
                 console.error('Failed to fetch engagement counts:', err);
             }
         };
 
         fetchCounts();
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- engagementCounts excluded to avoid refetch loop
     }, [items, contentType]);
 
     const handleEdit = useCallback((story: Story) => {

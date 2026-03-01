@@ -104,7 +104,7 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
     useEffect(() => {
         fetchInternal(true);
         initialFetchDoneRef.current = true;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only fetch; fetchInternal is stable via refs
     }, []);
 
     // Re-fetch when sectionId changes (client-side navigation)

@@ -96,7 +96,7 @@ export function useFetchStories(options: UseFetchStoriesOptions = {}): UseFetchS
   useEffect(() => {
     fetchStoriesInternal(true);
     initialFetchDoneRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only fetch; fetchStoriesInternal is stable via refs
   }, []);
 
   // Refetch when token changes (login/logout)

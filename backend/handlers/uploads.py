@@ -154,13 +154,16 @@ async def get_media(request: Request, filename: str, size: int | None = None):
 
 
 def _serve_local_file(blob_path: str, request: Request):
-    file_path = os.path.join(LOCAL_STORAGE_PATH, blob_path)
+    from fastapi.responses import FileResponse
+
+    file_path = os.path.realpath(os.path.join(LOCAL_STORAGE_PATH, blob_path))
+    storage_root = os.path.realpath(LOCAL_STORAGE_PATH)
+    if not file_path.startswith(storage_root + os.sep):
+        raise HTTPException(status_code=403, detail="Access denied")
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Media file not found")
     content_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
-    with open(file_path, "rb") as f:
-        data = f.read()
-    response = StreamingResponse(io.BytesIO(data), media_type=content_type)
+    response = FileResponse(file_path, media_type=content_type)
     set_media_response_headers(response, request)
     return response
 
@@ -395,7 +398,7 @@ async def upload_to_gcs(file_content, filename, content_type, bucket) -> Tuple[s
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "wb") as f:
             f.write(file_content if isinstance(file_content, bytes) else file_content)
-        return blob_path, f"file://{file_path}"
+        return blob_path, f"/uploads/{filename}"
     blob = bucket.blob(blob_path)
     blob.content_type = content_type
     blob.upload_from_string(file_content, content_type=content_type)

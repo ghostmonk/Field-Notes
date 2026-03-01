@@ -20,6 +20,7 @@ services:
     depends_on:
       mongo:
         condition: service_started
+    # Overrides Dockerfile CMD — migrations must be run separately via `make migrate-up`
     command: uvicorn app:app --host 0.0.0.0 --port 5001 --reload
 
   frontend:
