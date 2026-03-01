@@ -16,5 +16,5 @@ ENV PORT=8080
 
 EXPOSE ${PORT}
 
-CMD ["sh", "-c", "MIGRATE_URI=${MONGO_URI:-mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_CLUSTER}.${MONGO_HOST}/?retryWrites=true&w=majority&appName=${MONGO_APP_NAME}} && pymongo-migrate migrate -u \"$MIGRATE_URI\" -m migrations && uvicorn app:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "MIGRATE_URI=\"${MONGO_URI:-mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_CLUSTER}.${MONGO_HOST}/?retryWrites=true&w=majority&appName=${MONGO_APP_NAME}}\" && pymongo-migrate migrate -u \"$MIGRATE_URI\" -m migrations && uvicorn app:app --host 0.0.0.0 --port ${PORT}"]
 
