@@ -21,7 +21,7 @@ export default function TopNav() {
     const { data: session } = useSession();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const sections = useNavSections();
-    const activeSlug = useActiveSection();
+    const activeSlug = useActiveSection(sections);
 
     const toggleMobileMenu = () => {
         setMobileMenuOpen(!mobileMenuOpen);

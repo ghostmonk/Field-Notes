@@ -63,44 +63,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     apiLogger.logApiRequest(req, res);
     
     try {
+        const token = await getToken({ req });
+        const isAuthenticated = !!token?.accessToken;
+
+        // No browser caching — the server-side in-memory cache handles
+        // performance. Browser caching causes stale responses to overwrite
+        // fresh server-rendered data on client-side mount fetches.
+        const cacheControl = 'private, no-store';
+
         // Check cache for GET requests
         if (req.method === 'GET') {
             const cacheKey = getCacheKey(req);
             const cachedData = getFromCache(cacheKey);
-            
+
             if (cachedData) {
                 apiLogger.info('Serving from cache', { cacheKey });
-                
-                // Set cache headers
-                res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+
+                res.setHeader('Cache-Control', cacheControl);
                 res.setHeader('X-Cache', 'HIT');
-                
+
                 return res.status(200).json(cachedData);
             }
         }
 
         if (req.method !== 'GET') {
-            const token = await getToken({ req });
-            
-            if (!token || !token.accessToken) {
+            if (!isAuthenticated) {
                 const error = new Error('Authentication required');
                 apiLogger.error('Authentication failed', error, {
                     path: req.url,
                     method: req.method
                 });
-                return res.status(401).json({ 
+                return res.status(401).json({
                     detail: 'Not authenticated',
                     error: 'Authentication required'
                 });
             }
-            
+
             // Invalidate cache on mutations
             invalidateCache('stories');
         }
 
         let apiUrl = `${API_BASE_URL}/stories`;
-        
-        const token = await getToken({ req });
         
         if (req.method === 'GET' && req.query) {
             const params = new URLSearchParams();
@@ -180,7 +183,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         const data = await response.json();
-        
+
+        // Revalidate home page ISR cache after mutations
+        if (req.method !== 'GET') {
+            try {
+                await res.revalidate('/');
+            } catch (revalidateErr) {
+                console.error('ISR revalidation failed:', revalidateErr);
+            }
+        }
+
         // Cache successful GET responses
         if (req.method === 'GET') {
             const cacheKey = getCacheKey(req);
@@ -190,8 +202,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             setCache(cacheKey, data, ttl);
             apiLogger.info('Cached response', { cacheKey, ttl });
             
-            // Set cache headers
-            res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+            res.setHeader('Cache-Control', cacheControl);
             res.setHeader('X-Cache', 'MISS');
         }
         

@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { useActiveSection } from '@/hooks/useActiveSection';
 import { useNavSections } from '@/hooks/useNavSections';
+import { useActiveSection } from '@/hooks/useActiveSection';
 import { NavSectionItem, NavIcon } from '@/shared/lib/navigation';
 import { HiHome, HiUser, HiFolder, HiMail, HiViewGrid } from 'react-icons/hi';
 
@@ -36,7 +36,7 @@ const NavItem: React.FC<NavItemProps> = ({ section, isActive }) => {
 
 const BottomNav: React.FC = () => {
     const sections = useNavSections();
-    const activeSlug = useActiveSection();
+    const activeSlug = useActiveSection(sections);
 
     return (
         <nav

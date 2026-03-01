@@ -17,7 +17,7 @@ const SLUG_ICON_MAP: Record<string, NavIcon> = {
 };
 
 export const FALLBACK_SECTIONS: NavSectionItem[] = [
-    { slug: 'blog', path: '/', label: 'Blog', icon: 'home' },
+    { slug: 'blog', path: '/blog', label: 'Blog', icon: 'home' },
     { slug: 'about', path: '/about', label: 'About', icon: 'user' },
     { slug: 'projects', path: '/projects', label: 'Projects', icon: 'folder' },
     { slug: 'contact', path: '/contact', label: 'Contact', icon: 'mail' },
@@ -36,15 +36,11 @@ export function sectionsToNavItems(sections: Section[]): NavSectionItem[] {
     return sections.map(sectionToNavItem);
 }
 
-export function getActiveSectionSlug(pathname: string, sections: NavSectionItem[]): string | null {
-    if (pathname === '/') return 'blog';
+const DEFAULT_SECTION_SLUG = 'blog';
 
+export function getActiveSectionSlug(pathname: string, sections: NavSectionItem[]): string {
     const firstSegment = pathname.split('/').filter(Boolean)[0];
-    if (!firstSegment) return 'blog';
+    if (!firstSegment) return DEFAULT_SECTION_SLUG;
 
-    const match = sections.find(s => s.slug === firstSegment);
-    if (match) return match.slug;
-
-    // Story detail pages (e.g., /blog/some-story) — check if first segment matches any section
-    return sections.find(s => pathname.startsWith(s.path + '/'))?.slug || 'blog';
+    return sections.find(s => s.slug === firstSegment)?.slug || DEFAULT_SECTION_SLUG;
 }
