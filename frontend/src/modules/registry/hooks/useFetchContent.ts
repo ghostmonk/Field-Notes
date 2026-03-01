@@ -43,10 +43,12 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
     const [total, setTotal] = useState(initialData?.total || 0);
 
     const offsetRef = useRef(initialData?.items.length || 0);
-    const isMountedRef = useRef(false);
     const tokenRef = useRef(session?.accessToken);
     const loadingRef = useRef(false);
     const hasMoreRef = useRef(hasMore);
+    const prevSectionIdRef = useRef(sectionId);
+    const prevTokenRef = useRef(session?.accessToken);
+    const initialFetchDoneRef = useRef(false);
 
     useEffect(() => { loadingRef.current = loading; }, [loading]);
     useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
@@ -57,8 +59,7 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
 
         if (reset) {
             offsetRef.current = 0;
-            setItems([]);
-            setHasMore(true);
+            // Don't clear items here — keep showing current data until response arrives
             hasMoreRef.current = true;
         }
 
@@ -99,17 +100,36 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
         }
     }, [contentType, sectionId, pageSize, session?.accessToken]);
 
+    // Always fetch fresh data on mount
     useEffect(() => {
-        if (!isMountedRef.current) {
-            isMountedRef.current = true;
-            if (!initialData || initialData.items.length === 0) {
-                fetchInternal(true);
-            }
-        }
-    }, [fetchInternal, initialData]);
+        fetchInternal(true);
+        initialFetchDoneRef.current = true;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
+    // Re-fetch when sectionId changes (client-side navigation)
     useEffect(() => {
-        if (isMountedRef.current) {
+        if (prevSectionIdRef.current !== sectionId) {
+            prevSectionIdRef.current = sectionId;
+            // Immediately show SSR data for the new section
+            if (initialData && initialData.items.length > 0) {
+                setItems(initialData.items);
+                setTotal(initialData.total);
+                offsetRef.current = initialData.items.length;
+                const newHasMore = initialData.items.length < initialData.total;
+                setHasMore(newHasMore);
+                hasMoreRef.current = newHasMore;
+            }
+            // Then re-fetch to get authenticated data (e.g. drafts)
+            fetchInternal(true);
+        }
+    }, [sectionId, initialData, fetchInternal]);
+
+    // Re-fetch when auth token changes (login/logout)
+    useEffect(() => {
+        if (!initialFetchDoneRef.current) return;
+        if (prevTokenRef.current !== session?.accessToken) {
+            prevTokenRef.current = session?.accessToken;
             fetchInternal(true);
         }
     }, [session?.accessToken, fetchInternal]);

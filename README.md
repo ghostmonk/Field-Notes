@@ -10,10 +10,15 @@ Turbulence is a modern blog/content management system built with Next.js and Fas
 - **Responsive Design**: Beautiful UI with Tailwind CSS
 - **MongoDB Integration**: Persistent storage with MongoDB Atlas
 - **Image Uploads**: Upload and embed images using Google Cloud Storage
+- **Video Uploads**: Upload and embed videos with custom TipTap VideoExtension
 - **Docker Support**: Easy deployment with Docker and docker-compose
 - **Story Creation and Management**: Ability to create and manage stories
+- **Project Portfolios**: Showcase projects with grid display and detail views
 - **Publication Status Control**: Publish or unpublish content
 - **Dark Mode Support**: Dark mode for better readability
+- **Dynamic Routing**: Section-based routing via a catch-all `[...slugPath]` route
+- **Content Registry**: Pluggable display system (feed, grid, static-page) driven by section configuration
+- **Local Development Storage**: Filesystem-based upload storage for local development (no GCS credentials required)
 
 ## Tech Stack
 
@@ -21,16 +26,16 @@ Turbulence is a modern blog/content management system built with Next.js and Fas
 - **Framework**: FastAPI (Python)
 - **Database**: MongoDB (via motor - async MongoDB driver)
 - **Authentication**: Google OAuth token validation
-- **File Storage**: Google Cloud Storage for image uploads
+- **File Storage**: Google Cloud Storage for image/video uploads (production), local filesystem (development)
 - **Logging**: Google Cloud Logging
+- **Migrations**: pymongo-migrate for schema evolution
 - **Python Version**: Python 3.11+
-- **Google Application Credentials**: Path to GCP service account credentials file
 
 ### Frontend
 - **Framework**: Next.js with TypeScript
 - **UI**: Tailwind CSS for styling
 - **Authentication**: NextAuth.js with Google provider
-- **Rich Text Editing**: TipTap editor with image support
+- **Rich Text Editing**: TipTap editor with image and video support
 - **State Management**: React Hooks
 
 ### Infrastructure
@@ -129,8 +134,9 @@ The application requires the following environment variables:
 - `MONGO_APP_NAME`: MongoDB application name
 - `MONGO_HOST`: MongoDB host address
 - `MONGO_DB_NAME`: MongoDB database name
-- `GCS_BUCKET_NAME`: Google Cloud Storage bucket name for image uploads
-- `GOOGLE_APPLICATION_CREDENTIALS`: Path to GCP service account credentials file
+- `GCS_BUCKET_NAME`: Google Cloud Storage bucket name for uploads (production)
+- `GOOGLE_APPLICATION_CREDENTIALS`: Path to GCP service account credentials file (production)
+- `LOCAL_STORAGE_PATH`: Local filesystem path for uploads (development, set instead of GCS vars)
 
 #### Frontend
 - `FE_PORT`: Frontend server port
@@ -154,7 +160,13 @@ The application requires the following environment variables:
 - MongoDB Atlas account (or local MongoDB instance)
 - Google Cloud Platform account (for image uploads)
 
-### Google Cloud Storage Setup
+### File Upload Storage
+
+#### Local Development (default with Docker)
+
+No GCS setup needed. Docker Compose sets `LOCAL_STORAGE_PATH=/app/local-uploads` and mounts `./local-uploads` as a volume. Uploaded images and videos are stored on the local filesystem and served by the backend.
+
+#### Production (Google Cloud Storage)
 
 1. Create a Google Cloud Platform account if you don't have one
 2. Create a new project or use an existing one
@@ -165,6 +177,7 @@ The application requires the following environment variables:
 7. Create a Cloud Storage bucket
 8. Make sure the bucket has public access or configure appropriate permissions
 9. Add the bucket name to your `.env` file as `GCS_BUCKET_NAME`
+10. Do NOT set `LOCAL_STORAGE_PATH` in production
 
 ### Installation
 

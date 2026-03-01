@@ -41,7 +41,7 @@ async def get_projects(
         if featured_only:
             query["is_featured"] = True
         if section_id:
-            query["section_id"] = ObjectId(section_id)
+            query["section_id"] = section_id
 
         sort = [("sort_order", 1), ("createdDate", -1)]
 

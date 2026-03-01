@@ -239,10 +239,13 @@ class TestStoriesAuthenticatedEndpoints:
         self, async_client: AsyncClient, override_database, mock_auth
     ):
         """Test successful story creation with auth"""
+        from unittest.mock import AsyncMock, patch
+
         story_data = {"title": "New Story", "content": "New content", "is_published": True}
 
         # Use fixed datetime for consistent testing
         now = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        section_id = ObjectId()
 
         created_story = {
             "_id": ObjectId(),
@@ -253,6 +256,7 @@ class TestStoriesAuthenticatedEndpoints:
             "date": now,
             "createdDate": now,
             "updatedDate": now,
+            "section_id": str(section_id),
         }
 
         # Configure the mock collection provided by the fixture
@@ -263,9 +267,16 @@ class TestStoriesAuthenticatedEndpoints:
             created_story,
         ]  # First None for slug check, then return story
 
-        response = await async_client.post(
-            "/stories", json=story_data, headers={"Authorization": "Bearer valid_token"}
-        )
+        # Mock get_db for section lookup in add_story
+        mock_db = AsyncMock()
+        mock_sections = AsyncMock()
+        mock_sections.find_one = AsyncMock(return_value={"_id": section_id, "content_type": "story"})
+        mock_db.__getitem__ = lambda self, key: mock_sections
+
+        with patch("handlers.stories.get_db", return_value=mock_db):
+            response = await async_client.post(
+                "/stories", json=story_data, headers={"Authorization": "Bearer valid_token"}
+            )
 
         assert response.status_code == 201
         data = response.json()

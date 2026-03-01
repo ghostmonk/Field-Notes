@@ -12,9 +12,10 @@ import apiClient from '@/shared/lib/api-client';
 interface StoriesProps {
     initialData?: PaginatedResponse<Story>;
     initialError?: string;
+    basePath?: string;
 }
 
-const Stories: React.FC<StoriesProps> = ({ initialData, initialError }) => {
+const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }) => {
     const { data: session } = useSession();
     const router = useRouter();
     const {
@@ -27,11 +28,6 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError }) => {
     } = useFetchStories({ initialData, initialError });
     const { deleteStory, loading: deleteLoading } = useStoryMutations();
     const [engagementCounts, setEngagementCounts] = useState<BulkCountsResponse['counts']>({});
-
-    // Initialize data on component mount
-    useEffect(() => {
-        resetStories();
-    }, [resetStories]);
 
     // Fetch engagement counts when stories change
     useEffect(() => {
@@ -91,9 +87,10 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError }) => {
                 onDelete={handleDelete}
                 deleteLoading={deleteLoading}
                 engagementCounts={engagementCounts[`story:${story.id}`]}
+                basePath={basePath}
             />
         ));
-    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts]);
+    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath]);
 
     // Handle error state
     if (error) {

@@ -57,13 +57,13 @@ venv-clean:
 # Database migrations (pymongo-migrate)
 # Requires MONGO_URI environment variable set
 migrate:
-	. $(VENV_ACTIVATE) && set -a && . ./.env && set +a && cd backend && pymongo-migrate migrate -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && cd backend && pymongo-migrate migrate -u "$$MONGO_URI" -m migrations
 
 migrate-status:
-	. $(VENV_ACTIVATE) && set -a && . ./.env && set +a && cd backend && pymongo-migrate show -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && cd backend && pymongo-migrate show -u "$$MONGO_URI" -m migrations
 
 migrate-down:
-	. $(VENV_ACTIVATE) && set -a && . ./.env && set +a && cd backend && pymongo-migrate downgrade -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && cd backend && pymongo-migrate downgrade -u "$$MONGO_URI" -m migrations
 
 # Dependency management with pip-tools
 deps-compile:
@@ -147,34 +147,43 @@ test-frontend-ui:
 
 # Docker operations
 build:
-	docker-compose build
+	docker compose build
 
 up:
-	docker-compose up -d
+	docker compose up -d
 
 down:
-	docker-compose down
+	docker compose down
 
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
-# Development servers
+# Development: build, migrate, and start all services in Docker
 dev:
-	@echo "Starting development servers..."
-	@echo "Backend will run on http://localhost:5001"
-	@echo "Frontend will run on http://localhost:3000"
-	@echo "Press Ctrl+C to stop both servers"
-	@trap 'kill %1 %2' INT; \
-	make dev-backend & \
-	make dev-frontend & \
-	wait
+	@echo "Starting development environment..."
+	@echo "Building containers..."
+	docker compose build
+	@echo "Starting MongoDB..."
+	docker compose up mongo -d
+	@echo "Running migrations..."
+	$(MAKE) migrate
+	@echo "Starting all services..."
+	docker compose up -d
+	@echo ""
+	@echo "Frontend: http://localhost:3000"
+	@echo "Backend:  http://localhost:5001"
+	@echo "MongoDB:  localhost:27017"
+	@echo ""
+	@echo "Run 'make logs' to tail output, 'make down' to stop."
 # 
 # dev-backend: Start Python backend server on port 5001
 # - Activates virtual environment 
 # - Loads all .env variables (excluding comments and empty lines)
 # - Runs uvicorn with hot reload for development
 dev-backend:
-	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && cd backend && uvicorn app:app --reload --port 5001
+	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && \
+	if [ -f .env.local ]; then export $$(cat .env.local | grep -v '^#' | grep -v '^$$' | xargs); fi && \
+	cd backend && uvicorn app:app --reload --port 5001
 
 # dev-frontend: Start Next.js frontend server on port 3000
 # - Loads .env variables, then .env.local overrides (if exists)
@@ -206,7 +215,7 @@ clean-frontend:
 
 # Nuke all Docker resources for a clean slate
 nuke:
-	docker-compose down -v --rmi all --remove-orphans
+	docker compose down -v --rmi all --remove-orphans
 	docker system prune -af --volumes
 
 # Help

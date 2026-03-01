@@ -2,7 +2,7 @@ import traceback
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from database import get_collection
+from database import get_collection, get_db
 from decorators.auth import check_write_permission, requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from glogger import logger
@@ -30,7 +30,7 @@ async def get_stories(
         if not include_drafts:
             query["is_published"] = True
         if section_id:
-            query["section_id"] = ObjectId(section_id)
+            query["section_id"] = section_id
         sort = {"createdDate": -1}
 
         logger.info_with_context(
@@ -58,6 +58,7 @@ async def get_stories(
             "updatedDate": 1,
             "deleted": 1,
             "user_id": 1,
+            "section_id": 1,
         }
 
         stories = await find_many_and_convert(
@@ -341,6 +342,15 @@ async def add_story(
         # Generate a unique slug for the new story
         slug = await generate_unique_slug(collection, story.title)
 
+        # Assign to the default story section if one exists
+        section_id = None
+        db = await get_db()
+        default_section = await db["sections"].find_one(
+            {"content_type": "story", "is_deleted": {"$ne": True}}
+        )
+        if default_section:
+            section_id = str(default_section["_id"])
+
         document = {
             **story.model_dump(),
             "slug": slug,
@@ -348,6 +358,7 @@ async def add_story(
             "createdDate": current_time,
             "updatedDate": current_time,
             "user_id": user.id,
+            "section_id": section_id,
         }
 
         result = await collection.insert_one(document)

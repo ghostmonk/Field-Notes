@@ -17,11 +17,12 @@ export const REACTION_ICONS: Record<string, string> = {
  * Safely gets the story URL based on the slug
  * Falls back to ID if slug is not available
  */
-export const getStoryPath = (story: Story): string => {
+export const getStoryPath = (story: Story, basePath?: string): string => {
+    const prefix = basePath || '/stories';
     if (!story.slug || story.slug.trim() === '') {
-        return `/stories/${story.id}`;
+        return `${prefix}/${story.id}`;
     }
-    return `/stories/${story.slug}`;
+    return `${prefix}/${story.slug}`;
 };
 
 export const canEditStory = (session: Session | null, story: Story): boolean => {
@@ -45,6 +46,7 @@ export interface StoryCardProps {
     onDelete: (story: Story) => Promise<void>;
     deleteLoading: boolean;
     engagementCounts?: EngagementCounts;
+    basePath?: string;
 }
 
 export const StoryCard = React.memo(({
@@ -53,10 +55,11 @@ export const StoryCard = React.memo(({
     onEdit,
     onDelete,
     deleteLoading,
-    engagementCounts
+    engagementCounts,
+    basePath
 }: StoryCardProps) => {
     const isDraft = !story.is_published;
-    const storyPath = getStoryPath(story);
+    const storyPath = getStoryPath(story, basePath);
     const canEdit = canEditStory(session, story);
 
     return (

@@ -7,10 +7,11 @@ import { Story, PaginatedResponse } from '@/shared/types/api';
 
 interface HomeProps {
     initialStories?: PaginatedResponse<Story>;
+    storySectionSlug?: string | null;
     error?: string;
 }
 
-const Home: React.FC<HomeProps> = ({ initialStories, error }) => {
+const Home: React.FC<HomeProps> = ({ initialStories, storySectionSlug, error }) => {
     return (
         <>
             <Head>
@@ -27,7 +28,7 @@ const Home: React.FC<HomeProps> = ({ initialStories, error }) => {
                 <p className="text-center mb-8" style={{ color: 'var(--color-text-secondary)' }}>
                     Sharing Stories, Projects and Ideas
                 </p>
-                <StoryList initialData={initialStories} initialError={error} />
+                <StoryList initialData={initialStories} initialError={error} basePath={storySectionSlug ? `/${storySectionSlug}` : undefined} />
             </div>
         </>
     );
@@ -59,9 +60,25 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
 
         const data: PaginatedResponse<Story> = await response.json();
 
+        // Resolve the story section slug for links
+        let storySectionSlug: string | undefined;
+        try {
+            const sectionsRes = await fetch(`${backendUrl}/sections`);
+            if (sectionsRes.ok) {
+                const sectionsData = await sectionsRes.json();
+                const storySection = sectionsData.items.find((s: { content_type: string }) => s.content_type === 'story');
+                if (storySection) {
+                    storySectionSlug = storySection.slug;
+                }
+            }
+        } catch {
+            // Non-fatal — links will fall back to /stories
+        }
+
         return {
             props: {
-                initialStories: data
+                initialStories: data,
+                storySectionSlug: storySectionSlug || null,
             },
             revalidate: 300 // Revalidate every 5 minutes
         };

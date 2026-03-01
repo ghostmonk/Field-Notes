@@ -106,6 +106,8 @@ function SectionListView({ section, initialListData }: { section: Section; initi
         }
     }, [session, router, deleteStory, reset]);
 
+    const basePath = `/${section.slug}`;
+
     const renderItem = useMemo(() => {
         if (contentType === 'story') {
             return (item: unknown) => {
@@ -119,6 +121,7 @@ function SectionListView({ section, initialListData }: { section: Section; initi
                         onDelete={handleDelete}
                         deleteLoading={deleteLoading}
                         engagementCounts={engagementCounts[`story:${story.id}`]}
+                        basePath={basePath}
                     />
                 );
             };
@@ -126,14 +129,14 @@ function SectionListView({ section, initialListData }: { section: Section; initi
         if (contentType === 'project') {
             return (item: unknown) => {
                 const project = item as ProjectCardType;
-                return <ProjectCard key={project.id} project={project} />;
+                return <ProjectCard key={project.id} project={project} basePath={basePath} />;
             };
         }
         return (item: unknown) => {
             const data = item as { id: string; title: string };
             return <div key={data.id}>{data.title}</div>;
         };
-    }, [contentType, session, handleEdit, handleDelete, deleteLoading, engagementCounts]);
+    }, [contentType, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath]);
 
     if (error) {
         return (

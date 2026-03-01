@@ -313,3 +313,4 @@ playwright-report/
 *.zip
 .roomodes
 .worktrees/
+local-uploads/

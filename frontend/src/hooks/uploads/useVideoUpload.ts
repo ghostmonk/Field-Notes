@@ -33,24 +33,23 @@ export function useVideoUpload(editor: Editor | null): UseVideoUploadReturn {
 
     const result = await baseUpload.upload(file);
 
-    // Remove loading placeholder regardless of success/failure
+    // Get current HTML and remove placeholder
     const content = editor.getHTML();
-    const updatedContent = result
+    const cleanedContent = result
       ? content.replace(loadingText, '')
       : content.replace(/\[Uploading video .*?\]/g, '');
-    editor.commands.setContent(updatedContent);
 
     if (result?.urls?.length) {
       const videoUrl = result.urls[0];
       const dimensions = result.dimensions?.[0] || { width: 1280, height: 720 };
 
-      // Use type assertion for custom video command
-       
-      (editor.commands as any).setVideo({
-        src: videoUrl,
-        width: dimensions.width,
-        height: dimensions.height,
-      });
+      // Build video tag and inject into the HTML in a single setContent call.
+      // Two separate commands (setContent + setVideo) race with the content
+      // sync useEffect in RichTextEditor, losing the video node.
+      const videoTag = `<video src="${videoUrl}" width="${dimensions.width}" height="${dimensions.height}" controls muted></video>`;
+      editor.commands.setContent(cleanedContent + videoTag);
+    } else {
+      editor.commands.setContent(cleanedContent);
     }
   }, [editor, baseUpload]);
 

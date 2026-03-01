@@ -171,8 +171,8 @@ class TestBackfillSectionId:
         mock_db.__getitem__ = MagicMock(side_effect=getitem)
         return mock_db, mock_sections, mock_stories, mock_projects, mock_pages
 
-    def test_backfill_stores_objectid_not_string(self):
-        """section_id should be stored as ObjectId, not str(ObjectId)."""
+    def test_backfill_stores_string_section_id(self):
+        """section_id should be stored as str(ObjectId) to match Pydantic models."""
         from bson import ObjectId
 
         m4 = load_migration("0004_backfill_section_id")
@@ -200,10 +200,10 @@ class TestBackfillSectionId:
 
         m4.upgrade(mock_db)
 
-        # Verify ObjectId is stored, not string
+        # Verify string is stored, matching Pydantic model convention
         stories_call = mock_stories.update_many.call_args
-        assert stories_call[0][1] == {"$set": {"section_id": blog_id}}
-        assert isinstance(stories_call[0][1]["$set"]["section_id"], ObjectId)
+        assert stories_call[0][1] == {"$set": {"section_id": str(blog_id)}}
+        assert isinstance(stories_call[0][1]["$set"]["section_id"], str)
 
     def test_backfill_stories_with_blog_section(self):
         """Stories without section_id should get blog section's ID."""
