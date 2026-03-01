@@ -194,10 +194,6 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
         const story = item as Story;
         return (
             <div style={{ margin: '0 auto', maxWidth: '800px', padding: '2rem 1rem' }}>
-                <Link href={`/${section.slug}`} className="inline-block mb-8 btn btn--secondary btn--sm">
-                    &larr; Back to {section.title}
-                </Link>
-
                 <EngagementProvider targetType="story" targetId={story.id}>
                     <StoryDetail story={story}>
                         <StoryEngagement />

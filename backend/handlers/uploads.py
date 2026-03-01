@@ -208,7 +208,7 @@ async def process_image_file(
         )
         resized_image = resize_image(contents, size)
 
-        blob_path, _ = await upload_to_gcs(
+        blob_path, _ = await upload_file(
             resized_image, sized_filename, f"image/{OUTPUT_FORMAT}", bucket
         )
 
@@ -239,7 +239,7 @@ async def process_video_file(
     validate_video(file.content_type, file_size)
     new_filename = generate_unique_filename(file.filename)
 
-    blob_path, _ = await upload_to_gcs(contents, new_filename, file.content_type, bucket)
+    blob_path, _ = await upload_file(contents, new_filename, file.content_type, bucket)
 
     # Create video processing job entry
     try:
@@ -391,7 +391,7 @@ def get_gcs_bucket():
     return storage_client.bucket(GCS_BUCKET_NAME)
 
 
-async def upload_to_gcs(file_content, filename, content_type, bucket) -> Tuple[str, str]:
+async def upload_file(file_content, filename, content_type, bucket) -> Tuple[str, str]:
     blob_path = construct_blob_path(filename)
     if LOCAL_STORAGE_PATH:
         file_path = os.path.join(LOCAL_STORAGE_PATH, blob_path)

@@ -121,7 +121,7 @@ class TestStoriesPublicEndpoints:
         # Verify the query included section_id filter
         call_args = override_database.find.call_args
         query = call_args[0][0] if call_args[0] else call_args[1].get("filter", {})
-        assert "section_id" in query
+        assert query.get("section_id") == str(section_id)
 
     @pytest.mark.integration
     @pytest.mark.asyncio
