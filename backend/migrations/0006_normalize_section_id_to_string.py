@@ -8,7 +8,6 @@ whether 0004 ran before or after the fix.
 """
 
 import pymongo
-from bson import ObjectId
 
 name = "0006_normalize_section_id_to_string"
 dependencies = ["0004_backfill_section_id"]
