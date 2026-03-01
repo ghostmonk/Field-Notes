@@ -1,18 +1,20 @@
 import React from 'react';
 import Link from 'next/link';
 import { useActiveSection } from '@/hooks/useActiveSection';
-import { SECTIONS, NavSectionConfig } from '@/shared/lib/navigation';
-import { HiHome, HiUser, HiFolder, HiMail } from 'react-icons/hi';
+import { useNavSections } from '@/hooks/useNavSections';
+import { NavSectionItem, NavIcon } from '@/shared/lib/navigation';
+import { HiHome, HiUser, HiFolder, HiMail, HiViewGrid } from 'react-icons/hi';
 
-const iconMap: Record<NavSectionConfig['icon'], React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
     home: HiHome,
     user: HiUser,
     folder: HiFolder,
     mail: HiMail,
+    default: HiViewGrid,
 };
 
 interface NavItemProps {
-    section: NavSectionConfig;
+    section: NavSectionItem;
     isActive: boolean;
 }
 
@@ -24,7 +26,7 @@ const NavItem: React.FC<NavItemProps> = ({ section, isActive }) => {
             href={section.path}
             className={`bottom-nav__item ${isActive ? 'bottom-nav__item--active' : ''}`}
             aria-current={isActive ? 'page' : undefined}
-            data-testid={`bottom-nav-${section.id}`}
+            data-testid={`bottom-nav-${section.slug}`}
         >
             <Icon className="bottom-nav__icon" aria-hidden="true" />
             <span className="bottom-nav__label">{section.label}</span>
@@ -33,7 +35,8 @@ const NavItem: React.FC<NavItemProps> = ({ section, isActive }) => {
 };
 
 const BottomNav: React.FC = () => {
-    const activeSection = useActiveSection();
+    const sections = useNavSections();
+    const activeSlug = useActiveSection();
 
     return (
         <nav
@@ -42,11 +45,11 @@ const BottomNav: React.FC = () => {
             aria-label="Main navigation"
             data-testid="bottom-nav"
         >
-            {SECTIONS.map((section) => (
+            {sections.map((section) => (
                 <NavItem
-                    key={section.id}
+                    key={section.slug}
                     section={section}
-                    isActive={activeSection === section.id}
+                    isActive={activeSlug === section.slug}
                 />
             ))}
         </nav>

@@ -1,8 +1,15 @@
 import { useRouter } from 'next/router';
 import { useMemo } from 'react';
-import { getNavSectionFromPath, NavSection } from '@/shared/lib/navigation';
+import { getActiveSectionSlug, NavSectionItem } from '@/shared/lib/navigation';
+import { useNavSections } from './useNavSections';
 
-export function useActiveSection(): NavSection {
+export function useActiveSection(): string | null {
     const router = useRouter();
-    return useMemo(() => getNavSectionFromPath(router.pathname), [router.pathname]);
+    const sections = useNavSections();
+    return useMemo(() => getActiveSectionSlug(router.asPath, sections), [router.asPath, sections]);
+}
+
+export function useActiveSectionWith(sections: NavSectionItem[]): string | null {
+    const router = useRouter();
+    return useMemo(() => getActiveSectionSlug(router.asPath, sections), [router.asPath, sections]);
 }

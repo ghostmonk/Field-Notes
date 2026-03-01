@@ -2,25 +2,26 @@ import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState } from "react";
-import { SECTIONS, NavSectionConfig } from "@/shared/lib/navigation";
+import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
-import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm } from "react-icons/hi";
+import { NavIcon } from "@/shared/lib/navigation";
+import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm, HiViewGrid } from "react-icons/hi";
 
-// Icon mapping for section navigation items defined in SECTIONS config
-const iconMap: Record<NavSectionConfig['icon'], React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
     home: HiHome,
     user: HiUser,
     folder: HiFolder,
     mail: HiMail,
+    default: HiViewGrid,
 };
 
-// HiPlusSm is used directly for "New Story" link as it's not part of SECTIONS config
 const NewStoryIcon = HiPlusSm;
 
 export default function TopNav() {
     const { data: session } = useSession();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const activeSection = useActiveSection();
+    const sections = useNavSections();
+    const activeSlug = useActiveSection();
 
     const toggleMobileMenu = () => {
         setMobileMenuOpen(!mobileMenuOpen);
@@ -32,15 +33,15 @@ export default function TopNav() {
                 <div className="flex space-x-4">
                     {/* Desktop Navigation - Section Links */}
                     <div className="nav__links">
-                        {SECTIONS.map((section) => {
+                        {sections.map((section) => {
                             const Icon = iconMap[section.icon];
-                            const isActive = activeSection === section.id;
+                            const isActive = activeSlug === section.slug;
                             return (
                                 <Link
-                                    key={section.id}
+                                    key={section.slug}
                                     href={section.path}
                                     className={`nav__link ${isActive ? 'nav__link--active' : ''}`}
-                                    data-testid={`nav-${section.id}-link`}
+                                    data-testid={`nav-${section.slug}-link`}
                                     aria-current={isActive ? 'page' : undefined}
                                 >
                                     <Icon className="nav__link-icon" aria-hidden="true" />
