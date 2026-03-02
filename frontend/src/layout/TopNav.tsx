@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { NavIcon } from "@/shared/lib/navigation";
-import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm, HiViewGrid } from "react-icons/hi";
+import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm, HiViewGrid, HiCog } from "react-icons/hi";
 
 const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
     home: HiHome,
@@ -22,6 +22,7 @@ export default function TopNav() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const sections = useNavSections();
     const activeSlug = useActiveSection(sections);
+    const activeSectionId = sections.find(s => s.slug === activeSlug)?.id;
 
     const toggleMobileMenu = () => {
         setMobileMenuOpen(!mobileMenuOpen);
@@ -50,10 +51,20 @@ export default function TopNav() {
                             );
                         })}
                         {session?.user?.role === 'admin' && (
-                            <Link href="/editor" className="nav__link" data-testid="nav-new-story-link">
-                                <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
-                                <span>New Story</span>
-                            </Link>
+                            <>
+                                <Link
+                                    href={activeSectionId ? `/editor?section_id=${activeSectionId}` : '/editor'}
+                                    className="nav__link"
+                                    data-testid="nav-new-content-link"
+                                >
+                                    <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
+                                    <span>New</span>
+                                </Link>
+                                <Link href="/admin/sections" className="nav__link" data-testid="nav-sections-link">
+                                    <HiCog className="nav__link-icon" aria-hidden="true" />
+                                    <span>Sections</span>
+                                </Link>
+                            </>
                         )}
                     </div>
 
@@ -100,15 +111,26 @@ export default function TopNav() {
                 <div className="nav__mobile-menu" data-testid="mobile-menu">
                     <div className="nav__mobile-links">
                         {session?.user?.role === 'admin' && (
-                            <Link
-                                href="/editor"
-                                className="nav__mobile-link"
-                                onClick={() => setMobileMenuOpen(false)}
-                                data-testid="mobile-nav-new-story-link"
-                            >
-                                <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
-                                <span>New Story</span>
-                            </Link>
+                            <>
+                                <Link
+                                    href={activeSectionId ? `/editor?section_id=${activeSectionId}` : '/editor'}
+                                    className="nav__mobile-link"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    data-testid="mobile-nav-new-content-link"
+                                >
+                                    <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
+                                    <span>New</span>
+                                </Link>
+                                <Link
+                                    href="/admin/sections"
+                                    className="nav__mobile-link"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    data-testid="mobile-nav-sections-link"
+                                >
+                                    <HiCog className="nav__link-icon" aria-hidden="true" />
+                                    <span>Sections</span>
+                                </Link>
+                            </>
                         )}
                     </div>
                 </div>

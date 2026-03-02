@@ -1,249 +1,156 @@
-import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useStoryEditor } from '@/modules/editor';
-import { ErrorDisplay } from '@/components/ErrorDisplay';
-import { ErrorService } from '@/services/errorService';
+import { useSession } from 'next-auth/react';
+import { Section } from '@/shared/types/api';
+import apiClient from '@/shared/lib/api-client';
+import { StoryEditorForm, ProjectEditorForm, PageEditorForm } from '@/modules/editor/components';
+import { useFetchSections } from '@/modules/sections';
 
-const RichTextEditor = dynamic(() => import('@/modules/editor/components/RichTextEditor'), { ssr: false });
-
-/**
- * Story editor page for creating and editing stories.
- */
 export default function EditorPage() {
   const router = useRouter();
-  const {
-    story,
-    error,
-    isSaving,
-    isLoading,
-    isEditing,
-    setTitle,
-    setContent,
-    setPublished,
-    handleSubmit,
-    handleDelete,
-    resetForm,
-    clearError,
-  } = useStoryEditor();
+  const { data: session, status } = useSession();
+  const { section_id, id } = router.query;
+  const sectionId = typeof section_id === 'string' ? section_id : undefined;
+  const editId = typeof id === 'string' ? id : undefined;
 
-  if (isLoading && !isSaving) {
+  const [section, setSection] = useState<Section | null>(null);
+  const [loadingSection, setLoadingSection] = useState(false);
+  const [sectionError, setSectionError] = useState<string | null>(null);
+
+  // Redirect unauthenticated users
+  useEffect(() => {
+    if (status === 'unauthenticated') router.push('/');
+  }, [status, router]);
+
+  // Resolve section_id from content item when editing without section_id
+  const accessToken = session?.accessToken;
+  useEffect(() => {
+    if (sectionId || !editId || !accessToken) return;
+
+    let cancelled = false;
+    setLoadingSection(true);
+
+    // Try fetching as story first (most common), then project
+    apiClient.stories.getById(editId, accessToken)
+      .then(story => {
+        if (cancelled) return;
+        if (story.section_id) {
+          router.replace({ pathname: '/editor', query: { id: editId, section_id: story.section_id } }, undefined, { shallow: true });
+        } else {
+          setSectionError('This content has no section assigned. Edit it from its section page instead.');
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Try as project by ID
+        return apiClient.projects.getById(editId, accessToken).then(project => {
+          if (cancelled) return;
+          if (project.section_id) {
+            router.replace({ pathname: '/editor', query: { id: editId, section_id: project.section_id } }, undefined, { shallow: true });
+          } else {
+            setSectionError('This content has no section assigned. Edit it from its section page instead.');
+          }
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setSectionError('Content not found.');
+      })
+      .finally(() => { if (!cancelled) setLoadingSection(false); });
+
+    return () => { cancelled = true; };
+  }, [editId, sectionId, accessToken, router]);
+
+  // Fetch section when section_id is provided
+  useEffect(() => {
+    if (!sectionId) {
+      setSection(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingSection(true);
+    setSectionError(null);
+
+    apiClient.sections.getById(sectionId, session?.accessToken)
+      .then(data => { if (!cancelled) setSection(data); })
+      .catch(() => { if (!cancelled) setSectionError('Failed to load section'); })
+      .finally(() => { if (!cancelled) setLoadingSection(false); });
+
+    return () => { cancelled = true; };
+  }, [sectionId, session?.accessToken]);
+
+  if (status === 'loading' || status === 'unauthenticated' || loadingSection) {
     return <div>Loading...</div>;
   }
 
+  if (sectionError) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-red-600">{sectionError}</p>
+      </div>
+    );
+  }
+
+  // No section selected — show section picker
+  if (!section) {
+    return (
+      <div className="container mx-auto px-4 py-8" data-testid="editor-page">
+        <SectionPicker onSelect={(s) => router.push(`/editor?section_id=${s.id}`)} />
+      </div>
+    );
+  }
+
+  // Render the correct form based on content_type
   return (
     <div className="container mx-auto px-4 py-8" data-testid="editor-page">
-      <EditorHeader
-        isEditing={isEditing}
-        onNewStory={resetForm}
-        onDelete={handleDelete}
-        isDeleting={isSaving}
-      />
-
-      {error && (
-        <div className="mb-4">
-          <ErrorDisplay
-            error={ErrorService.createDisplayError(error)}
-            onDismiss={clearError}
-            showDetails={true}
-          />
-        </div>
-      )}
-
-      <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
-        <TitleInput
-          value={story.title || ''}
-          onChange={setTitle}
-          disabled={isSaving}
-        />
-
-        <ContentEditor
-          content={story.content || ''}
-          onChange={setContent}
-          actionSlot={
-            <>
-              <PublishToggle
-                checked={story.is_published || false}
-                onChange={setPublished}
-                disabled={isSaving}
-              />
-              <FormActions
-                isLoading={isLoading}
-                isSaving={isSaving}
-                isPublished={story.is_published || false}
-                onCancel={() => router.push('/')}
-              />
-            </>
-          }
-        />
-      </form>
-    </div>
-  );
-}
-
-/**
- * Editor page header with title and action buttons.
- */
-function EditorHeader({
-  isEditing,
-  onNewStory,
-  onDelete,
-  isDeleting,
-}: {
-  isEditing: boolean;
-  onNewStory: () => void;
-  onDelete: () => void;
-  isDeleting: boolean;
-}) {
-  return (
-    <div className="flex justify-between items-center mb-4">
-      <h1 className="section-title">
-        {isEditing ? 'Edit Story' : 'New Story'}
-      </h1>
-      {isEditing && (
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onNewStory}
-            className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
-            data-testid="editor-new-button"
-          >
-            New Story
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            disabled={isDeleting}
-            className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
-            data-testid="editor-delete-button"
-          >
-            Delete
-          </button>
+      {section.content_type === 'story' && <StoryEditorForm section={section} />}
+      {section.content_type === 'project' && <ProjectEditorForm section={section} />}
+      {section.content_type === 'page' && <PageEditorForm section={section} />}
+      {!['story', 'project', 'page'].includes(section.content_type) && (
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          Content type &quot;{section.content_type}&quot; does not have an editor form yet.
         </div>
       )}
     </div>
   );
 }
 
-/**
- * Title input field.
- */
-function TitleInput({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  disabled: boolean;
-}) {
-  return (
-    <div>
-      <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Title
-      </label>
-      <input
-        type="text"
-        id="title"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
-        placeholder="Story title"
-        required
-        disabled={disabled}
-        data-testid="editor-title-input"
-      />
-    </div>
-  );
-}
+function SectionPicker({ onSelect }: { onSelect: (section: Section) => void }) {
+  const { sections, loading } = useFetchSections();
 
-/**
- * Rich text content editor wrapper.
- */
-function ContentEditor({
-  content,
-  onChange,
-  actionSlot,
-}: {
-  content: string;
-  onChange: (content: string) => void;
-  actionSlot?: React.ReactNode;
-}) {
+  // Filter to sections with editable content types
+  const editableSections = sections.filter(s =>
+    ['story', 'project', 'page'].includes(s.content_type)
+  );
+
+  if (loading) return <div>Loading sections...</div>;
+
   return (
-    <div>
-      <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Content
-      </label>
-      <div className="mt-1">
-        <RichTextEditor content={content} onChange={onChange} actionSlot={actionSlot} />
+    <div data-testid="section-picker">
+      <h1 className="section-title mb-4">Select a Section</h1>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Choose which section to create content for.</p>
+      <div className="grid gap-3 max-w-2xl">
+        {editableSections.map(section => (
+          <button
+            key={section.id}
+            type="button"
+            onClick={() => onSelect(section)}
+            className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+            data-testid={`section-picker-${section.slug}`}
+          >
+            <div>
+              <span className="font-medium text-text-primary">{section.title}</span>
+              <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">({section.content_type})</span>
+            </div>
+            <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+              {section.display_type}
+            </span>
+          </button>
+        ))}
+        {editableSections.length === 0 && (
+          <p className="text-gray-500 dark:text-gray-400">No editable sections found.</p>
+        )}
       </div>
-    </div>
-  );
-}
-
-/**
- * Publish toggle checkbox.
- */
-function PublishToggle({
-  checked,
-  onChange,
-  disabled,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  disabled: boolean;
-}) {
-  return (
-    <div className="flex items-center">
-      <input
-        id="is_published"
-        name="is_published"
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
-        disabled={disabled}
-        data-testid="editor-publish-toggle"
-      />
-      <label htmlFor="is_published" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-        Publish
-      </label>
-    </div>
-  );
-}
-
-/**
- * Form action buttons (Save/Cancel).
- */
-function FormActions({
-  isLoading,
-  isSaving,
-  isPublished,
-  onCancel,
-}: {
-  isLoading: boolean;
-  isSaving: boolean;
-  isPublished: boolean;
-  onCancel: () => void;
-}) {
-  return (
-    <div className="flex gap-4">
-      <button
-        type="submit"
-        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-        disabled={isLoading || isSaving}
-        data-testid="editor-save-button"
-      >
-        {isSaving ? 'Saving...' : `Save${isPublished ? ' & Publish' : ' as Draft'}`}
-      </button>
-      <button
-        type="button"
-        onClick={onCancel}
-        className="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        disabled={isSaving}
-        data-testid="editor-cancel-button"
-      >
-        Cancel
-      </button>
     </div>
   );
 }

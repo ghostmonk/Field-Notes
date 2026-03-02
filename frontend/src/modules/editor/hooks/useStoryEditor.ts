@@ -39,7 +39,7 @@ export interface UseStoryEditorReturn {
  * - Auto-save on session expiry
  * - Fetching existing stories for editing
  */
-export function useStoryEditor(): UseStoryEditorReturn {
+export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseStoryEditorReturn {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { id } = router.query;
@@ -59,8 +59,9 @@ export function useStoryEditor(): UseStoryEditorReturn {
   const resetForm = useCallback(() => {
     setStory(EMPTY_STORY);
     setError(null);
-    router.push('/editor', undefined, { shallow: true });
-  }, [router]);
+    const query = sectionId ? `?section_id=${sectionId}` : '';
+    router.push(`/editor${query}`, undefined, { shallow: true });
+  }, [router, sectionId]);
 
   // Field updaters
   const setTitle = useCallback((title: string) => {
@@ -96,6 +97,7 @@ export function useStoryEditor(): UseStoryEditorReturn {
       const storyToSave = {
         ...story,
         is_published: shouldPublish ? story.is_published : false,
+        ...(sectionId && !story.section_id ? { section_id: sectionId } : {}),
       };
 
       logger.info('Saving story', { id: story.id, title: story.title });
@@ -106,13 +108,13 @@ export function useStoryEditor(): UseStoryEditorReturn {
       }
 
       logger.info('Story saved', { id: result.id, title: result.title });
-      router.push('/');
+      router.push(sectionSlug ? `/${sectionSlug}` : '/');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(`Error: ${message}`);
       setIsSaving(false);
     }
-  }, [session, story, saveStory, router]);
+  }, [session, story, sectionId, sectionSlug, saveStory, router]);
 
   // Delete handler
   const handleDelete = useCallback(async () => {
@@ -127,9 +129,9 @@ export function useStoryEditor(): UseStoryEditorReturn {
 
     const success = await deleteStory(story.id);
     if (success) {
-      router.push('/');
+      router.push(sectionSlug ? `/${sectionSlug}` : '/');
     }
-  }, [story.id, story.title, session, deleteStory, router]);
+  }, [story.id, story.title, session, sectionSlug, deleteStory, router]);
 
   // Sync fetched story to form state
   useEffect(() => {
@@ -146,9 +148,10 @@ export function useStoryEditor(): UseStoryEditorReturn {
     }
   }, [fetchError, storyId]);
 
-  // Reset form when navigating to /editor without ID
+  // Reset form when navigating to /editor without story ID
   useEffect(() => {
-    if (!storyId && (Object.keys(router.query).length > 0 || story.id)) {
+    const queryKeys = Object.keys(router.query).filter(k => k !== 'section_id');
+    if (!storyId && (queryKeys.length > 0 || story.id)) {
       resetForm();
     }
   }, [storyId, router.query, story.id, resetForm]);

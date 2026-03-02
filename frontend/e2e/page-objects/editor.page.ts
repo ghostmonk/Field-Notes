@@ -38,17 +38,17 @@ export class EditorPage extends BasePage {
   }
 
   /**
-   * Navigate to the editor page (new story).
+   * Navigate to the editor page for a specific section.
    */
-  async goto() {
-    await super.goto('/editor');
+  async goto(sectionId: string) {
+    await super.goto(`/editor?section_id=${sectionId}`);
   }
 
   /**
-   * Navigate to edit an existing story.
+   * Navigate to edit an existing story within a section.
    */
-  async gotoEdit(storyId: string) {
-    await super.goto(`/editor?id=${storyId}`);
+  async gotoEdit(storyId: string, sectionId: string) {
+    await super.goto(`/editor?id=${storyId}&section_id=${sectionId}`);
   }
 
   /**
@@ -102,7 +102,7 @@ export class EditorPage extends BasePage {
    */
   async cancel() {
     await this.cancelButton.click();
-    await this.page.waitForURL('/', { timeout: 10000 });
+    await this.page.waitForURL(/^(?!.*\/editor)/, { timeout: 10000 });
   }
 
   /**

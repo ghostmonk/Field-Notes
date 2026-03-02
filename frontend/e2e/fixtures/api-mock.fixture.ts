@@ -16,6 +16,7 @@ import {
   TestComment,
   projectToCard,
   createTestComment,
+  createTestSection,
 } from '../test-data';
 
 /**
@@ -647,6 +648,81 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
         contentType: 'application/json',
         body: JSON.stringify({ detail: 'Section not found' }),
       });
+    }
+  });
+
+  // Mock sections list endpoint (GET /api/sections)
+  await page.route(/\/api\/sections\/?(\?|$)/, async (route) => {
+    await maybeDelay();
+    const method = route.request().method();
+
+    if (method === 'POST') {
+      if (failRequests) {
+        await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ detail: 'Internal server error' }) });
+        return;
+      }
+      const body = route.request().postDataJSON();
+      const newSection = createTestSection({
+        ...body,
+        id: `section-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        slug: body.title?.toLowerCase().replace(/\s+/g, '-') || 'new-section',
+      });
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(newSection) });
+      return;
+    }
+
+    if (failRequests) {
+      await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ detail: 'Internal server error' }) });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        items: sections,
+        total: sections.length,
+        limit: 20,
+        offset: 0,
+      }),
+    });
+  });
+
+  // Mock section by ID endpoint (GET/PUT/DELETE /api/sections/{id})
+  await page.route(/\/api\/sections\/(?!by-slug|navigation)[\w-]+$/, async (route) => {
+    await maybeDelay();
+    const method = route.request().method();
+    const urlObj = new URL(route.request().url());
+    const pathParts = urlObj.pathname.split('/');
+    const id = pathParts[pathParts.length - 1];
+
+    if (failRequests) {
+      await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ detail: 'Internal server error' }) });
+      return;
+    }
+
+    if (method === 'DELETE') {
+      await route.fulfill({ status: 204 });
+      return;
+    }
+
+    if (method === 'PUT') {
+      const body = route.request().postDataJSON();
+      const existing = sections.find((s) => s.id === id);
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ...(existing || {}), ...body, id }),
+      });
+      return;
+    }
+
+    // GET
+    const section = sections.find((s) => s.id === id);
+    if (section) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(section) });
+    } else {
+      await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ detail: 'Section not found' }) });
     }
   });
 

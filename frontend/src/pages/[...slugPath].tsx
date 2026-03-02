@@ -91,8 +91,8 @@ function SectionListView({ section, initialListData }: { section: Section; initi
             router.push('/api/auth/signin');
             return;
         }
-        router.push({ pathname: '/editor', query: { id: story.id } });
-    }, [session, router]);
+        router.push({ pathname: '/editor', query: { id: story.id, section_id: section.id } });
+    }, [session, router, section.id]);
 
     const handleDelete = useCallback(async (story: Story) => {
         if (!session) {

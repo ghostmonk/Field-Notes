@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@/shared/lib/api-client';
-import { FALLBACK_SECTIONS, sectionsToNavItems, NavSectionItem } from '@/shared/lib/navigation';
+import { sectionsToNavItems, NavSectionItem } from '@/shared/lib/navigation';
 
 let cachedSections: NavSectionItem[] | null = null;
 let fetchPromise: Promise<NavSectionItem[]> | null = null;
+let listeners: Array<() => void> = [];
+
+export function invalidateNavCache() {
+    cachedSections = null;
+    fetchPromise = null;
+    listeners.forEach(fn => fn());
+}
 
 function fetchNavSections(): Promise<NavSectionItem[]> {
     if (cachedSections) return Promise.resolve(cachedSections);
@@ -12,10 +19,12 @@ function fetchNavSections(): Promise<NavSectionItem[]> {
     fetchPromise = apiClient.sections.navigation()
         .then(response => {
             const items = sectionsToNavItems(response.items);
-            cachedSections = items.length > 0 ? items : FALLBACK_SECTIONS;
+            cachedSections = items;
             return cachedSections;
         })
-        .catch(() => FALLBACK_SECTIONS)
+        .catch(() => {
+            return cachedSections ?? [];
+        })
         .finally(() => {
             fetchPromise = null;
         });
@@ -24,16 +33,18 @@ function fetchNavSections(): Promise<NavSectionItem[]> {
 }
 
 export function useNavSections(): NavSectionItem[] {
-    const [sections, setSections] = useState<NavSectionItem[]>(cachedSections || FALLBACK_SECTIONS);
+    const [sections, setSections] = useState<NavSectionItem[]>(cachedSections || []);
+    const [version, setVersion] = useState(0);
 
     useEffect(() => {
-        if (cachedSections) {
-            setSections(cachedSections);
-            return;
-        }
-
-        fetchNavSections().then(setSections);
+        const listener = () => setVersion(v => v + 1);
+        listeners.push(listener);
+        return () => { listeners = listeners.filter(l => l !== listener); };
     }, []);
+
+    useEffect(() => {
+        fetchNavSections().then(setSections);
+    }, [version]);
 
     return sections;
 }

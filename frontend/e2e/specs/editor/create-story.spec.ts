@@ -1,11 +1,13 @@
-import { test, expect } from '../../fixtures';
+import { test, expect, TEST_SECTION_IDS } from '../../fixtures';
 import { EditorPage } from '../../page-objects/editor.page';
+
+const BLOG_SECTION_ID = TEST_SECTION_IDS.BLOG;
 
 test.describe('Create Story', () => {
   test('editor page loads for authenticated user', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     // Verify editor elements are visible
@@ -20,7 +22,7 @@ test.describe('Create Story', () => {
   test('title input accepts text', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     await editorPage.setTitle('My Test Story');
@@ -32,7 +34,7 @@ test.describe('Create Story', () => {
   test('rich text editor accepts content', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     await editorPage.richTextEditor.type('This is my story content');
@@ -44,7 +46,7 @@ test.describe('Create Story', () => {
   test('publish toggle can be toggled', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     // Default state
@@ -60,7 +62,7 @@ test.describe('Create Story', () => {
   test('save button reflects publish state', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     // With publish unchecked
@@ -74,22 +76,22 @@ test.describe('Create Story', () => {
     expect(buttonText).toContain('Publish');
   });
 
-  test('cancel button navigates to home', async ({ mockAuthenticatedApiPage }) => {
+  test('cancel button navigates to section page', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     await editorPage.cancel();
 
-    // Should be on home page
-    expect(editorPage.url).toBe('http://localhost:3000/');
+    // Should navigate to the section page
+    expect(editorPage.url).toBe('http://localhost:3000/blog');
   });
 
   test('toolbar buttons are visible', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     // Verify all toolbar buttons are visible
@@ -110,8 +112,8 @@ test.describe('Create Story', () => {
     // Start from home
     await mockAuthenticatedApiPage.goto('/');
 
-    // Click new story link
-    await editorPage.nav.goToNewStory();
+    // Click new content link
+    await editorPage.nav.goToNewContent();
 
     // Should be on editor page
     expect(editorPage.url).toContain('/editor');

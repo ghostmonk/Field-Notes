@@ -352,6 +352,26 @@ export const sampleSections: TestSection[] = [
   },
 ];
 
+/**
+ * Helper to create a mock section with defaults.
+ */
+export function createTestSection(overrides: Partial<TestSection> = {}): TestSection {
+  return {
+    id: `section-${Date.now()}`,
+    title: 'Test Section',
+    slug: 'test-section',
+    parent_id: null,
+    display_type: 'feed',
+    content_type: 'story',
+    nav_visibility: 'main',
+    sort_order: 0,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+    ...overrides,
+  };
+}
+
 // ============================================================================
 // Engagement (Reactions & Comments)
 // ============================================================================
