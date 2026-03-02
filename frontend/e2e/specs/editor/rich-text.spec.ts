@@ -1,11 +1,13 @@
-import { test, expect } from '../../fixtures';
+import { test, expect, TEST_SECTION_IDS } from '../../fixtures';
 import { EditorPage } from '../../page-objects/editor.page';
+
+const BLOG_SECTION_ID = TEST_SECTION_IDS.BLOG;
 
 test.describe('Rich Text Editor', () => {
   test('bold formatting works', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     // Click bold first, then type (toggle mode)
@@ -20,7 +22,7 @@ test.describe('Rich Text Editor', () => {
   test('italic formatting works', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     // Click italic first, then type (toggle mode)
@@ -34,7 +36,7 @@ test.describe('Rich Text Editor', () => {
   test('h1 heading works', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     await editorPage.richTextEditor.type('Title');
@@ -47,7 +49,7 @@ test.describe('Rich Text Editor', () => {
   test('h2 heading works', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     await editorPage.richTextEditor.type('Subtitle');
@@ -60,7 +62,7 @@ test.describe('Rich Text Editor', () => {
   test('bullet list works', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     await editorPage.richTextEditor.type('Item 1');
@@ -74,7 +76,7 @@ test.describe('Rich Text Editor', () => {
   test('ordered list works', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     await editorPage.richTextEditor.type('Step 1');
@@ -88,7 +90,7 @@ test.describe('Rich Text Editor', () => {
   test('blockquote works', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     await editorPage.richTextEditor.type('A famous quote');
@@ -101,7 +103,7 @@ test.describe('Rich Text Editor', () => {
   test('multiple formatting can be combined', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
-    await editorPage.goto();
+    await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
     // Toggle both formats then type

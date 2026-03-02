@@ -9,7 +9,8 @@ export class TopNavComponent {
 
   // Navigation elements
   readonly nav: Locator;
-  readonly newStoryLink: Locator;
+  readonly newContentLink: Locator;
+  readonly sectionsLink: Locator;
 
   // Section links (desktop)
   readonly blogLink: Locator;
@@ -25,14 +26,16 @@ export class TopNavComponent {
   // Mobile menu
   readonly mobileMenuToggle: Locator;
   readonly mobileMenu: Locator;
-  readonly mobileNewStoryLink: Locator;
+  readonly mobileNewContentLink: Locator;
+  readonly mobileSectionsLink: Locator;
 
   constructor(page: Page) {
     this.page = page;
 
     // Navigation
     this.nav = page.getByTestId('top-nav');
-    this.newStoryLink = page.getByTestId('nav-new-story-link');
+    this.newContentLink = page.getByTestId('nav-new-content-link');
+    this.sectionsLink = page.getByTestId('nav-sections-link');
 
     // Section links
     this.blogLink = page.getByTestId('nav-blog-link');
@@ -48,7 +51,8 @@ export class TopNavComponent {
     // Mobile
     this.mobileMenuToggle = page.getByTestId('mobile-menu-toggle');
     this.mobileMenu = page.getByTestId('mobile-menu');
-    this.mobileNewStoryLink = page.getByTestId('mobile-nav-new-story-link');
+    this.mobileNewContentLink = page.getByTestId('mobile-nav-new-content-link');
+    this.mobileSectionsLink = page.getByTestId('mobile-nav-sections-link');
   }
 
   /**
@@ -94,10 +98,17 @@ export class TopNavComponent {
   /**
    * Navigate to new story page.
    */
-  async goToNewStory() {
+  async goToNewContent() {
     await Promise.all([
-      this.page.waitForURL('**/editor'),
-      this.newStoryLink.click(),
+      this.page.waitForURL('**/editor**'),
+      this.newContentLink.click(),
+    ]);
+  }
+
+  async goToSections() {
+    await Promise.all([
+      this.page.waitForURL('**/admin/sections'),
+      this.sectionsLink.click(),
     ]);
   }
 

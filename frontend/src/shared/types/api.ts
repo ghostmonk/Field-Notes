@@ -31,6 +31,7 @@ export interface Story {
     createdDate: string;
     updatedDate: string;
     user_id?: string;
+    section_id?: string;
 }
 
 /**
@@ -75,6 +76,7 @@ export interface ProjectCard {
     live_url: string | null;
     is_featured: boolean;
     user_id?: string;
+    section_id?: string;
 }
 
 /**
@@ -96,6 +98,7 @@ export interface Project {
     createdDate: string;
     updatedDate: string;
     user_id?: string;
+    section_id?: string;
 }
 
 /**
@@ -112,6 +115,7 @@ export interface CreateProjectRequest {
     is_published?: boolean;
     is_featured?: boolean;
     sort_order?: number;
+    section_id?: string;
 }
 
 /**
@@ -126,6 +130,7 @@ export interface CreateStoryRequest {
     title: string;
     content: string;
     is_published: boolean;
+    section_id?: string;
 }
 
 /**
@@ -164,6 +169,18 @@ export interface Section {
     updatedDate: string;
     user_id?: string;
 }
+
+export interface CreateSectionRequest {
+    title: string;
+    display_type: DisplayType;
+    content_type: SectionContentType;
+    nav_visibility?: NavVisibility;
+    sort_order?: number;
+    is_published?: boolean;
+    parent_id?: string | null;
+}
+
+export type UpdateSectionRequest = Partial<CreateSectionRequest>;
 
 /**
  * Engagement types for reactions and comments

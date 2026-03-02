@@ -14,6 +14,8 @@ import {
   CreateProjectRequest,
   UpdateProjectRequest,
   Section,
+  CreateSectionRequest,
+  UpdateSectionRequest,
   ReactionCounts,
   ToggleReactionRequest,
   ToggleReactionResponse,
@@ -152,14 +154,20 @@ const apiRoutes = {
   },
   projects: {
     list: () => '/api/projects',
+    getById: (id: string) => `/api/projects/${id}`,
     getBySlug: (slug: string) => `/api/projects/${slug}`,
     create: () => '/api/projects',
     update: (id: string) => `/api/projects/${id}`,
     delete: (id: string) => `/api/projects/${id}`,
   },
   sections: {
+    list: () => '/api/sections',
+    getById: (id: string) => `/api/sections/${id}`,
     getBySlug: (slug: string) => `/api/sections/by-slug/${slug}`,
     navigation: () => '/api/sections/navigation',
+    create: () => '/api/sections',
+    update: (id: string) => `/api/sections/${id}`,
+    delete: (id: string) => `/api/sections/${id}`,
   },
   engagement: {
     reactions: (targetType: string, targetId: string) =>
@@ -259,6 +267,9 @@ const apiClient = {
         params: pagination as Record<string, string | number>
       }),
 
+    getById: (id: string, token: string) =>
+      fetchApi<Project>(apiRoutes.projects.getById(id), { token }),
+
     getBySlug: (slug: string) =>
       fetchApi<Project>(apiRoutes.projects.getBySlug(slug)),
 
@@ -287,11 +298,37 @@ const apiClient = {
    * Section methods
    */
   sections: {
+    list: (token?: string, params?: Record<string, string | number>) =>
+      fetchApi<PaginatedResponse<Section>>(apiRoutes.sections.list(), { token, params }),
+
+    getById: (id: string, token?: string) =>
+      fetchApi<Section>(apiRoutes.sections.getById(id), { token }),
+
     getBySlug: (slug: string) =>
       fetchApi<Section>(apiRoutes.sections.getBySlug(slug)),
 
     navigation: () =>
       fetchApi<PaginatedResponse<Section>>(apiRoutes.sections.navigation()),
+
+    create: (data: CreateSectionRequest, token: string) =>
+      fetchApi<Section, CreateSectionRequest>(apiRoutes.sections.create(), {
+        method: 'POST',
+        body: data,
+        token,
+      }),
+
+    update: (id: string, data: UpdateSectionRequest, token: string) =>
+      fetchApi<Section, UpdateSectionRequest>(apiRoutes.sections.update(id), {
+        method: 'PUT',
+        body: data,
+        token,
+      }),
+
+    delete: (id: string, token: string) =>
+      fetchApi<void>(apiRoutes.sections.delete(id), {
+        method: 'DELETE',
+        token,
+      }),
   },
 
   /**

@@ -3,6 +3,7 @@ import { Section } from '@/shared/types/api';
 export type NavIcon = 'home' | 'user' | 'folder' | 'mail' | 'default';
 
 export interface NavSectionItem {
+    id: string;
     slug: string;
     path: string;
     label: string;
@@ -16,15 +17,9 @@ const SLUG_ICON_MAP: Record<string, NavIcon> = {
     contact: 'mail',
 };
 
-export const FALLBACK_SECTIONS: NavSectionItem[] = [
-    { slug: 'blog', path: '/blog', label: 'Blog', icon: 'home' },
-    { slug: 'about', path: '/about', label: 'About', icon: 'user' },
-    { slug: 'projects', path: '/projects', label: 'Projects', icon: 'folder' },
-    { slug: 'contact', path: '/contact', label: 'Contact', icon: 'mail' },
-];
-
 export function sectionToNavItem(section: Section): NavSectionItem {
     return {
+        id: section.id,
         slug: section.slug,
         path: `/${section.slug}`,
         label: section.title,

@@ -63,8 +63,8 @@ test.describe('Smoke Tests', () => {
     await homePage.goto();
     await homePage.waitForLoad();
 
-    // Verify New Story link is visible
-    await expect(homePage.nav.newStoryLink).toBeVisible();
+    // Verify New content link is visible
+    await expect(homePage.nav.newContentLink).toBeVisible();
   });
 
   test('navigation links work correctly', async ({ mockApiPage }) => {

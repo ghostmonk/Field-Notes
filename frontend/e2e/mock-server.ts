@@ -9,6 +9,7 @@ import {
   sampleReactions,
   sampleComments,
   createTestComment,
+  createTestSection,
 } from './test-data';
 
 const app = express();
@@ -322,6 +323,41 @@ app.get('/sections/by-slug/:slug', (req: Request, res: Response) => {
   } else {
     res.status(404).json({ detail: 'Section not found' });
   }
+});
+
+// GET /sections/:id - Get section by ID
+app.get('/sections/:id', (req: Request, res: Response) => {
+  const section = sections.find((s) => s.id === req.params.id);
+  if (section) {
+    res.json(section);
+  } else {
+    res.status(404).json({ detail: 'Section not found' });
+  }
+});
+
+// POST /sections - Create section (returns success but doesn't persist)
+app.post('/sections', (req: Request, res: Response) => {
+  const newSection = createTestSection({
+    ...req.body,
+    id: `section-${Date.now()}`,
+    slug: req.body.title?.toLowerCase().replace(/\s+/g, '-') || 'new-section',
+  });
+  res.status(201).json(newSection);
+});
+
+// PUT /sections/:id - Update section (returns success but doesn't persist)
+app.put('/sections/:id', (req: Request, res: Response) => {
+  const section = sections.find((s) => s.id === req.params.id);
+  if (section) {
+    res.json({ ...section, ...req.body, updatedDate: FIXED_TIMESTAMP });
+  } else {
+    res.status(404).json({ detail: 'Section not found' });
+  }
+});
+
+// DELETE /sections/:id - Delete section
+app.delete('/sections/:id', (req: Request, res: Response) => {
+  res.status(204).send();
 });
 
 // Health check
