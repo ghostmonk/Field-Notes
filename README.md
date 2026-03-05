@@ -1,6 +1,6 @@
-# Turbulence
+# Field Notes
 
-Turbulence is a modern blog/content management system built with Next.js and FastAPI. It allows authenticated users to create and publish rich text content that can be viewed by anyone.
+Field Notes is a modern blog/content management system built with Next.js and FastAPI. It allows authenticated users to create and publish rich text content that can be viewed by anyone.
 
 ## Features
 
@@ -185,8 +185,8 @@ No GCS setup needed. Docker Compose sets `LOCAL_STORAGE_PATH=/app/local-uploads`
 
 1. Clone the repository
    ```
-   git clone https://github.com/yourusername/turbulence.git
-   cd turbulence
+   git clone https://github.com/ghostmonk/Field-Notes.git
+   cd Field-Notes
    ```
 
 2. Set up environment variables
@@ -202,8 +202,8 @@ No GCS setup needed. Docker Compose sets `LOCAL_STORAGE_PATH=/app/local-uploads`
 
 1. Clone the repository
    ```
-   git clone https://github.com/yourusername/turbulence.git
-   cd turbulence
+   git clone https://github.com/ghostmonk/Field-Notes.git
+   cd Field-Notes
    ```
 
 2. Set up the backend
