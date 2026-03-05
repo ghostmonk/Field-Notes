@@ -69,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             if (cachedData) {
                 apiLogger.info('Serving project from cache', { cacheKey });
-                res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+                res.setHeader('Cache-Control', 'private, no-store');
                 res.setHeader('X-Cache', 'HIT');
                 return res.status(200).json(cachedData);
             }
@@ -145,7 +145,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (req.method === 'GET') {
             const cacheKey = `project:${slug}`;
             setCache(cacheKey, data, CACHE_TTL);
-            res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+            res.setHeader('Cache-Control', 'private, no-store');
             res.setHeader('X-Cache', 'MISS');
         }
 
