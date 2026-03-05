@@ -1,5 +1,5 @@
 /**
- * API type definitions for the Turbulence blog
+ * API type definitions for the Field Notes blog
  */
 
 /**

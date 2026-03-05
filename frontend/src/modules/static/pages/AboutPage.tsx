@@ -30,8 +30,8 @@ export const AboutPage: React.FC = () => {
     return (
         <>
             <Head>
-                <title>{`${page?.title || 'About'} | Turbulence`}</title>
-                <meta name="description" content="About Ghostmonk and Turbulence" />
+                <title>{`${page?.title || 'About'} | Field Notes`}</title>
+                <meta name="description" content="About Ghostmonk and Field Notes" />
             </Head>
 
             <div className="page-container">

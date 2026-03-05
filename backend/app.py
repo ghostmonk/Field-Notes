@@ -30,7 +30,7 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting application turbulent")
+    logger.info("Starting application field-notes")
 
     # Debug environment variables for GCS credentials
     gcs_bucket = os.environ.get("GCS_BUCKET_NAME")

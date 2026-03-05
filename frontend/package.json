@@ -1,5 +1,5 @@
 {
-  "name": "turbulent-frontend",
+  "name": "field-notes-frontend",
   "version": "0.1.0",
   "private": true,
   "_comment_turbopack": "Using --webpack flag because Turbopack hangs with PostCSS/Tailwind. Re-evaluate when Next.js fixes this.",

@@ -30,7 +30,7 @@ export const ContactPage: React.FC = () => {
     return (
         <>
             <Head>
-                <title>{`${page?.title || 'Contact'} | Turbulence`}</title>
+                <title>{`${page?.title || 'Contact'} | Field Notes`}</title>
                 <meta name="description" content="Get in touch with Ghostmonk" />
             </Head>
 

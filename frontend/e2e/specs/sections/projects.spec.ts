@@ -21,7 +21,7 @@ test.describe('Projects Page', () => {
 
       const browserTitle = await projectsPage.getTitle();
       expect(browserTitle).toContain('Projects');
-      expect(browserTitle).toContain('Turbulence');
+      expect(browserTitle).toContain('Field Notes');
     });
 
     test('displays project cards', async ({ mockApiPage }) => {

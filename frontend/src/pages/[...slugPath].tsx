@@ -243,7 +243,7 @@ export default function SectionPage({ section, view, initialListData, detailItem
         return (
             <>
                 <Head>
-                    <title>{`${pageContent.title || section.title} | Turbulence`}</title>
+                    <title>{`${pageContent.title || section.title} | Field Notes`}</title>
                     <meta property="og:title" content={pageContent.title || section.title} />
                     <meta property="og:type" content="website" />
                     <link rel="canonical" href={canonicalUrl} />
@@ -260,7 +260,7 @@ export default function SectionPage({ section, view, initialListData, detailItem
         return (
             <>
                 <Head>
-                    <title>{`${title} | Turbulence`}</title>
+                    <title>{`${title} | Field Notes`}</title>
                     <meta name="description" content={excerpt || `${title} on ghostmonk.com`} />
                     <meta property="og:title" content={title} />
                     <meta property="og:description" content={excerpt || `${title} on ghostmonk.com`} />
@@ -277,7 +277,7 @@ export default function SectionPage({ section, view, initialListData, detailItem
     return (
         <>
             <Head>
-                <title>{`${section.title} | Turbulence`}</title>
+                <title>{`${section.title} | Field Notes`}</title>
                 <meta property="og:title" content={section.title} />
                 <meta property="og:type" content="website" />
                 <link rel="canonical" href={canonicalUrl} />

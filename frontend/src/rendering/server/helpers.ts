@@ -22,7 +22,7 @@ export function createStoryErrorProps(error: string, excerpt?: string): StorySSR
     story: null,
     error,
     ogImage: `${getBaseUrl()}${getDefaultOGImage()}`,
-    excerpt: excerpt || 'Browse stories and updates on Turbulence'
+    excerpt: excerpt || 'Browse stories and updates on Field Notes'
   };
 }
 
@@ -44,7 +44,7 @@ export async function processStoryDataSSR(story: Story): Promise<{ ogImage: stri
     excerpt = normalized.length > metaLength ? normalized.substring(0, metaLength) + '...' : normalized;
   } catch (error) {
     console.error('Error creating excerpt:', error);
-    excerpt = 'Browse stories and updates on Turbulence';
+    excerpt = 'Browse stories and updates on Field Notes';
   }
 
   let ogImage = extractedImage;

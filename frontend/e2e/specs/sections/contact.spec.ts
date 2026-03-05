@@ -31,7 +31,7 @@ test.describe('Contact Page', () => {
 
     const browserTitle = await contactPage.getTitle();
     expect(browserTitle).toContain('Get In Touch');
-    expect(browserTitle).toContain('Turbulence');
+    expect(browserTitle).toContain('Field Notes');
   });
 
   test('navigation is visible', async ({ mockApiPage }) => {
