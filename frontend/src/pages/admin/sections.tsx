@@ -154,7 +154,7 @@ function SectionCreateForm({
           data-testid="section-title-input"
         />
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label htmlFor="new-section-display" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Type</label>
           <select id="new-section-display" value={displayType} onChange={e => setDisplayType(e.target.value as DisplayType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled} data-testid="section-display-type-select">
@@ -195,15 +195,17 @@ function SectionRow({
   disabled: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg" data-testid={`section-row-${section.id}`}>
-      <div className="flex-1">
+    <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg space-y-2" data-testid={`section-row-${section.id}`}>
+      <div>
         <span className="font-medium text-text-primary">{section.title}</span>
         <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">/{section.slug}</span>
-        <span className="ml-2 text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.display_type}</span>
-        <span className="ml-1 text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.content_type}</span>
-        <span className="ml-1 text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.nav_visibility}</span>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-1">
+        <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.display_type}</span>
+        <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.content_type}</span>
+        <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.nav_visibility}</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onAddContent}
@@ -260,7 +262,7 @@ function SectionEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="p-3 border-2 border-indigo-500 rounded-lg space-y-3" data-testid={`section-edit-form-${section.id}`}>
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div>
           <label htmlFor={`edit-title-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
           <input
