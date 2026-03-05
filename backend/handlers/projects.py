@@ -6,7 +6,7 @@ import traceback
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from database import get_projects_collection
+from database import get_db, get_projects_collection
 from decorators.auth import check_write_permission, requires_auth, verify_auth
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
@@ -67,6 +67,7 @@ async def get_projects(
             "live_url": 1,
             "is_featured": 1,
             "user_id": 1,
+            "section_id": 1,
         }
 
         projects = await find_many_and_convert(
@@ -242,12 +243,24 @@ async def create_project(
         current_time = datetime.now(timezone.utc)
         slug = await generate_unique_slug(collection, project.title)
 
+        # Use client-sent section_id; fall back to the default project section
+        section_id = project.section_id
+        if not section_id:
+            db = await get_db()
+            default_section = await db["sections"].find_one(
+                {"content_type": "project", "is_deleted": {"$ne": True}},
+                sort=[("sort_order", 1)],
+            )
+            if default_section:
+                section_id = str(default_section["_id"])
+
         document = {
             **project.model_dump(),
             "slug": slug,
             "createdDate": current_time,
             "updatedDate": current_time,
             "user_id": user.id,
+            "section_id": section_id,
         }
 
         result = await collection.insert_one(document)

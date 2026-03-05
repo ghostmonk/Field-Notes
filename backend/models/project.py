@@ -36,7 +36,7 @@ class ProjectBase(BaseModel):
 class ProjectCreate(ProjectBase):
     """Model for creating a new project."""
 
-    pass
+    section_id: str | None = None
 
 
 class ProjectUpdate(BaseModel):
@@ -52,6 +52,7 @@ class ProjectUpdate(BaseModel):
     is_published: bool | None = None
     is_featured: bool | None = None
     sort_order: int | None = None
+    section_id: str | None = None
 
     @field_validator("github_url", "live_url", "image_url")
     @classmethod

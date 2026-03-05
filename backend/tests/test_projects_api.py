@@ -2,7 +2,7 @@
 API tests for Projects endpoints.
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from bson import ObjectId
@@ -214,16 +214,26 @@ class TestProjectsAuthenticatedEndpoints:
         override_projects_database.find_one.side_effect = [None, created_project]
         override_projects_database.insert_one.return_value = MagicMock(inserted_id=project_id)
 
-        response = await projects_async_client.post(
-            "/projects",
-            json={
-                "title": "New Project",
-                "summary": "A new project summary",
-                "content": "Detailed content here",
-                "technologies": ["Python"],
-            },
-            headers=auth_headers,
+        # Mock get_db for section lookup fallback
+        section_id = ObjectId()
+        mock_db = AsyncMock()
+        mock_sections = AsyncMock()
+        mock_sections.find_one = AsyncMock(
+            return_value={"_id": section_id, "content_type": "project"}
         )
+        mock_db.__getitem__ = lambda self, key: mock_sections
+
+        with patch("handlers.projects.get_db", return_value=mock_db):
+            response = await projects_async_client.post(
+                "/projects",
+                json={
+                    "title": "New Project",
+                    "summary": "A new project summary",
+                    "content": "Detailed content here",
+                    "technologies": ["Python"],
+                },
+                headers=auth_headers,
+            )
 
         assert response.status_code == 201
         assert response.json()["title"] == "New Project"

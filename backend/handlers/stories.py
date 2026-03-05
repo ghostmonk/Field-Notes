@@ -342,15 +342,16 @@ async def add_story(
         # Generate a unique slug for the new story
         slug = await generate_unique_slug(collection, story.title)
 
-        # Assign to the default story section if one exists
-        section_id = None
-        db = await get_db()
-        default_section = await db["sections"].find_one(
-            {"content_type": "story", "is_deleted": {"$ne": True}},
-            sort=[("sort_order", 1)],
-        )
-        if default_section:
-            section_id = str(default_section["_id"])
+        # Use client-sent section_id; fall back to the default story section
+        section_id = story.section_id
+        if not section_id:
+            db = await get_db()
+            default_section = await db["sections"].find_one(
+                {"content_type": "story", "is_deleted": {"$ne": True}},
+                sort=[("sort_order", 1)],
+            )
+            if default_section:
+                section_id = str(default_section["_id"])
 
         document = {
             **story.model_dump(),

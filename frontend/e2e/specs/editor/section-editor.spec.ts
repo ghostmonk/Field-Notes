@@ -87,6 +87,30 @@ test.describe('Section-Aware Editor', () => {
     expect(body.title).toBe('Test Story With Section');
   });
 
+  test('project form includes section_id in save payload', async ({ mockAuthenticatedApiPage }) => {
+    await mockAuthenticatedApiPage.goto(`/editor?section_id=${TEST_SECTION_IDS.PROJECTS}`);
+    await mockAuthenticatedApiPage.getByTestId('editor-page').waitFor({ state: 'visible' });
+
+    await mockAuthenticatedApiPage.getByTestId('editor-title-input').fill('Test Project With Section');
+    await mockAuthenticatedApiPage.getByTestId('editor-summary-input').fill('A test project summary');
+
+    // Wait for rich text editor to load, then type content
+    const editor = mockAuthenticatedApiPage.locator('.tiptap.ProseMirror');
+    await editor.waitFor({ state: 'visible', timeout: 10000 });
+    await editor.click();
+    await mockAuthenticatedApiPage.keyboard.type('Test project content');
+
+    const createPromise = mockAuthenticatedApiPage.waitForRequest(
+      (req) => req.url().includes('/api/projects') && req.method() === 'POST'
+    );
+
+    await mockAuthenticatedApiPage.getByTestId('editor-save-button').click();
+    const createRequest = await createPromise;
+    const body = createRequest.postDataJSON();
+    expect(body.section_id).toBe(TEST_SECTION_IDS.PROJECTS);
+    expect(body.title).toBe('Test Project With Section');
+  });
+
   test('redirects unauthenticated users to home', async ({ mockApiPage }) => {
     await mockApiPage.goto('/editor');
     await mockApiPage.waitForURL('/', { timeout: 10000 });

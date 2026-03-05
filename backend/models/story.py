@@ -18,7 +18,7 @@ class StoryBase(BaseModel):
 class StoryCreate(StoryBase):
     """Model for creating a new story."""
 
-    pass
+    section_id: str | None = None
 
 
 class StoryResponse(StoryBase):
