@@ -29,3 +29,29 @@ Each pattern documented here should be applicable to other projects with minimal
 | `layout/` | App shell | Wraps all pages |
 
 **Data flows DOWN through layers.** Pages compose modules. Modules compose shared. Never upward.
+
+## Dynamic Sections
+
+The site structure is configuration-driven. A **Section** defines an area of the site with two key properties:
+
+- **`display_type`**: How content renders — `feed` (infinite scroll), `card-grid` (responsive grid), `static-page` (single block)
+- **`content_type`**: What items belong here — `story`, `project`, `page`
+
+This separation enables combinations like blog feed (feed + story), project showcase (card-grid + project), or about page (static-page + page).
+
+### Registry Pattern
+
+`modules/registry/` maps display types and content types to React components:
+
+- **Display registry**: `display_type` → display component (FeedDisplay, CardGridDisplay, StaticPageDisplay)
+- **Content registry**: `content_type` → list item + detail components (StoryCard/StoryDetail, ProjectCard/ProjectDetail)
+
+Adding a new type means creating components and registering them. No routing or page changes needed.
+
+### Dynamic Routing
+
+A single catch-all route (`pages/[...slugPath].tsx`) resolves all content URLs. It looks up the section by slug, fetches content based on `content_type`, and renders via the registry. Static routes were removed in favor of this unified approach.
+
+### Navigation
+
+TopNav renders from database sections where `nav_visibility = "main"`. A module-level cache in `useNavSections` prevents redundant API calls, with listener-based invalidation when sections are created, updated, or deleted.

@@ -76,7 +76,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
             type="text"
             id="title"
             value={project.title || ''}
-            onChange={(e) => setField('title', e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('title', e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
             placeholder="Project title"
             required
@@ -90,7 +90,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
           <textarea
             id="summary"
             value={project.summary || ''}
-            onChange={(e) => setField('summary', e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setField('summary', e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
             placeholder="Brief project description"
             rows={3}
@@ -104,7 +104,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
           <div className="mt-1">
             <RichTextEditor
               content={project.content || ''}
-              onChange={(val) => setField('content', val)}
+              onChange={(val: string) => setField('content', val)}
               actionSlot={
                 <>
                   <div className="flex items-center gap-4">
@@ -113,7 +113,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
                         id="is_published"
                         type="checkbox"
                         checked={project.is_published || false}
-                        onChange={(e) => setField('is_published', e.target.checked)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('is_published', e.target.checked)}
                         className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
                         disabled={isSaving}
                         data-testid="editor-publish-toggle"
@@ -125,7 +125,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
                         id="is_featured"
                         type="checkbox"
                         checked={project.is_featured || false}
-                        onChange={(e) => setField('is_featured', e.target.checked)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('is_featured', e.target.checked)}
                         className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
                         disabled={isSaving}
                         data-testid="editor-featured-toggle"
@@ -165,7 +165,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
               type="text"
               id="technologies"
               value={(project.technologies || []).join(', ')}
-              onChange={(e) => setField('technologies', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('technologies', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               placeholder="React, TypeScript, Node.js"
               disabled={isSaving}
@@ -178,7 +178,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
               type="number"
               id="sort_order"
               value={project.sort_order ?? 0}
-              onChange={(e) => setField('sort_order', parseInt(e.target.value, 10) || 0)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('sort_order', parseInt(e.target.value, 10) || 0)}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               disabled={isSaving}
               data-testid="editor-sort-order-input"
@@ -193,7 +193,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
               type="url"
               id="github_url"
               value={project.github_url || ''}
-              onChange={(e) => setField('github_url', e.target.value || null)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('github_url', e.target.value || null)}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               placeholder="https://github.com/..."
               disabled={isSaving}
@@ -206,7 +206,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
               type="url"
               id="live_url"
               value={project.live_url || ''}
-              onChange={(e) => setField('live_url', e.target.value || null)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('live_url', e.target.value || null)}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               placeholder="https://..."
               disabled={isSaving}
@@ -219,7 +219,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
               type="url"
               id="image_url"
               value={project.image_url || ''}
-              onChange={(e) => setField('image_url', e.target.value || null)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('image_url', e.target.value || null)}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               placeholder="https://..."
               disabled={isSaving}

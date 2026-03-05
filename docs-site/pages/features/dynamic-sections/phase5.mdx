@@ -1,0 +1,89 @@
+# Phase 5: Database-Driven Navigation
+
+**Status:** Implemented
+
+## Goal
+
+Replace the hardcoded `SECTIONS` array with navigation data fetched from the database. The main nav renders from section records where `nav_visibility = "main"`, with a module-level cache and listener-based invalidation.
+
+## Navigation Data Flow
+
+```
+Backend: GET /sections?nav_visibility=main
+    ↓
+Proxy: pages/api/sections/navigation.ts (adds cache headers)
+    ↓
+Client: apiClient.sections.navigation()
+    ↓
+Cache: useNavSections hook (module-level singleton)
+    ↓
+Render: TopNav maps NavSectionItem[] to nav links
+```
+
+## Navigation API Proxy
+
+`pages/api/sections/navigation.ts` proxies `GET /sections?nav_visibility=main` from the backend and sets `Cache-Control: public, max-age=300, stale-while-revalidate=600`. The proxy exists so the client never calls the backend directly.
+
+## NavSectionItem Type
+
+`shared/lib/navigation.ts` defines the frontend representation of a navigation section:
+
+```typescript
+interface NavSectionItem {
+    id: string;
+    slug: string;
+    path: string;    // "/{slug}"
+    label: string;   // section.title
+    icon: NavIcon;   // mapped from slug (blog→home, about→user, etc.)
+}
+```
+
+`sectionToNavItem()` and `sectionsToNavItems()` convert backend `Section` objects to `NavSectionItem`.
+
+`getActiveSectionSlug()` extracts the first URL segment and matches it against known sections to determine which nav item is active.
+
+## useNavSections Hook
+
+`hooks/useNavSections.ts` implements a module-level singleton cache:
+
+```typescript
+let cachedSections: NavSectionItem[] | null = null;
+let fetchPromise: Promise<NavSectionItem[]> | null = null;
+let listeners: Array<() => void> = [];
+```
+
+Key behaviors:
+
+- **Deduplication:** Multiple components calling `useNavSections()` share a single in-flight request via `fetchPromise`.
+- **Caching:** Once fetched, `cachedSections` serves all subsequent reads until invalidated.
+- **Error resilience:** On fetch failure, returns `cachedSections ?? []` without assigning to the cache. This prevents permanently caching an empty array and allows the next call to retry.
+- **Invalidation:** `invalidateNavCache()` clears `cachedSections` and `fetchPromise`, then notifies all mounted components via `listeners`. Components re-fetch on the next render cycle.
+
+## TopNav Changes
+
+- Renders nav links from `useNavSections()` instead of a hardcoded array.
+- Maps `NavSectionItem.icon` to `react-icons/hi` components via an `iconMap`.
+- `useActiveSection()` highlights the current section based on the URL path.
+- Admin users see a context-aware "New" button that links to `/editor?section_id={activeSectionId}`.
+
+## Frontend Changes
+
+### New Files
+- `shared/lib/navigation.ts` — `NavSectionItem` type, conversion utilities, active section resolution
+- `hooks/useNavSections.ts` — singleton cache hook with invalidation
+- `hooks/useActiveSection.ts` — derives active section from URL
+
+### Modified Files
+- `layout/TopNav.tsx` — renders from database sections
+- `shared/lib/api-client.ts` — added `sections.navigation()` method
+
+### Removed
+- Hardcoded `SECTIONS` array (previously in navigation config)
+
+## Checkpoint
+
+- Navigation renders from database sections
+- Visual appearance unchanged from hardcoded version
+- Cache prevents redundant API calls
+- `invalidateNavCache()` available for Phase 6 section CRUD operations
+- Error fallback prevents blank navigation

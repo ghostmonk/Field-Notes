@@ -54,7 +54,7 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
   }, [router, sectionId]);
 
   const setField = useCallback(<K extends keyof Project>(key: K, value: Project[K]) => {
-    setProject(prev => ({ ...prev, [key]: value }));
+    setProject((prev: Partial<Project>) => ({ ...prev, [key]: value }));
   }, []);
 
   // Fetch existing project for editing

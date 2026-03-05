@@ -18,7 +18,7 @@ export function useFetchSections(): UseFetchSectionsReturn {
   const [error, setError] = useState<string | null>(null);
   const [fetchCount, setFetchCount] = useState(0);
 
-  const refetch = useCallback(() => setFetchCount(c => c + 1), []);
+  const refetch = useCallback(() => setFetchCount((c: number) => c + 1), []);
   const clearError = useCallback(() => setError(null), []);
 
   useEffect(() => {

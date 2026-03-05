@@ -276,19 +276,19 @@ function SectionEditForm({
         </div>
         <div>
           <label htmlFor={`edit-display-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Type</label>
-          <select id={`edit-display-${section.id}`} value={displayType} onChange={e => setDisplayType(e.target.value as DisplayType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
+          <select id={`edit-display-${section.id}`} value={displayType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setDisplayType(e.target.value as DisplayType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
             {DISPLAY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div>
           <label htmlFor={`edit-content-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Content Type</label>
-          <select id={`edit-content-${section.id}`} value={contentType} onChange={e => setContentType(e.target.value as SectionContentType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
+          <select id={`edit-content-${section.id}`} value={contentType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setContentType(e.target.value as SectionContentType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
             {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div>
           <label htmlFor={`edit-nav-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nav Visibility</label>
-          <select id={`edit-nav-${section.id}`} value={navVisibility} onChange={e => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
+          <select id={`edit-nav-${section.id}`} value={navVisibility} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
             {NAV_VISIBILITIES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>

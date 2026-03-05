@@ -17,7 +17,7 @@ function fetchNavSections(): Promise<NavSectionItem[]> {
     if (fetchPromise) return fetchPromise;
 
     fetchPromise = apiClient.sections.navigation()
-        .then(response => {
+        .then((response: { items: import('@/shared/types/api').Section[] }) => {
             const items = sectionsToNavItems(response.items);
             cachedSections = items;
             return cachedSections;
@@ -37,7 +37,7 @@ export function useNavSections(): NavSectionItem[] {
     const [version, setVersion] = useState(0);
 
     useEffect(() => {
-        const listener = () => setVersion(v => v + 1);
+        const listener = () => setVersion((v: number) => v + 1);
         listeners.push(listener);
         return () => { listeners = listeners.filter(l => l !== listener); };
     }, []);

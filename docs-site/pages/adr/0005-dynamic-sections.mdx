@@ -143,18 +143,14 @@ Resolution:
 | `/navlinks/{id}` | PUT | Yes | Update navlink |
 | `/navlinks/{id}` | DELETE | Yes | Hard delete navlink |
 
-### Admin UIs
+### Admin UI
 
-**Quick Wizard (Mobile)**
-1. Tap + → Enter section name
-2. Pick type from icons (Feed, Grid, Page, Gallery)
-3. Choose nav placement (Main, Secondary, Hidden)
-4. Section created with sensible defaults
-
-**Full Editor**
-- Tree view with drag-and-drop reordering
-- Section edit form (all fields)
-- NavLink management
+**Section Management** (`/admin/sections`)
+- Flat list of all sections with inline edit
+- Create form: title, display_type, content_type, nav_visibility
+- Edit/Delete/Add Content actions per row
+- Nav cache invalidation on mutations
+- Auth guard (admin-only)
 
 ### Permissions
 
@@ -185,13 +181,14 @@ Future: Role-based permissions per section
 Each phase is independently deployable:
 
 1. **Foundation (Backend)** - Section and NavLink models, CRUD APIs ✅
-2. **Migration Infrastructure** - Add section_id to content, seed initial sections
-3. **Display Registry (Frontend)** - Extract displays into registry pattern
-4. **Dynamic Routing** - Catch-all route with section resolution
-5. **Navigation from Database** - Replace hardcoded SECTIONS array
-6. **Quick Wizard** - Mobile-friendly section creation
-7. **Full Admin Editor** - Tree view with drag-and-drop
-8. **Documentation** - Update docs-site
+2. **Migration Infrastructure** - Add section_id to content, seed initial sections ✅
+3. **Display Registry (Frontend)** - Extract displays into registry pattern ✅
+4. **Dynamic Routing** - Catch-all route with section resolution ✅
+5. **Navigation from Database** - Replace hardcoded SECTIONS array ✅
+6. **Section Editor** - Admin management page, content-type-specific editor forms ✅
+7. **Documentation** - Update docs-site ✅
+
+*Quick Wizard (mobile section creation) and tree-view drag-and-drop were deferred.*
 
 ## Migration Strategy
 

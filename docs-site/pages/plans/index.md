@@ -14,6 +14,8 @@ Implementation plans provide:
 
 | Plan | Description |
 |------|-------------|
+| [Phase 6: Section Editor](/plans/2026-03-01-phase-6-section-editor) | Section management and content-type-specific editor |
+| [Phase 4: Dynamic Routing](/plans/2026-02-27-phase4-dynamic-routing) | Catch-all route with section resolution |
 | [Stories Module](/plans/2026-01-04-phase-4-stories-module) | Phase 4 of frontend architecture refactor |
 | [Layout Extraction](/plans/2026-01-04-phase-3-layout-extraction) | Phase 3 of frontend architecture refactor |
 | [Shared Extraction](/plans/2026-01-04-phase-2-shared-extraction) | Phase 2 of frontend architecture refactor |

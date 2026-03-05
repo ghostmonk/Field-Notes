@@ -164,10 +164,38 @@ The catch-all route will:
 
 No new page files needed.
 
+## Step 5: Editor Form
+
+Create an editor form component at `modules/editor/components/RecipeEditorForm.tsx`:
+
+```typescript
+import { useRouter } from 'next/router';
+import { Section } from '@/shared/types/api';
+
+interface RecipeEditorFormProps {
+    section: Section;
+}
+
+export function RecipeEditorForm({ section }: RecipeEditorFormProps) {
+    // Use a custom hook for form state and API calls
+    // Follow useStoryEditor or useProjectEditor patterns
+    // Include section.id as sectionId in create/update payloads
+    // Navigate to /{section.slug} after save or cancel
+}
+```
+
+Register the form in `pages/editor.tsx`:
+
+```typescript
+{section.content_type === 'recipe' && <RecipeEditorForm section={section} />}
+```
+
+The editor page routes to the correct form based on `section.content_type`. When a user navigates to `/editor?section_id={id}`, the section is fetched and its `content_type` determines which form renders.
+
 ## Existing Content Types
 
-| Type | List Component | Detail Component | Typical Display |
-|---|---|---|---|
-| `story` | `StoryCard` | `StoryDetail` | feed |
-| `project` | `ProjectCard` | `ProjectDetail` | card-grid |
-| `page` | none | none | static-page |
+| Type | List Component | Detail Component | Editor Form | Typical Display |
+|---|---|---|---|---|
+| `story` | `StoryCard` | `StoryDetail` | `StoryEditorForm` | feed |
+| `project` | `ProjectCard` | `ProjectDetail` | `ProjectEditorForm` | card-grid |
+| `page` | none | none | `PageEditorForm` | static-page |

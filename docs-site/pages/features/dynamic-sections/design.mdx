@@ -158,7 +158,7 @@ Resolution:
 
 Each phase is independently deployable without breaking the existing site.
 
-### Phase 1: Foundation (Backend)
+### Phase 1: Foundation (Backend) ✅
 - Ensure `make dev-backend` works with local MongoDB
 - Create `sections` collection with indexes
 - Create `nav_links` collection
@@ -166,52 +166,48 @@ Each phase is independently deployable without breaking the existing site.
 - Add section CRUD API endpoints
 - **Checkpoint:** API works, existing site unchanged
 
-### Phase 2: Migration Infrastructure
+### Phase 2: Migration Infrastructure ✅
 - Create migration scripts framework
 - Seed initial sections from hardcoded structure (blog, about, projects, contact)
 - Add `section_id` to existing Story, Project, Page models
 - Backfill `section_id` on existing content
 - **Checkpoint:** Data migrated, existing site unchanged
 
-### Phase 3: Display Registry (Frontend)
+### Phase 3: Display Registry (Frontend) ✅
 - Create display type registry pattern
 - Extract existing displays into registry components (FeedDisplay, CardGridDisplay, StaticPageDisplay)
 - Create content type registry pattern
 - **Checkpoint:** Existing pages render via registry, no behavior change
 
-### Phase 4: Dynamic Routing
+### Phase 4: Dynamic Routing ✅
 - Create `[...slugPath]` catch-all route
 - Implement section path resolution
 - Route existing URLs through new system
-- Keep old routes as fallbacks during transition
-- **Checkpoint:** URLs work through new router, old routes still work
+- Remove old route files after verification
+- **Checkpoint:** URLs work through new router
 
-### Phase 5: Navigation from Database
-- Create navigation API endpoint
+### Phase 5: Navigation from Database ✅
+- Create navigation API proxy endpoint
 - Replace hardcoded SECTIONS array with API fetch
 - Render main nav from section hierarchy
-- Add flyout support for nested sections
+- Module-level singleton cache with listener-based invalidation
 - **Checkpoint:** Navigation renders from DB, looks the same
 
-### Phase 6: Quick Wizard
-- Create mobile-friendly section creation wizard
-- Add "+" button to nav for admins
-- 3-step wizard: name -> type -> placement
-- **Checkpoint:** Admins can create sections on mobile
+### Phase 6: Section Editor ✅
+- Create `/admin/sections` route with full CRUD
+- Section-aware editor with content-type-specific forms (story, project, page)
+- Nav cache invalidation on section mutations
+- Context-aware "New" button in TopNav
+- **Checkpoint:** Full section management and content creation UI
 
-### Phase 7: Full Admin Editor
-- Create `/admin/sections` route
-- Tree view with drag-and-drop reordering
-- Section edit form (all fields)
-- NavLink (hamburger) management
-- **Checkpoint:** Full section management UI
-
-### Phase 8: Documentation
+### Phase 7: Documentation ✅
 - Update docs-site with new architecture
 - Add ADR for dynamic content management
 - Update folder-structure.mdx
 - Add guide for creating new content types
 - **Checkpoint:** Docs complete
+
+*Quick Wizard (mobile 3-step section creation) and tree-view drag-and-drop reordering were deferred.*
 
 ---
 

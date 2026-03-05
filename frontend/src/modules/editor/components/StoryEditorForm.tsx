@@ -71,7 +71,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
         </div>
       )}
 
-      <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
+      <form onSubmit={(e: React.FormEvent) => handleSubmit(e, true)} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Title
@@ -80,7 +80,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
             type="text"
             id="title"
             value={story.title || ''}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
             placeholder="Story title"
             required
@@ -105,7 +105,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
                       name="is_published"
                       type="checkbox"
                       checked={story.is_published || false}
-                      onChange={(e) => setPublished(e.target.checked)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPublished(e.target.checked)}
                       className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
                       disabled={isSaving}
                       data-testid="editor-publish-toggle"

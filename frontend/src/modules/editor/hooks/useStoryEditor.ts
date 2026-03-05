@@ -65,15 +65,15 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
 
   // Field updaters
   const setTitle = useCallback((title: string) => {
-    setStory(prev => ({ ...prev, title }));
+    setStory((prev: Partial<Story>) => ({ ...prev, title }));
   }, []);
 
   const setContent = useCallback((content: string) => {
-    setStory(prev => ({ ...prev, content }));
+    setStory((prev: Partial<Story>) => ({ ...prev, content }));
   }, []);
 
   const setPublished = useCallback((is_published: boolean) => {
-    setStory(prev => ({ ...prev, is_published }));
+    setStory((prev: Partial<Story>) => ({ ...prev, is_published }));
   }, []);
 
   // Submit handler

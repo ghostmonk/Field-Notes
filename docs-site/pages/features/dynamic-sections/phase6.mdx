@@ -1,0 +1,160 @@
+# Phase 6: Section Editor
+
+**Status:** Implemented
+
+## Goal
+
+Add section management and content-type-specific editor forms. Admins can create, edit, and delete sections from `/admin/sections`. The editor page (`/editor`) adapts its form to the section's `content_type` — story, project, or page.
+
+## Architecture
+
+```
+/admin/sections
+    ├── SectionCreateForm      → apiClient.sections.create()
+    ├── SectionRow             → inline edit, delete, "Add Content"
+    └── SectionEditForm        → apiClient.sections.update()
+
+/editor?section_id={id}
+    ├── section.content_type === 'story'   → StoryEditorForm
+    ├── section.content_type === 'project' → ProjectEditorForm
+    └── section.content_type === 'page'    → PageEditorForm
+
+/editor (no params)
+    └── SectionPicker          → select section, then redirect with section_id
+```
+
+## Section CRUD API Layer
+
+### Proxy Routes
+
+| File | Methods | Backend Endpoint |
+|------|---------|------------------|
+| `pages/api/sections/index.ts` | GET, POST | `GET /sections`, `POST /sections` |
+| `pages/api/sections/[id].ts` | GET, PUT, DELETE | `/sections/{id}` |
+
+These sit alongside existing `navigation.ts` and `by-slug/[slug].ts` routes.
+
+### api-client Methods
+
+```typescript
+apiClient.sections.list(token, params?)
+apiClient.sections.getById(id, token)
+apiClient.sections.create(data, token)
+apiClient.sections.update(id, data, token)
+apiClient.sections.delete(id, token)
+```
+
+### Types
+
+`CreateSectionRequest` and `UpdateSectionRequest` in `shared/types/api.ts`. `section_id` added as optional field to `Story`, `CreateStoryRequest`, `Project`, `ProjectCard`, `CreateProjectRequest`.
+
+## Sections Module
+
+`modules/sections/` provides two hooks:
+
+- **`useFetchSections`** — fetches all sections on mount, exposes `sections`, `loading`, `error`, `refetch()`, `clearError()`.
+- **`useSectionMutations`** — `createSection()`, `updateSection()`, `deleteSection()` with shared `loading`, `error`, `clearError()` state.
+
+Both follow patterns from `modules/stories/hooks/`.
+
+## Admin Sections Page
+
+`pages/admin/sections.tsx` is a self-contained admin page with inline components:
+
+- **Auth guard** — `useEffect` redirects non-admin users to `/`.
+- **SectionCreateForm** — form with title, display_type, content_type, nav_visibility selects.
+- **SectionRow** — displays each section with Edit, Delete, and "Add Content" buttons.
+- **SectionEditForm** — inline edit form pre-filled with current values.
+- **Nav cache invalidation** — calls `invalidateNavCache()` after create, update, or delete so the navigation updates immediately.
+
+"Add Content" navigates to `/editor?section_id={id}`.
+
+## Section-Aware Editor
+
+`pages/editor.tsx` was refactored from a story-only editor to a thin shell that delegates to content-type-specific form components.
+
+### URL Parameters
+
+| Query Params | Behavior |
+|---|---|
+| `section_id` + `id` | Edit existing item in that section |
+| `section_id` only | Create new item for that section |
+| `id` only | Resolve section from content item, then redirect with both params |
+| None | Show SectionPicker |
+
+### Section Resolution
+
+When editing with only `id` (legacy links), the editor tries fetching the item as a story first, then as a project. If the item has a `section_id`, it does a shallow redirect to add `section_id` to the URL. If not, it shows an error message.
+
+### Content-Type Routing
+
+```typescript
+{section.content_type === 'story'   && <StoryEditorForm section={section} />}
+{section.content_type === 'project' && <ProjectEditorForm section={section} />}
+{section.content_type === 'page'    && <PageEditorForm section={section} />}
+```
+
+Unknown content types show a placeholder message.
+
+## Editor Form Components
+
+### StoryEditorForm
+
+`modules/editor/components/StoryEditorForm.tsx` — extracted from the original `editor.tsx`. Uses `useStoryEditor(section.id, section.slug)`. Fields: title, content (TipTap rich text), is_published toggle. Cancel navigates to `/{section.slug}`. Save/delete navigates to `/{section.slug}`.
+
+### ProjectEditorForm
+
+`modules/editor/components/ProjectEditorForm.tsx` — new form using `useProjectEditor(section.id, section.slug)`. Fields: title, summary, content (TipTap), technologies (comma-separated), github_url, live_url, image_url, is_featured, sort_order, is_published.
+
+### PageEditorForm
+
+`modules/editor/components/PageEditorForm.tsx` — simple form for static pages. Fields: content (TipTap). Page type is constrained to `Literal["about", "contact"]` by the backend.
+
+### Editor Hooks
+
+Both `useStoryEditor` and `useProjectEditor` accept `sectionId` and `sectionSlug` parameters:
+
+- `sectionId` is included in create/update payloads as `section_id`.
+- `sectionSlug` determines where to navigate after save or delete.
+- Existing content preserves its `section_id` on update.
+
+## TopNav Admin Links
+
+For admin users, TopNav now shows:
+
+- **Sections** link (`/admin/sections`) via a gear icon.
+- **Context-aware "New" button** — links to `/editor?section_id={activeSectionId}` based on the current URL path, so clicking "New" while viewing `/blog` creates a new story, while viewing `/projects` creates a new project.
+
+## Frontend Changes
+
+### New Files
+- `pages/api/sections/index.ts` — list + create proxy
+- `pages/api/sections/[id].ts` — get + update + delete proxy
+- `pages/admin/sections.tsx` — admin management page
+- `modules/sections/hooks/useFetchSections.ts`
+- `modules/sections/hooks/useSectionMutations.ts`
+- `modules/sections/hooks/index.ts`
+- `modules/sections/index.ts`
+- `modules/editor/components/StoryEditorForm.tsx`
+- `modules/editor/components/ProjectEditorForm.tsx`
+- `modules/editor/components/PageEditorForm.tsx`
+- `modules/editor/hooks/useProjectEditor.ts`
+
+### Modified Files
+- `pages/editor.tsx` — refactored to section-aware shell
+- `modules/editor/hooks/useStoryEditor.ts` — accepts sectionId and sectionSlug
+- `shared/types/api.ts` — section CRUD types, section_id on content types
+- `shared/lib/api-client.ts` — section CRUD methods, projects.getById
+- `shared/lib/navigation.ts` — added id to NavSectionItem
+- `hooks/useNavSections.ts` — exported invalidateNavCache
+- `layout/TopNav.tsx` — admin links, context-aware "New" button
+
+## Checkpoint
+
+- `/admin/sections` — full CRUD for sections with auth guard
+- Section changes reflect immediately in navigation via cache invalidation
+- `/editor` without params shows section picker
+- `/editor?section_id=<blog-id>` renders story form
+- `/editor?section_id=<projects-id>` renders project form
+- Legacy edit links without `section_id` resolve correctly
+- Cancel and save navigate to the section's list page

@@ -4,26 +4,51 @@
 frontend/src/
 │
 ├── pages/                    # ROUTING LAYER (thin)
-│   ├── api/                  # API routes
-│   └── [routes].tsx          # SSR + compose from modules
+│   ├── api/                  # API proxy routes
+│   │   ├── sections/         # Section CRUD + navigation proxies
+│   │   ├── stories/          # Story CRUD proxies
+│   │   └── projects/         # Project CRUD proxies
+│   ├── admin/
+│   │   └── sections.tsx      # Section management (admin-only)
+│   ├── [...slugPath].tsx     # Catch-all dynamic route
+│   ├── editor.tsx            # Section-aware content editor
+│   └── index.tsx             # Home page
 │
 ├── modules/                  # FEATURE MODULES
 │   ├── stories/              # Story feature
-│   │   ├── components/       # UI for this module
-│   │   ├── hooks/            # Logic for this module
-│   │   ├── pages/            # Page compositions
-│   │   ├── types/            # Types scoped to module
+│   │   ├── components/       # StoryCard, StoryDetail, StoryList
+│   │   ├── hooks/            # useFetchStory, useFetchStories, useStoryMutations
 │   │   └── index.ts          # Public API
-│   ├── editor/
-│   ├── engagement/
-│   └── static/
+│   ├── projects/             # Project feature
+│   │   ├── components/       # ProjectCard, ProjectDetail
+│   │   └── index.ts
+│   ├── editor/               # Content editor
+│   │   ├── components/       # StoryEditorForm, ProjectEditorForm, PageEditorForm, RichTextEditor
+│   │   ├── hooks/            # useStoryEditor, useProjectEditor
+│   │   └── index.ts
+│   ├── sections/             # Section management
+│   │   ├── hooks/            # useFetchSections, useSectionMutations
+│   │   └── index.ts
+│   ├── registry/             # Display + content type registries
+│   │   ├── displays/         # FeedDisplay, CardGridDisplay, StaticPageDisplay
+│   │   ├── hooks/            # useFetchContent
+│   │   ├── contentRegistry.ts
+│   │   ├── displayRegistry.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── engagement/           # Reactions and comments
+│   └── static/               # Static pages (About, Contact, Terms, Privacy)
 │
 ├── shared/                   # CROSS-MODULE CODE
 │   ├── components/           # Reusable UI
 │   ├── hooks/                # Shared logic
-│   ├── lib/                  # Infrastructure
-│   ├── types/                # Shared types
+│   ├── lib/                  # Infrastructure (api-client, navigation)
+│   ├── types/                # Shared types (api.ts)
 │   └── utils/                # Pure functions
+│
+├── hooks/                    # APP-LEVEL HOOKS
+│   ├── useNavSections.ts     # Navigation cache with invalidation
+│   └── useActiveSection.ts   # Active section from URL
 │
 ├── rendering/                # SSR PATTERNS
 │   ├── server/               # getServerSideProps helpers
@@ -31,7 +56,7 @@ frontend/src/
 │
 └── layout/                   # APP SHELL
     ├── Layout.tsx
-    ├── TopNav.tsx
+    ├── TopNav.tsx             # Database-driven nav with admin links
     └── Footer.tsx
 ```
 

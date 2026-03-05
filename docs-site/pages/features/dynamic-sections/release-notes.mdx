@@ -41,24 +41,112 @@ None - additive changes only.
 
 ---
 
-## Phase 2: Migration Infrastructure
+## Phase 2: Migration Infrastructure (PR #105)
 
-**Status:** In Progress
+**Released:** 2026-02-01
 
-### Planned Changes
+### What's New
 
-- Migration script to seed initial sections from hardcoded navigation
-- Add `section_id` field to Story, Project, and Page models
-- Backfill existing content with appropriate section_id
-- Index creation for section_id lookups
+- **pymongo-migrate framework**: Migration scripts in `backend/migrations/` with `upgrade`/`downgrade` support
+- **Initial section seeding** (`0003_seed_initial_sections`): Creates blog, about, projects, contact sections from hardcoded structure
+- **section_id on content models**: Added `section_id` field to Story, Project, and Page models
+- **Content backfill** (`0004_backfill_section_ids`): Links existing content to appropriate sections
+- **Index creation**: `section_id` indexes on stories, projects, and pages collections
+
+### Breaking Changes
+
+None - `section_id` is nullable during transition.
+
+---
+
+## Phase 3: Display Registry (PR #111)
+
+**Released:** 2026-02-15
+
+### What's New
+
+- **Display type registry** (`modules/registry/displayRegistry.ts`): Maps `display_type` to React components
+  - `feed` → `FeedDisplay` (infinite scroll list)
+  - `card-grid` → `CardGridDisplay` (responsive grid)
+  - `static-page` → `StaticPageDisplay` (single content block)
+- **Content type registry** (`modules/registry/contentRegistry.ts`): Maps `content_type` to list/detail components
+  - `story` → `StoryCard` / `StoryDetail`
+  - `project` → `ProjectCard` / `ProjectDetail`
+  - `page` → static page rendering
+- **Projects module** (`modules/projects/`): Extracted `ProjectCard` and `ProjectDetail`
+- **Guide**: `/guides/creating-content-types` for adding new content types
+
+### Breaking Changes
+
+None - existing pages render identically via registry.
+
+---
+
+## Phase 4: Dynamic Routing (PR #118)
+
+**Released:** 2026-02-27
+
+### What's New
+
+- **Catch-all route** (`pages/[...slugPath].tsx`): Single route resolves all section URLs
+- **Section path resolution**: First URL segment → section lookup → display/content component selection
+- **Generic content fetching** (`useFetchContent`): Content-type-agnostic infinite scroll hook
+- **SSR support**: `getServerSideProps` fetches section config and initial content
+- **Removed hardcoded routes**: `about.tsx`, `contact.tsx`, `projects.tsx`, `stories/[slug].tsx`, `projects/[slug].tsx`
+
+### Breaking Changes
+
+None - all existing URLs continue to work through the catch-all route.
+
+---
+
+## Phase 5: Database Navigation (PR #122)
+
+**Released:** 2026-03-01
+
+### What's New
+
+- **Database-driven nav**: TopNav renders from sections where `nav_visibility = "main"` instead of hardcoded array
+- **Navigation API proxy** (`pages/api/sections/navigation.ts`): Proxies `GET /sections?nav_visibility=main` with `Cache-Control: public, max-age=300, stale-while-revalidate=600`
+- **NavSectionItem type**: Frontend representation with `id`, `slug`, `path`, `label`, `icon`
+- **useNavSections hook**: Module-level singleton cache with listener-based invalidation
+- **Active section detection**: `useActiveSection` derives current section from URL path
+
+### Breaking Changes
+
+None - navigation appearance unchanged.
+
+---
+
+## Phase 6: Section Editor (PR #126)
+
+**Released:** 2026-03-04
+
+### What's New
+
+- **Admin sections page** (`/admin/sections`): Full CRUD for sections with auth guard
+- **Section CRUD proxy routes**: `pages/api/sections/index.ts` (list + create), `pages/api/sections/[id].ts` (get + update + delete)
+- **Sections module** (`modules/sections/`): `useFetchSections` and `useSectionMutations` hooks
+- **Section-aware editor**: `editor.tsx` refactored to thin shell that delegates to content-type-specific forms
+- **StoryEditorForm**: Extracted from original editor, accepts section context
+- **ProjectEditorForm**: New form for project content type with all project fields
+- **PageEditorForm**: Simple form for static page content
+- **Context-aware "New" button**: TopNav "+" links to `/editor?section_id={activeSectionId}`
+- **Nav cache invalidation**: Section CRUD operations trigger `invalidateNavCache()` for immediate nav updates
+
+### Technical Details
+
+- 102 Playwright e2e tests passing
+- Editor resolves section from content item for legacy edit links
+- Section picker shown when navigating to `/editor` without parameters
+
+### Breaking Changes
+
+None - existing editor functionality preserved, new section context added.
 
 ---
 
 ## Future Phases
 
-- **Phase 3**: Display Registry (Frontend)
-- **Phase 4**: Dynamic Routing
-- **Phase 5**: Navigation from Database
-- **Phase 6**: Quick Wizard
-- **Phase 7**: Full Admin Editor
-- **Phase 8**: Documentation
+- **Quick Wizard**: Mobile-friendly 3-step section creation (deferred)
+- **Tree view with drag-and-drop**: Hierarchical section reordering (deferred)
