@@ -1,7 +1,7 @@
 .PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend install-frontend migrate migrate-status migrate-down
 
 # Virtual environment configuration
-VENV_DEFAULT := $(HOME)/Documents/venvs/turbulence
+VENV_DEFAULT := $(HOME)/Documents/venvs/field-notes
 VENV_PATH ?= $(VENV_DEFAULT)
 VENV_ACTIVATE := $(VENV_PATH)/bin/activate
 SYSTEM_PYTHON := $(shell which python)

@@ -12,6 +12,6 @@ httpx
 google
 motor==3.7.1
 google-cloud-storage==3.7.0
-python-multipart==0.0.21
-pillow==12.0.0
+python-multipart==0.0.22
+pillow==12.1.1
 pymongo-migrate==1.0.0

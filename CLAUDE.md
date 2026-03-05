@@ -47,7 +47,7 @@ docker-compose logs -f  # View logs
 
 # Virtual environment (backend)
 make venv              # Create/update Python venv
-source ~/Documents/venvs/turbulence/bin/activate  # Activate venv
+source ~/Documents/venvs/field-notes/bin/activate  # Activate venv
 ```
 
 ### Code Quality

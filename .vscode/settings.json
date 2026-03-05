@@ -1,5 +1,5 @@
 {
-    "python.defaultInterpreterPath": "${env:HOME}/Documents/venvs/turbulence/bin/python",
+    "python.defaultInterpreterPath": "${env:HOME}/Documents/venvs/field-notes/bin/python",
     "python.analysis.extraPaths": [
         "${workspaceFolder}/backend"
     ],
