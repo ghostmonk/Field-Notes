@@ -632,7 +632,7 @@ button.btn--primary:hover:not(:disabled) {
 
 /* Bottom nav content offset */
 .pb-bottom-nav {
-  padding-bottom: calc(56px + 2rem + env(safe-area-inset-bottom)); /* nav height + footer height + safe area */
+  padding-bottom: calc(56px + 2rem + 1.5rem + env(safe-area-inset-bottom)); /* nav height + footer height + spacing + safe area */
 }
 
 .grid {
