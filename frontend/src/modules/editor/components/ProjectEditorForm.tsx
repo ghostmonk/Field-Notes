@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { Section } from '@/shared/types/api';
@@ -25,6 +26,13 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
     resetForm,
     clearError,
   } = useProjectEditor(section.id, section.slug);
+
+  const [techText, setTechText] = useState((project.technologies || []).join(', '));
+
+  // Sync local text when project data loads (e.g. editing existing project)
+  useEffect(() => {
+    setTechText((project.technologies || []).join(', '));
+  }, [project.technologies]);
 
   if (isLoading && !isSaving) {
     return <div>Loading...</div>;
@@ -164,8 +172,9 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
             <input
               type="text"
               id="technologies"
-              value={(project.technologies || []).join(', ')}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('technologies', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
+              value={techText}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTechText(e.target.value)}
+              onBlur={() => setField('technologies', techText.split(',').map((s: string) => s.trim()).filter(Boolean))}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               placeholder="React, TypeScript, Node.js"
               disabled={isSaving}
