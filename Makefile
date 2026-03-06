@@ -175,6 +175,20 @@ dev:
 	@echo "MongoDB:  localhost:27017"
 	@echo ""
 	@echo "Run 'make logs' to tail output, 'make down' to stop."
+
+# Development: Docker backend/mongo + local frontend (hot reload, no rebuild)
+dev-local:
+	@echo "Starting backend and MongoDB in Docker..."
+	docker compose up mongo backend -d
+	@echo "Running migrations..."
+	$(MAKE) migrate
+	@echo "Starting local frontend with hot reload..."
+	@echo ""
+	@echo "Frontend: http://localhost:3000 (local, hot reload)"
+	@echo "Backend:  http://localhost:5001 (Docker)"
+	@echo "MongoDB:  localhost:27017 (Docker)"
+	@echo ""
+	$(MAKE) dev-frontend
 # 
 # dev-backend: Start Python backend server on port 5001
 # - Activates virtual environment 
@@ -244,7 +258,8 @@ help:
 	@echo "  docker-up        - Start Docker containers"
 	@echo "  docker-down      - Stop Docker containers"
 	@echo "  docker-logs      - Show Docker container logs"
-	@echo "  dev              - Start both backend and frontend development servers"
+	@echo "  dev              - Start full stack in Docker (build + migrate + up)"
+	@echo "  dev-local        - Docker backend/mongo + local frontend (hot reload)"
 	@echo "  dev-backend      - Start backend development server"
 	@echo "  dev-frontend     - Start frontend development server"
 	@echo "  clean            - Clean up Python cache files and build artifacts"
