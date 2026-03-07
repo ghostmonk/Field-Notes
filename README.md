@@ -2,6 +2,8 @@
 
 Field Notes is a modern blog/content management system built with Next.js and FastAPI. It allows authenticated users to create and publish rich text content that can be viewed by anyone.
 
+**[Documentation](https://ghostmonk.github.io/Field-Notes/)**
+
 ## Features
 
 - **Modern Tech Stack**: Next.js frontend with TypeScript and FastAPI backend
