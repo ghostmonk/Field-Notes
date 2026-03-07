@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
     },
 
     // Exclude cheerio from client bundle (server-side only for HTML parsing)
+    turbopack: {
+        resolveAlias: {
+            cheerio: { browser: '' },
+        },
+    },
     webpack: (config, { isServer }) => {
         if (!isServer) {
             config.resolve.fallback = {
