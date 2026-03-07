@@ -19,8 +19,7 @@
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
     "dev:test": "NODE_NO_WARNINGS=1 BACKEND_URL=http://localhost:5555 NEXT_PUBLIC_API_URL=http://localhost:5555 NEXTAUTH_URL=http://localhost:3000 NEXTAUTH_SECRET=test-secret-for-e2e-tests UNSAFE_EVAL=true next dev",
-    "test:unit": "vitest run",
-    "test:unit:watch": "vitest"
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@tiptap/core": "^3.14.0",
@@ -49,7 +48,6 @@
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
     "@types/express": "^5.0.6",
     "@types/he": "^1.2.3",
     "@types/node": "^25.0.3",

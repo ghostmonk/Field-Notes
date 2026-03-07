@@ -26,7 +26,9 @@ const nextConfig: NextConfig = {
         },
     },
 
-    // Exclude cheerio from client bundle (server-side only for HTML parsing)
+    // Exclude cheerio from client bundle (server-side only for HTML parsing).
+    // Turbopack uses resolveAlias with { browser: '' } to stub out the module on the client side,
+    // equivalent to webpack's resolve.fallback: { cheerio: false }.
     turbopack: {
         resolveAlias: {
             cheerio: { browser: '' },

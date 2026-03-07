@@ -119,6 +119,10 @@ jobs:
           npm run test:unit
 
       - name: Verify build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5001
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: ci-placeholder
         run: |
           cd frontend
           npm run build
