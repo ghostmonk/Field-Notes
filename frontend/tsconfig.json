@@ -33,7 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "../site.config.json"
+    "site.config.json"
   ],
   "exclude": [
     "node_modules"

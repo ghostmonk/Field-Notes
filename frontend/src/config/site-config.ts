@@ -1,5 +1,5 @@
 import { SiteConfig } from './types';
-import config from '../../../site.config.json';
+import config from '../../site.config.json';
 
 const siteConfig = config satisfies SiteConfig;
 

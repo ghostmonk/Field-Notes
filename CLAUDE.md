@@ -98,7 +98,7 @@ Place `gcp-credentials.json` in project root (production only). Docker Compose s
 **CORS Configuration**: Hardcoded origins in `backend/app.py` for production domains.
 **Logging**: Google Cloud Logging integrated throughout backend with custom middleware.
 
-**Site Config**: `site.config.json` at project root defines site identity (title, tagline, author, copyright), template selection, brand colors, fonts, navigation icon mappings, footer links, and layout settings. Loaded at build time via `getSiteConfig()` from `frontend/src/config/`.
+**Site Config**: `frontend/site.config.json` defines site identity (title, tagline, author, copyright), fonts, navigation icon mappings, footer links, and layout settings. Loaded at build time via `getSiteConfig()` from `frontend/src/config/`.
 
 **Template System**: Visual themes live under `frontend/src/templates/<name>/`. Each template contains CSS files only:
 - `styles/tokens.css` — CSS custom properties (colors, fonts, spacing, radii, transitions)
@@ -107,7 +107,7 @@ Place `gcp-credentials.json` in project root (production only). Docker Compose s
 
 Template CSS is imported directly in `_app.tsx` (Next.js Pages Router requires global CSS imports in `_app`). `globals.css` contains only Tailwind directives, resets, and editor styles — no template-specific styles.
 
-Layout components (`Layout.tsx`, `Footer.tsx`, `TopNav.tsx`, `BottomNav.tsx`) consume CSS variables and config values — no hardcoded pixel values, brand strings, or icon mappings. To create a new template: copy `templates/default/`, modify the CSS, and update the imports in `_app.tsx` plus the `template` field in `site.config.json`.
+Layout components (`Layout.tsx`, `Footer.tsx`, `TopNav.tsx`, `BottomNav.tsx`) consume CSS variables and config values — no hardcoded pixel values, brand strings, or icon mappings. To create a new template: copy `templates/default/`, modify the CSS, and update the imports in `_app.tsx`.
 
 ## Development Guidelines
 
