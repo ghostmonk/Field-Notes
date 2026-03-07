@@ -7,9 +7,11 @@ const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutes for stories
 const PUBLIC_CACHE_TTL = 5 * 60 * 1000; // 5 minutes for public stories
 
-function getCacheKey(req: NextApiRequest): string {
-    const { limit, offset, include_drafts, section_id } = req.query;
-    return `stories:${limit || 'all'}:${offset || 0}:${include_drafts || 'false'}:${section_id || 'none'}`;
+function getCacheKey(req: NextApiRequest, isAuthenticated: boolean): string {
+    const { limit, offset, section_id } = req.query;
+    // Key on auth state, not client-sent include_drafts — the proxy overrides
+    // include_drafts based on token presence, so cache must reflect actual auth state
+    return `stories:${isAuthenticated ? 'auth' : 'anon'}:${limit || 'all'}:${offset || 0}:${section_id || 'none'}`;
 }
 
 function getFromCache(key: string): any | null {
@@ -73,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Check cache for GET requests
         if (req.method === 'GET') {
-            const cacheKey = getCacheKey(req);
+            const cacheKey = getCacheKey(req, isAuthenticated);
             const cachedData = getFromCache(cacheKey);
 
             if (cachedData) {
@@ -195,9 +197,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Cache successful GET responses
         if (req.method === 'GET') {
-            const cacheKey = getCacheKey(req);
-            const { include_drafts } = req.query;
-            const ttl = include_drafts === 'true' ? CACHE_TTL : PUBLIC_CACHE_TTL;
+            const cacheKey = getCacheKey(req, isAuthenticated);
+            const ttl = isAuthenticated ? CACHE_TTL : PUBLIC_CACHE_TTL;
             
             setCache(cacheKey, data, ttl);
             apiLogger.info('Cached response', { cacheKey, ttl });

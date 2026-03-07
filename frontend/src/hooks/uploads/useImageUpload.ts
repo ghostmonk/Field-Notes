@@ -10,7 +10,7 @@ import { escapeHtmlAttr } from '@/shared/utils/htmlUtils';
 export interface UseImageUploadReturn extends UseFileUploadReturn {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   acceptTypes: string;
-  pendingAltText: { fileName: string; resolve: (altText: string) => void } | null;
+  pendingAltText: { resolve: (altText: string) => void } | null;
 }
 
 /**
@@ -25,7 +25,6 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
   });
 
   const [pendingAltText, setPendingAltText] = useState<{
-    fileName: string;
     resolve: (altText: string) => void;
   } | null>(null);
 
@@ -50,11 +49,12 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     if (result?.urls?.length) {
       // Request alt text from user via dialog
       const altText = await new Promise<string>((resolve) => {
-        setPendingAltText({ fileName: file.name, resolve });
+        setPendingAltText({ resolve });
       });
       setPendingAltText(null);
 
       const { urls, srcsets, dimensions } = result;
+      // Manual escaping required: TipTap insertContent injects raw HTML, bypassing React's auto-escaping
       const safeAlt = escapeHtmlAttr(altText);
       const attrs = [`src="${urls[0]}"`, `alt="${safeAlt}"`];
       if (srcsets?.length) {

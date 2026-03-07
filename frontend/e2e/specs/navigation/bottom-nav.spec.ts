@@ -10,4 +10,12 @@ test.describe('Bottom Navigation', () => {
     await homePage.waitForLoad();
     await expect(homePage.bottomNav.homeLink).toBeVisible();
   });
+
+  test('home link navigates to /', async ({ mockApiPage }) => {
+    const homePage = new HomePage(mockApiPage);
+    await homePage.goto();
+    await homePage.waitForLoad();
+    await homePage.bottomNav.goToHome();
+    await expect(mockApiPage).toHaveURL('/');
+  });
 });

@@ -4,7 +4,7 @@ import '../templates/default/index.css';
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
 import { Layout } from "@/layout";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from 'next/router';
 import Head from "next/head";
 import { getSiteConfig } from '@/config';
@@ -17,44 +17,43 @@ function MyApp({ Component, pageProps }: AppProps) {
     const [warmupFailed, setWarmupFailed] = useState(false);
     const [isSkeletonTest, setIsSkeletonTest] = useState(false);
 
+    const doWarmup = useCallback(async (skeletonTest: boolean) => {
+        setIsWarming(true);
+        setWarmupFailed(false);
+
+        try {
+            const success = await keepAliveService.warmup();
+            if (!success) {
+                setWarmupFailed(true);
+            }
+        } catch (error) {
+            console.error('Warmup failed:', error);
+            setWarmupFailed(true);
+        } finally {
+            if (!skeletonTest) {
+                setIsWarming(false);
+            }
+        }
+    }, []);
+
     useEffect(() => {
         configureDOMPurify();
-        
+
         // Check if we're in skeleton test mode
         const skeletonTestMode = window.location.search.includes('skeleton=test');
         setIsSkeletonTest(skeletonTestMode);
-        
+
         // Start keep-alive service to prevent cold starts
         keepAliveService.start();
-        
-        // Initial warmup attempt
-        const performWarmup = async () => {
-            setIsWarming(true);
-            setWarmupFailed(false);
-            
-            try {
-                const success = await keepAliveService.warmup();
-                if (!success) {
-                    setWarmupFailed(true);
-                }
-            } catch (error) {
-                console.error('Initial warmup failed:', error);
-                setWarmupFailed(true);
-            } finally {
-                // Keep warming state if in skeleton test mode
-                if (!skeletonTestMode) {
-                    setIsWarming(false);
-                }
-            }
-        };
 
-        performWarmup();
+        // Initial warmup attempt
+        doWarmup(skeletonTestMode);
 
         // Cleanup on unmount
         return () => {
             keepAliveService.stop();
         };
-    }, []);
+    }, [doWarmup]);
 
     const router = useRouter();
 
@@ -69,25 +68,9 @@ function MyApp({ Component, pageProps }: AppProps) {
         return () => router.events.off('routeChangeComplete', handleRouteChange);
     }, [router]);
 
-    const handleWarmupRetry = async () => {
-        setIsWarming(true);
-        setWarmupFailed(false);
-        
-        try {
-            const success = await keepAliveService.warmup();
-            if (!success) {
-                setWarmupFailed(true);
-            }
-        } catch (error) {
-            console.error('Warmup retry failed:', error);
-            setWarmupFailed(true);
-        } finally {
-            // Keep warming state if in skeleton test mode
-            if (!isSkeletonTest) {
-                setIsWarming(false);
-            }
-        }
-    };
+    const handleWarmupRetry = useCallback(async () => {
+        await doWarmup(isSkeletonTest);
+    }, [doWarmup, isSkeletonTest]);
 
     return (
         <SessionProvider session={pageProps.session}>
@@ -100,7 +83,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                 <link rel="canonical" href="https://ghostmonk.com/"/>
             </Head>
             <Layout>
-                <BackendWarmupBanner 
+                <BackendWarmupBanner
                     isWarming={isWarming}
                     warmupFailed={warmupFailed}
                     onRetry={handleWarmupRetry}

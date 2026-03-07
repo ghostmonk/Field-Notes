@@ -175,6 +175,7 @@ function SectionListView({ section, initialListData }: { section: Section; initi
                 renderItem={renderItem}
                 onLoadMore={loadMore}
                 hasMore={hasMore}
+                keyExtractor={(item: any, index: number) => item.id ?? item.slug ?? String(index)}
             />
         );
     }

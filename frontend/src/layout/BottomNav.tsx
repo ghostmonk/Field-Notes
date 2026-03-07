@@ -4,16 +4,9 @@ import { useRouter } from 'next/router';
 import { useNavSections } from '@/hooks/useNavSections';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { getSiteConfig } from '@/config';
-import { NavSectionItem, NavIcon } from '@/shared/lib/navigation';
-import { HiHome, HiUser, HiFolder, HiMail, HiViewGrid } from 'react-icons/hi';
-
-const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
-    home: HiHome,
-    user: HiUser,
-    folder: HiFolder,
-    mail: HiMail,
-    default: HiViewGrid,
-};
+import { NavSectionItem } from '@/shared/lib/navigation';
+import { iconMap } from '@/shared/lib/navIcons';
+import { HiHome } from 'react-icons/hi';
 
 interface NavItemProps {
     section: NavSectionItem;

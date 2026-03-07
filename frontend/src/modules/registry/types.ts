@@ -14,6 +14,7 @@ export interface FeedDisplayProps<T = unknown> {
     renderItem: (item: T) => React.ReactNode;
     onLoadMore: () => void;
     hasMore: boolean;
+    keyExtractor?: (item: T, index: number) => string;
 }
 
 export interface CardGridDisplayProps<T = unknown> {

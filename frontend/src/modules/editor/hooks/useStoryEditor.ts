@@ -265,6 +265,7 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
   const acceptDraft = useCallback(() => {
     if (recoveredDraft) {
       setStory((prev) => ({ ...prev, ...recoveredDraft }));
+      isDirtyRef.current = true;
     }
     setShowDraftRecovery(false);
   }, [recoveredDraft]);

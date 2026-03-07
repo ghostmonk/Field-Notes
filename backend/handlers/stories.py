@@ -55,11 +55,7 @@ async def get_stories(
             },
         )
 
-        total = (
-            await collection.estimated_document_count()
-            if not query
-            else await collection.count_documents(query)
-        )
+        total = await collection.count_documents(query)
 
         projection = {
             "_id": 1,
