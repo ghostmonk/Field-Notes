@@ -4,6 +4,7 @@
   --layout-bottom-nav-offset: 2rem;
   --layout-container-max-width: 75rem;
   --layout-content-padding: 1.5rem;
+  --layout-page-content-max-width: 800px;
   --layout-bottom-offset: calc(
     var(--layout-nav-height) +
     var(--layout-bottom-nav-offset) +

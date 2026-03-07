@@ -25,6 +25,7 @@ templates/<name>/
 - `--color-border-primary`, `--color-border-secondary`, `--color-border-focus`
 - `--color-status-success`, `--color-status-warning`, `--color-status-error`, `--color-status-info`
 - `--color-shadow-light`, `--color-shadow-medium`, `--color-shadow-dark`
+- `--color-nav-backdrop` (semi-transparent background for bottom nav)
 
 ### Fonts
 - `--font-family-sans`, `--font-family-serif`, `--font-family-mono`
@@ -44,6 +45,7 @@ templates/<name>/
 ### Layout
 - `--layout-nav-height`, `--layout-footer-height`
 - `--layout-bottom-nav-offset`, `--layout-container-max-width`, `--layout-content-padding`
+- `--layout-page-content-max-width` (max width for single-page content like privacy/terms)
 - `--layout-bottom-offset` (computed, includes safe-area-inset)
 
 ## Required Component Classes
@@ -67,3 +69,6 @@ These classes are referenced directly in React components:
 3. Update `_app.tsx`: change `import '../templates/default/index.css'` to `import '../templates/<name>/index.css'`
 4. Update `site.config.json`: set `"template": "<name>"`
 5. Update `site.config.json` `fonts` if the template uses different Google Fonts
+6. Update the FOUC background color in `_document.tsx` (`style={{backgroundColor: '...'}}`
+   on `<Html>` and `<body>`) to match the new template's `--color-surface-primary` dark value.
+   CSS variables are not available at SSR paint time, so this must be a hardcoded hex value.
