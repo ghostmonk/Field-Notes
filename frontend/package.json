@@ -2,12 +2,11 @@
   "name": "field-notes-frontend",
   "version": "0.1.0",
   "private": true,
-  "_comment_turbopack": "Using --webpack flag because Turbopack hangs with PostCSS/Tailwind. Re-evaluate when Next.js fixes this.",
   "scripts": {
-    "dev": "next dev --webpack",
-    "dev:docker": "TAILWIND_MODE=watch next dev --webpack",
+    "dev": "next dev",
+    "dev:docker": "TAILWIND_MODE=watch next dev",
     "dev:css": "tailwindcss -i ./src/styles/globals.css -o ./public/styles/output.css --watch",
-    "build": "next build --webpack",
+    "build": "next build",
     "build:css": "tailwindcss -i ./src/styles/globals.css -o ./public/styles/output.css --minify",
     "start": "next start",
     "lint": "eslint . --max-warnings 10",
@@ -19,7 +18,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
-    "dev:test": "NODE_NO_WARNINGS=1 BACKEND_URL=http://localhost:5555 NEXT_PUBLIC_API_URL=http://localhost:5555 NEXTAUTH_URL=http://localhost:3000 NEXTAUTH_SECRET=test-secret-for-e2e-tests UNSAFE_EVAL=true next dev --webpack"
+    "dev:test": "NODE_NO_WARNINGS=1 BACKEND_URL=http://localhost:5555 NEXT_PUBLIC_API_URL=http://localhost:5555 NEXTAUTH_URL=http://localhost:3000 NEXTAUTH_SECRET=test-secret-for-e2e-tests UNSAFE_EVAL=true next dev",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@tiptap/core": "^3.14.0",
@@ -47,6 +47,7 @@
     "@next/eslint-plugin-next": "^16.1.1",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.18",
+    "@testing-library/jest-dom": "^6.9.1",
     "@types/express": "^5.0.6",
     "@types/he": "^1.2.3",
     "@types/node": "^25.0.3",
@@ -60,10 +61,12 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "express": "^5.2.1",
+    "jsdom": "^28.1.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.51.0"
+    "typescript-eslint": "^8.51.0",
+    "vitest": "^4.0.18"
   }
 }

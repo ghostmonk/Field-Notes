@@ -1,6 +1,7 @@
 export default {
   index: 'Overview',
   '2026-03-07-ux-review-design': 'UX Review',
+  '2026-03-07-dev-process-optimization': 'Dev Process Optimization',
   '2026-03-01-phase-6-section-editor': 'Phase 6: Section Editor',
   '2026-02-27-phase4-dynamic-routing': 'Phase 4: Dynamic Routing',
   '2026-01-04-phase-4-stories-module': 'Stories Module',

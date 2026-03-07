@@ -65,7 +65,8 @@ cd frontend && npm run lint
 
 ### Testing
 ```bash
-make test    # Run Python tests with pytest
+make test                # Run Python tests with pytest
+make test-frontend-unit  # Run frontend unit tests with vitest
 ```
 
 ## Environment Setup
@@ -116,6 +117,52 @@ Layout components (`Layout.tsx`, `Footer.tsx`, `TopNav.tsx`, `BottomNav.tsx`) co
 - Use the virtual environment for backend Python work
 - Check formatting before committing changes
 - **New features must include docs-site updates** — add or update pages under `docs-site/pages/` (guides, architecture, features, or releases as appropriate). The docs site auto-deploys to GitHub Pages on push to main when `docs-site/` files change.
+- **Design plans** go in `docs-site/pages/plans/` with filename format `YYYY-MM-DD-<topic>.md`. Update `_meta.ts` in the same directory when adding a new plan.
+
+### Worktree Discipline
+
+Assume all work happens in a worktree unless the user explicitly says to work on main.
+
+- **Worktree location**: `.worktrees/<descriptive-name>` (e.g., `.worktrees/video-upload-fix`)
+- **Branch naming**: `ghostmonk/{issue#}_descriptive_title` when an issue exists, `ghostmonk/descriptive_title` otherwise (e.g., `ghostmonk/142_video-upload-fix`, `ghostmonk/development-optimization`)
+- **Setup**: symlink `.env` from main repo, run `cd frontend && npm install`
+- **Dev testing**: use `make dev-local` or `make dev` to start services — don't run commands manually
+- **Cleanup**: run `make down` in the worktree to stop all Docker containers before removing the worktree with `git worktree remove`
+
+### Formatting Rules
+
+`make format` is mandatory before every commit — CI rejects unformatted code.
+- Backend: black + isort + flake8
+- Frontend: eslint --fix
+
+### Debugging Protocol
+
+- Before proposing any fix: read the actual error message, trace the call path from entry point to failure, identify the root cause. State the root cause explicitly before writing code.
+- Never apply speculative fixes. If the cause is unclear, add logging or reproduce the issue first.
+- Maximum one fix attempt per hypothesis. If it doesn't work, the hypothesis was wrong — re-investigate, don't iterate on the same guess.
+
+### Completion Checklist
+
+Before declaring work done:
+- If a backend endpoint changed: check all frontend callers
+- If a data model changed: check migrations, API serialization, and frontend types
+- If CSS/template variables changed: verify both light and dark mode
+- Run `make format` and `make test`
+- If the change affects deployment (new env vars, new dependencies, Dockerfile changes): update `deploy.yml` and document the new vars
+
+## Deployment Architecture
+
+Three Cloud Run services deployed via GitHub Actions (`.github/workflows/deploy.yml`):
+- `turbulent-service` (backend), `turbulent-frontend`, `video-processor`
+- Auto-deploys on push to main with path-based change detection
+- Cloud Build for Docker images, GCR for image registry
+- CI runs on PRs and non-main branches (pytest, eslint, tsc)
+- Service names still use "turbulent" prefix in GCP
+
+**Environment differences:**
+- Local: `LOCAL_STORAGE_PATH` for file uploads, no GCS credentials needed, containerized MongoDB
+- Production: GCS bucket, MongoDB Atlas, Google Cloud Logging
+- `BACKEND_URL`: Docker = `http://backend:5001`, local frontend = `http://localhost:5001`, production = Cloud Run backend URL
 
 ## Security Requirements
 

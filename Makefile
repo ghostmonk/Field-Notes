@@ -1,4 +1,4 @@
-.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend install-frontend migrate migrate-status migrate-down
+.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui test-frontend-unit clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend install-frontend migrate migrate-status migrate-down
 
 # Virtual environment configuration
 VENV_DEFAULT := $(HOME)/Documents/venvs/field-notes
@@ -145,6 +145,9 @@ test-frontend:
 test-frontend-ui:
 	cd frontend && npm run test:e2e:ui
 
+test-frontend-unit:
+	cd frontend && npm run test:unit
+
 # Docker operations
 build:
 	docker compose build
@@ -203,11 +206,10 @@ dev-backend:
 # - Loads .env variables, then .env.local overrides (if exists)
 # - Excludes PORT to avoid conflicts
 # - Explicitly sets PORT=3000 to prevent frontend from using backend's port (5001)
-# - Uses --webpack flag because Turbopack hangs with PostCSS/Tailwind (Next.js 16 bug)
 dev-frontend:
 	export $$(cat .env | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs) && \
 	if [ -f .env.local ]; then export $$(cat .env.local | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs); fi && \
-	cd frontend && PORT=3000 npx next dev --webpack -H 0.0.0.0
+	cd frontend && PORT=3000 npx next dev -H 0.0.0.0
 
 # Cleanup
 clean:
