@@ -3,9 +3,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import ClipLoader from 'react-spinners/ClipLoader';
 import type { FeedDisplayProps } from '../types';
 
-const defaultKeyExtractor = (_item: unknown, index: number) => String(index);
-
-export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtractor = defaultKeyExtractor as (item: T, index: number) => string }: FeedDisplayProps<T>) {
+export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtractor = (_item: T, index: number) => String(index) }: FeedDisplayProps<T>) {
     const skipTargetId = useId();
     return (
         <section aria-label="Content feed" className="mt-4">

@@ -17,7 +17,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     const [warmupFailed, setWarmupFailed] = useState(false);
     const [isSkeletonTest, setIsSkeletonTest] = useState(false);
 
-    const doWarmup = async (skeletonTest: boolean) => {
+    const doWarmup = useCallback(async (skeletonTest: boolean) => {
         setIsWarming(true);
         setWarmupFailed(false);
 
@@ -34,7 +34,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                 setIsWarming(false);
             }
         }
-    };
+    }, []);
 
     useEffect(() => {
         configureDOMPurify();
@@ -53,7 +53,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         return () => {
             keepAliveService.stop();
         };
-    }, []);
+    }, [doWarmup]);
 
     const router = useRouter();
 
@@ -70,7 +70,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
     const handleWarmupRetry = useCallback(async () => {
         await doWarmup(isSkeletonTest);
-    }, [isSkeletonTest]);
+    }, [doWarmup, isSkeletonTest]);
 
     return (
         <SessionProvider session={pageProps.session}>
