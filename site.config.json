@@ -1,0 +1,34 @@
+{
+  "site": {
+    "title": "Ghostmonk",
+    "tagline": "Sharing Stories, Projects and Ideas",
+    "author": "Ghostmonk",
+    "copyright": "© {year} Ghostmonk"
+  },
+  "template": "default",
+  "brand": {
+    "primary": "#4f46e5",
+    "accent": "#6366f1"
+  },
+  "fonts": {
+    "heading": "Poppins",
+    "body": "Roboto Slab"
+  },
+  "navigation": {
+    "iconMap": {
+      "blog": "home",
+      "about": "user",
+      "projects": "folder",
+      "contact": "mail"
+    }
+  },
+  "footer": {
+    "links": [
+      { "label": "Privacy", "href": "/privacy" },
+      { "label": "Terms", "href": "/terms" }
+    ]
+  },
+  "layout": {
+    "containerMaxWidth": "75rem"
+  }
+}
