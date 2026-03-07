@@ -1,5 +1,8 @@
 import '../styles/globals.css';
-import '../templates/default'; // Active template CSS (tokens, components, layout)
+// Active template CSS — must be imported here (Next.js Pages Router requires global CSS in _app)
+import '../templates/default/styles/tokens.css';
+import '../templates/default/styles/components.css';
+import '../templates/default/styles/layout.css';
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
 import { Layout } from "@/layout";
