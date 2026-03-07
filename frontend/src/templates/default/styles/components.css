@@ -616,6 +616,28 @@ button.btn--primary:hover:not(:disabled) {
   }
 }
 
+/* Skip-to-content link (accessibility) */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-brand-primary);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0 0 0.375rem 0;
+}
+
+.skip-to-content:focus {
+  left: 0;
+}
+
+#main-content:focus {
+  outline: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

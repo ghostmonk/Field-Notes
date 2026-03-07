@@ -36,10 +36,11 @@ const NavItem: React.FC<NavItemProps> = ({ section, isActive }) => {
     );
 };
 
+const config = getSiteConfig();
+
 const BottomNav: React.FC = () => {
     const sections = useNavSections();
     const activeSlug = useActiveSection(sections);
-    const config = getSiteConfig();
     const router = useRouter();
     const isHomePage = router.pathname === '/';
 

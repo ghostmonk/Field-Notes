@@ -68,6 +68,8 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
 
   const storyRef = useRef(story);
   storyRef.current = story;
+  const isDirtyRef = useRef(false);
+  const hasCheckedDraftRef = useRef(false);
 
   // Clear local error when mutation succeeds
   const clearError = useCallback(() => setError(null), []);
@@ -82,14 +84,17 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
 
   // Field updaters
   const setTitle = useCallback((title: string) => {
+    isDirtyRef.current = true;
     setStory((prev: Partial<Story>) => ({ ...prev, title }));
   }, []);
 
   const setContent = useCallback((content: string) => {
+    isDirtyRef.current = true;
     setStory((prev: Partial<Story>) => ({ ...prev, content }));
   }, []);
 
   const setPublished = useCallback((is_published: boolean) => {
+    isDirtyRef.current = true;
     setStory((prev: Partial<Story>) => ({ ...prev, is_published }));
   }, []);
 
@@ -177,7 +182,8 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
 
   // Check for recovered draft on initial load
   useEffect(() => {
-    if (fetchLoading) return;
+    if (fetchLoading || hasCheckedDraftRef.current) return;
+    hasCheckedDraftRef.current = true;
     const draft = loadDraft();
     if (draft && (draft.title || draft.content)) {
       const currentTitle = fetchedStory?.title || '';
@@ -187,8 +193,7 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
         setShowDraftRecovery(true);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchLoading]);
+  }, [fetchLoading, loadDraft, fetchedStory]);
 
   // Start autosave timer
   useEffect(() => {
@@ -203,18 +208,19 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
   // Warn on navigation with unsaved changes
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
-      if (story.title || story.content) {
+      if (isDirtyRef.current) {
+        const current = storyRef.current;
         saveDraft(
-          story.title || '',
-          story.content || '',
-          story.is_published || false,
+          current.title || '',
+          current.content || '',
+          current.is_published || false,
         );
         e.preventDefault();
       }
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [story.title, story.content, story.is_published, saveDraft]);
+  }, [saveDraft]);
 
   // Populate form from query params (for new stories with prefilled data)
   useEffect(() => {

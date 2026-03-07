@@ -17,9 +17,9 @@ const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
 };
 
 const NewStoryIcon = HiPlusSm;
+const config = getSiteConfig();
 
 export default function TopNav() {
-    const config = getSiteConfig();
     const { data: session } = useSession();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const sections = useNavSections();

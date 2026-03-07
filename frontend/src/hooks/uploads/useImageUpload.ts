@@ -10,7 +10,11 @@ export interface UseImageUploadReturn extends UseFileUploadReturn {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   acceptTypes: string;
   pendingAltText: { fileName: string; resolve: (altText: string) => void } | null;
-  cancelPendingUpload: () => void;
+  dismissAltTextDialog: () => void;
+}
+
+export function escapeHtmlAttr(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
 
 /**
@@ -55,23 +59,24 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
       setPendingAltText(null);
 
       const { urls, srcsets, dimensions } = result;
+      const safeAlt = escapeHtmlAttr(altText);
 
       if (srcsets?.length && dimensions?.length) {
         // Full responsive image with srcset and dimensions
-        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" width="${dimensions[0].width}" height="${dimensions[0].height}" alt="${altText}" />`;
+        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" width="${dimensions[0].width}" height="${dimensions[0].height}" alt="${safeAlt}" />`;
         editor.commands.insertContent(imgHTML);
       } else if (srcsets?.length) {
         // Responsive image without dimensions
-        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" alt="${altText}" />`;
+        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" alt="${safeAlt}" />`;
         editor.commands.insertContent(imgHTML);
       } else {
         // Basic image fallback
-        editor.commands.insertContent(`<img src="${urls[0]}" alt="${altText}" />`);
+        editor.commands.insertContent(`<img src="${urls[0]}" alt="${safeAlt}" />`);
       }
     }
   }, [editor, baseUpload]);
 
-  const cancelPendingUpload = useCallback(() => {
+  const dismissAltTextDialog = useCallback(() => {
     if (pendingAltText) {
       pendingAltText.resolve(pendingAltText.fileName);
       setPendingAltText(null);
@@ -83,6 +88,6 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     handleFileChange,
     acceptTypes: ALLOWED_IMAGE_TYPES.join(','),
     pendingAltText,
-    cancelPendingUpload,
+    dismissAltTextDialog,
   };
 }
