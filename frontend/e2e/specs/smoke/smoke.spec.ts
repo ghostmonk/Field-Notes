@@ -102,6 +102,18 @@ test.describe('Smoke Tests', () => {
     await expect(homePage.nav.mobileMenuToggle).toBeVisible();
   });
 
+  test('skip to content link is accessible via keyboard', async ({ mockApiPage }) => {
+    const homePage = new HomePage(mockApiPage);
+    await homePage.goto();
+    await homePage.waitForLoad();
+
+    // Tab into the page — skip link should become visible
+    await mockApiPage.keyboard.press('Tab');
+    const skipLink = mockApiPage.getByTestId('skip-to-content');
+    await expect(skipLink).toBeVisible();
+    await expect(skipLink).toBeFocused();
+  });
+
   test('all section links are present', async ({ mockApiPage }) => {
     const homePage = new HomePage(mockApiPage);
 
