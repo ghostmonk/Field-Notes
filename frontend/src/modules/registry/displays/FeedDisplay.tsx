@@ -5,13 +5,16 @@ import type { FeedDisplayProps } from '../types';
 
 export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore }: FeedDisplayProps<T>) {
     return (
-        <div className="mt-4">
+        <section aria-label="Content feed" className="mt-4">
+            <a href="#after-feed" className="skip-to-content">
+                Skip past feed
+            </a>
             <InfiniteScroll
                 dataLength={items.length}
                 next={onLoadMore}
                 hasMore={hasMore}
                 loader={
-                    <div className="flex justify-center items-center py-4">
+                    <div className="flex justify-center items-center py-4" role="status" aria-label="Loading more content">
                         <ClipLoader color="var(--color-brand-primary)" loading={true} size={35} />
                     </div>
                 }
@@ -29,6 +32,7 @@ export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore }: FeedD
                     ))}
                 </div>
             </InfiniteScroll>
-        </div>
+            <div id="after-feed" tabIndex={-1} />
+        </section>
     );
 }
