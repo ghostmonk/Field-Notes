@@ -3,7 +3,9 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import ClipLoader from 'react-spinners/ClipLoader';
 import type { FeedDisplayProps } from '../types';
 
-export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore }: FeedDisplayProps<T>) {
+const defaultKeyExtractor = (_item: unknown, index: number) => String(index);
+
+export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtractor = defaultKeyExtractor as (item: T, index: number) => string }: FeedDisplayProps<T>) {
     const skipTargetId = useId();
     return (
         <section aria-label="Content feed" className="mt-4">
@@ -27,7 +29,7 @@ export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore }: FeedD
             >
                 <div className="flex flex-col space-y-6">
                     {items.map((item, index) => (
-                        <React.Fragment key={index}>
+                        <React.Fragment key={keyExtractor(item, index)}>
                             {renderItem(item)}
                         </React.Fragment>
                     ))}

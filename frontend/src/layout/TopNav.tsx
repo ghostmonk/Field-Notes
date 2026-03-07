@@ -4,17 +4,9 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useState } from "react";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
-import { NavIcon } from "@/shared/lib/navigation";
-import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm, HiViewGrid, HiCog } from "react-icons/hi";
+import { iconMap } from "@/shared/lib/navIcons";
+import { HiPlusSm, HiCog } from "react-icons/hi";
 import { getSiteConfig } from "@/config";
-
-const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
-    home: HiHome,
-    user: HiUser,
-    folder: HiFolder,
-    mail: HiMail,
-    default: HiViewGrid,
-};
 
 const NewStoryIcon = HiPlusSm;
 // Safe at module scope — getSiteConfig reads a static JSON import, no runtime side effects
