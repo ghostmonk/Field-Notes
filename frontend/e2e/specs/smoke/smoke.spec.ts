@@ -17,6 +17,14 @@ test.describe('Smoke Tests', () => {
     expect(title).toContain('Ghostmonk');
   });
 
+  test('home link with site title is visible in navigation', async ({ mockApiPage }) => {
+    const homePage = new HomePage(mockApiPage);
+    await homePage.goto();
+    await homePage.waitForLoad();
+    await expect(homePage.nav.homeLink).toBeVisible();
+    await expect(homePage.nav.homeLink).toHaveText('Ghostmonk');
+  });
+
   test('home page displays stories list', async ({ mockApiPage }) => {
     const homePage = new HomePage(mockApiPage);
 

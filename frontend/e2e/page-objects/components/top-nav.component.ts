@@ -9,6 +9,7 @@ export class TopNavComponent {
 
   // Navigation elements
   readonly nav: Locator;
+  readonly homeLink: Locator;
   readonly newContentLink: Locator;
   readonly sectionsLink: Locator;
 
@@ -34,6 +35,7 @@ export class TopNavComponent {
 
     // Navigation
     this.nav = page.getByTestId('top-nav');
+    this.homeLink = page.getByTestId('nav-home-link');
     this.newContentLink = page.getByTestId('nav-new-content-link');
     this.sectionsLink = page.getByTestId('nav-sections-link');
 
@@ -109,6 +111,16 @@ export class TopNavComponent {
     await Promise.all([
       this.page.waitForURL('**/admin/sections'),
       this.sectionsLink.click(),
+    ]);
+  }
+
+  /**
+   * Navigate to home page via home link.
+   */
+  async goToHome() {
+    await Promise.all([
+      this.page.waitForURL('/'),
+      this.homeLink.click(),
     ]);
   }
 

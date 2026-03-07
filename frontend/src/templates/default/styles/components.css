@@ -309,6 +309,13 @@ button.btn--primary:hover:not(:disabled) {
   color: var(--color-text-brand);
 }
 
+.nav__link--home {
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  letter-spacing: -0.025em;
+}
+
 .nav__link-icon {
   width: 20px;
   height: 20px;

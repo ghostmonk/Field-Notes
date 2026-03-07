@@ -6,6 +6,7 @@ import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { NavIcon } from "@/shared/lib/navigation";
 import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm, HiViewGrid, HiCog } from "react-icons/hi";
+import { getSiteConfig } from "@/config";
 
 const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
     home: HiHome,
@@ -18,6 +19,7 @@ const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
 const NewStoryIcon = HiPlusSm;
 
 export default function TopNav() {
+    const config = getSiteConfig();
     const { data: session } = useSession();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const sections = useNavSections();
@@ -31,7 +33,10 @@ export default function TopNav() {
     return (
         <nav className="nav" data-testid="top-nav">
             <div className="nav__container">
-                <div className="flex space-x-4">
+                <div className="flex items-center space-x-4">
+                    <Link href="/" data-testid="nav-home-link" className="nav__link nav__link--home">
+                        {config.site.title}
+                    </Link>
                     {/* Desktop Navigation - Section Links */}
                     <div className="nav__links">
                         {sections.map((section) => {
