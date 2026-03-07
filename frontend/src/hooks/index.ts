@@ -32,4 +32,4 @@ export { default as useClientSideStorage } from './useClientSideStorage';
 // Navigation hooks
 export { useActiveSection } from './useActiveSection';
 export { useNavSections } from './useNavSections';
-export { useMediaQuery, useIsDesktop, useIsMobile } from './useMediaQuery';
+export { useMediaQuery } from './useMediaQuery';
