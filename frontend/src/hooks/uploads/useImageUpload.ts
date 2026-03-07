@@ -1,7 +1,7 @@
 /**
  * Hook for image uploads with validation and editor integration.
  */
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { useFileUpload, UseFileUploadReturn } from './useFileUpload';
 import { validateImageFile, createFileValidationError, ALLOWED_IMAGE_TYPES } from '@/shared/utils/uploadUtils';
@@ -9,6 +9,8 @@ import { validateImageFile, createFileValidationError, ALLOWED_IMAGE_TYPES } fro
 export interface UseImageUploadReturn extends UseFileUploadReturn {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   acceptTypes: string;
+  pendingAltText: { fileName: string; resolve: (altText: string) => void } | null;
+  cancelPendingUpload: () => void;
 }
 
 /**
@@ -21,6 +23,11 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     createValidationError: (file, error) => createFileValidationError(file, error, 'image'),
     context: 'image',
   });
+
+  const [pendingAltText, setPendingAltText] = useState<{
+    fileName: string;
+    resolve: (altText: string) => void;
+  } | null>(null);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files.length || !editor) return;
@@ -41,26 +48,41 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     editor.commands.setContent(updatedContent);
 
     if (result?.urls?.length) {
+      // Request alt text from user via dialog
+      const altText = await new Promise<string>((resolve) => {
+        setPendingAltText({ fileName: file.name, resolve });
+      });
+      setPendingAltText(null);
+
       const { urls, srcsets, dimensions } = result;
 
       if (srcsets?.length && dimensions?.length) {
         // Full responsive image with srcset and dimensions
-        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" width="${dimensions[0].width}" height="${dimensions[0].height}" alt="${file.name}" />`;
+        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" width="${dimensions[0].width}" height="${dimensions[0].height}" alt="${altText}" />`;
         editor.commands.insertContent(imgHTML);
       } else if (srcsets?.length) {
         // Responsive image without dimensions
-        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" alt="${file.name}" />`;
+        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" alt="${altText}" />`;
         editor.commands.insertContent(imgHTML);
       } else {
         // Basic image fallback
-        editor.commands.insertContent(`<img src="${urls[0]}" alt="${file.name}" />`);
+        editor.commands.insertContent(`<img src="${urls[0]}" alt="${altText}" />`);
       }
     }
   }, [editor, baseUpload]);
+
+  const cancelPendingUpload = useCallback(() => {
+    if (pendingAltText) {
+      pendingAltText.resolve(pendingAltText.fileName);
+      setPendingAltText(null);
+    }
+  }, [pendingAltText]);
 
   return {
     ...baseUpload,
     handleFileChange,
     acceptTypes: ALLOWED_IMAGE_TYPES.join(','),
+    pendingAltText,
+    cancelPendingUpload,
   };
 }
