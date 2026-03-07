@@ -1,4 +1,5 @@
 import '../styles/globals.css';
+import '../templates/default'; // Active template CSS (tokens, components, layout)
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
 import { Layout } from "@/layout";
