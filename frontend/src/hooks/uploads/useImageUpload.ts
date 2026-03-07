@@ -1,14 +1,16 @@
 /**
  * Hook for image uploads with validation and editor integration.
  */
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { useFileUpload, UseFileUploadReturn } from './useFileUpload';
 import { validateImageFile, createFileValidationError, ALLOWED_IMAGE_TYPES } from '@/shared/utils/uploadUtils';
+import { escapeHtmlAttr } from '@/shared/utils/htmlUtils';
 
 export interface UseImageUploadReturn extends UseFileUploadReturn {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   acceptTypes: string;
+  pendingAltText: { fileName: string; resolve: (altText: string) => void } | null;
 }
 
 /**
@@ -21,6 +23,11 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     createValidationError: (file, error) => createFileValidationError(file, error, 'image'),
     context: 'image',
   });
+
+  const [pendingAltText, setPendingAltText] = useState<{
+    fileName: string;
+    resolve: (altText: string) => void;
+  } | null>(null);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files.length || !editor) return;
@@ -41,20 +48,22 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     editor.commands.setContent(updatedContent);
 
     if (result?.urls?.length) {
-      const { urls, srcsets, dimensions } = result;
+      // Request alt text from user via dialog
+      const altText = await new Promise<string>((resolve) => {
+        setPendingAltText({ fileName: file.name, resolve });
+      });
+      setPendingAltText(null);
 
-      if (srcsets?.length && dimensions?.length) {
-        // Full responsive image with srcset and dimensions
-        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" width="${dimensions[0].width}" height="${dimensions[0].height}" alt="${file.name}" />`;
-        editor.commands.insertContent(imgHTML);
-      } else if (srcsets?.length) {
-        // Responsive image without dimensions
-        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" alt="${file.name}" />`;
-        editor.commands.insertContent(imgHTML);
-      } else {
-        // Basic image fallback
-        editor.commands.insertContent(`<img src="${urls[0]}" alt="${file.name}" />`);
+      const { urls, srcsets, dimensions } = result;
+      const safeAlt = escapeHtmlAttr(altText);
+      const attrs = [`src="${urls[0]}"`, `alt="${safeAlt}"`];
+      if (srcsets?.length) {
+        attrs.push(`srcset="${srcsets[0]}"`, `sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px"`);
       }
+      if (dimensions?.length) {
+        attrs.push(`width="${dimensions[0].width}"`, `height="${dimensions[0].height}"`);
+      }
+      editor.commands.insertContent(`<img ${attrs.join(' ')} />`);
     }
   }, [editor, baseUpload]);
 
@@ -62,5 +71,6 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     ...baseUpload,
     handleFileChange,
     acceptTypes: ALLOWED_IMAGE_TYPES.join(','),
+    pendingAltText,
   };
 }

@@ -5,6 +5,7 @@ import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
 import { Layout } from "@/layout";
 import { useEffect, useState } from "react";
+import { useRouter } from 'next/router';
 import Head from "next/head";
 import { getSiteConfig } from '@/config';
 import { configureDOMPurify } from '@/shared/utils/sanitizer';
@@ -54,6 +55,19 @@ function MyApp({ Component, pageProps }: AppProps) {
             keepAliveService.stop();
         };
     }, []);
+
+    const router = useRouter();
+
+    useEffect(() => {
+        const handleRouteChange = () => {
+            const main = document.getElementById('main-content');
+            if (main) {
+                main.focus({ preventScroll: true });
+            }
+        };
+        router.events.on('routeChangeComplete', handleRouteChange);
+        return () => router.events.off('routeChangeComplete', handleRouteChange);
+    }, [router]);
 
     const handleWarmupRetry = async () => {
         setIsWarming(true);

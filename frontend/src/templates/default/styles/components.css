@@ -309,6 +309,13 @@ button.btn--primary:hover:not(:disabled) {
   color: var(--color-text-brand);
 }
 
+.nav__link--home {
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  letter-spacing: -0.025em;
+}
+
 .nav__link-icon {
   width: 20px;
   height: 20px;
@@ -607,6 +614,28 @@ button.btn--primary:hover:not(:disabled) {
   .container {
     padding: 0 var(--space-md);
   }
+}
+
+/* Skip-to-content link (accessibility) */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-brand-primary);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0 0 0.375rem 0;
+}
+
+.skip-to-content:focus {
+  left: 0;
+}
+
+#main-content:focus {
+  outline: none;
 }
 
 .sr-only {

@@ -1,13 +1,14 @@
 /**
  * Hook for managing story editor form state and actions.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import { Story } from '@/shared/types/api';
 import { isTokenExpired } from '@/shared/lib/auth';
 import { useFetchStory, useStoryMutations } from '@/modules/stories/hooks';
 import { logger } from '@/shared/utils/logger';
+import { useDraftRecovery } from './useDraftRecovery';
 
 const EMPTY_STORY: Partial<Story> = {
   title: '',
@@ -30,6 +31,10 @@ export interface UseStoryEditorReturn {
   handleDelete: () => Promise<void>;
   resetForm: () => void;
   clearError: () => void;
+  showDraftRecovery: boolean;
+  recoveredDraft: { title: string; content: string; is_published: boolean } | null;
+  acceptDraft: () => void;
+  dismissDraft: () => void;
 }
 
 /**
@@ -52,6 +57,20 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const { saveDraft, loadDraft, clearDraft, startAutosave, stopAutosave } =
+    useDraftRecovery(storyId, sectionId);
+  const [showDraftRecovery, setShowDraftRecovery] = useState(false);
+  const [recoveredDraft, setRecoveredDraft] = useState<{
+    title: string;
+    content: string;
+    is_published: boolean;
+  } | null>(null);
+
+  const storyRef = useRef(story);
+  storyRef.current = story;
+  const isDirtyRef = useRef(false);
+  const hasCheckedDraftRef = useRef(false);
+
   // Clear local error when mutation succeeds
   const clearError = useCallback(() => setError(null), []);
 
@@ -65,14 +84,17 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
 
   // Field updaters
   const setTitle = useCallback((title: string) => {
+    isDirtyRef.current = true;
     setStory((prev: Partial<Story>) => ({ ...prev, title }));
   }, []);
 
   const setContent = useCallback((content: string) => {
+    isDirtyRef.current = true;
     setStory((prev: Partial<Story>) => ({ ...prev, content }));
   }, []);
 
   const setPublished = useCallback((is_published: boolean) => {
+    isDirtyRef.current = true;
     setStory((prev: Partial<Story>) => ({ ...prev, is_published }));
   }, []);
 
@@ -108,13 +130,15 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
       }
 
       logger.info('Story saved', { id: result.id, title: result.title });
+      clearDraft();
+      stopAutosave();
       router.push(sectionSlug ? `/${sectionSlug}` : '/');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(`Error: ${message}`);
       setIsSaving(false);
     }
-  }, [session, story, sectionId, sectionSlug, saveStory, router]);
+  }, [session, story, sectionId, sectionSlug, saveStory, router, clearDraft, stopAutosave]);
 
   // Delete handler
   const handleDelete = useCallback(async () => {
@@ -156,6 +180,51 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }
   }, [storyId, router.query, story.id, resetForm]);
 
+  // Check for recovered draft on initial load
+  useEffect(() => {
+    if (fetchLoading || hasCheckedDraftRef.current) return;
+    hasCheckedDraftRef.current = true;
+    const draft = loadDraft();
+    if (draft && (draft.title || draft.content)) {
+      const currentTitle = fetchedStory?.title || '';
+      const currentContent = fetchedStory?.content || '';
+      if (draft.title !== currentTitle || draft.content !== currentContent) {
+        setRecoveredDraft(draft);
+        setShowDraftRecovery(true);
+      }
+    }
+  }, [fetchLoading, loadDraft, fetchedStory]);
+
+  // Start autosave timer — only writes when form has been modified
+  useEffect(() => {
+    startAutosave(() => {
+      if (!isDirtyRef.current) return null;
+      return {
+        title: storyRef.current.title || '',
+        content: storyRef.current.content || '',
+        is_published: storyRef.current.is_published || false,
+      };
+    });
+    return () => stopAutosave();
+  }, [startAutosave, stopAutosave]);
+
+  // Warn on navigation with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirtyRef.current) {
+        const current = storyRef.current;
+        saveDraft(
+          current.title || '',
+          current.content || '',
+          current.is_published || false,
+        );
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [saveDraft]);
+
   // Populate form from query params (for new stories with prefilled data)
   useEffect(() => {
     if (!storyId) {
@@ -170,10 +239,12 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }
   }, [router.query, storyId]);
 
-  // Auto-save on token expiry
+  // Auto-save on token expiry — reads from refs to avoid interval churn
   useEffect(() => {
     const interval = setInterval(() => {
-      if (session?.accessToken && isTokenExpired(session.accessToken) && (story.title || story.content)) {
+      const token = session?.accessToken;
+      const current = storyRef.current;
+      if (token && isTokenExpired(token) && (current.title || current.content)) {
         handleSubmit(new Event('submit') as unknown as React.FormEvent, false).then(() => {
           alert('Session expired. Your story has been saved as a draft. Logging out.');
           signOut();
@@ -182,7 +253,7 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }, TOKEN_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [session?.accessToken, story.title, story.content, handleSubmit]);
+  }, [session?.accessToken, handleSubmit]);
 
   // Redirect unauthenticated users
   useEffect(() => {
@@ -190,6 +261,19 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
       router.push('/');
     }
   }, [status, router]);
+
+  const acceptDraft = useCallback(() => {
+    if (recoveredDraft) {
+      setStory((prev) => ({ ...prev, ...recoveredDraft }));
+    }
+    setShowDraftRecovery(false);
+  }, [recoveredDraft]);
+
+  const dismissDraft = useCallback(() => {
+    clearDraft();
+    setShowDraftRecovery(false);
+    setRecoveredDraft(null);
+  }, [clearDraft]);
 
   const isLoading = fetchLoading || saveLoading || status === 'loading';
   const combinedError = error || saveError;
@@ -207,5 +291,9 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     handleDelete,
     resetForm,
     clearError,
+    showDraftRecovery,
+    recoveredDraft,
+    acceptDraft,
+    dismissDraft,
   };
 }

@@ -6,6 +6,7 @@ import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { NavIcon } from "@/shared/lib/navigation";
 import { HiHome, HiUser, HiFolder, HiMail, HiPlusSm, HiViewGrid, HiCog } from "react-icons/hi";
+import { getSiteConfig } from "@/config";
 
 const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
     home: HiHome,
@@ -16,6 +17,8 @@ const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
 };
 
 const NewStoryIcon = HiPlusSm;
+// Safe at module scope — getSiteConfig reads a static JSON import, no runtime side effects
+const config = getSiteConfig();
 
 export default function TopNav() {
     const { data: session } = useSession();
@@ -31,7 +34,10 @@ export default function TopNav() {
     return (
         <nav className="nav" data-testid="top-nav">
             <div className="nav__container">
-                <div className="flex space-x-4">
+                <div className="flex items-center space-x-4">
+                    <Link href="/" data-testid="nav-home-link" className="nav__link nav__link--home">
+                        {config.site.title}
+                    </Link>
                     {/* Desktop Navigation - Section Links */}
                     <div className="nav__links">
                         {sections.map((section) => {
@@ -69,16 +75,18 @@ export default function TopNav() {
                     </div>
 
                     {/* Mobile Menu Button */}
-                    <button
-                        className="nav__mobile-toggle"
-                        onClick={toggleMobileMenu}
-                        aria-label="Toggle mobile menu"
-                        data-testid="mobile-menu-toggle"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                        </svg>
-                    </button>
+                    {session?.user?.role === 'admin' && (
+                        <button
+                            className="nav__mobile-toggle"
+                            onClick={toggleMobileMenu}
+                            aria-label="Toggle mobile menu"
+                            data-testid="mobile-menu-toggle"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                            </svg>
+                        </button>
+                    )}
                 </div>
 
                 <div className="flex items-center space-x-4">
@@ -107,31 +115,27 @@ export default function TopNav() {
             </div>
 
             {/* Mobile Menu - Auth/Settings only (sections handled by BottomNav) */}
-            {mobileMenuOpen && (
+            {session?.user?.role === 'admin' && mobileMenuOpen && (
                 <div className="nav__mobile-menu" data-testid="mobile-menu">
                     <div className="nav__mobile-links">
-                        {session?.user?.role === 'admin' && (
-                            <>
-                                <Link
-                                    href={activeSectionId ? `/editor?section_id=${activeSectionId}` : '/editor'}
-                                    className="nav__mobile-link"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    data-testid="mobile-nav-new-content-link"
-                                >
-                                    <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
-                                    <span>New</span>
-                                </Link>
-                                <Link
-                                    href="/admin/sections"
-                                    className="nav__mobile-link"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    data-testid="mobile-nav-sections-link"
-                                >
-                                    <HiCog className="nav__link-icon" aria-hidden="true" />
-                                    <span>Sections</span>
-                                </Link>
-                            </>
-                        )}
+                        <Link
+                            href={activeSectionId ? `/editor?section_id=${activeSectionId}` : '/editor'}
+                            className="nav__mobile-link"
+                            onClick={() => setMobileMenuOpen(false)}
+                            data-testid="mobile-nav-new-content-link"
+                        >
+                            <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
+                            <span>New</span>
+                        </Link>
+                        <Link
+                            href="/admin/sections"
+                            className="nav__mobile-link"
+                            onClick={() => setMobileMenuOpen(false)}
+                            data-testid="mobile-nav-sections-link"
+                        >
+                            <HiCog className="nav__link-icon" aria-hidden="true" />
+                            <span>Sections</span>
+                        </Link>
                     </div>
                 </div>
             )}

@@ -7,6 +7,7 @@ import { VideoExtension } from './VideoExtension';
 import { ErrorService } from '@/services/errorService';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { useImageUpload, useVideoUpload } from '@/hooks/uploads';
+import { AltTextDialog } from './AltTextDialog';
 
 interface RichTextEditorProps {
     onChange: (content: string) => void;
@@ -63,7 +64,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     });
 
     // Upload hooks
-    const imageUpload = useImageUpload(editor);
+    const { pendingAltText, ...imageUpload } = useImageUpload(editor);
     const videoUpload = useVideoUpload(editor);
 
     // Sync content from props
@@ -172,6 +173,11 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                 </div>
             )}
             <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
+            {pendingAltText && (
+                <AltTextDialog
+                    onConfirm={pendingAltText.resolve}
+                />
+            )}
         </div>
     );
 }

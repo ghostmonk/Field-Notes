@@ -17,6 +17,14 @@ test.describe('Smoke Tests', () => {
     expect(title).toContain('Ghostmonk');
   });
 
+  test('home link with site title is visible in navigation', async ({ mockApiPage }) => {
+    const homePage = new HomePage(mockApiPage);
+    await homePage.goto();
+    await homePage.waitForLoad();
+    await expect(homePage.nav.homeLink).toBeVisible();
+    await expect(homePage.nav.homeLink).toHaveText('Ghostmonk');
+  });
+
   test('home page displays stories list', async ({ mockApiPage }) => {
     const homePage = new HomePage(mockApiPage);
 
@@ -78,6 +86,32 @@ test.describe('Smoke Tests', () => {
 
     // Should still be on home page
     expect(homePage.url).toMatch(/\/(blog)?$/);
+  });
+
+  test('unauthenticated user does not see mobile menu toggle', async ({ mockApiPage }) => {
+    const homePage = new HomePage(mockApiPage);
+    await homePage.goto();
+    await homePage.waitForLoad();
+    await expect(homePage.nav.mobileMenuToggle).not.toBeVisible();
+  });
+
+  test('authenticated admin user sees mobile menu toggle', async ({ mockAuthenticatedApiPage }) => {
+    const homePage = new HomePage(mockAuthenticatedApiPage);
+    await homePage.goto();
+    await homePage.waitForLoad();
+    await expect(homePage.nav.mobileMenuToggle).toBeVisible();
+  });
+
+  test('skip to content link is accessible via keyboard', async ({ mockApiPage }) => {
+    const homePage = new HomePage(mockApiPage);
+    await homePage.goto();
+    await homePage.waitForLoad();
+
+    // Tab into the page — skip link should become visible
+    await mockApiPage.keyboard.press('Tab');
+    const skipLink = mockApiPage.getByTestId('skip-to-content');
+    await expect(skipLink).toBeVisible();
+    await expect(skipLink).toBeFocused();
   });
 
   test('all section links are present', async ({ mockApiPage }) => {

@@ -26,6 +26,10 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
     handleDelete,
     resetForm,
     clearError,
+    showDraftRecovery,
+    recoveredDraft,
+    acceptDraft,
+    dismissDraft,
   } = useStoryEditor(section.id, section.slug);
 
   if (isLoading && !isSaving) {
@@ -68,6 +72,43 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
             onDismiss={clearError}
             showDetails={true}
           />
+        </div>
+      )}
+
+      {showDraftRecovery && recoveredDraft && (
+        <div
+          className="mb-4 p-4 rounded-md border"
+          style={{
+            backgroundColor: 'var(--color-status-info-bg, #eff6ff)',
+            borderColor: 'var(--color-status-info, #3b82f6)',
+          }}
+          data-testid="draft-recovery-banner"
+        >
+          <p
+            className="text-sm font-medium"
+            style={{ color: 'var(--color-text-primary)' }}
+          >
+            Unsaved draft found
+            {recoveredDraft.title ? `: "${recoveredDraft.title}"` : ''}.
+          </p>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={acceptDraft}
+              className="btn btn--primary btn--sm"
+              data-testid="draft-recovery-accept"
+            >
+              Restore Draft
+            </button>
+            <button
+              type="button"
+              onClick={dismissDraft}
+              className="btn btn--secondary btn--sm"
+              data-testid="draft-recovery-dismiss"
+            >
+              Discard
+            </button>
+          </div>
         </div>
       )}
 
