@@ -1,6 +1,9 @@
 import { Section } from '@/shared/types/api';
 
-export type NavIcon = 'home' | 'user' | 'folder' | 'mail' | 'default';
+const VALID_ICONS = ['home', 'user', 'folder', 'mail', 'default'] as const;
+export type NavIcon = (typeof VALID_ICONS)[number];
+
+const VALID_ICON_SET = new Set<string>(VALID_ICONS);
 
 export interface NavSectionItem {
     id: string;
@@ -10,25 +13,19 @@ export interface NavSectionItem {
     icon: NavIcon;
 }
 
-const SLUG_ICON_MAP: Record<string, NavIcon> = {
-    blog: 'home',
-    about: 'user',
-    projects: 'folder',
-    contact: 'mail',
-};
-
-export function sectionToNavItem(section: Section): NavSectionItem {
+export function sectionToNavItem(section: Section, iconMap: Record<string, string>): NavSectionItem {
+    const mapped = iconMap[section.slug];
     return {
         id: section.id,
         slug: section.slug,
         path: `/${section.slug}`,
         label: section.title,
-        icon: SLUG_ICON_MAP[section.slug] || 'default',
+        icon: VALID_ICON_SET.has(mapped) ? (mapped as NavIcon) : 'default',
     };
 }
 
-export function sectionsToNavItems(sections: Section[]): NavSectionItem[] {
-    return sections.map(sectionToNavItem);
+export function sectionsToNavItems(sections: Section[], iconMap: Record<string, string>): NavSectionItem[] {
+    return sections.map(s => sectionToNavItem(s, iconMap));
 }
 
 const DEFAULT_SECTION_SLUG = 'blog';

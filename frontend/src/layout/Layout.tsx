@@ -11,7 +11,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
         <div className="min-h-dvh transition-colors duration-300" style={{ backgroundColor: 'var(--color-surface-primary)', color: 'var(--color-text-primary)' }}>
             <TopNav />
-            <main className="container mx-auto px-6 pt-6 pb-bottom-nav">
+            <main
+                className="container mx-auto px-6 pt-6"
+                style={{ paddingBottom: 'var(--layout-bottom-offset)' }}
+            >
                 {children}
             </main>
             <Footer />

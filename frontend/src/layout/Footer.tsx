@@ -1,8 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
+import { getSiteConfig } from '@/config';
+
+const config = getSiteConfig();
 
 const Footer: React.FC = () => {
-    const currentYear = new Date().getFullYear();
+    const copyright = config.site.copyright.replace('{year}', String(new Date().getFullYear()));
 
     return (
         <footer
@@ -14,14 +17,13 @@ const Footer: React.FC = () => {
             }}
         >
             <div className="container mx-auto flex justify-between items-center">
-                <span className="pointer-events-auto">&copy; {currentYear} Ghostmonk</span>
+                <span className="pointer-events-auto">{copyright}</span>
                 <div className="flex gap-4">
-                    <Link href="/privacy" className="hover:underline pointer-events-auto">
-                        Privacy
-                    </Link>
-                    <Link href="/terms" className="hover:underline pointer-events-auto">
-                        Terms
-                    </Link>
+                    {config.footer.links.map((link) => (
+                        <Link key={link.href} href={link.href} className="hover:underline pointer-events-auto">
+                            {link.label}
+                        </Link>
+                    ))}
                 </div>
             </div>
         </footer>

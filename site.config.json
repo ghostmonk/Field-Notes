@@ -1,0 +1,26 @@
+{
+  "site": {
+    "title": "Ghostmonk",
+    "tagline": "Sharing Stories, Projects and Ideas",
+    "author": "Ghostmonk",
+    "copyright": "© {year} Ghostmonk"
+  },
+  "fonts": {
+    "heading": "Poppins",
+    "body": "Roboto Slab"
+  },
+  "navigation": {
+    "iconMap": {
+      "blog": "home",
+      "about": "user",
+      "projects": "folder",
+      "contact": "mail"
+    }
+  },
+  "footer": {
+    "links": [
+      { "label": "Privacy", "href": "/privacy" },
+      { "label": "Terms", "href": "/terms" }
+    ]
+  }
+}
