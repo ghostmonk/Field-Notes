@@ -10,6 +10,9 @@ export class BottomNavComponent {
   // Navigation container
   readonly nav: Locator;
 
+  // Home link
+  readonly homeLink: Locator;
+
   // Section links
   readonly blogLink: Locator;
   readonly aboutLink: Locator;
@@ -22,11 +25,24 @@ export class BottomNavComponent {
     // Navigation container
     this.nav = page.getByTestId('bottom-nav');
 
+    // Home link
+    this.homeLink = page.getByTestId('bottom-nav-home');
+
     // Section links
     this.blogLink = page.getByTestId('bottom-nav-blog');
     this.aboutLink = page.getByTestId('bottom-nav-about');
     this.projectsLink = page.getByTestId('bottom-nav-projects');
     this.contactLink = page.getByTestId('bottom-nav-contact');
+  }
+
+  /**
+   * Navigate to home page via bottom nav.
+   */
+  async goToHome() {
+    await Promise.all([
+      this.page.waitForURL('/'),
+      this.homeLink.click(),
+    ]);
   }
 
   /**

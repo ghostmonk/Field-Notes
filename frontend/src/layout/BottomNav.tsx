@@ -1,7 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useNavSections } from '@/hooks/useNavSections';
 import { useActiveSection } from '@/hooks/useActiveSection';
+import { getSiteConfig } from '@/config';
 import { NavSectionItem, NavIcon } from '@/shared/lib/navigation';
 import { HiHome, HiUser, HiFolder, HiMail, HiViewGrid } from 'react-icons/hi';
 
@@ -37,6 +39,9 @@ const NavItem: React.FC<NavItemProps> = ({ section, isActive }) => {
 const BottomNav: React.FC = () => {
     const sections = useNavSections();
     const activeSlug = useActiveSection(sections);
+    const config = getSiteConfig();
+    const router = useRouter();
+    const isHomePage = router.pathname === '/';
 
     return (
         <nav
@@ -45,11 +50,20 @@ const BottomNav: React.FC = () => {
             aria-label="Main navigation"
             data-testid="bottom-nav"
         >
+            <Link
+                href="/"
+                className={`bottom-nav__item ${isHomePage ? 'bottom-nav__item--active' : ''}`}
+                aria-current={isHomePage ? 'page' : undefined}
+                data-testid="bottom-nav-home"
+            >
+                <HiHome className="bottom-nav__icon" aria-hidden="true" />
+                <span className="bottom-nav__label">{config.site.title}</span>
+            </Link>
             {sections.map((section) => (
                 <NavItem
                     key={section.slug}
                     section={section}
-                    isActive={activeSlug === section.slug}
+                    isActive={!isHomePage && activeSlug === section.slug}
                 />
             ))}
         </nav>
