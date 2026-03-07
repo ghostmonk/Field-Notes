@@ -73,7 +73,7 @@ export function useFetchStories(options: UseFetchStoriesOptions = {}): UseFetchS
       const response = await apiClient.stories.list(tokenRef.current, {
         limit: STORIES_PAGE_SIZE,
         offset: offsetRef.current,
-        include_drafts: !!session?.accessToken
+        include_drafts: session?.user?.role === 'admin'
       });
 
       setTotalStories(response.total);

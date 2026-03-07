@@ -3,7 +3,11 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from database import get_collection, get_db
-from decorators.auth import check_write_permission, requires_auth
+from decorators.auth import (
+    check_write_permission,
+    requires_auth,
+    verify_auth_and_get_user,
+)
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from glogger import logger
 from models.story import StoryCreate, StoryResponse
@@ -26,8 +30,17 @@ async def get_stories(
     collection: AsyncIOMotorCollection = Depends(get_collection),
 ):
     try:
+        # Only allow include_drafts for authenticated admin users
+        drafts_allowed = False
+        if include_drafts:
+            try:
+                user = await verify_auth_and_get_user(request)
+                drafts_allowed = user.role == "admin"
+            except HTTPException:
+                drafts_allowed = False
+
         query = {"deleted": {"$ne": True}}
-        if not include_drafts:
+        if not drafts_allowed:
             query["is_published"] = True
         if section_id:
             query["section_id"] = section_id

@@ -77,7 +77,7 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
             if (sectionId) {
                 params.section_id = sectionId;
             }
-            if (contentType === 'story' && session?.accessToken) {
+            if (contentType === 'story' && session?.user?.role === 'admin') {
                 params.include_drafts = 1;
             }
 
