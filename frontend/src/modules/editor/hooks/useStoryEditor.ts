@@ -195,13 +195,16 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }
   }, [fetchLoading, loadDraft, fetchedStory]);
 
-  // Start autosave timer
+  // Start autosave timer — only writes when form has been modified
   useEffect(() => {
-    startAutosave(() => ({
-      title: storyRef.current.title || '',
-      content: storyRef.current.content || '',
-      is_published: storyRef.current.is_published || false,
-    }));
+    startAutosave(() => {
+      if (!isDirtyRef.current) return null;
+      return {
+        title: storyRef.current.title || '',
+        content: storyRef.current.content || '',
+        is_published: storyRef.current.is_published || false,
+      };
+    });
     return () => stopAutosave();
   }, [startAutosave, stopAutosave]);
 
@@ -236,10 +239,12 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }
   }, [router.query, storyId]);
 
-  // Auto-save on token expiry
+  // Auto-save on token expiry — reads from refs to avoid interval churn
   useEffect(() => {
     const interval = setInterval(() => {
-      if (session?.accessToken && isTokenExpired(session.accessToken) && (story.title || story.content)) {
+      const token = session?.accessToken;
+      const current = storyRef.current;
+      if (token && isTokenExpired(token) && (current.title || current.content)) {
         handleSubmit(new Event('submit') as unknown as React.FormEvent, false).then(() => {
           alert('Session expired. Your story has been saved as a draft. Logging out.');
           signOut();
@@ -248,7 +253,7 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }, TOKEN_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [session?.accessToken, story.title, story.content, handleSubmit]);
+  }, [session?.accessToken, handleSubmit]);
 
   // Redirect unauthenticated users
   useEffect(() => {

@@ -1,12 +1,10 @@
 import { useRef, useEffect } from 'react';
 
 interface AltTextDialogProps {
-  fileName: string;
   onConfirm: (altText: string) => void;
-  onCancel: () => void;
 }
 
-export function AltTextDialog({ fileName, onConfirm, onCancel }: AltTextDialogProps) {
+export function AltTextDialog({ onConfirm }: AltTextDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -16,14 +14,14 @@ export function AltTextDialog({ fileName, onConfirm, onCancel }: AltTextDialogPr
   }, []);
 
   const handleConfirm = () => {
-    const altText = inputRef.current?.value?.trim() || fileName;
+    const altText = inputRef.current?.value?.trim() || '';
     dialogRef.current?.close();
     onConfirm(altText);
   };
 
   const handleCancel = () => {
     dialogRef.current?.close();
-    onCancel();
+    onConfirm('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -55,7 +53,6 @@ export function AltTextDialog({ fileName, onConfirm, onCancel }: AltTextDialogPr
         <input
           ref={inputRef}
           type="text"
-          defaultValue={fileName}
           placeholder="Describe the image..."
           className="w-full rounded-md border px-3 py-2 text-sm"
           style={{
@@ -66,15 +63,7 @@ export function AltTextDialog({ fileName, onConfirm, onCancel }: AltTextDialogPr
           onKeyDown={handleKeyDown}
           data-testid="alt-text-input"
         />
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="btn btn--secondary btn--sm"
-            data-testid="alt-text-cancel"
-          >
-            Skip
-          </button>
+        <div className="mt-4 flex justify-end">
           <button
             type="button"
             onClick={handleConfirm}

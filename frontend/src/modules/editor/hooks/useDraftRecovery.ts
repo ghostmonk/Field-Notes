@@ -68,12 +68,12 @@ export function useDraftRecovery(storyId?: string, sectionId?: string) {
         title: string;
         content: string;
         is_published: boolean;
-      },
+      } | null,
     ) => {
       if (autosaveTimer.current !== null) clearInterval(autosaveTimer.current);
       autosaveTimer.current = setInterval(() => {
         const state = getState();
-        saveDraft(state.title, state.content, state.is_published);
+        if (state) saveDraft(state.title, state.content, state.is_published);
       }, AUTOSAVE_INTERVAL);
     },
     [saveDraft],

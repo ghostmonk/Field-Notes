@@ -5,16 +5,12 @@ import { useCallback, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { useFileUpload, UseFileUploadReturn } from './useFileUpload';
 import { validateImageFile, createFileValidationError, ALLOWED_IMAGE_TYPES } from '@/shared/utils/uploadUtils';
+import { escapeHtmlAttr } from '@/shared/utils/htmlUtils';
 
 export interface UseImageUploadReturn extends UseFileUploadReturn {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   acceptTypes: string;
   pendingAltText: { fileName: string; resolve: (altText: string) => void } | null;
-  dismissAltTextDialog: () => void;
-}
-
-export function escapeHtmlAttr(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
 
 /**
@@ -60,34 +56,21 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
 
       const { urls, srcsets, dimensions } = result;
       const safeAlt = escapeHtmlAttr(altText);
-
-      if (srcsets?.length && dimensions?.length) {
-        // Full responsive image with srcset and dimensions
-        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" width="${dimensions[0].width}" height="${dimensions[0].height}" alt="${safeAlt}" />`;
-        editor.commands.insertContent(imgHTML);
-      } else if (srcsets?.length) {
-        // Responsive image without dimensions
-        const imgHTML = `<img src="${urls[0]}" srcset="${srcsets[0]}" sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px" alt="${safeAlt}" />`;
-        editor.commands.insertContent(imgHTML);
-      } else {
-        // Basic image fallback
-        editor.commands.insertContent(`<img src="${urls[0]}" alt="${safeAlt}" />`);
+      const attrs = [`src="${urls[0]}"`, `alt="${safeAlt}"`];
+      if (srcsets?.length) {
+        attrs.push(`srcset="${srcsets[0]}"`, `sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px"`);
       }
+      if (dimensions?.length) {
+        attrs.push(`width="${dimensions[0].width}"`, `height="${dimensions[0].height}"`);
+      }
+      editor.commands.insertContent(`<img ${attrs.join(' ')} />`);
     }
   }, [editor, baseUpload]);
-
-  const dismissAltTextDialog = useCallback(() => {
-    if (pendingAltText) {
-      pendingAltText.resolve(pendingAltText.fileName);
-      setPendingAltText(null);
-    }
-  }, [pendingAltText]);
 
   return {
     ...baseUpload,
     handleFileChange,
     acceptTypes: ALLOWED_IMAGE_TYPES.join(','),
     pendingAltText,
-    dismissAltTextDialog,
   };
 }

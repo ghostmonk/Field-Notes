@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { escapeHtmlAttr } from './useImageUpload';
+import { escapeHtmlAttr } from './htmlUtils';
 
 describe('escapeHtmlAttr', () => {
   it('escapes double quotes', () => {
@@ -10,8 +10,20 @@ describe('escapeHtmlAttr', () => {
     expect(escapeHtmlAttr('cats & dogs')).toBe('cats &amp; dogs');
   });
 
-  it('escapes both together', () => {
-    expect(escapeHtmlAttr('"Tom & Jerry"')).toBe('&quot;Tom &amp; Jerry&quot;');
+  it('escapes single quotes', () => {
+    expect(escapeHtmlAttr("it's fine")).toBe('it&#39;s fine');
+  });
+
+  it('escapes angle brackets', () => {
+    expect(escapeHtmlAttr('<script>alert("xss")</script>')).toBe(
+      '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
+    );
+  });
+
+  it('escapes all special characters together', () => {
+    expect(escapeHtmlAttr('"Tom & Jerry" <show>')).toBe(
+      '&quot;Tom &amp; Jerry&quot; &lt;show&gt;'
+    );
   });
 
   it('passes through safe strings unchanged', () => {

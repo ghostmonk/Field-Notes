@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useId } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import ClipLoader from 'react-spinners/ClipLoader';
 import type { FeedDisplayProps } from '../types';
 
 export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore }: FeedDisplayProps<T>) {
+    const skipTargetId = useId();
     return (
         <section aria-label="Content feed" className="mt-4">
-            <a href="#after-feed" className="skip-to-content">
+            <a href={`#${skipTargetId}`} className="skip-to-content">
                 Skip past feed
             </a>
             <InfiniteScroll
@@ -32,7 +33,7 @@ export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore }: FeedD
                     ))}
                 </div>
             </InfiniteScroll>
-            <div id="after-feed" tabIndex={-1} />
+            <div id={skipTargetId} tabIndex={-1} />
         </section>
     );
 }

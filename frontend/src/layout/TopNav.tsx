@@ -17,6 +17,7 @@ const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
 };
 
 const NewStoryIcon = HiPlusSm;
+// Safe at module scope — getSiteConfig reads a static JSON import, no runtime side effects
 const config = getSiteConfig();
 
 export default function TopNav() {
@@ -117,28 +118,24 @@ export default function TopNav() {
             {session?.user?.role === 'admin' && mobileMenuOpen && (
                 <div className="nav__mobile-menu" data-testid="mobile-menu">
                     <div className="nav__mobile-links">
-                        {session?.user?.role === 'admin' && (
-                            <>
-                                <Link
-                                    href={activeSectionId ? `/editor?section_id=${activeSectionId}` : '/editor'}
-                                    className="nav__mobile-link"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    data-testid="mobile-nav-new-content-link"
-                                >
-                                    <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
-                                    <span>New</span>
-                                </Link>
-                                <Link
-                                    href="/admin/sections"
-                                    className="nav__mobile-link"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    data-testid="mobile-nav-sections-link"
-                                >
-                                    <HiCog className="nav__link-icon" aria-hidden="true" />
-                                    <span>Sections</span>
-                                </Link>
-                            </>
-                        )}
+                        <Link
+                            href={activeSectionId ? `/editor?section_id=${activeSectionId}` : '/editor'}
+                            className="nav__mobile-link"
+                            onClick={() => setMobileMenuOpen(false)}
+                            data-testid="mobile-nav-new-content-link"
+                        >
+                            <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
+                            <span>New</span>
+                        </Link>
+                        <Link
+                            href="/admin/sections"
+                            className="nav__mobile-link"
+                            onClick={() => setMobileMenuOpen(false)}
+                            data-testid="mobile-nav-sections-link"
+                        >
+                            <HiCog className="nav__link-icon" aria-hidden="true" />
+                            <span>Sections</span>
+                        </Link>
                     </div>
                 </div>
             )}

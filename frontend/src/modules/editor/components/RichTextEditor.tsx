@@ -64,7 +64,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     });
 
     // Upload hooks
-    const { pendingAltText, dismissAltTextDialog, ...imageUpload } = useImageUpload(editor);
+    const { pendingAltText, ...imageUpload } = useImageUpload(editor);
     const videoUpload = useVideoUpload(editor);
 
     // Sync content from props
@@ -175,9 +175,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
             {pendingAltText && (
                 <AltTextDialog
-                    fileName={pendingAltText.fileName}
                     onConfirm={pendingAltText.resolve}
-                    onCancel={dismissAltTextDialog}
                 />
             )}
         </div>

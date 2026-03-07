@@ -36,6 +36,7 @@ const NavItem: React.FC<NavItemProps> = ({ section, isActive }) => {
     );
 };
 
+// Safe at module scope — getSiteConfig reads a static JSON import, no runtime side effects
 const config = getSiteConfig();
 
 const BottomNav: React.FC = () => {
