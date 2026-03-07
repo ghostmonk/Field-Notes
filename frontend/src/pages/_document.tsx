@@ -3,10 +3,10 @@ import siteConfig from '../../../site.config.json';
 
 const fontFamilies = [siteConfig.fonts.heading, siteConfig.fonts.body]
     .filter((v, i, a) => a.indexOf(v) === i)
-    .map(f => f.replace(/ /g, '+'))
+    .map(f => `${f.replace(/ /g, '+')}:wght@300;400;500;600;700`)
     .join('&family=');
 
-const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamilies}:wght@300;400;500;600;700&display=swap`;
+const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamilies}&display=swap`;
 
 export default function Document() {
     return (

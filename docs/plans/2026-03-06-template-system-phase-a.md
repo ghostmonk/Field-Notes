@@ -1,16 +1,14 @@
 # Template System Phase A — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+**Status:** Completed
 
 **Goal:** Extract the current visual layer into a swappable template directory, driven by a site config file, so the site looks identical but the architecture supports template swapping.
 
-**Architecture:** A `site.config.json` at the project root defines site identity, template selection, brand colors, fonts, nav icons, and footer links. Templates live under `frontend/src/templates/<name>/` and contain only CSS (tokens, components, layout vars). Shared layout components consume CSS variables and config values instead of hardcoding them.
+**Architecture:** A `site.config.json` at the project root defines site identity, template selection, fonts, nav icons, and footer links. Templates live under `frontend/src/templates/<name>/` and contain only CSS (tokens, components, layout vars). Shared layout components consume CSS variables and config values instead of hardcoding them.
 
 **Tech Stack:** Next.js, TypeScript, CSS custom properties, Tailwind CSS v4
 
 **Design doc:** `docs/plans/2026-03-06-template-system-design.md`
-
-**Worktree:** `.worktrees/template-design-rework` (branch: `ghostmonk/issue-129-design-rework`)
 
 ---
 

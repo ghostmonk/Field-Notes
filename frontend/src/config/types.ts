@@ -6,10 +6,6 @@ export interface SiteConfig {
     copyright: string;
   };
   template: string;
-  brand: {
-    primary: string;
-    accent: string;
-  };
   fonts: {
     heading: string;
     body: string;
@@ -19,8 +15,5 @@ export interface SiteConfig {
   };
   footer: {
     links: Array<{ label: string; href: string }>;
-  };
-  layout: {
-    containerMaxWidth: string;
   };
 }
