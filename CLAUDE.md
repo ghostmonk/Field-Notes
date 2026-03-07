@@ -115,6 +115,7 @@ Layout components (`Layout.tsx`, `Footer.tsx`, `TopNav.tsx`, `BottomNav.tsx`) co
 - Follow established patterns in each technology stack
 - Use the virtual environment for backend Python work
 - Check formatting before committing changes
+- **New features must include docs-site updates** — add or update pages under `docs-site/pages/` (guides, architecture, features, or releases as appropriate). The docs site auto-deploys to GitHub Pages on push to main when `docs-site/` files change.
 
 ## Security Requirements
 

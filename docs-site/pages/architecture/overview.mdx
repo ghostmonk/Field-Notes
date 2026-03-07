@@ -55,3 +55,33 @@ A single catch-all route (`pages/[...slugPath].tsx`) resolves all content URLs. 
 ### Navigation
 
 TopNav renders from database sections where `nav_visibility = "main"`. A module-level cache in `useNavSections` prevents redundant API calls, with listener-based invalidation when sections are created, updated, or deleted.
+
+## Template System
+
+Templates are CSS-only packages that control the visual identity of the site. Each template lives in `templates/<name>/` and exposes a single `index.css` entry point imported in `_app.tsx`. No JavaScript, no React components — just CSS custom properties and component classes.
+
+A template must provide:
+
+- **`tokens.css`** — CSS custom properties for colors, fonts, spacing, radii, and transitions, with dark mode overrides under `.dark`
+- **`typography.css`** — Font assignments and heading styles
+- **`layout.css`** — Layout dimension variables (`--layout-nav-height`, `--layout-container-max-width`, etc.)
+- **`components.css`** — Component classes (`.card`, `.btn`, `.badge`, `.grid`, `.prose`, etc.) consumed directly by React components
+
+The full contract of required properties and classes is documented in `templates/CONTRACT.md`. Switching templates means copying the default, modifying the CSS, updating the import in `_app.tsx`, and adjusting `site.config.json` fonts if needed.
+
+## Site Configuration
+
+`site.config.json` in the frontend root defines build-time site metadata loaded by the `config/` module. It contains four sections:
+
+| Key | Purpose |
+|-----|---------|
+| `site` | Title, tagline, author, copyright (supports `{year}` token) |
+| `fonts` | Google Fonts for heading and body text |
+| `navigation` | Icon map linking section slugs to icon names for mobile bottom nav |
+| `footer` | Static footer links (Privacy, Terms) |
+
+The config loader reads this file once at build time and exposes typed accessors to components. Layout, TopNav, Footer, and `_document.tsx` (Google Fonts injection) all consume it.
+
+### How Templates and Config Interact
+
+Templates define **what the fonts look like** (sizes, weights, line-heights via CSS custom properties). Site config defines **which fonts to load** (Google Fonts families injected in `_document.tsx`). The template's `--font-family-sans` / `--font-family-serif` variables reference the families that `site.config.json` loads. Changing fonts requires updating both: the config to load the new family, and the template tokens to reference it.

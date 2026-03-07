@@ -50,6 +50,16 @@ frontend/src/
 │   ├── useNavSections.ts     # Navigation cache with invalidation
 │   └── useActiveSection.ts   # Active section from URL
 │
+├── config/                   # SITE CONFIGURATION
+│   ├── siteConfig.ts          # Loader for site.config.json
+│   └── types.ts               # SiteConfig type definitions
+│
+├── templates/                # CSS-ONLY TEMPLATES
+│   ├── CONTRACT.md            # Template requirements spec
+│   └── default/               # Default template
+│       ├── index.css          # Single entry point
+│       └── styles/            # tokens, typography, layout, components
+│
 ├── rendering/                # SSR PATTERNS
 │   ├── server/               # getServerSideProps helpers
 │   └── client/               # Client-only patterns

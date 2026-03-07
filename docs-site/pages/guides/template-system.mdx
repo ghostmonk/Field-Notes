@@ -1,0 +1,277 @@
+# Template System
+
+Field Notes uses a CSS-only template system. Templates contain no JavaScript components — they define design tokens, typography rules, layout dimensions, and component classes as plain CSS. React components reference these classes directly, and switching templates is a single import change.
+
+## How It Works
+
+Two CSS layers load in `_app.tsx`:
+
+```tsx
+import '../styles/globals.css';
+import '../templates/default/index.css';
+```
+
+**`globals.css`** is the framework reset. It imports Tailwind, sets viewport height, clears margins, and enables font smoothing. It is template-independent and never changes between templates.
+
+**`templates/<name>/index.css`** is the template entry point. It provides all visual identity: colors, fonts, spacing, component styles. Swapping this import swaps the entire look of the site.
+
+The separation is strict: `globals.css` handles browser normalization; the template handles everything visual.
+
+## Directory Structure
+
+Every template follows this layout:
+
+```
+templates/<name>/
+  index.css          # Single entry point, imported in _app.tsx
+  styles/
+    tokens.css       # CSS custom properties (colors, fonts, spacing, radii, transitions)
+    typography.css   # Font assignments and heading styles
+    layout.css       # Layout dimension variables
+    components.css   # Component classes consumed by React components
+```
+
+The `index.css` file imports all partials:
+
+```css
+@import './styles/tokens.css';
+@import './styles/typography.css';
+@import './styles/layout.css';
+@import './styles/components.css';
+```
+
+## Required CSS Custom Properties
+
+Templates must define all of the following properties. Light mode values go in `:root`, dark mode overrides in `.dark`.
+
+### Colors
+
+```css
+:root {
+  /* Brand */
+  --color-brand-primary: #2563eb;
+  --color-brand-primary-hover: #1d4ed8;
+  --color-brand-secondary: #06b6d4;
+
+  /* Surfaces */
+  --color-surface-primary: #ffffff;
+  --color-surface-secondary: #f9fafb;
+  --color-surface-tertiary: #f3f4f6;
+  --color-surface-inverse: #111827;
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --color-text-inverse: #ffffff;
+  --color-text-brand: #2563eb;
+  --color-text-link: #2563eb;
+  --color-text-link-hover: #1d4ed8;
+
+  /* Borders */
+  --color-border-primary: #e5e7eb;
+  --color-border-secondary: #d1d5db;
+  --color-border-focus: #4f46e5;
+
+  /* Status */
+  --color-status-success: #10b981;
+  --color-status-warning: #f59e0b;
+  --color-status-error: #ef4444;
+  --color-status-info: #3b82f6;
+
+  /* Shadows */
+  --color-shadow-light: rgba(0, 0, 0, 0.1);
+  --color-shadow-medium: rgba(0, 0, 0, 0.15);
+  --color-shadow-dark: rgba(0, 0, 0, 0.25);
+
+  /* Navigation */
+  --color-nav-backdrop: rgba(255, 255, 255, 0.95);
+}
+```
+
+Dark mode overrides surfaces, text, borders, and shadows in `.dark`:
+
+```css
+.dark {
+  --color-surface-primary: #0f172a;
+  --color-surface-secondary: #1e293b;
+  --color-surface-tertiary: #334155;
+  --color-surface-inverse: #f8fafc;
+  /* ... remaining dark overrides */
+  --color-nav-backdrop: rgba(15, 23, 42, 0.95);
+}
+```
+
+### Fonts
+
+```css
+:root {
+  --font-family-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-serif: 'Roboto Slab', Georgia, serif;
+  --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+
+  --font-size-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.8rem);
+  --font-size-sm: clamp(0.875rem, 0.8rem + 0.3vw, 0.95rem);
+  --font-size-base: clamp(1rem, 0.9rem + 0.4vw, 1.125rem);
+  --font-size-lg: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
+  --font-size-xl: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --font-size-2xl: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+  --font-size-3xl: clamp(1.875rem, 1.6rem + 1.2vw, 2.5rem);
+  --font-size-4xl: clamp(2.25rem, 1.9rem + 1.5vw, 3rem);
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+}
+```
+
+### Spacing, Radii, Transitions
+
+```css
+:root {
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+  --space-2xl: 2rem;
+  --space-3xl: 3rem;
+  --space-4xl: 4rem;
+  --space-5xl: 6rem;
+
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+  --transition-colors: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+```
+
+### Layout
+
+```css
+:root {
+  --layout-nav-height: 56px;
+  --layout-footer-height: 32px;
+  --layout-bottom-nav-offset: 2rem;
+  --layout-container-max-width: 75rem;
+  --layout-content-padding: 1.5rem;
+  --layout-page-content-max-width: 800px;
+  --layout-bottom-offset: calc(
+    var(--layout-nav-height) +
+    var(--layout-bottom-nav-offset) +
+    var(--layout-footer-height) +
+    env(safe-area-inset-bottom)
+  );
+}
+```
+
+`--layout-bottom-offset` is a computed property that accounts for mobile safe areas. It has a desktop override at `min-width: 768px`.
+
+## Required Component Classes
+
+React components reference these CSS classes directly. Every template must implement them.
+
+| Category | Classes |
+|---|---|
+| Layout | `.container`, `.nav`, `.nav__container`, `.nav__links`, `.nav__link`, `.nav__link--active` |
+| Navigation | `.bottom-nav`, `.bottom-nav__item`, `.bottom-nav__item--active`, `.bottom-nav__icon`, `.bottom-nav__label` |
+| Cards | `.card`, `.card--draft`, `.card--link`, `.card--hoverable` |
+| Buttons | `.btn`, `.btn--primary`, `.btn--secondary`, `.btn--danger`, `.btn--sm`, `.btn--lg` |
+| Badges | `.badge`, `.badge--draft`, `.badge--featured` |
+| Grid | `.grid`, `.grid--responsive`, `.grid--3-cols`, `.grid--1-col` |
+| Story | `.story-header`, `.story-title`, `.story-content`, `.story-excerpt` |
+| Prose | `.prose`, `.prose--card` |
+| Utility | `.sr-only`, `.transition-colors`, `.pb-safe` |
+
+## Typography Contract
+
+`typography.css` assigns font tokens to HTML elements. The template controls which font families apply to body text vs. headings:
+
+```css
+body {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  background-color: var(--color-surface-primary);
+  color: var(--color-text-primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-serif);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+h5 { font-size: var(--font-size-base); }
+h6 { font-size: var(--font-size-sm); }
+```
+
+A new template can swap serif headings for sans-serif, change the size scale, or use entirely different font families — as long as the custom property names stay the same.
+
+## Creating a New Template
+
+1. Copy the default template:
+
+```bash
+cp -r frontend/src/templates/default frontend/src/templates/my-theme
+```
+
+2. Edit `tokens.css` — change colors, font families, spacing scale, radii, transitions. Every property listed under "Required CSS Custom Properties" above must be present.
+
+3. Edit `typography.css` — adjust font family assignments, heading sizes, line heights.
+
+4. Edit `layout.css` — adjust nav height, container width, content padding.
+
+5. Edit `components.css` — restyle all required component classes. Change borders, shadows, padding, hover states. Do not rename or remove any class listed in the contract.
+
+6. Verify `index.css` imports all four partials.
+
+7. Switch the import in `_app.tsx` (see next section).
+
+8. If your template uses different Google Fonts, update `site.config.json` to load them.
+
+9. Update the FOUC background color in `_document.tsx`. The `<Html>` and `<body>` elements have a hardcoded `style={{backgroundColor: '...'}}` that must match your template's `--color-surface-primary` dark value. CSS variables are not available at SSR paint time, so this must be a literal hex value.
+
+## Switching Templates
+
+Change the import path in `frontend/src/pages/_app.tsx`:
+
+```tsx
+import '../styles/globals.css';
+// Change 'default' to your template name
+import '../templates/my-theme/index.css';
+```
+
+That single line change swaps the entire visual identity. No component code changes required.
+
+## globals.css vs. Template CSS
+
+| Concern | File | Changes per template? |
+|---|---|---|
+| Tailwind import | `globals.css` | No |
+| Viewport height / `min-height` | `globals.css` | No |
+| Body margin/padding reset | `globals.css` | No |
+| Font smoothing | `globals.css` | No |
+| Colors, fonts, spacing tokens | `tokens.css` | Yes |
+| Heading/body font assignments | `typography.css` | Yes |
+| Layout dimensions | `layout.css` | Yes |
+| Component visual styles | `components.css` | Yes |
+
+`globals.css` is infrastructure. Template CSS is identity. They do not overlap.

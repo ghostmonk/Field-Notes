@@ -1,0 +1,146 @@
+# Site Configuration
+
+All site-wide settings live in a single JSON file loaded at build time. The config drives fonts, navigation icons, footer content, and site metadata.
+
+## Config Location and Loading
+
+The config file is `frontend/site.config.json`. It is imported as a static JSON module in `frontend/src/config/site-config.ts`:
+
+```ts
+import { SiteConfig } from './types';
+import config from '../../site.config.json';
+
+const siteConfig = config satisfies SiteConfig;
+
+export function getSiteConfig(): SiteConfig {
+  return siteConfig;
+}
+```
+
+`satisfies` enforces the `SiteConfig` type at compile time without widening the inferred type. The JSON is inlined by the bundler -- there is no runtime file read. Changes require a rebuild.
+
+The public API is re-exported from `frontend/src/config/index.ts` as `getSiteConfig`.
+
+## Config Sections
+
+### `site`
+
+| Field       | Type   | Description                                                             |
+|-------------|--------|-------------------------------------------------------------------------|
+| `title`     | string | Site name. Used in page titles and branding.                            |
+| `tagline`   | string | Short descriptor displayed alongside the title.                         |
+| `author`    | string | Author attribution.                                                     |
+| `copyright` | string | Copyright template string. Supports `{year}` placeholder (see below).  |
+
+### `fonts`
+
+| Field     | Type   | Description                              |
+|-----------|--------|------------------------------------------|
+| `heading` | string | Google Font family name for headings.    |
+| `body`    | string | Google Font family name for body text.   |
+
+### `navigation`
+
+| Field     | Type                    | Description                                      |
+|-----------|-------------------------|--------------------------------------------------|
+| `iconMap` | `Record<string, string>` | Maps section slugs to icon names for the nav bar. |
+
+### `footer`
+
+| Field   | Type                                   | Description                |
+|---------|----------------------------------------|----------------------------|
+| `links` | `Array<{ label: string; href: string }>` | Links rendered in the footer. |
+
+## Full Example
+
+```json
+{
+  "site": {
+    "title": "Ghostmonk",
+    "tagline": "Sharing Stories, Projects and Ideas",
+    "author": "Ghostmonk",
+    "copyright": "\u00a9 {year} Ghostmonk"
+  },
+  "fonts": {
+    "heading": "Poppins",
+    "body": "Roboto Slab"
+  },
+  "navigation": {
+    "iconMap": {
+      "blog": "home",
+      "about": "user",
+      "projects": "folder",
+      "contact": "mail"
+    }
+  },
+  "footer": {
+    "links": [
+      { "label": "Privacy", "href": "/privacy" },
+      { "label": "Terms", "href": "/terms" }
+    ]
+  }
+}
+```
+
+## Font Loading
+
+`_document.tsx` reads `fonts.heading` and `fonts.body` from the config and constructs a Google Fonts URL at module scope (build time):
+
+```ts
+const fontFamilies = [...new Set([config.fonts.heading, config.fonts.body])]
+    .map(f => `${f.replace(/ /g, '+')}:wght@300;400;500;600;700`)
+    .join('&family=');
+
+const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamilies}&display=swap`;
+```
+
+Steps:
+
+1. Deduplicates heading and body fonts (if they are the same family, only one request is made).
+2. Replaces spaces with `+` for the URL.
+3. Requests weights 300-700 for each family.
+4. The resulting `<link>` tag is placed in `<Head>` with `preconnect` hints to `fonts.googleapis.com` and `fonts.gstatic.com`.
+
+To use a different font, change the family name in the config. The name must exactly match the Google Fonts catalog entry.
+
+## Navigation Icon Map
+
+The `navigation.iconMap` maps section slugs (from the database) to icon identifiers used in the nav bar.
+
+```json
+"iconMap": {
+  "blog": "home",
+  "about": "user",
+  "projects": "folder",
+  "contact": "mail"
+}
+```
+
+The mapping is consumed in `useNavSections`, which fetches sections from the API and passes `iconMap` to `sectionsToNavItems`. For each section, the slug is looked up in the map. The resolved value is validated against a whitelist of valid icons:
+
+```ts
+const VALID_ICONS = ['home', 'user', 'folder', 'mail', 'default'] as const;
+```
+
+If a slug has no entry in the map, or the mapped value is not in `VALID_ICONS`, the icon falls back to `'default'`.
+
+To add an icon for a new section: add a `"section-slug": "icon-name"` entry to `iconMap`, using one of the valid icon names above.
+
+## Copyright Template
+
+The `site.copyright` field supports a `{year}` placeholder. The `Footer` component replaces it with the current year at render time:
+
+```ts
+const copyright = config.site.copyright.replace('{year}', String(new Date().getFullYear()));
+```
+
+Example: `"\u00a9 {year} Ghostmonk"` renders as `"\u00a9 2026 Ghostmonk"`.
+
+## Footer Links
+
+The `footer.links` array defines links rendered in the right side of the footer bar. Each entry has:
+
+- `label` -- visible link text.
+- `href` -- destination path (internal routes like `/privacy`) or full URL.
+
+Links are rendered as Next.js `<Link>` components with hover underline styling. Add or remove entries from the array to change the footer links. Order in the array matches render order left-to-right.

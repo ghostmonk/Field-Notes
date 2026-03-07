@@ -69,7 +69,6 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
 
 ```typescript
 import React from 'react';
-import DOMPurify from 'isomorphic-dompurify';
 import { Recipe } from '@/shared/types/api';
 
 interface RecipeDetailProps {
@@ -87,7 +86,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe }) => {
             </ul>
             <div className="card">
                 <div className="prose prose--card">
-                    <div dangerouslySetInnerHTML=&#123;&#123; __html: DOMPurify.sanitize(recipe.content) &#125;&#125; />
+                    <p>{recipe.content}</p>
                 </div>
             </div>
         </>

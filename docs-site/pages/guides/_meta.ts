@@ -7,5 +7,7 @@ export default {
   'error-handling-system': 'Error Handling',
   'logging-usage-guide': 'Logging',
   'video-processing-setup': 'Video Processing',
-  'github-actions-video-setup': 'GitHub Actions Video Setup'
+  'github-actions-video-setup': 'GitHub Actions Video Setup',
+  'template-system': 'Template System',
+  'site-configuration': 'Site Configuration'
 }
