@@ -2,6 +2,8 @@ import { Section } from '@/shared/types/api';
 
 export type NavIcon = 'home' | 'user' | 'folder' | 'mail' | 'default';
 
+const VALID_ICONS: readonly string[] = ['home', 'user', 'folder', 'mail', 'default'];
+
 export interface NavSectionItem {
     id: string;
     slug: string;
@@ -11,12 +13,13 @@ export interface NavSectionItem {
 }
 
 export function sectionToNavItem(section: Section, iconMap: Record<string, string>): NavSectionItem {
+    const mapped = iconMap[section.slug];
     return {
         id: section.id,
         slug: section.slug,
         path: `/${section.slug}`,
         label: section.title,
-        icon: (iconMap[section.slug] as NavIcon) || 'default',
+        icon: VALID_ICONS.includes(mapped) ? (mapped as NavIcon) : 'default',
     };
 }
 

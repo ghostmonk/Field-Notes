@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from "next/document";
+// Direct JSON import — _document.tsx runs server-side only and cannot use getSiteConfig()
 import siteConfig from '../../../site.config.json';
 
 const fontFamilies = [siteConfig.fonts.heading, siteConfig.fonts.body]

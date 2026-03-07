@@ -1,5 +1,7 @@
 import '../styles/globals.css';
-// Active template CSS — must be imported here (Next.js Pages Router requires global CSS in _app)
+// Active template CSS — change these imports to switch templates.
+// Next.js Pages Router requires global CSS imports in _app; dynamic imports are not supported.
+// The "template" field in site.config.json documents which template is active.
 import '../templates/default/styles/tokens.css';
 import '../templates/default/styles/components.css';
 import '../templates/default/styles/layout.css';

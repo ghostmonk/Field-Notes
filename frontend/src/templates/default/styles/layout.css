@@ -14,6 +14,6 @@
 
 @media (min-width: 768px) {
   :root {
-    --layout-bottom-offset: 4rem;
+    --layout-bottom-offset: calc(4rem + env(safe-area-inset-bottom));
   }
 }
