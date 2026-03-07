@@ -74,16 +74,18 @@ export default function TopNav() {
                     </div>
 
                     {/* Mobile Menu Button */}
-                    <button
-                        className="nav__mobile-toggle"
-                        onClick={toggleMobileMenu}
-                        aria-label="Toggle mobile menu"
-                        data-testid="mobile-menu-toggle"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                        </svg>
-                    </button>
+                    {session?.user?.role === 'admin' && (
+                        <button
+                            className="nav__mobile-toggle"
+                            onClick={toggleMobileMenu}
+                            aria-label="Toggle mobile menu"
+                            data-testid="mobile-menu-toggle"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                            </svg>
+                        </button>
+                    )}
                 </div>
 
                 <div className="flex items-center space-x-4">
@@ -112,7 +114,7 @@ export default function TopNav() {
             </div>
 
             {/* Mobile Menu - Auth/Settings only (sections handled by BottomNav) */}
-            {mobileMenuOpen && (
+            {session?.user?.role === 'admin' && mobileMenuOpen && (
                 <div className="nav__mobile-menu" data-testid="mobile-menu">
                     <div className="nav__mobile-links">
                         {session?.user?.role === 'admin' && (

@@ -88,6 +88,20 @@ test.describe('Smoke Tests', () => {
     expect(homePage.url).toMatch(/\/(blog)?$/);
   });
 
+  test('unauthenticated user does not see mobile menu toggle', async ({ mockApiPage }) => {
+    const homePage = new HomePage(mockApiPage);
+    await homePage.goto();
+    await homePage.waitForLoad();
+    await expect(homePage.nav.mobileMenuToggle).not.toBeVisible();
+  });
+
+  test('authenticated admin user sees mobile menu toggle', async ({ mockAuthenticatedApiPage }) => {
+    const homePage = new HomePage(mockAuthenticatedApiPage);
+    await homePage.goto();
+    await homePage.waitForLoad();
+    await expect(homePage.nav.mobileMenuToggle).toBeVisible();
+  });
+
   test('all section links are present', async ({ mockApiPage }) => {
     const homePage = new HomePage(mockApiPage);
 
