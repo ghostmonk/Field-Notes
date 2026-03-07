@@ -4,8 +4,9 @@ import '../templates/default/index.css';
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
 import { Layout } from "@/layout";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Head from "next/head";
+import { getSiteConfig } from '@/config';
 import { configureDOMPurify } from '@/shared/utils/sanitizer';
 import keepAliveService from '@/shared/lib/keep-alive';
 import { BackendWarmupBanner } from '@/components/LoadingSkeletons';
@@ -81,7 +82,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                     name="viewport"
                     content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes"
                 />
-                <meta name="author" content="Ghostmonk"/>
+                <meta name="author" content={getSiteConfig().site.author}/>
                 <link rel="canonical" href="https://ghostmonk.com/"/>
             </Head>
             <Layout>

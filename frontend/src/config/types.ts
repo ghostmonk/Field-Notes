@@ -5,7 +5,6 @@ export interface SiteConfig {
     author: string;
     copyright: string;
   };
-  template: string;
   fonts: {
     heading: string;
     body: string;

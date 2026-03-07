@@ -67,8 +67,7 @@ These classes are referenced directly in React components:
 1. Copy `templates/default/` to `templates/<name>/`
 2. Modify the CSS files
 3. Update `_app.tsx`: change `import '../templates/default/index.css'` to `import '../templates/<name>/index.css'`
-4. Update `site.config.json`: set `"template": "<name>"`
-5. Update `site.config.json` `fonts` if the template uses different Google Fonts
-6. Update the FOUC background color in `_document.tsx` (`style={{backgroundColor: '...'}}`
+4. Update `site.config.json` `fonts` if the template uses different Google Fonts
+5. Update the FOUC background color in `_document.tsx` (`style={{backgroundColor: '...'}}`
    on `<Html>` and `<body>`) to match the new template's `--color-surface-primary` dark value.
    CSS variables are not available at SSR paint time, so this must be a hardcoded hex value.

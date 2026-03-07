@@ -1,8 +1,9 @@
 import { Section } from '@/shared/types/api';
 
-export type NavIcon = 'home' | 'user' | 'folder' | 'mail' | 'default';
+const VALID_ICONS = ['home', 'user', 'folder', 'mail', 'default'] as const;
+export type NavIcon = (typeof VALID_ICONS)[number];
 
-const VALID_ICONS: readonly string[] = ['home', 'user', 'folder', 'mail', 'default'];
+const VALID_ICON_SET = new Set<string>(VALID_ICONS);
 
 export interface NavSectionItem {
     id: string;
@@ -19,7 +20,7 @@ export function sectionToNavItem(section: Section, iconMap: Record<string, strin
         slug: section.slug,
         path: `/${section.slug}`,
         label: section.title,
-        icon: VALID_ICONS.includes(mapped) ? (mapped as NavIcon) : 'default',
+        icon: VALID_ICON_SET.has(mapped) ? (mapped as NavIcon) : 'default',
     };
 }
 

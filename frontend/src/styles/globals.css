@@ -11,12 +11,6 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: var(--font-family-sans);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
-  background-color: var(--color-surface-primary);
-  color: var(--color-text-primary);
-  transition: var(--transition-colors);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

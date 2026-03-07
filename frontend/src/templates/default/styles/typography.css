@@ -1,16 +1,14 @@
-* {
-  font-family: inherit;
-}
-
-h1, h2, h3, h4, h5, h6, .font-serif {
-  font-family: var(--font-family-serif) !important;
-}
-
-p, div, span, a, button, input, textarea, .font-sans {
-  font-family: var(--font-family-sans) !important;
+body {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  background-color: var(--color-surface-primary);
+  color: var(--color-text-primary);
+  transition: var(--transition-colors);
 }
 
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-serif);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   color: var(--color-text-primary);

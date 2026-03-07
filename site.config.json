@@ -5,7 +5,6 @@
     "author": "Ghostmonk",
     "copyright": "© {year} Ghostmonk"
   },
-  "template": "default",
   "fonts": {
     "heading": "Poppins",
     "body": "Roboto Slab"
