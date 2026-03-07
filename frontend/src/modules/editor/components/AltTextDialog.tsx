@@ -15,8 +15,7 @@ export function AltTextDialog({ fileName, onConfirm, onCancel }: AltTextDialogPr
     inputRef.current?.focus();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleConfirm = () => {
     const altText = inputRef.current?.value?.trim() || fileName;
     dialogRef.current?.close();
     onConfirm(altText);
@@ -25,6 +24,13 @@ export function AltTextDialog({ fileName, onConfirm, onCancel }: AltTextDialogPr
   const handleCancel = () => {
     dialogRef.current?.close();
     onCancel();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleConfirm();
+    }
   };
 
   return (
@@ -41,7 +47,7 @@ export function AltTextDialog({ fileName, onConfirm, onCancel }: AltTextDialogPr
       onCancel={handleCancel}
       data-testid="alt-text-dialog"
     >
-      <form onSubmit={handleSubmit} className="p-6">
+      <div className="p-6">
         <h3 className="text-lg font-medium mb-1">Image Description</h3>
         <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
           Describe this image for screen readers and accessibility.
@@ -57,6 +63,7 @@ export function AltTextDialog({ fileName, onConfirm, onCancel }: AltTextDialogPr
             backgroundColor: 'var(--color-surface-secondary)',
             color: 'var(--color-text-primary)',
           }}
+          onKeyDown={handleKeyDown}
           data-testid="alt-text-input"
         />
         <div className="mt-4 flex justify-end gap-2">
@@ -69,14 +76,15 @@ export function AltTextDialog({ fileName, onConfirm, onCancel }: AltTextDialogPr
             Skip
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={handleConfirm}
             className="btn btn--primary btn--sm"
             data-testid="alt-text-confirm"
           >
             Add
           </button>
         </div>
-      </form>
+      </div>
     </dialog>
   );
 }
