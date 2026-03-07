@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { getSiteConfig } from '@/config';
 
 const config = getSiteConfig();
-const copyright = config.site.copyright.replace('{year}', String(new Date().getFullYear()));
 
 const Footer: React.FC = () => {
+    const copyright = config.site.copyright.replace('{year}', String(new Date().getFullYear()));
+
     return (
         <footer
             className="fixed left-0 right-0 bottom-0 py-2 px-4 text-xs z-[55] pointer-events-none"
