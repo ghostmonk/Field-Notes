@@ -1,10 +1,6 @@
 import '../styles/globals.css';
-// Active template CSS — change these imports to switch templates.
-// Next.js Pages Router requires global CSS imports in _app; dynamic imports are not supported.
-// The "template" field in site.config.json documents which template is active.
-import '../templates/default/styles/tokens.css';
-import '../templates/default/styles/components.css';
-import '../templates/default/styles/layout.css';
+// To switch templates: change this import path to another template's index.css
+import '../templates/default/index.css';
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
 import { Layout } from "@/layout";

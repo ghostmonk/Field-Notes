@@ -23,7 +23,7 @@
 }
 
 .container {
-  max-width: 75rem;
+  max-width: var(--layout-container-max-width);
   margin: 0 auto;
   padding: 0 var(--space-lg);
 }
@@ -271,7 +271,7 @@ button.btn--primary:hover:not(:disabled) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 75rem;
+  max-width: var(--layout-container-max-width);
   margin: 0 auto;
 }
 
@@ -802,12 +802,6 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
 .dark .prose--card img:not([data-loaded="true"]) {
   background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
   background-size: 200% 100%;
-}
-
-/* Legacy wrapper class for gradual migration */
-.legacy-styles {
-  /* This class can be used to wrap legacy components that need the old styles */
-  /* while we gradually migrate them to the new system */
 }
 
 /* Story Progress Bar */
