@@ -8,7 +8,7 @@ Eliminate emojis, filler, hype, soft asks, conversational transitions, and all c
 
 ## Project Overview
 
-Turbulence is a modern blog/content management system with a Next.js frontend and FastAPI backend. It allows authenticated users to create and publish rich text content with image and video uploads. Supports section-based dynamic routing, pluggable display types, and project portfolios.
+Field Notes is a reusable content management system with a Next.js frontend and FastAPI backend. It allows authenticated users to create and publish rich text content with image and video uploads. Supports section-based dynamic routing, pluggable display types, project portfolios, and swappable visual templates.
 
 ## Architecture
 
@@ -19,6 +19,7 @@ Turbulence is a modern blog/content management system with a Next.js frontend an
 - React hooks for state management
 - Dynamic routing via catch-all `[...slugPath]` route
 - Content/display registry for pluggable section rendering
+- Template system for swappable visual themes (see Template System below)
 
 **Backend**: FastAPI app (Python) in `/backend/`
 - Google OAuth token validation
@@ -37,13 +38,15 @@ Turbulence is a modern blog/content management system with a Next.js frontend an
 
 ### Development
 ```bash
-# Full stack development
-make dev-backend    # Start FastAPI server on port 5001
-make dev-frontend   # Start Next.js on port 3000
+# Recommended: Docker backend/mongo + local frontend (hot reload, no rebuild)
+make dev-local          # Start backend/mongo in Docker, frontend locally
 
-# Docker development
-docker-compose up -d    # Start all services
-docker-compose logs -f  # View logs
+# Full stack in Docker (slower, requires rebuild for frontend changes)
+make dev                # Build + migrate + start all services
+
+# Individual services
+make dev-backend        # Start FastAPI server on port 5001
+make dev-frontend       # Start Next.js on port 3000
 
 # Virtual environment (backend)
 make venv              # Create/update Python venv
@@ -94,6 +97,17 @@ Place `gcp-credentials.json` in project root (production only). Docker Compose s
 
 **CORS Configuration**: Hardcoded origins in `backend/app.py` for production domains.
 **Logging**: Google Cloud Logging integrated throughout backend with custom middleware.
+
+**Site Config**: `site.config.json` at project root defines site identity (title, tagline, author, copyright), template selection, brand colors, fonts, navigation icon mappings, footer links, and layout settings. Loaded at build time via `getSiteConfig()` from `frontend/src/config/`.
+
+**Template System**: Visual themes live under `frontend/src/templates/<name>/`. Each template contains CSS files only:
+- `styles/tokens.css` — CSS custom properties (colors, fonts, spacing, radii, transitions)
+- `styles/components.css` — component classes (card, btn, badge, nav, grid, prose, etc.)
+- `styles/layout.css` — layout dimension variables (`--layout-bottom-offset`, `--layout-nav-height`, etc.)
+
+Template CSS is imported directly in `_app.tsx` (Next.js Pages Router requires global CSS imports in `_app`). `globals.css` contains only Tailwind directives, resets, and editor styles — no template-specific styles.
+
+Layout components (`Layout.tsx`, `Footer.tsx`, `TopNav.tsx`, `BottomNav.tsx`) consume CSS variables and config values — no hardcoded pixel values, brand strings, or icon mappings. To create a new template: copy `templates/default/`, modify the CSS, and update the imports in `_app.tsx` plus the `template` field in `site.config.json`.
 
 ## Development Guidelines
 
