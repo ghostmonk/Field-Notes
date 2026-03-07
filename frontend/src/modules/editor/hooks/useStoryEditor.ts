@@ -1,13 +1,14 @@
 /**
  * Hook for managing story editor form state and actions.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import { Story } from '@/shared/types/api';
 import { isTokenExpired } from '@/shared/lib/auth';
 import { useFetchStory, useStoryMutations } from '@/modules/stories/hooks';
 import { logger } from '@/shared/utils/logger';
+import { useDraftRecovery } from './useDraftRecovery';
 
 const EMPTY_STORY: Partial<Story> = {
   title: '',
@@ -30,6 +31,10 @@ export interface UseStoryEditorReturn {
   handleDelete: () => Promise<void>;
   resetForm: () => void;
   clearError: () => void;
+  showDraftRecovery: boolean;
+  recoveredDraft: { title: string; content: string; is_published: boolean } | null;
+  acceptDraft: () => void;
+  dismissDraft: () => void;
 }
 
 /**
@@ -51,6 +56,18 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
   const [story, setStory] = useState<Partial<Story>>(EMPTY_STORY);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const { saveDraft, loadDraft, clearDraft, startAutosave, stopAutosave } =
+    useDraftRecovery(storyId, sectionId);
+  const [showDraftRecovery, setShowDraftRecovery] = useState(false);
+  const [recoveredDraft, setRecoveredDraft] = useState<{
+    title: string;
+    content: string;
+    is_published: boolean;
+  } | null>(null);
+
+  const storyRef = useRef(story);
+  storyRef.current = story;
 
   // Clear local error when mutation succeeds
   const clearError = useCallback(() => setError(null), []);
@@ -108,13 +125,15 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
       }
 
       logger.info('Story saved', { id: result.id, title: result.title });
+      clearDraft();
+      stopAutosave();
       router.push(sectionSlug ? `/${sectionSlug}` : '/');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(`Error: ${message}`);
       setIsSaving(false);
     }
-  }, [session, story, sectionId, sectionSlug, saveStory, router]);
+  }, [session, story, sectionId, sectionSlug, saveStory, router, clearDraft, stopAutosave]);
 
   // Delete handler
   const handleDelete = useCallback(async () => {
@@ -156,6 +175,47 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }
   }, [storyId, router.query, story.id, resetForm]);
 
+  // Check for recovered draft on initial load
+  useEffect(() => {
+    if (fetchLoading) return;
+    const draft = loadDraft();
+    if (draft && (draft.title || draft.content)) {
+      const currentTitle = fetchedStory?.title || '';
+      const currentContent = fetchedStory?.content || '';
+      if (draft.title !== currentTitle || draft.content !== currentContent) {
+        setRecoveredDraft(draft);
+        setShowDraftRecovery(true);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchLoading]);
+
+  // Start autosave timer
+  useEffect(() => {
+    startAutosave(() => ({
+      title: storyRef.current.title || '',
+      content: storyRef.current.content || '',
+      is_published: storyRef.current.is_published || false,
+    }));
+    return () => stopAutosave();
+  }, [startAutosave, stopAutosave]);
+
+  // Warn on navigation with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (story.title || story.content) {
+        saveDraft(
+          story.title || '',
+          story.content || '',
+          story.is_published || false,
+        );
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [story.title, story.content, story.is_published, saveDraft]);
+
   // Populate form from query params (for new stories with prefilled data)
   useEffect(() => {
     if (!storyId) {
@@ -191,6 +251,19 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }
   }, [status, router]);
 
+  const acceptDraft = useCallback(() => {
+    if (recoveredDraft) {
+      setStory((prev) => ({ ...prev, ...recoveredDraft }));
+    }
+    setShowDraftRecovery(false);
+  }, [recoveredDraft]);
+
+  const dismissDraft = useCallback(() => {
+    clearDraft();
+    setShowDraftRecovery(false);
+    setRecoveredDraft(null);
+  }, [clearDraft]);
+
   const isLoading = fetchLoading || saveLoading || status === 'loading';
   const combinedError = error || saveError;
 
@@ -207,5 +280,9 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     handleDelete,
     resetForm,
     clearError,
+    showDraftRecovery,
+    recoveredDraft,
+    acceptDraft,
+    dismissDraft,
   };
 }
