@@ -1,3 +1,9 @@
+export interface HeroConfig {
+  title: string;
+  subtitle: string;
+  showOnHome: boolean;
+}
+
 export interface SiteConfig {
   site: {
     title: string;
@@ -5,6 +11,7 @@ export interface SiteConfig {
     author: string;
     copyright: string;
   };
+  hero: HeroConfig;
   fonts: {
     heading: string;
     body: string;

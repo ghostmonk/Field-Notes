@@ -4,6 +4,7 @@ import { GetStaticProps } from 'next';
 import { StoryList } from '@/modules/stories';
 import { SkeletonShowcase } from '@/components/LoadingSkeletons';
 import { Story, PaginatedResponse } from '@/shared/types/api';
+import { getSiteConfig } from '@/config';
 
 interface HomeProps {
     initialStories?: PaginatedResponse<Story>;
@@ -11,23 +12,27 @@ interface HomeProps {
     error?: string;
 }
 
+const config = getSiteConfig();
+
 const Home: React.FC<HomeProps> = ({ initialStories, storySectionSlug, error }) => {
     return (
         <>
             <Head>
-                <title>Ghostmonk</title>
-                <meta name="description" content="Sharing Stories, Projects and Ideas"/>
-                <meta name="keywords" content="Ghostmonk, blog, stories, projects"/>
+                <title>{config.site.title}</title>
+                <meta name="description" content={config.site.tagline}/>
+                <meta name="keywords" content={`${config.site.title}, blog, stories, projects`}/>
             </Head>
 
             {/* Skeleton showcase for testing - add ?skeleton=test to URL */}
             <SkeletonShowcase />
-            
+
             <div style={{margin: '0 auto', maxWidth: '800px', padding: '0 1rem'}}>
-                <h1 className="page-title text-blue-500">Ghostmonk</h1>
-                <p className="text-center mb-8" style={{ color: 'var(--color-text-secondary)' }}>
-                    Sharing Stories, Projects and Ideas
-                </p>
+                {config.hero.showOnHome && (
+                    <div className="hero">
+                        <h1 className="hero__title">{config.hero.title}</h1>
+                        <p className="hero__subtitle">{config.hero.subtitle}</p>
+                    </div>
+                )}
                 <StoryList initialData={initialStories} initialError={error} basePath={storySectionSlug ? `/${storySectionSlug}` : undefined} featureFirst />
             </div>
         </>

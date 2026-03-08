@@ -5,6 +5,11 @@
     "author": "Ghostmonk",
     "copyright": "© {year} Ghostmonk"
   },
+  "hero": {
+    "title": "Ghostmonk",
+    "subtitle": "Sharing Stories, Projects and Ideas",
+    "showOnHome": true
+  },
   "fonts": {
     "heading": "Poppins",
     "body": "Roboto Slab"
