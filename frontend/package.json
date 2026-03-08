@@ -32,7 +32,7 @@
     "cookie": "^1.1.1",
     "dompurify": "^3.3.2",
     "he": "^1.2.0",
-    "isomorphic-dompurify": "^3.0.0",
+    "isomorphic-dompurify": "^2.36.0",
     "jwt-decode": "^4.0.0",
     "medium-zoom": "^1.1.0",
     "next": "^16.1.6",
