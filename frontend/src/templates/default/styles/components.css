@@ -586,6 +586,16 @@ button.btn--primary:hover:not(:disabled) {
   color: rgb(252 165 165);
 }
 
+.feed-load-error {
+  text-align: center;
+  padding: var(--space-lg);
+  color: var(--color-text-secondary);
+}
+
+.feed-load-error p {
+  margin-bottom: var(--space-sm);
+}
+
 .empty-state {
   text-align: center;
   padding: var(--space-4xl) var(--space-lg);
@@ -869,6 +879,30 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
     background: var(--color-brand-primary);
     opacity: 1;
     box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
+  }
+}
+
+/* Editor toolbar buttons */
+.editor-toolbar__btn {
+  padding: 0.25rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.editor-toolbar__btn--active {
+  background-color: var(--color-surface-tertiary);
+}
+.editor-toolbar__btn--inactive {
+  background-color: var(--color-surface-secondary);
+}
+
+@media (max-width: 767px) {
+  .editor-toolbar__btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.5rem;
   }
 }
 
