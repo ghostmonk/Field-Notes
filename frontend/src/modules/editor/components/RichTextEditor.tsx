@@ -25,7 +25,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             StarterKit,
             Link.configure({
                 openOnClick: false,
-                validate: (href: string) => /^https?:\/\//i.test(href),
+                validate: (href: string) => /^(https?:\/\/|mailto:|tel:)/i.test(href),
             }),
             Image.extend({
                 addAttributes() {
@@ -170,6 +170,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                         if (editor.isActive('link')) {
                             editor.chain().focus().unsetLink().run();
                         } else {
+                            setLinkUrl(editor.getAttributes('link').href || '');
                             setShowLinkInput(true);
                         }
                     }}

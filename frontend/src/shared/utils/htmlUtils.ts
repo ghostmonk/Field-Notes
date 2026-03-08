@@ -3,11 +3,11 @@
  * TipTap inserts these as artifacts around block-level nodes like <video>.
  * Handles variants: <p></p>, <p> </p>, <p>&nbsp;</p>, <p class="..."></p>
  */
+const LEADING_EMPTY_P = /^(\s*<p[^>]*>(\s|&nbsp;)*<\/p>\s*)+/i;
+const TRAILING_EMPTY_P = /(\s*<p[^>]*>(\s|&nbsp;)*<\/p>\s*)+$/i;
+
 export function stripEmptyParagraphs(html: string): string {
-  const emptyP = /\s*<p[^>]*>(\s|&nbsp;)*<\/p>\s*/i;
-  const leadingEmpty = new RegExp(`^(${emptyP.source})+`, 'i');
-  const trailingEmpty = new RegExp(`(${emptyP.source})+$`, 'i');
-  return html.replace(leadingEmpty, '').replace(trailingEmpty, '');
+  return html.replace(LEADING_EMPTY_P, '').replace(TRAILING_EMPTY_P, '');
 }
 
 export function escapeHtmlAttr(str: string): string {

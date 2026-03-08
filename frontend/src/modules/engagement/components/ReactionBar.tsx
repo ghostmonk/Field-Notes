@@ -9,21 +9,8 @@ interface ReactionBarProps {
   compact?: boolean;
 }
 
-const REACTION_ICONS: Record<string, string> = {
-  thumbup: '\uD83D\uDC4D',
-  heart: '\u2764\uFE0F',
-  surprise: '\uD83D\uDE2E',
-  celebrate: '\uD83C\uDF89',
-  insightful: '\uD83D\uDCA1',
-};
-
-const REACTION_LABELS: Record<string, string> = {
-  thumbup: 'Thumbs up',
-  heart: 'Heart',
-  surprise: 'Surprised',
-  celebrate: 'Celebrate',
-  insightful: 'Insightful',
-};
+const REACTION_ICONS = engagementConfig.reactionIcons;
+const REACTION_LABELS = engagementConfig.reactionLabels;
 
 export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBarProps) {
   const { data: session } = useSession();

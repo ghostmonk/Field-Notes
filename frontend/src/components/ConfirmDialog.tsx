@@ -75,10 +75,15 @@ function ConfirmDialogInner({
 }: ConfirmDialogInnerProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const previousFocusRef = useRef<Element | null>(null);
 
   useEffect(() => {
+    previousFocusRef.current = document.activeElement;
     dialogRef.current?.showModal();
     cancelRef.current?.focus();
+    return () => {
+      (previousFocusRef.current as HTMLElement)?.focus?.();
+    };
   }, []);
 
   return (

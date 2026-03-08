@@ -44,13 +44,8 @@
 }
 
 .card--draft {
-  background-color: rgb(254 252 232);
-  border-color: rgb(254 240 138);
-}
-
-.dark .card--draft {
-  background-color: rgb(120 113 108 / 0.2);
-  border-color: rgb(133 77 14);
+  background-color: var(--color-surface-draft);
+  border-color: var(--color-border-draft);
 }
 
 .card--link {
@@ -546,11 +541,7 @@ button.btn--primary:hover:not(:disabled) {
 }
 
 .card--draft .story-content--truncated::after {
-  background: linear-gradient(transparent, rgb(254 252 232));
-}
-
-.dark .card--draft .story-content--truncated::after {
-  background: linear-gradient(transparent, rgb(120 113 108 / 0.2));
+  background: linear-gradient(transparent, var(--color-surface-draft));
 }
 
 .story-excerpt {
