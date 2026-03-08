@@ -22,14 +22,18 @@ export function useImageZoom(
     const attachImages = () => {
       const images = container.querySelectorAll('img:not([data-zoom-disabled])');
       zoom.detach();
-      zoom.attach(images as unknown as HTMLElement[]);
+      zoom.attach(Array.from(images) as HTMLElement[]);
     };
 
     // Attach to initial images
     attachImages();
 
-    // Re-attach when DOM changes (async-loaded content)
-    const observer = new MutationObserver(attachImages);
+    // Re-attach when DOM changes (async-loaded content), debounced
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    const observer = new MutationObserver(() => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(attachImages, 150);
+    });
     observer.observe(container, { childList: true, subtree: true });
 
     let currentScale = 1;
@@ -129,7 +133,9 @@ export function useImageZoom(
     });
 
     return () => {
+      clearTimeout(debounceTimer);
       observer.disconnect();
+      zoom.close();
       zoom.detach();
     };
   }, [containerRef, enabled, pathname]);
