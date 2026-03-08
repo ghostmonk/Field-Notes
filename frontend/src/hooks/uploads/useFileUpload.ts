@@ -17,6 +17,7 @@ export interface UseFileUploadOptions {
   validate: (file: File) => { isValid: boolean; error?: string };
   createValidationError: (file: File, error: string) => StandardErrorResponse;
   context: string;
+  preprocess?: (file: File) => Promise<File | Blob>;
 }
 
 export interface UseFileUploadReturn {
@@ -24,7 +25,7 @@ export interface UseFileUploadReturn {
   error: StandardErrorResponse | string | ApiRequestError | null;
   inputRef: React.RefObject<HTMLInputElement | null>;
   clearError: () => void;
-  upload: (file: File) => Promise<UploadResponse | null>;
+  upload: (file: File, extraFields?: Record<string, string>) => Promise<UploadResponse | null>;
   triggerFileSelect: () => void;
 }
 
@@ -33,7 +34,7 @@ export interface UseFileUploadReturn {
  * Provides validation, error handling, and upload state management.
  */
 export function useFileUpload(options: UseFileUploadOptions): UseFileUploadReturn {
-  const { validate, createValidationError, context } = options;
+  const { validate, createValidationError, context, preprocess } = options;
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<StandardErrorResponse | string | ApiRequestError | null>(null);
@@ -46,10 +47,10 @@ export function useFileUpload(options: UseFileUploadOptions): UseFileUploadRetur
     inputRef.current?.click();
   }, []);
 
-  const upload = useCallback(async (file: File): Promise<UploadResponse | null> => {
+  const upload = useCallback(async (file: File, extraFields?: Record<string, string>): Promise<UploadResponse | null> => {
     setError(null);
 
-    // Validate file
+    // Validate file type
     const validation = validate(file);
     if (!validation.isValid) {
       setError(createValidationError(file, validation.error!));
@@ -59,8 +60,19 @@ export function useFileUpload(options: UseFileUploadOptions): UseFileUploadRetur
     setUploading(true);
 
     try {
+      // Run preprocess (e.g., client-side resize)
+      let processedFile: File | Blob = file;
+      if (preprocess) {
+        processedFile = await preprocess(file);
+      }
+
       const formData = new FormData();
-      formData.append('files', file);
+      formData.append('files', processedFile, file.name);
+      if (extraFields) {
+        for (const [key, value] of Object.entries(extraFields)) {
+          formData.append(key, value);
+        }
+      }
 
       const response = await fetch('/api/upload-proxy', {
         method: 'POST',
@@ -96,7 +108,7 @@ export function useFileUpload(options: UseFileUploadOptions): UseFileUploadRetur
         inputRef.current.value = '';
       }
     }
-  }, [validate, createValidationError, context]);
+  }, [validate, createValidationError, context, preprocess]);
 
   return {
     uploading,

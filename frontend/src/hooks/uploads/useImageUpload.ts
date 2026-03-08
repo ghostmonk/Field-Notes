@@ -1,45 +1,95 @@
 /**
- * Hook for image uploads with validation and editor integration.
+ * Hook for image uploads with validation, resize, filter selection, and editor integration.
  */
 import { useCallback, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { useFileUpload, UseFileUploadReturn } from './useFileUpload';
-import { validateImageFile, createFileValidationError, ALLOWED_IMAGE_TYPES } from '@/shared/utils/uploadUtils';
+import { validateImageFile, createFileValidationError, ALLOWED_IMAGE_TYPES, resizeImageFile } from '@/shared/utils/uploadUtils';
 import { escapeHtmlAttr } from '@/shared/utils/htmlUtils';
 
 export interface UseImageUploadReturn extends UseFileUploadReturn {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   acceptTypes: string;
   pendingAltText: { resolve: (altText: string) => void } | null;
+  pendingFilter: {
+    imageUrl: string;
+    previews: Record<string, string>;
+    loading: boolean;
+    resolve: (filter: string) => void;
+  } | null;
 }
 
-/**
- * Hook for handling image uploads in the rich text editor.
- * Manages validation, upload state, and editor content updates.
- */
 export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
   const baseUpload = useFileUpload({
     validate: validateImageFile,
     createValidationError: (file, error) => createFileValidationError(file, error, 'image'),
     context: 'image',
+    preprocess: resizeImageFile,
   });
 
   const [pendingAltText, setPendingAltText] = useState<{
     resolve: (altText: string) => void;
   } | null>(null);
 
+  const [pendingFilter, setPendingFilter] = useState<{
+    imageUrl: string;
+    previews: Record<string, string>;
+    loading: boolean;
+    resolve: (filter: string) => void;
+  } | null>(null);
+
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files.length || !editor) return;
 
     const file = e.target.files[0];
-    const loadingText = `![Uploading ${file.name}...]()`;
 
-    // Insert loading placeholder
+    // Resize first for preview and filter thumbnails
+    const resized = await resizeImageFile(file);
+    const imageUrl = URL.createObjectURL(resized);
+
+    // Start filter selection flow
+    const filterPromise = new Promise<string>((resolve) => {
+      setPendingFilter({ imageUrl, previews: {}, loading: true, resolve });
+    });
+
+    // Fetch filter previews in background
+    const previewFormData = new FormData();
+    previewFormData.append('file', resized, file.name);
+    try {
+      const previewResponse = await fetch('/api/filter-previews', {
+        method: 'POST',
+        body: previewFormData,
+        credentials: 'include',
+      });
+      if (previewResponse.ok) {
+        const previewData = await previewResponse.json();
+        setPendingFilter((prev) => prev ? { ...prev, previews: previewData.previews || {}, loading: false } : null);
+      } else {
+        setPendingFilter((prev) => prev ? { ...prev, loading: false } : null);
+      }
+    } catch {
+      setPendingFilter((prev) => prev ? { ...prev, loading: false } : null);
+    }
+
+    // Wait for user to pick a filter
+    const selectedFilter = await filterPromise;
+    setPendingFilter(null);
+    URL.revokeObjectURL(imageUrl);
+
+    if (selectedFilter === '__cancel__') {
+      // Reset input so same file can be selected again
+      if (baseUpload.inputRef.current) {
+        baseUpload.inputRef.current.value = '';
+      }
+      return;
+    }
+
+    const loadingText = `![Uploading ${file.name}...]()`;
     editor.commands.insertContent(loadingText);
 
-    const result = await baseUpload.upload(file);
+    const result = await baseUpload.upload(file, { image_filter: selectedFilter });
 
-    // Remove loading placeholder regardless of success/failure
+    // Remove loading placeholder
     const content = editor.getHTML();
     const updatedContent = result
       ? content.replace(loadingText, '')
@@ -47,18 +97,17 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     editor.commands.setContent(updatedContent);
 
     if (result?.urls?.length) {
-      // Request alt text from user via dialog
+      // Request alt text from user
       const altText = await new Promise<string>((resolve) => {
         setPendingAltText({ resolve });
       });
       setPendingAltText(null);
 
       const { urls, srcsets, dimensions } = result;
-      // Manual escaping required: TipTap insertContent injects raw HTML, bypassing React's auto-escaping
       const safeAlt = escapeHtmlAttr(altText);
       const attrs = [`src="${urls[0]}"`, `alt="${safeAlt}"`];
       if (srcsets?.length) {
-        attrs.push(`srcset="${srcsets[0]}"`, `sizes="(max-width: 500px) 500px, (max-width: 750px) 750px, 1200px"`);
+        attrs.push(`srcset="${srcsets[0]}"`, `sizes="(max-width: 400px) 400px, (max-width: 768px) 768px, (max-width: 1536px) 1536px, 2048px"`);
       }
       if (dimensions?.length) {
         attrs.push(`width="${dimensions[0].width}"`, `height="${dimensions[0].height}"`);
@@ -72,5 +121,6 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     handleFileChange,
     acceptTypes: ALLOWED_IMAGE_TYPES.join(','),
     pendingAltText,
+    pendingFilter,
   };
 }

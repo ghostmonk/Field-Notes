@@ -8,6 +8,7 @@ import { ErrorService } from '@/services/errorService';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { useImageUpload, useVideoUpload } from '@/hooks/uploads';
 import { AltTextDialog } from './AltTextDialog';
+import { ImageFilterPicker } from './ImageFilterPicker';
 import { ImageBubbleMenu } from './ImageBubbleMenu';
 
 interface RichTextEditorProps {
@@ -66,7 +67,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     });
 
     // Upload hooks
-    const { pendingAltText, ...imageUpload } = useImageUpload(editor);
+    const { pendingAltText, pendingFilter, ...imageUpload } = useImageUpload(editor);
     const videoUpload = useVideoUpload(editor);
 
     // Link input state
@@ -255,6 +256,15 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             )}
             <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
             <ImageBubbleMenu editor={editor} />
+            {pendingFilter && (
+                <ImageFilterPicker
+                    imageUrl={pendingFilter.imageUrl}
+                    previews={pendingFilter.previews}
+                    loading={pendingFilter.loading}
+                    onConfirm={(filter) => pendingFilter.resolve(filter)}
+                    onCancel={() => pendingFilter.resolve('__cancel__')}
+                />
+            )}
             {pendingAltText && (
                 <AltTextDialog
                     onConfirm={pendingAltText.resolve}
