@@ -107,14 +107,14 @@ test.describe('Admin Sections Page', () => {
     await page.goto();
     await page.waitForPage();
 
-    // Accept the confirmation dialog
-    mockAuthenticatedApiPage.on('dialog', (dialog) => dialog.accept());
-
     const deletePromise = mockAuthenticatedApiPage.waitForRequest(
       (req) => req.url().includes(`/api/sections/${TEST_SECTION_IDS.CONTACT}`) && req.method() === 'DELETE'
     );
 
     await page.deleteButton(TEST_SECTION_IDS.CONTACT).click();
+
+    // Confirm via the custom ConfirmDialog component
+    await mockAuthenticatedApiPage.getByTestId('confirm-ok').click();
     await deletePromise;
   });
 

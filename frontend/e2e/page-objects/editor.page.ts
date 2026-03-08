@@ -15,8 +15,8 @@ export class EditorPage extends BasePage {
 
   // Form elements
   readonly titleInput: Locator;
-  readonly publishToggle: Locator;
-  readonly saveButton: Locator;
+  readonly saveDraftButton: Locator;
+  readonly publishButton: Locator;
   readonly cancelButton: Locator;
 
   // Header buttons (visible when editing)
@@ -30,8 +30,8 @@ export class EditorPage extends BasePage {
 
     this.editorPage = page.getByTestId('editor-page');
     this.titleInput = page.getByTestId('editor-title-input');
-    this.publishToggle = page.getByTestId('editor-publish-toggle');
-    this.saveButton = page.getByTestId('editor-save-button');
+    this.saveDraftButton = page.getByTestId('editor-save-draft');
+    this.publishButton = page.getByTestId('editor-publish-button');
     this.cancelButton = page.getByTestId('editor-cancel-button');
     this.newButton = page.getByTestId('editor-new-button');
     this.deleteButton = page.getByTestId('editor-delete-button');
@@ -74,27 +74,24 @@ export class EditorPage extends BasePage {
   }
 
   /**
-   * Set the publish state.
+   * Click save as draft button.
    */
-  async setPublished(published: boolean) {
-    const isChecked = await this.publishToggle.isChecked();
-    if (isChecked !== published) {
-      await this.publishToggle.click();
-    }
+  async saveDraft() {
+    await this.saveDraftButton.click();
   }
 
   /**
-   * Check if publish toggle is checked.
+   * Click publish button.
    */
-  async isPublished(): Promise<boolean> {
-    return this.publishToggle.isChecked();
+  async publish() {
+    await this.publishButton.click();
   }
 
   /**
-   * Click save button.
+   * Click save button (defaults to save draft).
    */
   async save() {
-    await this.saveButton.click();
+    await this.saveDraftButton.click();
   }
 
   /**
@@ -133,17 +130,25 @@ export class EditorPage extends BasePage {
   }
 
   /**
-   * Check if save button is disabled.
+   * Check if save draft button is disabled.
    */
   async isSaveDisabled(): Promise<boolean> {
-    return this.saveButton.isDisabled();
+    return this.saveDraftButton.isDisabled();
   }
 
   /**
-   * Get save button text.
+   * Get save draft button text.
    */
   async getSaveButtonText(): Promise<string> {
-    const text = await this.saveButton.textContent();
+    const text = await this.saveDraftButton.textContent();
+    return text || '';
+  }
+
+  /**
+   * Get publish button text.
+   */
+  async getPublishButtonText(): Promise<string> {
+    const text = await this.publishButton.textContent();
     return text || '';
   }
 
@@ -153,16 +158,17 @@ export class EditorPage extends BasePage {
   async fillStory(options: { title: string; content: string; publish?: boolean }) {
     await this.setTitle(options.title);
     await this.richTextEditor.setContent(options.content);
-    if (options.publish !== undefined) {
-      await this.setPublished(options.publish);
-    }
   }
 
   /**
-   * Create and save a new story.
+   * Create and save a new story (as draft or published).
    */
   async createStory(options: { title: string; content: string; publish?: boolean }) {
     await this.fillStory(options);
-    await this.save();
+    if (options.publish) {
+      await this.publish();
+    } else {
+      await this.saveDraft();
+    }
   }
 }
