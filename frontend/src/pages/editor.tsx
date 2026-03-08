@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { Section } from '@/shared/types/api';
@@ -79,6 +79,10 @@ export default function EditorPage() {
     return () => { cancelled = true; };
   }, [sectionId, session?.accessToken]);
 
+  const handleSectionSelect = useCallback((s: Section) => {
+    router.push(`/editor?section_id=${s.id}`);
+  }, [router]);
+
   if (status === 'loading' || status === 'unauthenticated' || loadingSection) {
     return <div>Loading...</div>;
   }
@@ -95,7 +99,7 @@ export default function EditorPage() {
   if (!section) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="editor-page">
-        <SectionPicker onSelect={(s) => router.push(`/editor?section_id=${s.id}`)} />
+        <SectionPicker onSelect={handleSectionSelect} />
       </div>
     );
   }
@@ -117,13 +121,18 @@ export default function EditorPage() {
 
 function SectionPicker({ onSelect }: { onSelect: (section: Section) => void }) {
   const { sections, loading } = useFetchSections();
-
-  // Filter to sections with editable content types
   const editableSections = sections.filter(s =>
     ['story', 'project', 'page'].includes(s.content_type)
   );
 
-  if (loading) return <div>Loading sections...</div>;
+  useEffect(() => {
+    if (!loading && editableSections.length === 1) {
+      onSelect(editableSections[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, editableSections.length, onSelect]);
+
+  if (loading || editableSections.length === 1) return <div>Loading...</div>;
 
   return (
     <div data-testid="section-picker">
