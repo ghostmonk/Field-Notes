@@ -25,6 +25,7 @@ export function VersionHistory({ contentType, contentId, onSelectVersion }: Vers
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
+  const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
     if (!session?.accessToken || !contentId) return;
@@ -50,12 +51,15 @@ export function VersionHistory({ contentType, contentId, onSelectVersion }: Vers
 
     setSelectedVersion(version);
     setError(null);
+    setFetching(true);
     try {
       const data = await apiClient.versions.get(contentType, contentId, version, session.accessToken as string);
       onSelectVersion?.({ title: data.title, content: data.content });
     } catch (err) {
       setSelectedVersion(null);
       setError(err instanceof Error ? err.message : 'Failed to load version');
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -72,6 +76,7 @@ export function VersionHistory({ contentType, contentId, onSelectVersion }: Vers
           <li key={v.version} className="version-history__item">
             <button
               onClick={() => handleSelect(v.version)}
+              disabled={fetching}
               className={`version-history__btn ${selectedVersion === v.version ? 'version-history__btn--active' : ''}`}
             >
               <span className="version-history__version">v{v.version}</span>

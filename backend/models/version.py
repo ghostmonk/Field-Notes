@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ContentVersion(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     id: Optional[str] = Field(alias="_id", default=None)
     content_id: str
     content_type: Literal["story", "project", "page"]
@@ -14,6 +16,3 @@ class ContentVersion(BaseModel):
     metadata: dict = Field(default_factory=dict)
     created_by: str
     created_at: datetime
-
-    class Config:
-        populate_by_name = True
