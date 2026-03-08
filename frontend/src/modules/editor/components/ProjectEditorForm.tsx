@@ -7,7 +7,6 @@ import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 import { VersionHistory } from '@/modules/versions/components/VersionHistory';
-import { useConfirm } from '@/components/ConfirmDialog';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
 
@@ -16,7 +15,6 @@ interface ProjectEditorFormProps {
 }
 
 export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
-  const confirmDialog = useConfirm();
   const router = useRouter();
   const confirm = useConfirm();
   const {
@@ -263,15 +261,9 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
           <VersionHistory
             contentType="project"
             contentId={project.id}
-            onSelectVersion={async (v) => {
-              const ok = await confirmDialog({
-                title: 'Restore version',
-                message: 'Load this version? Current unsaved changes will be lost.',
-              });
-              if (ok) {
-                setField('title', v.title);
-                setField('content', v.content);
-              }
+            onSelectVersion={(v) => {
+              setField('title', v.title);
+              setField('content', v.content);
             }}
           />
         </div>

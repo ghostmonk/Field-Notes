@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import apiClient from '@/shared/lib/api-client';
+import { useConfirm } from '@/components/ConfirmDialog';
 
 interface Version {
   version: number;
@@ -17,6 +18,7 @@ interface VersionHistoryProps {
 
 export function VersionHistory({ contentType, contentId, onSelectVersion }: VersionHistoryProps) {
   const { data: session } = useSession();
+  const confirmDialog = useConfirm();
   const [versions, setVersions] = useState<Version[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,13 @@ export function VersionHistory({ contentType, contentId, onSelectVersion }: Vers
 
   const handleSelect = async (version: number) => {
     if (!session?.accessToken) return;
+
+    const ok = await confirmDialog({
+      title: 'Restore version',
+      message: 'Load this version? Current unsaved changes will be lost.',
+    });
+    if (!ok) return;
+
     setSelectedVersion(version);
     setError(null);
     try {
