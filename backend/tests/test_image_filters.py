@@ -1,5 +1,5 @@
 import pytest
-from handlers.image_filters import AVAILABLE_FILTERS, apply_filter
+from handlers.image_filters import AVAILABLE_FILTERS, apply_filter, validate_filter_name
 from PIL import Image
 
 
@@ -177,13 +177,13 @@ class TestVintageFilter:
 
 
 class TestInvalidFilter:
-    def test_returns_unchanged_copy(self, sample_image):
-        result = apply_filter(sample_image, "nonexistent_filter")
-        assert list(result.getdata()) == list(sample_image.getdata())
+    def test_raises_value_error(self, sample_image):
+        with pytest.raises(ValueError, match="Invalid filter"):
+            apply_filter(sample_image, "nonexistent_filter")
 
-    def test_returns_different_object(self, sample_image):
-        result = apply_filter(sample_image, "nonexistent_filter")
-        assert result is not sample_image
+    def test_error_includes_filter_name(self, sample_image):
+        with pytest.raises(ValueError, match="nonexistent_filter"):
+            apply_filter(sample_image, "nonexistent_filter")
 
 
 class TestAllFiltersPreserveSize:
@@ -196,3 +196,13 @@ class TestAllFiltersPreserveSize:
     def test_returns_rgb(self, sample_image, filter_name):
         result = apply_filter(sample_image, filter_name)
         assert result.mode == "RGB"
+
+
+class TestValidateFilterName:
+    @pytest.mark.parametrize("filter_name", AVAILABLE_FILTERS)
+    def test_accepts_valid_filters(self, filter_name):
+        validate_filter_name(filter_name)  # should not raise
+
+    def test_rejects_invalid_filter(self):
+        with pytest.raises(ValueError, match="Invalid filter"):
+            validate_filter_name("bogus")

@@ -73,7 +73,7 @@ venv-clean:
 # Database migrations (pymongo-migrate)
 # Requires MONGO_URI environment variable set
 migrate:
-	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && MONGO_URI="mongodb://localhost:$(MONGO_PORT)/$${MONGO_DB_NAME:-ghostmonk}" && export MONGO_URI && cd backend && pymongo-migrate migrate -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && if [ -n "$$MONGO_PORT" ]; then MONGO_URI="mongodb://localhost:$$MONGO_PORT/$${MONGO_DB_NAME:-ghostmonk}"; export MONGO_URI; fi && cd backend && pymongo-migrate migrate -u "$$MONGO_URI" -m migrations
 
 migrate-status:
 	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && cd backend && pymongo-migrate show -u "$$MONGO_URI" -m migrations

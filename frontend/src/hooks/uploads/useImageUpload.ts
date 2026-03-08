@@ -25,7 +25,6 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     validate: validateImageType,
     createValidationError: (file, error) => createFileValidationError(file, error, 'image'),
     context: 'image',
-    preprocess: resizeImageFile,
   });
 
   const [pendingAltText, setPendingAltText] = useState<{

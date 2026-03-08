@@ -42,10 +42,14 @@ export function useImageZoom(
     let translateX = 0;
     let translateY = 0;
     let zoomedImage: HTMLElement | null = null;
+    let baseTransform = '';
 
     const applyTransform = () => {
       if (zoomedImage) {
-        zoomedImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+        const extra = currentScale === 1 && translateX === 0 && translateY === 0
+          ? ''
+          : ` translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+        zoomedImage.style.transform = baseTransform + extra;
       }
     };
 
@@ -106,6 +110,7 @@ export function useImageZoom(
         '.medium-zoom-image--opened'
       ) as HTMLElement;
       zoomedImage = overlay;
+      baseTransform = overlay?.style.transform || '';
       currentScale = 1;
       translateX = 0;
       translateY = 0;
@@ -122,6 +127,7 @@ export function useImageZoom(
 
     zoom.on('close', () => {
       zoomedImage = null;
+      baseTransform = '';
       currentScale = 1;
       translateX = 0;
       translateY = 0;

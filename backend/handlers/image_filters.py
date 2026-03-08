@@ -86,9 +86,15 @@ _FILTER_MAP = {
 }
 
 
+def validate_filter_name(filter_name):
+    """Raise ValueError if filter_name is not in AVAILABLE_FILTERS."""
+    if filter_name not in AVAILABLE_FILTERS:
+        raise ValueError(
+            f"Invalid filter '{filter_name}'. Must be one of: {', '.join(AVAILABLE_FILTERS)}"
+        )
+
+
 def apply_filter(image, filter_name):
     """Apply a named filter to a PIL Image. Returns a new Image."""
-    fn = _FILTER_MAP.get(filter_name)
-    if fn is None:
-        return image.copy()
-    return fn(image)
+    validate_filter_name(filter_name)
+    return _FILTER_MAP[filter_name](image)
