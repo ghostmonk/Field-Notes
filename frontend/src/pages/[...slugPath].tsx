@@ -15,6 +15,7 @@ import { ProjectCard } from '@/modules/projects';
 import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
 import { processStoryDataSSR } from '@/rendering/server';
 import apiClient from '@/shared/lib/api-client';
@@ -204,14 +205,13 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
         const story = item as Story;
         return (
             <div style={{ margin: '0 auto', maxWidth: '800px', padding: '2rem 1rem' }}>
+                <Breadcrumbs items={[
+                    { label: section.title, href: `/${section.slug}` },
+                    { label: story.title },
+                ]} />
                 <EngagementProvider targetType="story" targetId={story.id}>
                     <StoryDetail story={story}>
                         <StoryEngagement />
-                        <div className="mt-10 pt-6">
-                            <Link href={`/${section.slug}`} className="btn btn--secondary btn--sm">
-                                &larr; Back to {section.title}
-                            </Link>
-                        </div>
                     </StoryDetail>
                 </EngagementProvider>
             </div>
@@ -222,9 +222,10 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
         const project = item as Project;
         return (
             <div className="page-container">
-                <Link href={`/${section.slug}`} className="inline-block mb-8 btn btn--secondary btn--sm">
-                    &larr; Back to {section.title}
-                </Link>
+                <Breadcrumbs items={[
+                    { label: section.title, href: `/${section.slug}` },
+                    { label: project.title },
+                ]} />
                 <ProjectDetail project={project} />
             </div>
         );
