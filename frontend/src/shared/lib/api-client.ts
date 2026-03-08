@@ -178,7 +178,45 @@ const apiRoutes = {
       `/api/engagement/comments/${commentId}`,
     bulkCounts: () => '/api/engagement/bulk/counts',
   },
+  search: {
+    query: () => '/api/search',
+  },
+  versions: {
+    list: (contentType: string, contentId: string) =>
+      `/api/versions/${contentType}/${contentId}`,
+    get: (contentType: string, contentId: string, version: number) =>
+      `/api/versions/${contentType}/${contentId}/${version}`,
+  },
 };
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  excerpt: string;
+  content_type: 'story' | 'project' | 'page';
+  slug: string;
+  section_slug: string | null;
+  score: number;
+}
+
+export interface SearchResponse {
+  results: SearchResult[];
+  query: string;
+  total: number;
+}
+
+export interface ContentVersion {
+  version: number;
+  title: string;
+  content: string;
+  created_at: string;
+  created_by: string;
+}
+
+export interface VersionListResponse {
+  versions: ContentVersion[];
+  total: number;
+}
 
 interface PaginationParams {
   limit?: number;
@@ -366,7 +404,27 @@ const apiClient = {
       ),
   },
 
+  /**
+   * Search methods
+   */
+  search: {
+    query: (q: string, limit = 20) =>
+      fetchApi<SearchResponse>(apiRoutes.search.query(), {
+        params: { q, limit },
+      }),
+  },
+
+  /**
+   * Version history methods
+   */
+  versions: {
+    list: (contentType: string, contentId: string, token: string) =>
+      fetchApi<VersionListResponse>(apiRoutes.versions.list(contentType, contentId), { token }),
+
+    get: (contentType: string, contentId: string, version: number, token: string) =>
+      fetchApi<ContentVersion>(apiRoutes.versions.get(contentType, contentId, version), { token }),
+  },
 };
 
 export { apiClient };
-export default apiClient; 
+export default apiClient;
