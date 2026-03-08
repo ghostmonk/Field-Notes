@@ -3,13 +3,5 @@
   "navigation": {
     "desktop": "top",
     "mobile": "bottom"
-  },
-  "footer": {
-    "position": "fixed-bottom",
-    "showAboveBottomNav": true
-  },
-  "content": {
-    "maxWidth": "var(--layout-page-content-max-width)",
-    "centered": true
   }
 }

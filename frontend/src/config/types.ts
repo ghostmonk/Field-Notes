@@ -1,6 +1,6 @@
 export interface HeroConfig {
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   showOnHome: boolean;
 }
 
@@ -9,14 +9,6 @@ export interface LayoutConfig {
   navigation: {
     desktop: "top" | "sidebar";
     mobile: "bottom" | "hamburger";
-  };
-  footer: {
-    position: "fixed-bottom" | "inline";
-    showAboveBottomNav: boolean;
-  };
-  content: {
-    maxWidth: string;
-    centered: boolean;
   };
 }
 

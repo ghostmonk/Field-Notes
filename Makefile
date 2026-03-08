@@ -6,7 +6,6 @@ BACKEND_PORT ?= 5001
 MONGO_PORT ?= 27017
 
 # Load .env.local overrides if present
--include .env.local.mk
 ifneq (,$(wildcard .env.local))
   # Export port vars from .env.local for Docker Compose
   FRONTEND_PORT := $(or $(shell grep '^FRONTEND_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(FRONTEND_PORT))
