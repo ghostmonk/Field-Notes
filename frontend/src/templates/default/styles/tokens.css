@@ -99,9 +99,9 @@
   --color-border-secondary: #475569;
   --color-border-focus: #3b82f6;
 
-  --color-shadow-light: rgba(0, 0, 0, 0.3);
-  --color-shadow-medium: rgba(0, 0, 0, 0.4);
-  --color-shadow-dark: rgba(0, 0, 0, 0.6);
+  --color-shadow-light: rgba(0, 0, 0, 0.4);
+  --color-shadow-medium: rgba(0, 0, 0, 0.5);
+  --color-shadow-dark: rgba(0, 0, 0, 0.7);
 
   --color-surface-draft: rgb(120 113 108 / 0.2);
   --color-border-draft: rgb(133 77 14);

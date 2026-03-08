@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { Story, PaginatedResponse, BulkCountsResponse } from '@/shared/types/api';
 import { useFetchStories, useStoryMutations } from '../hooks';
 import { StoriesListSkeleton } from '@/components/LoadingSkeletons';
+import { EmptyState } from '@/components/EmptyState';
 import { StoryCard } from './StoryCard';
 import apiClient from '@/shared/lib/api-client';
 import { useConfirm } from '@/components/ConfirmDialog';
@@ -15,9 +16,10 @@ interface StoriesProps {
     initialData?: PaginatedResponse<Story>;
     initialError?: string;
     basePath?: string;
+    featureFirst?: boolean;
 }
 
-const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }) => {
+const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath, featureFirst }) => {
     const { data: session } = useSession();
     const router = useRouter();
     const {
@@ -89,7 +91,7 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }
 
     // Memoize the story list to prevent unnecessary re-renders
     const storyItems = useMemo(() => {
-        return stories.map(story => (
+        return stories.map((story, index) => (
             <StoryCard
                 key={story.id}
                 story={story}
@@ -99,9 +101,10 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }
                 deleteLoading={deleteLoading}
                 engagementCounts={engagementCounts[`story:${story.id}`]}
                 basePath={basePath}
+                featured={featureFirst && index === 0 && story.is_published}
             />
         ));
-    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath]);
+    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath, featureFirst]);
 
     // Handle error state
     if (error) {
@@ -128,18 +131,11 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }
     // Handle empty state
     if (stories.length === 0 && !loading) {
         return (
-            <div className="empty-state" data-testid="stories-empty">
-                <h2 className="empty-state__title">No stories found</h2>
-                {session?.user?.role === 'admin' && (
-                    <button
-                        onClick={() => router.push('/editor')}
-                        className="btn btn--primary"
-                        data-testid="create-first-story-button"
-                    >
-                        Create Your First Story
-                    </button>
-                )}
-            </div>
+            <EmptyState
+                title="No stories yet"
+                description="This is where stories will appear once published."
+                action={session?.user?.role === 'admin' ? { label: 'Write a Story', href: '/editor' } : undefined}
+            />
         );
     }
 

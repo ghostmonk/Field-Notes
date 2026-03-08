@@ -25,10 +25,10 @@ test.describe('Section-Aware Editor', () => {
     await mockAuthenticatedApiPage.goto(`/editor?section_id=${TEST_SECTION_IDS.BLOG}`);
     await mockAuthenticatedApiPage.getByTestId('editor-page').waitFor({ state: 'visible' });
 
-    // Story form has title input, rich text editor, publish toggle
+    // Story form has title input, rich text editor, draft/publish buttons
     await expect(mockAuthenticatedApiPage.getByTestId('editor-title-input')).toBeVisible();
-    await expect(mockAuthenticatedApiPage.getByTestId('editor-publish-toggle')).toBeVisible();
-    await expect(mockAuthenticatedApiPage.getByTestId('editor-save-button')).toBeVisible();
+    await expect(mockAuthenticatedApiPage.getByTestId('editor-save-draft')).toBeVisible();
+    await expect(mockAuthenticatedApiPage.getByTestId('editor-publish-button')).toBeVisible();
 
     // Story form should show "New Story" in heading
     await expect(mockAuthenticatedApiPage.getByText('New Story')).toBeVisible();
@@ -56,8 +56,8 @@ test.describe('Section-Aware Editor', () => {
 
     // Page form has title and content
     await expect(mockAuthenticatedApiPage.getByTestId('editor-title-input')).toBeVisible();
-    await expect(mockAuthenticatedApiPage.getByTestId('editor-publish-toggle')).toBeVisible();
-    await expect(mockAuthenticatedApiPage.getByTestId('editor-save-button')).toBeVisible();
+    await expect(mockAuthenticatedApiPage.getByTestId('editor-save-draft')).toBeVisible();
+    await expect(mockAuthenticatedApiPage.getByTestId('editor-publish-button')).toBeVisible();
 
     // Page form should not have project-specific fields
     await expect(mockAuthenticatedApiPage.getByTestId('editor-summary-input')).not.toBeVisible();
@@ -80,7 +80,7 @@ test.describe('Section-Aware Editor', () => {
       (req) => req.url().includes('/api/stories') && req.method() === 'POST'
     );
 
-    await mockAuthenticatedApiPage.getByTestId('editor-save-button').click();
+    await mockAuthenticatedApiPage.getByTestId('editor-save-draft').click();
     const createRequest = await createPromise;
     const body = createRequest.postDataJSON();
     expect(body.section_id).toBe(TEST_SECTION_IDS.BLOG);
@@ -104,7 +104,7 @@ test.describe('Section-Aware Editor', () => {
       (req) => req.url().includes('/api/projects') && req.method() === 'POST'
     );
 
-    await mockAuthenticatedApiPage.getByTestId('editor-save-button').click();
+    await mockAuthenticatedApiPage.getByTestId('editor-save-draft').click();
     const createRequest = await createPromise;
     const body = createRequest.postDataJSON();
     expect(body.section_id).toBe(TEST_SECTION_IDS.PROJECTS);

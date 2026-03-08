@@ -14,8 +14,8 @@ test.describe('Create Story', () => {
     await expect(editorPage.editorPage).toBeVisible();
     await expect(editorPage.titleInput).toBeVisible();
     await expect(editorPage.richTextEditor.editor).toBeVisible();
-    await expect(editorPage.publishToggle).toBeVisible();
-    await expect(editorPage.saveButton).toBeVisible();
+    await expect(editorPage.saveDraftButton).toBeVisible();
+    await expect(editorPage.publishButton).toBeVisible();
     await expect(editorPage.cancelButton).toBeVisible();
   });
 
@@ -43,37 +43,20 @@ test.describe('Create Story', () => {
     expect(html).toContain('This is my story content');
   });
 
-  test('publish toggle can be toggled', async ({ mockAuthenticatedApiPage }) => {
+  test('draft and publish buttons are both visible', async ({ mockAuthenticatedApiPage }) => {
     const editorPage = new EditorPage(mockAuthenticatedApiPage);
 
     await editorPage.goto(BLOG_SECTION_ID);
     await editorPage.waitForEditor();
 
-    // Default state
-    const initialState = await editorPage.isPublished();
+    await expect(editorPage.saveDraftButton).toBeVisible();
+    await expect(editorPage.publishButton).toBeVisible();
 
-    // Toggle
-    await editorPage.setPublished(!initialState);
-    const newState = await editorPage.isPublished();
+    const draftText = await editorPage.getSaveButtonText();
+    expect(draftText).toContain('Draft');
 
-    expect(newState).toBe(!initialState);
-  });
-
-  test('save button reflects publish state', async ({ mockAuthenticatedApiPage }) => {
-    const editorPage = new EditorPage(mockAuthenticatedApiPage);
-
-    await editorPage.goto(BLOG_SECTION_ID);
-    await editorPage.waitForEditor();
-
-    // With publish unchecked
-    await editorPage.setPublished(false);
-    let buttonText = await editorPage.getSaveButtonText();
-    expect(buttonText).toContain('Draft');
-
-    // With publish checked
-    await editorPage.setPublished(true);
-    buttonText = await editorPage.getSaveButtonText();
-    expect(buttonText).toContain('Publish');
+    const publishText = await editorPage.getPublishButtonText();
+    expect(publishText).toContain('Publish');
   });
 
   test('cancel button navigates to section page', async ({ mockAuthenticatedApiPage }) => {

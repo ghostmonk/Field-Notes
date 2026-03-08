@@ -6,6 +6,7 @@ import { Section, Page, PageType, UpdatePageRequest } from '@/shared/types/api';
 import apiClient from '@/shared/lib/api-client';
 import { ApiRequestError } from '@/shared/types/error';
 import { ErrorService } from '@/services/errorService';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
@@ -30,6 +31,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const isEditing = !!page.id;
 
+  const confirm = useConfirm();
   const clearError = useCallback(() => setError(null), []);
 
   // Fetch existing page
@@ -46,7 +48,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
     return () => { cancelled = true; };
   }, [pageType]);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent, shouldPublish?: boolean) => {
     e.preventDefault();
 
     if (!session?.accessToken) {
@@ -71,7 +73,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
       const payload: UpdatePageRequest = {
         title: page.title,
         content: page.content,
-        is_published: page.is_published,
+        is_published: shouldPublish !== undefined ? shouldPublish : page.is_published,
       };
 
       await apiClient.pages.update(pageType, payload, session.accessToken);
@@ -121,7 +123,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
           <input
@@ -145,31 +147,46 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
               onChange={(val) => setPage(prev => ({ ...prev, content: val }))}
               actionSlot={
                 <>
-                  <div className="flex items-center">
-                    <input
-                      id="is_published"
-                      type="checkbox"
-                      checked={page.is_published || false}
-                      onChange={(e) => setPage(prev => ({ ...prev, is_published: e.target.checked }))}
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
-                      disabled={isSaving}
-                      data-testid="editor-publish-toggle"
-                    />
-                    <label htmlFor="is_published" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">Publish</label>
-                  </div>
-                  <div className="flex gap-4">
+                  {page.is_published && (
+                    <span className="text-xs font-medium px-2 py-1 rounded" style={{ backgroundColor: 'var(--color-status-success)', color: 'white' }}>
+                      Published
+                    </span>
+                  )}
+                  <div className="flex gap-2">
                     <button
-                      type="submit"
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                      type="button"
+                      onClick={() => {
+                        handleSubmit(new Event('submit') as unknown as React.FormEvent, false);
+                      }}
+                      className="btn btn--secondary btn--sm"
                       disabled={isLoading || isSaving}
-                      data-testid="editor-save-button"
+                      data-testid="editor-save-draft"
                     >
-                      {isSaving ? 'Saving...' : `Save${page.is_published ? ' & Publish' : ' as Draft'}`}
+                      {isSaving && !page.is_published ? 'Saving...' : 'Save as Draft'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!page.is_published) {
+                          const confirmed = await confirm({
+                            title: 'Publish Page',
+                            message: 'This will make the page visible to everyone. Continue?',
+                            confirmLabel: 'Publish',
+                          });
+                          if (!confirmed) return;
+                        }
+                        handleSubmit(new Event('submit') as unknown as React.FormEvent, true);
+                      }}
+                      className="btn btn--primary btn--sm"
+                      disabled={isLoading || isSaving}
+                      data-testid="editor-publish-button"
+                    >
+                      {isSaving && page.is_published ? 'Publishing...' : 'Publish'}
                     </button>
                     <button
                       type="button"
                       onClick={() => router.push(`/${section.slug}`)}
-                      className="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="btn btn--secondary btn--sm"
                       disabled={isSaving}
                       data-testid="editor-cancel-button"
                     >

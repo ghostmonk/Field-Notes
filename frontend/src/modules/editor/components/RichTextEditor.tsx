@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
+import DOMPurify from 'isomorphic-dompurify';
 import { VideoExtension } from './VideoExtension';
 import { ErrorService } from '@/services/errorService';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -68,6 +69,9 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     // Upload hooks
     const { pendingAltText, ...imageUpload } = useImageUpload(editor);
     const videoUpload = useVideoUpload(editor);
+
+    // Preview mode state
+    const [isPreview, setIsPreview] = useState(false);
 
     // Link input state
     const [showLinkInput, setShowLinkInput] = useState(false);
@@ -200,6 +204,13 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                 />
                 <span className="w-px h-6 bg-gray-300 dark:bg-gray-600 self-center" aria-hidden="true" />
                 <ToolbarButton
+                    onClick={() => setIsPreview(!isPreview)}
+                    isActive={isPreview}
+                    label={isPreview ? 'Edit' : 'Preview'}
+                    testId="toolbar-preview"
+                />
+                <span className="w-px h-6 bg-gray-300 dark:bg-gray-600 self-center" aria-hidden="true" />
+                <ToolbarButton
                     onClick={imageUpload.triggerFileSelect}
                     label="Image"
                     testId="toolbar-image"
@@ -253,8 +264,16 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     {actionSlot}
                 </div>
             )}
-            <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
-            <ImageBubbleMenu editor={editor} />
+            {isPreview ? (
+                <div
+                    className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white prose prose--card lg:prose-lg"
+                    data-testid="editor-preview"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(editor.getHTML()) }}
+                />
+            ) : (
+                <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
+            )}
+            {!isPreview && <ImageBubbleMenu editor={editor} />}
             {pendingAltText && (
                 <AltTextDialog
                     onConfirm={pendingAltText.resolve}
