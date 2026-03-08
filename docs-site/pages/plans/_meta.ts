@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-03-07-image-enhancement': 'Image Enhancement',
   '2026-03-07-ux-review-design': 'UX Review',
   '2026-03-07-dev-process-optimization': 'Dev Process Optimization',
   '2026-03-01-phase-6-section-editor': 'Phase 6: Section Editor',
