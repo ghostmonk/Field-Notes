@@ -18,6 +18,7 @@ from handlers.sections import router as sections_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
+from handlers.versions import router as versions_router
 from handlers.video_processing import router as video_processing_router
 from middleware.logging_middleware import LoggingMiddleware
 from middleware.rate_limit import limiter
@@ -229,6 +230,7 @@ app.include_router(users_router)
 app.include_router(video_processing_router)
 app.include_router(engagement_router)
 app.include_router(search_router)
+app.include_router(versions_router)
 
 if __name__ == "__main__":
     import uvicorn

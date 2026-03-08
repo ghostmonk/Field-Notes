@@ -392,6 +392,22 @@ async def update_project(
             )
             raise HTTPException(status_code=500, detail="Failed to update project")
 
+        # Save version snapshot (non-critical — don't fail the update)
+        try:
+            from handlers.versions import save_version
+
+            await save_version(
+                content_id=project_id,
+                content_type="project",
+                title=update_data.get("title", existing_project.title),
+                content=update_data.get("content", existing_project.content or ""),
+                user_id=user.id,
+            )
+        except Exception as version_err:
+            logger.warning(
+                f"Failed to save version snapshot for project {project_id}: {version_err}"
+            )
+
         updated_project = await find_one_and_convert(
             collection, {"_id": ObjectId(project_id)}, ProjectResponse
         )
