@@ -5,6 +5,9 @@
     "author": "Ghostmonk",
     "copyright": "© {year} Ghostmonk"
   },
+  "template": {
+    "active": "default"
+  },
   "hero": {
     "title": "Ghostmonk",
     "subtitle": "Sharing Stories, Projects and Ideas",

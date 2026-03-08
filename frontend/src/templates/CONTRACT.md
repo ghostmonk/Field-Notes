@@ -62,12 +62,34 @@ These classes are referenced directly in React components:
 ### Prose: `.prose`, `.prose--card`
 ### Utility: `.sr-only`, `.transition-colors`, `.pb-safe`
 
+## Required Layout Config
+
+Each template must include a `layout.config.json` that describes its structural layout:
+
+```json
+{
+  "structure": "top-content-bottom",
+  "navigation": { "desktop": "top", "mobile": "bottom" },
+  "footer": { "position": "fixed-bottom", "showAboveBottomNav": true },
+  "content": { "maxWidth": "var(--layout-page-content-max-width)", "centered": true }
+}
+```
+
+Valid `structure` values: `top-content-bottom`, `sidebar-content`, `top-content`.
+
 ## Switching Templates
 
-1. Copy `templates/default/` to `templates/<name>/`
-2. Modify the CSS files
-3. Update `_app.tsx`: change `import '../templates/default/index.css'` to `import '../templates/<name>/index.css'`
-4. Update `site.config.json` `fonts` if the template uses different Google Fonts
-5. Update the FOUC background color in `_document.tsx` (`style={{backgroundColor: '...'}}`
+Template switching is a **build-time** operation. Next.js Pages Router requires global CSS
+imports to be static — dynamic `import()` for CSS is not supported. Two things must change
+in lockstep:
+
+1. Set `template.active` in `site.config.json` to the template directory name (e.g. `"default"`)
+2. Update the CSS import in `_app.tsx` to match: `import '../templates/<name>/index.css'`
+3. Update `site.config.json` `fonts` if the template uses different Google Fonts
+4. Update the FOUC background color in `_document.tsx` (`style={{backgroundColor: '...'}}`
    on `<Html>` and `<body>`) to match the new template's `--color-surface-primary` dark value.
    CSS variables are not available at SSR paint time, so this must be a hardcoded hex value.
+5. Rebuild and deploy
+
+The `template.active` value in config is the source of truth for which template is active.
+The CSS import in `_app.tsx` must always match it manually.

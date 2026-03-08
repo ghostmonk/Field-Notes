@@ -20,6 +20,10 @@ export interface LayoutConfig {
   };
 }
 
+export interface TemplateConfig {
+  active: string;
+}
+
 export interface SiteConfig {
   site: {
     title: string;
@@ -27,6 +31,7 @@ export interface SiteConfig {
     author: string;
     copyright: string;
   };
+  template: TemplateConfig;
   hero: HeroConfig;
   fonts: {
     heading: string;
