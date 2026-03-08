@@ -73,6 +73,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
     <div
       className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg text-sm ${TYPE_STYLES[toast.type]}`}
       data-testid={`toast-${toast.type}`}
+      data-toast-id={toast.id}
     >
       <span className="font-bold text-base" aria-hidden="true">{TYPE_ICONS[toast.type]}</span>
       <span className="flex-1">{toast.message}</span>

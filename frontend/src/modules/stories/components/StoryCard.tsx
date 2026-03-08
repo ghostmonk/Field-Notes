@@ -10,8 +10,8 @@ import { LazyStoryContent } from './LazyStoryContent';
  * The leading media is shown full-size above the truncated text.
  */
 export function splitLeadingImage(html: string): { leadImage: string | null; rest: string } {
-    // Strip leading whitespace and empty paragraphs (TipTap inserts <p></p> before block nodes)
-    const trimmed = html.trimStart().replace(/^(<p>\s*<\/p>\s*)+/i, '');
+    // Strip leading whitespace and empty paragraphs (TipTap inserts <p></p>, <p>&nbsp;</p>, etc.)
+    const trimmed = html.trimStart().replace(/^(<p[^>]*>(\s|&nbsp;)*<\/p>\s*)+/i, '');
 
     // Match <img> or <video>...</video> (possibly wrapped in <p>) at the very start
     const mediaInParagraph = /^<p>\s*(<img[^>]*>|<video[^>]*>[\s\S]*?<\/video>)\s*<\/p>/i;

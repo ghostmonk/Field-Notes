@@ -3,6 +3,10 @@
  *
  * Both /api/stories (list) and /api/stories/[id] (mutations)
  * import from here so that mutations can invalidate the list cache.
+ *
+ * Limitation: This is a process-scoped Map. On Cloud Run with multiple
+ * instances, a mutation on instance A will not invalidate instance B's
+ * cache. The TTL (2-5 min) provides eventual consistency.
  */
 
 const cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();

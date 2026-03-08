@@ -25,6 +25,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             StarterKit,
             Link.configure({
                 openOnClick: false,
+                validate: (href: string) => /^https?:\/\//i.test(href),
             }),
             Image.extend({
                 addAttributes() {

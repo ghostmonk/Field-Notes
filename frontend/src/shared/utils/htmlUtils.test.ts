@@ -69,4 +69,19 @@ describe('stripEmptyParagraphs', () => {
     expect(stripEmptyParagraphs('<p>  </p><p>Real</p>'))
       .toBe('<p>Real</p>');
   });
+
+  it('strips paragraphs containing only &nbsp;', () => {
+    expect(stripEmptyParagraphs('<p>&nbsp;</p><p>Real</p>'))
+      .toBe('<p>Real</p>');
+  });
+
+  it('strips paragraphs with class attributes but no content', () => {
+    expect(stripEmptyParagraphs('<p class="editor-p"></p><img src="/a.jpg">'))
+      .toBe('<img src="/a.jpg">');
+  });
+
+  it('strips trailing &nbsp; paragraphs', () => {
+    expect(stripEmptyParagraphs('<p>Content</p><p>&nbsp;</p>'))
+      .toBe('<p>Content</p>');
+  });
 });
