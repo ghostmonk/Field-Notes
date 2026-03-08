@@ -6,6 +6,7 @@ import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 import { VersionHistory } from '@/modules/versions/components/VersionHistory';
+import { useConfirm } from '@/components/ConfirmDialog';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
 
@@ -14,6 +15,7 @@ interface StoryEditorFormProps {
 }
 
 export function StoryEditorForm({ section }: StoryEditorFormProps) {
+  const confirmDialog = useConfirm();
   const router = useRouter();
   const confirm = useConfirm();
   const {
@@ -200,8 +202,12 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
           <VersionHistory
             contentType="story"
             contentId={story.id}
-            onSelectVersion={(v) => {
-              if (confirm('Load this version? Current unsaved changes will be lost.')) {
+            onSelectVersion={async (v) => {
+              const ok = await confirmDialog({
+                title: 'Restore version',
+                message: 'Load this version? Current unsaved changes will be lost.',
+              });
+              if (ok) {
                 setTitle(v.title);
                 setContent(v.content);
               }
