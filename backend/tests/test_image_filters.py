@@ -126,13 +126,13 @@ class TestHighContrastFilter:
 
 
 class TestBwFilter:
-    def test_changes_pixel_values(self, sample_image):
+    def test_changes_pixel_values(self):
         # Use a non-gray image so BW actually changes values
         img = Image.new("RGB", (100, 100), (200, 100, 50))
         result = apply_filter(img, "bw")
         assert list(result.getdata()) != list(img.getdata())
 
-    def test_produces_equal_rgb_channels(self, sample_image):
+    def test_produces_equal_rgb_channels(self):
         img = Image.new("RGB", (100, 100), (200, 100, 50))
         result = apply_filter(img, "bw")
         r, g, b = result.split()
