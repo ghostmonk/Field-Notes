@@ -44,7 +44,8 @@ export function ImageFilterPicker({
         maxWidth: '40rem',
         width: '100%',
       }}
-      onCancel={(e) => { e.preventDefault(); onCancel(); }}
+      onCancel={(e) => e.preventDefault()}
+      onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); onCancel(); } }}
       data-testid="filter-picker-dialog"
     >
       <div className="p-6">
@@ -107,7 +108,6 @@ export function ImageFilterPicker({
             {Object.entries(FILTER_LABELS).map(([key, label]) => {
               if (key === 'none') return null;
               const previewUrl = previews[key];
-              if (!previewUrl) return null;
 
               return (
                 <button
@@ -125,16 +125,32 @@ export function ImageFilterPicker({
                   }}
                   data-testid={`filter-option-${key}`}
                 >
-                  <img
-                    src={previewUrl}
-                    alt={label}
-                    style={{
-                      width: '80px',
-                      height: '80px',
-                      objectFit: 'cover',
-                      borderRadius: '0.375rem',
-                    }}
-                  />
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt={label}
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'cover',
+                        borderRadius: '0.375rem',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '0.375rem',
+                        backgroundColor: 'var(--color-surface-secondary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>...</span>
+                    </div>
+                  )}
                   <span className="text-xs mt-1">{label}</span>
                 </button>
               );
