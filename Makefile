@@ -1,5 +1,21 @@
 .PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui test-frontend-unit clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend install-frontend migrate migrate-status migrate-down
 
+# Port configuration (override in .env.local for worktree isolation)
+FRONTEND_PORT ?= 3000
+BACKEND_PORT ?= 5001
+MONGO_PORT ?= 27017
+
+# Load .env.local overrides if present
+-include .env.local.mk
+ifneq (,$(wildcard .env.local))
+  # Export port vars from .env.local for Docker Compose
+  FRONTEND_PORT := $(or $(shell grep '^FRONTEND_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(FRONTEND_PORT))
+  BACKEND_PORT := $(or $(shell grep '^BACKEND_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(BACKEND_PORT))
+  MONGO_PORT := $(or $(shell grep '^MONGO_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(MONGO_PORT))
+endif
+
+export FRONTEND_PORT BACKEND_PORT MONGO_PORT
+
 # Virtual environment configuration
 VENV_DEFAULT := $(HOME)/Documents/venvs/field-notes
 VENV_PATH ?= $(VENV_DEFAULT)
@@ -57,13 +73,19 @@ venv-clean:
 # Database migrations (pymongo-migrate)
 # Requires MONGO_URI environment variable set
 migrate:
-	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && cd backend && pymongo-migrate migrate -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && \
+	MONGO_URI=$${MONGO_URI:-mongodb://localhost:$(MONGO_PORT)/$${MONGO_DB_NAME:-ghostmonk}} && \
+	export MONGO_URI && cd backend && pymongo-migrate migrate -u "$$MONGO_URI" -m migrations
 
 migrate-status:
-	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && cd backend && pymongo-migrate show -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && \
+	MONGO_URI=$${MONGO_URI:-mongodb://localhost:$(MONGO_PORT)/$${MONGO_DB_NAME:-ghostmonk}} && \
+	export MONGO_URI && cd backend && pymongo-migrate show -u "$$MONGO_URI" -m migrations
 
 migrate-down:
-	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && cd backend && pymongo-migrate downgrade -u "$$MONGO_URI" -m migrations
+	. $(VENV_ACTIVATE) && set -a && . ./.env && if [ -f .env.local ]; then . ./.env.local; fi && set +a && \
+	MONGO_URI=$${MONGO_URI:-mongodb://localhost:$(MONGO_PORT)/$${MONGO_DB_NAME:-ghostmonk}} && \
+	export MONGO_URI && cd backend && pymongo-migrate downgrade -u "$$MONGO_URI" -m migrations
 
 # Dependency management with pip-tools
 deps-compile:
@@ -187,9 +209,9 @@ dev-local:
 	$(MAKE) migrate
 	@echo "Starting local frontend with hot reload..."
 	@echo ""
-	@echo "Frontend: http://localhost:3000 (local, hot reload)"
-	@echo "Backend:  http://localhost:5001 (Docker)"
-	@echo "MongoDB:  localhost:27017 (Docker)"
+	@echo "Frontend: http://localhost:$(FRONTEND_PORT) (local, hot reload)"
+	@echo "Backend:  http://localhost:$(BACKEND_PORT) (Docker)"
+	@echo "MongoDB:  localhost:$(MONGO_PORT) (Docker)"
 	@echo ""
 	$(MAKE) dev-frontend
 # 
@@ -200,7 +222,7 @@ dev-local:
 dev-backend:
 	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && \
 	if [ -f .env.local ]; then export $$(cat .env.local | grep -v '^#' | grep -v '^$$' | xargs); fi && \
-	cd backend && uvicorn app:app --reload --port 5001
+	cd backend && uvicorn app:app --reload --port $(BACKEND_PORT)
 
 # dev-frontend: Start Next.js frontend server on port 3000
 # - Loads .env variables, then .env.local overrides (if exists)
@@ -209,7 +231,7 @@ dev-backend:
 dev-frontend:
 	export $$(cat .env | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs) && \
 	if [ -f .env.local ]; then export $$(cat .env.local | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs); fi && \
-	cd frontend && PORT=3000 npx next dev -H 0.0.0.0
+	cd frontend && BACKEND_URL=http://localhost:$(BACKEND_PORT) PORT=$(FRONTEND_PORT) npx next dev -H 0.0.0.0
 
 # Cleanup
 clean:
