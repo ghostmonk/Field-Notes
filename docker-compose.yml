@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-      - "5001:5001"
+      - "${BACKEND_PORT:-5001}:5001"
     env_file:
       - .env
     environment:
@@ -28,7 +28,7 @@ services:
       context: ./frontend
       target: build
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     env_file:
       - .env
     environment:
@@ -51,9 +51,8 @@ services:
 
   mongo:
     image: mongo:6.0
-    container_name: mongo
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongo_data:/data/db
 
