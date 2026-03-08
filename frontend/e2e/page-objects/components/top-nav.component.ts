@@ -1,92 +1,105 @@
 import { Page, Locator } from '@playwright/test';
 
-/**
- * TopNav component page object.
- * Encapsulates navigation and auth-related interactions.
- */
 export class TopNavComponent {
   readonly page: Page;
 
-  // Navigation elements
+  // Header elements
   readonly nav: Locator;
   readonly homeLink: Locator;
-  readonly newContentLink: Locator;
-  readonly sectionsLink: Locator;
+  readonly hamburgerButton: Locator;
+  readonly menuOverlay: Locator;
 
-  // Section links (desktop)
+  // Section links (inside menu overlay)
   readonly blogLink: Locator;
   readonly aboutLink: Locator;
   readonly projectsLink: Locator;
   readonly contactLink: Locator;
 
-  // Auth elements
+  // Admin links (inside menu overlay)
+  readonly newContentLink: Locator;
+  readonly sectionsLink: Locator;
+
+  // Auth elements (in header)
   readonly signInButton: Locator;
   readonly logoutButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
 
-    // Navigation
+    // Header
     this.nav = page.getByTestId('top-nav');
     this.homeLink = page.getByTestId('nav-home-link');
-    this.newContentLink = page.getByTestId('nav-new-content-link');
-    this.sectionsLink = page.getByTestId('nav-sections-link');
+    this.hamburgerButton = page.getByTestId('hamburger-button');
+    this.menuOverlay = page.getByTestId('menu-overlay');
 
-    // Section links
+    // Section links (same testids, now in overlay)
     this.blogLink = page.getByTestId('nav-blog-link');
     this.aboutLink = page.getByTestId('nav-about-link');
     this.projectsLink = page.getByTestId('nav-projects-link');
     this.contactLink = page.getByTestId('nav-contact-link');
+
+    // Admin links
+    this.newContentLink = page.getByTestId('nav-new-content-link');
+    this.sectionsLink = page.getByTestId('nav-sections-link');
 
     // Auth
     this.signInButton = page.getByTestId('signin-button');
     this.logoutButton = page.getByTestId('logout-button');
   }
 
-  /**
-   * Navigate to blog/home page via nav link.
-   */
+  async openMenu() {
+    const isOpen = await this.menuOverlay.evaluate(
+      el => el.classList.contains('menu-overlay--open')
+    );
+    if (!isOpen) {
+      await this.hamburgerButton.click();
+      await this.menuOverlay.waitFor({ state: 'visible' });
+    }
+  }
+
+  async closeMenu() {
+    const isOpen = await this.menuOverlay.evaluate(
+      el => el.classList.contains('menu-overlay--open')
+    );
+    if (isOpen) {
+      await this.hamburgerButton.click();
+    }
+  }
+
   async goToBlog() {
+    await this.openMenu();
     await Promise.all([
       this.page.waitForURL(/\/(blog)?$/),
       this.blogLink.click(),
     ]);
   }
 
-  /**
-   * Navigate to about page via nav link.
-   */
   async goToAbout() {
+    await this.openMenu();
     await Promise.all([
       this.page.waitForURL('**/about'),
       this.aboutLink.click(),
     ]);
   }
 
-  /**
-   * Navigate to projects page via nav link.
-   */
   async goToProjects() {
+    await this.openMenu();
     await Promise.all([
       this.page.waitForURL('**/projects'),
       this.projectsLink.click(),
     ]);
   }
 
-  /**
-   * Navigate to contact page via nav link.
-   */
   async goToContact() {
+    await this.openMenu();
     await Promise.all([
       this.page.waitForURL('**/contact'),
       this.contactLink.click(),
     ]);
   }
 
-  /**
-   * Navigate to new story page.
-   */
   async goToNewContent() {
+    await this.openMenu();
     await Promise.all([
       this.page.waitForURL('**/editor**'),
       this.newContentLink.click(),
@@ -94,15 +107,13 @@ export class TopNavComponent {
   }
 
   async goToSections() {
+    await this.openMenu();
     await Promise.all([
       this.page.waitForURL('**/admin/sections'),
       this.sectionsLink.click(),
     ]);
   }
 
-  /**
-   * Navigate to home page via home link.
-   */
   async goToHome() {
     await Promise.all([
       this.page.waitForURL('/'),
@@ -110,25 +121,15 @@ export class TopNavComponent {
     ]);
   }
 
-  /**
-   * Click sign in button.
-   */
   async clickSignIn() {
     await this.signInButton.click();
   }
 
-  /**
-   * Click logout button.
-   */
   async clickLogout() {
     await this.logoutButton.click();
   }
 
-  /**
-   * Check if user is authenticated (logout button visible).
-   */
   async isAuthenticated(): Promise<boolean> {
     return this.logoutButton.isVisible();
   }
-
 }

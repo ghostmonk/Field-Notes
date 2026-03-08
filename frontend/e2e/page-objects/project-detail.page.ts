@@ -1,14 +1,12 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './base.page';
 import { TopNavComponent } from './components/top-nav.component';
-import { BottomNavComponent } from './components/bottom-nav.component';
 
 /**
  * Project detail page object for individual project pages.
  */
 export class ProjectDetailPage extends BasePage {
   readonly nav: TopNavComponent;
-  readonly bottomNav: BottomNavComponent;
 
   // Page elements
   readonly pageTitle: Locator;
@@ -28,7 +26,6 @@ export class ProjectDetailPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.nav = new TopNavComponent(page);
-    this.bottomNav = new BottomNavComponent(page);
 
     this.pageTitle = page.locator('h1.page-title');
     this.backLink = page.getByTestId('breadcrumbs').getByRole('link', { name: 'Projects' });

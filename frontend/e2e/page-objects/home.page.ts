@@ -1,7 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './base.page';
 import { TopNavComponent } from './components/top-nav.component';
-import { BottomNavComponent } from './components/bottom-nav.component';
 import { StoryCardComponent, createStoryCard } from './components/story-card.component';
 
 /**
@@ -9,7 +8,6 @@ import { StoryCardComponent, createStoryCard } from './components/story-card.com
  */
 export class HomePage extends BasePage {
   readonly nav: TopNavComponent;
-  readonly bottomNav: BottomNavComponent;
 
   // Stories list elements
   readonly storiesList: Locator;
@@ -22,7 +20,6 @@ export class HomePage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.nav = new TopNavComponent(page);
-    this.bottomNav = new BottomNavComponent(page);
 
     this.storiesList = page.getByTestId('stories-list');
     this.emptyState = page.getByTestId('stories-empty');

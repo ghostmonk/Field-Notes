@@ -1,14 +1,12 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './base.page';
 import { TopNavComponent } from './components/top-nav.component';
-import { BottomNavComponent } from './components/bottom-nav.component';
 
 /**
  * Contact page object for the contact page.
  */
 export class ContactPage extends BasePage {
   readonly nav: TopNavComponent;
-  readonly bottomNav: BottomNavComponent;
 
   // Page elements
   readonly pageTitle: Locator;
@@ -20,7 +18,6 @@ export class ContactPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.nav = new TopNavComponent(page);
-    this.bottomNav = new BottomNavComponent(page);
 
     this.pageTitle = page.locator('h1.page-title');
     this.contentCard = page.locator('.card');
