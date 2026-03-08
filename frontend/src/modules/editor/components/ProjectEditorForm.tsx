@@ -6,6 +6,7 @@ import { useProjectEditor } from '../hooks/useProjectEditor';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
+import { VersionHistory } from '@/modules/versions/components/VersionHistory';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
 
@@ -254,6 +255,21 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
           </div>
         </div>
       </form>
+
+      {project.id && (
+        <div className="max-w-4xl mx-auto mt-6">
+          <VersionHistory
+            contentType="project"
+            contentId={project.id}
+            onSelectVersion={(v) => {
+              if (confirm('Load this version? Current unsaved changes will be lost.')) {
+                setField('title', v.title);
+                setField('content', v.content);
+              }
+            }}
+          />
+        </div>
+      )}
     </>
   );
 }
