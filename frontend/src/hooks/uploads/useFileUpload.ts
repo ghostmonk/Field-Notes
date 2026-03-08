@@ -5,6 +5,7 @@ import { useState, useCallback, useRef } from 'react';
 import { ApiRequestError, StandardErrorResponse } from '@/shared/types/error';
 import { ErrorService } from '@/services/errorService';
 import { logger } from '@/shared/utils/logger';
+import { getMaxSizeForType, formatFileSize } from '@/shared/utils/uploadUtils';
 
 export interface UploadResponse {
   urls: string[];
@@ -64,6 +65,14 @@ export function useFileUpload(options: UseFileUploadOptions): UseFileUploadRetur
       let processedFile: File | Blob = file;
       if (preprocess) {
         processedFile = await preprocess(file);
+      }
+
+      // Validate size after preprocessing (resize may have reduced it)
+      const maxSize = getMaxSizeForType(file.type);
+      if (maxSize > 0 && processedFile.size > maxSize) {
+        setError(createValidationError(file, `File too large after processing (${formatFileSize(processedFile.size)}). Maximum is ${formatFileSize(maxSize)}.`));
+        setUploading(false);
+        return null;
       }
 
       const formData = new FormData();

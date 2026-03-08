@@ -4,7 +4,7 @@
 import { useCallback, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { useFileUpload, UseFileUploadReturn } from './useFileUpload';
-import { validateImageFile, createFileValidationError, ALLOWED_IMAGE_TYPES, resizeImageFile } from '@/shared/utils/uploadUtils';
+import { validateImageType, createFileValidationError, ALLOWED_IMAGE_TYPES, resizeImageFile } from '@/shared/utils/uploadUtils';
 import { escapeHtmlAttr } from '@/shared/utils/htmlUtils';
 
 export interface UseImageUploadReturn extends UseFileUploadReturn {
@@ -21,7 +21,7 @@ export interface UseImageUploadReturn extends UseFileUploadReturn {
 
 export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
   const baseUpload = useFileUpload({
-    validate: validateImageFile,
+    validate: validateImageType,
     createValidationError: (file, error) => createFileValidationError(file, error, 'image'),
     context: 'image',
     preprocess: resizeImageFile,

@@ -65,14 +65,27 @@ export function validateImageFile(file: File): { isValid: boolean; error?: strin
       error: `This image format is not supported. Please use ${ALLOWED_IMAGE_FORMATS.join(', ')}.`
     };
   }
-  
+
   if (file.size > MAX_IMAGE_SIZE) {
     return {
       isValid: false,
       error: `The image file is too large. Please choose a file smaller than ${formatFileSize(MAX_IMAGE_SIZE)}.`
     };
   }
-  
+
+  return { isValid: true };
+}
+
+/**
+ * Validate image type only (skip size check for flows with client-side resize).
+ */
+export function validateImageType(file: File): { isValid: boolean; error?: string } {
+  if (!isAllowedImageType(file.type)) {
+    return {
+      isValid: false,
+      error: `This image format is not supported. Please use ${ALLOWED_IMAGE_FORMATS.join(', ')}.`
+    };
+  }
   return { isValid: true };
 }
 
