@@ -242,10 +242,15 @@ export default function SectionPage({ section, view, initialListData, detailItem
     if (error) {
         return (
             <div className="container mx-auto px-4 py-8">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-                    <h3 className="text-red-800 font-semibold">Error</h3>
-                    <p className="text-red-600 mt-2">{error}</p>
-                    <Link href="/" className="btn btn--primary">Return Home</Link>
+                <div className="error-state">
+                    <h3 className="error-state__title">Error</h3>
+                    <p className="error-state__message">{error}</p>
+                    <div className="flex gap-3 mt-4 justify-center">
+                        <button onClick={() => window.location.reload()} className="btn btn--primary" data-testid="error-retry">
+                            Try Again
+                        </button>
+                        <Link href="/" className="btn btn--secondary">Return Home</Link>
+                    </div>
                 </div>
             </div>
         );
