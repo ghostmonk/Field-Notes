@@ -28,10 +28,10 @@ const Home: React.FC<HomeProps> = ({ initialStories, storySectionSlug, error }) 
 
             <div style={{margin: '0 auto', maxWidth: '800px', padding: '0 1rem'}}>
                 {config.hero.showOnHome && (
-                    <div className="hero">
-                        <h1 className="hero__title">{config.hero.title || config.site.title}</h1>
-                        <p className="hero__subtitle">{config.hero.subtitle || config.site.tagline}</p>
-                    </div>
+                    <header className="hero">
+                        <h1 className="hero__title">{config.site.title}</h1>
+                        <p className="hero__subtitle">{config.site.tagline}</p>
+                    </header>
                 )}
                 <StoryList initialData={initialStories} initialError={error} basePath={storySectionSlug ? `/${storySectionSlug}` : undefined} featureFirst />
             </div>

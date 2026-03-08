@@ -79,7 +79,7 @@ Valid `navigation.desktop` values: `top`, `sidebar`. Valid `navigation.mobile` v
 ## Switching Templates
 
 Template switching is a **build-time** operation. Next.js Pages Router requires global CSS
-imports to be static — dynamic `import()` for CSS is not supported. Two things must change
+imports to be static — dynamic `import()` for CSS is not supported. Three things must change
 in lockstep:
 
 1. Set `template.active` in `site.config.json` to the template directory name (e.g. `"default"`)

@@ -1,6 +1,4 @@
 export interface HeroConfig {
-  title?: string;
-  subtitle?: string;
   showOnHome: boolean;
 }
 
