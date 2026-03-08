@@ -1,12 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { useNavSections } from '@/hooks/useNavSections';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { getSiteConfig } from '@/config';
 import { NavSectionItem } from '@/shared/lib/navigation';
 import { iconMap } from '@/shared/lib/navIcons';
-import { HiHome } from 'react-icons/hi';
+import { HiHome, HiPlusSm, HiCog } from 'react-icons/hi';
 
 interface NavItemProps {
     section: NavSectionItem;
@@ -33,8 +34,10 @@ const NavItem: React.FC<NavItemProps> = ({ section, isActive }) => {
 const config = getSiteConfig();
 
 const BottomNav: React.FC = () => {
+    const { data: session } = useSession();
     const sections = useNavSections();
     const activeSlug = useActiveSection(sections);
+    const activeSectionId = sections.find(s => s.slug === activeSlug)?.id;
     const router = useRouter();
     const isHomePage = router.pathname === '/';
 
@@ -61,6 +64,26 @@ const BottomNav: React.FC = () => {
                     isActive={!isHomePage && activeSlug === section.slug}
                 />
             ))}
+            {session?.user?.role === 'admin' && (
+                <>
+                    <Link
+                        href={activeSectionId ? `/editor?section_id=${activeSectionId}` : '/editor'}
+                        className="bottom-nav__item"
+                        data-testid="bottom-nav-new"
+                    >
+                        <HiPlusSm className="bottom-nav__icon" aria-hidden="true" />
+                        <span className="bottom-nav__label">New</span>
+                    </Link>
+                    <Link
+                        href="/admin/sections"
+                        className="bottom-nav__item"
+                        data-testid="bottom-nav-sections"
+                    >
+                        <HiCog className="bottom-nav__icon" aria-hidden="true" />
+                        <span className="bottom-nav__label">Sections</span>
+                    </Link>
+                </>
+            )}
         </nav>
     );
 };
