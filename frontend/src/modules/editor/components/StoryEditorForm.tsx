@@ -2,6 +2,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { Section } from '@/shared/types/api';
 import { useStoryEditor } from '../hooks/useStoryEditor';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 
@@ -13,6 +14,7 @@ interface StoryEditorFormProps {
 
 export function StoryEditorForm({ section }: StoryEditorFormProps) {
   const router = useRouter();
+  const confirm = useConfirm();
   const {
     story,
     error,
@@ -21,7 +23,6 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
     isEditing,
     setTitle,
     setContent,
-    setPublished,
     handleSubmit,
     handleDelete,
     resetForm,
@@ -112,7 +113,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
         </div>
       )}
 
-      <form onSubmit={(e: React.FormEvent) => handleSubmit(e, true)} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Title
@@ -140,34 +141,46 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
               onChange={setContent}
               actionSlot={
                 <>
-                  <div className="flex items-center">
-                    <input
-                      id="is_published"
-                      name="is_published"
-                      type="checkbox"
-                      checked={story.is_published || false}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPublished(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
-                      disabled={isSaving}
-                      data-testid="editor-publish-toggle"
-                    />
-                    <label htmlFor="is_published" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                      Publish
-                    </label>
-                  </div>
-                  <div className="flex gap-4">
+                  {story.is_published && (
+                    <span className="text-xs font-medium px-2 py-1 rounded" style={{ backgroundColor: 'var(--color-status-success)', color: 'white' }}>
+                      Published
+                    </span>
+                  )}
+                  <div className="flex gap-2">
                     <button
-                      type="submit"
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                      type="button"
+                      onClick={() => {
+                        handleSubmit(new Event('submit') as unknown as React.FormEvent, false);
+                      }}
+                      className="btn btn--secondary btn--sm"
                       disabled={isLoading || isSaving}
-                      data-testid="editor-save-button"
+                      data-testid="editor-save-draft"
                     >
-                      {isSaving ? 'Saving...' : `Save${story.is_published ? ' & Publish' : ' as Draft'}`}
+                      {isSaving && !story.is_published ? 'Saving...' : 'Save as Draft'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!story.is_published) {
+                          const confirmed = await confirm({
+                            title: 'Publish Story',
+                            message: 'This will make the story visible to everyone. Continue?',
+                            confirmLabel: 'Publish',
+                          });
+                          if (!confirmed) return;
+                        }
+                        handleSubmit(new Event('submit') as unknown as React.FormEvent, true);
+                      }}
+                      className="btn btn--primary btn--sm"
+                      disabled={isLoading || isSaving}
+                      data-testid="editor-publish-button"
+                    >
+                      {isSaving && story.is_published ? 'Publishing...' : 'Publish'}
                     </button>
                     <button
                       type="button"
                       onClick={() => router.push(`/${section.slug}`)}
-                      className="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="btn btn--secondary btn--sm"
                       disabled={isSaving}
                       data-testid="editor-cancel-button"
                     >

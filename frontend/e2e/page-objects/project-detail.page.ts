@@ -31,7 +31,7 @@ export class ProjectDetailPage extends BasePage {
     this.bottomNav = new BottomNavComponent(page);
 
     this.pageTitle = page.locator('h1.page-title');
-    this.backLink = page.getByText('← Back to Projects');
+    this.backLink = page.getByTestId('breadcrumbs').getByRole('link', { name: 'Projects' });
     this.featuredBadge = page.locator('h1').getByText('Featured');
     this.summary = page.locator('p.text-text-secondary').first();
     this.technologiesList = page.locator('div').filter({ has: page.locator('span') }).first();

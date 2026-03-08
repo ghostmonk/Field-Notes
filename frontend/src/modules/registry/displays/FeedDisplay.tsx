@@ -33,6 +33,18 @@ export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtr
                     ))}
                 </div>
             </InfiniteScroll>
+            {items.length > 5 && (
+                <div className="text-center py-4">
+                    <button
+                        type="button"
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        className="btn btn--secondary btn--sm"
+                        data-testid="back-to-top"
+                    >
+                        Back to top
+                    </button>
+                </div>
+            )}
             <div id={skipTargetId} tabIndex={-1} />
         </section>
     );

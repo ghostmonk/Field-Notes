@@ -29,7 +29,7 @@ export interface UseProjectEditorReturn {
   isLoading: boolean;
   isEditing: boolean;
   setField: <K extends keyof Project>(key: K, value: Project[K]) => void;
-  handleSubmit: (e: React.FormEvent) => Promise<void>;
+  handleSubmit: (e: React.FormEvent, shouldPublish?: boolean) => Promise<void>;
   handleDelete: () => Promise<void>;
   resetForm: () => void;
   clearError: () => void;
@@ -83,7 +83,7 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
     return () => { cancelled = true; };
   }, [projectId, accessToken]);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent, shouldPublish?: boolean) => {
     e.preventDefault();
 
     if (!session?.accessToken) {
@@ -108,7 +108,7 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
         github_url: project.github_url || undefined,
         live_url: project.live_url || undefined,
         image_url: project.image_url || undefined,
-        is_published: project.is_published,
+        is_published: shouldPublish !== undefined ? shouldPublish : project.is_published,
         is_featured: project.is_featured,
         sort_order: project.sort_order,
         section_id: project.section_id || sectionId,

@@ -15,6 +15,8 @@ import { ProjectCard } from '@/modules/projects';
 import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { EmptyState } from '@/components/EmptyState';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
 import { processStoryDataSSR } from '@/rendering/server';
 import apiClient from '@/shared/lib/api-client';
@@ -169,9 +171,10 @@ function SectionListView({ section, initialListData }: { section: Section; initi
 
     if (items.length === 0 && !loading) {
         return (
-            <div className="empty-state">
-                <h2 className="empty-state__title">No content found</h2>
-            </div>
+            <EmptyState
+                title={`No ${section.title.toLowerCase()} yet`}
+                description="Check back later for new content."
+            />
         );
     }
 
@@ -203,15 +206,14 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
     if (contentType === 'story') {
         const story = item as Story;
         return (
-            <div style={{ margin: '0 auto', maxWidth: '800px', padding: '2rem 1rem' }}>
+            <div className="detail-container">
+                <Breadcrumbs items={[
+                    { label: section.title, href: `/${section.slug}` },
+                    { label: story.title },
+                ]} />
                 <EngagementProvider targetType="story" targetId={story.id}>
                     <StoryDetail story={story}>
                         <StoryEngagement />
-                        <div className="mt-10 pt-6">
-                            <Link href={`/${section.slug}`} className="btn btn--secondary btn--sm">
-                                &larr; Back to {section.title}
-                            </Link>
-                        </div>
                     </StoryDetail>
                 </EngagementProvider>
             </div>
@@ -222,9 +224,10 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
         const project = item as Project;
         return (
             <div className="page-container">
-                <Link href={`/${section.slug}`} className="inline-block mb-8 btn btn--secondary btn--sm">
-                    &larr; Back to {section.title}
-                </Link>
+                <Breadcrumbs items={[
+                    { label: section.title, href: `/${section.slug}` },
+                    { label: project.title },
+                ]} />
                 <ProjectDetail project={project} />
             </div>
         );
@@ -239,10 +242,15 @@ export default function SectionPage({ section, view, initialListData, detailItem
     if (error) {
         return (
             <div className="container mx-auto px-4 py-8">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-                    <h3 className="text-red-800 font-semibold">Error</h3>
-                    <p className="text-red-600 mt-2">{error}</p>
-                    <Link href="/" className="btn btn--primary">Return Home</Link>
+                <div className="error-state">
+                    <h3 className="error-state__title">Error</h3>
+                    <p className="error-state__message">{error}</p>
+                    <div className="flex gap-3 mt-4 justify-center">
+                        <button onClick={() => window.location.reload()} className="btn btn--primary" data-testid="error-retry">
+                            Try Again
+                        </button>
+                        <Link href="/" className="btn btn--secondary">Return Home</Link>
+                    </div>
                 </div>
             </div>
         );

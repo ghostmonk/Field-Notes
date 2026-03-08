@@ -28,7 +28,7 @@ const Home: React.FC<HomeProps> = ({ initialStories, storySectionSlug, error }) 
                 <p className="text-center mb-8" style={{ color: 'var(--color-text-secondary)' }}>
                     Sharing Stories, Projects and Ideas
                 </p>
-                <StoryList initialData={initialStories} initialError={error} basePath={storySectionSlug ? `/${storySectionSlug}` : undefined} />
+                <StoryList initialData={initialStories} initialError={error} basePath={storySectionSlug ? `/${storySectionSlug}` : undefined} featureFirst />
             </div>
         </>
     );
