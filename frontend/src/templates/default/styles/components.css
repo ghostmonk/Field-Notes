@@ -54,6 +54,12 @@
 
 .card:hover {
   box-shadow: 0 4px 12px var(--color-shadow-medium);
+  transform: translateY(-2px);
+}
+
+/* Accent strip for cards without media */
+.card:not(:has(.card__media)) {
+  border-top: 3px solid var(--color-brand-primary);
 }
 
 .card--draft {
@@ -973,6 +979,13 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
     min-width: 44px;
     min-height: 44px;
     padding: 0.5rem;
+  }
+}
+
+/* Card hover: disable transform lift for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .card:hover {
+    transform: none;
   }
 }
 
