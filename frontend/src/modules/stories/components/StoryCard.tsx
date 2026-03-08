@@ -167,13 +167,11 @@ export const StoryCard = React.memo(({
 
             {!isDraft ? (
                 <>
-                    <Link href={storyPath} className="block" data-testid={`story-content-link-${story.id}`}>
-                        <StoryMediaPreview leadImage={leadImage} rest={rest} />
-                        <div className="mt-4">
-                            <span className="btn btn--secondary btn--sm" data-testid={`story-read-more-${story.id}`}>
-                                Read full story →
-                            </span>
-                        </div>
+                    <StoryMediaPreview leadImage={leadImage} rest={rest} />
+                    <Link href={storyPath} className="block mt-4" data-testid={`story-content-link-${story.id}`}>
+                        <span className="btn btn--secondary btn--sm" data-testid={`story-read-more-${story.id}`}>
+                            Read full story →
+                        </span>
                     </Link>
                     {engagementCounts && (
                         <div className="mt-4 flex items-center justify-end gap-4 text-sm" style={{ color: 'var(--color-text-secondary)' }}>

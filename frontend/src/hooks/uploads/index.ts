@@ -4,7 +4,7 @@
 export { useFileUpload } from './useFileUpload';
 export type { UploadResponse, UseFileUploadOptions, UseFileUploadReturn } from './useFileUpload';
 
-export { useImageUpload } from './useImageUpload';
+export { useImageUpload, FILTER_CANCEL } from './useImageUpload';
 export type { UseImageUploadReturn } from './useImageUpload';
 
 export { useVideoUpload } from './useVideoUpload';

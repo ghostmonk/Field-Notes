@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -7,8 +8,9 @@ import DOMPurify from 'isomorphic-dompurify';
 import { VideoExtension } from './VideoExtension';
 import { ErrorService } from '@/services/errorService';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
-import { useImageUpload, useVideoUpload } from '@/hooks/uploads';
+import { useImageUpload, useVideoUpload, FILTER_CANCEL } from '@/hooks/uploads';
 import { AltTextDialog } from './AltTextDialog';
+import { ImageFilterPicker } from './ImageFilterPicker';
 import { ImageBubbleMenu } from './ImageBubbleMenu';
 
 interface RichTextEditorProps {
@@ -52,6 +54,11 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                             parseHTML: element => element.getAttribute('sizes'),
                             renderHTML: attributes => attributes.sizes ? { sizes: attributes.sizes } : {},
                         },
+                        'data-original-src': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-original-src'),
+                            renderHTML: attributes => attributes['data-original-src'] ? { 'data-original-src': attributes['data-original-src'] } : {},
+                        },
                     }
                 },
             }).configure({
@@ -67,7 +74,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     });
 
     // Upload hooks
-    const { pendingAltText, ...imageUpload } = useImageUpload(editor);
+    const { pendingAltText, pendingFilter, refilterImage, isProcessing: isImageUploading, ...imageUpload } = useImageUpload(editor);
     const videoUpload = useVideoUpload(editor);
 
     // Preview mode state
@@ -264,6 +271,11 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     {actionSlot}
                 </div>
             )}
+            {isImageUploading && !pendingFilter && (
+                <div className="mb-2 p-2 text-sm" style={{ color: 'var(--color-text-secondary)' }} data-testid="image-upload-progress">
+                    Uploading image...
+                </div>
+            )}
             {isPreview ? (
                 <div
                     className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white prose prose--card lg:prose-lg"
@@ -273,11 +285,22 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             ) : (
                 <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
             )}
-            {!isPreview && <ImageBubbleMenu editor={editor} />}
-            {pendingAltText && (
+            {!isPreview && <ImageBubbleMenu editor={editor} onChangeFilter={refilterImage} />}
+            {pendingFilter && createPortal(
+                <ImageFilterPicker
+                    imageUrl={pendingFilter.imageUrl}
+                    previews={pendingFilter.previews}
+                    loading={pendingFilter.loading}
+                    onConfirm={(filter) => pendingFilter?.resolve(filter)}
+                    onCancel={() => pendingFilter?.resolve(FILTER_CANCEL)}
+                />,
+                document.body
+            )}
+            {pendingAltText && createPortal(
                 <AltTextDialog
                     onConfirm={pendingAltText.resolve}
-                />
+                />,
+                document.body
             )}
         </div>
     );

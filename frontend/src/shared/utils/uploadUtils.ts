@@ -65,14 +65,27 @@ export function validateImageFile(file: File): { isValid: boolean; error?: strin
       error: `This image format is not supported. Please use ${ALLOWED_IMAGE_FORMATS.join(', ')}.`
     };
   }
-  
+
   if (file.size > MAX_IMAGE_SIZE) {
     return {
       isValid: false,
       error: `The image file is too large. Please choose a file smaller than ${formatFileSize(MAX_IMAGE_SIZE)}.`
     };
   }
-  
+
+  return { isValid: true };
+}
+
+/**
+ * Validate image type only (skip size check for flows with client-side resize).
+ */
+export function validateImageType(file: File): { isValid: boolean; error?: string } {
+  if (!isAllowedImageType(file.type)) {
+    return {
+      isValid: false,
+      error: `This image format is not supported. Please use ${ALLOWED_IMAGE_FORMATS.join(', ')}.`
+    };
+  }
   return { isValid: true };
 }
 
@@ -100,8 +113,76 @@ export function validateVideoFile(file: File): { isValid: boolean; error?: strin
 /**
  * Create a structured error response for file validation failures
  */
+export const MAX_CLIENT_RESIZE_DIMENSION = 2048;
+
+/**
+ * Resize an image file client-side if it exceeds maxDimension.
+ * Returns the original file if no resize needed or if the file is an animated GIF.
+ */
+export async function resizeImageFile(
+  file: File,
+  maxDimension: number = MAX_CLIENT_RESIZE_DIMENSION
+): Promise<File | Blob> {
+  if (file.type === 'image/gif') {
+    return file;
+  }
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const { width, height } = img;
+
+      if (width <= maxDimension && height <= maxDimension) {
+        resolve(file);
+        return;
+      }
+
+      const scale = maxDimension / Math.max(width, height);
+      const newWidth = Math.round(width * scale);
+      const newHeight = Math.round(height * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to create canvas context for image resize'));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+      const outputType = file.type === 'image/jpeg' ? 'image/jpeg' : 'image/webp';
+      const quality = file.type === 'image/jpeg' ? 0.92 : 0.90;
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to encode resized image'));
+          }
+        },
+        outputType,
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image for resize'));
+    };
+
+    img.src = url;
+  });
+}
+
 export function createFileValidationError(
-  file: File, 
+  file: File,
   validationError: string,
   fileType: 'image' | 'video'
 ): StandardErrorResponse {

@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import io
 import json
@@ -10,9 +11,19 @@ from typing import List, Tuple
 
 from database import get_database
 from decorators.auth import requires_auth
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 from fastapi.responses import RedirectResponse, StreamingResponse
 from glogger import logger
+from handlers.image_filters import AVAILABLE_FILTERS, apply_filter, validate_filter_name
+from middleware.rate_limit import limiter
 from models.error import (
     ErrorCode,
     create_upload_error_response,
@@ -33,9 +44,12 @@ ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/avi"
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
 MAX_VIDEO_SIZE = 100 * 1024 * 1024
-MAX_IMAGE_LENGTH = 1200
-IMAGE_SIZES = [1200, 750, 500]
+MAX_IMAGE_LENGTH = 2048
+IMAGE_SIZES = [2048, 1536, 768, 400]
+MAX_IMAGE_SIZE = max(IMAGE_SIZES)
 OUTPUT_FORMAT = "webp"
+PREVIEW_WIDTH = 200
+PREVIEW_TEMP_DIR = "filter_previews"
 
 LOCAL_STORAGE_PATH = os.environ.get("LOCAL_STORAGE_PATH")
 
@@ -168,13 +182,15 @@ def _serve_local_file(blob_path: str, request: Request):
     return response
 
 
-async def process_single_file(file: UploadFile, bucket) -> ProcessedMediaFile:
+async def process_single_file(
+    file: UploadFile, bucket, image_filter: str = "none"
+) -> ProcessedMediaFile:
     """Process a single uploaded file and return ProcessedMediaFile."""
     contents = await file.read()
     file_size = len(contents)
 
     if file.content_type in ALLOWED_IMAGE_TYPES:
-        return await process_image_file(file, contents, file_size, bucket)
+        return await process_image_file(file, contents, file_size, bucket, image_filter)
     elif file.content_type in ALLOWED_VIDEO_TYPES:
         return await process_video_file(file, contents, file_size, bucket)
     else:
@@ -182,7 +198,7 @@ async def process_single_file(file: UploadFile, bucket) -> ProcessedMediaFile:
 
 
 async def process_image_file(
-    file: UploadFile, contents: bytes, file_size: int, bucket
+    file: UploadFile, contents: bytes, file_size: int, bucket, image_filter: str = "none"
 ) -> ProcessedMediaFile:
     """Process an image file and return ProcessedMediaFile."""
     validate_image(file.content_type, file_size)
@@ -195,6 +211,15 @@ async def process_image_file(
     original_image = ImageOps.exif_transpose(original_image)
     original_width, original_height = original_image.size
 
+    # Apply filter if specified
+    if image_filter != "none":
+        original_image = apply_filter(original_image, image_filter)
+        # Save filtered image to bytes (PNG to avoid lossy intermediate)
+        buf = io.BytesIO()
+        original_image.save(buf, format="PNG")
+        buf.seek(0)
+        contents = buf.read()
+
     srcset_entries = []
     primary_url = None
     final_width = original_width
@@ -203,10 +228,10 @@ async def process_image_file(
     for size in IMAGE_SIZES:
         sized_filename = (
             f"{base_name}_{size}{webp_extension}"
-            if size != max(IMAGE_SIZES)
+            if size != MAX_IMAGE_SIZE
             else f"{base_name}{webp_extension}"
         )
-        resized_image = resize_image(contents, size)
+        resized_image = resize_image(contents, size, exif_corrected=(image_filter != "none"))
 
         blob_path, _ = await upload_file(
             resized_image, sized_filename, f"image/{OUTPUT_FORMAT}", bucket
@@ -217,7 +242,7 @@ async def process_image_file(
         url = f"/uploads/{sized_filename}"
 
         srcset_entries.append(f"{url} {size}w")
-        if size == max(IMAGE_SIZES):
+        if size == MAX_IMAGE_SIZE:
             primary_url = url
             # Calculate final dimensions for the largest size
             if original_width > size:
@@ -290,8 +315,17 @@ async def process_video_file(
 
 @router.post("/uploads", response_model=UploadResponse)
 @requires_auth
-async def upload_media(request: Request, files: List[UploadFile] = File(...)) -> UploadResponse:
+async def upload_media(
+    request: Request,
+    files: List[UploadFile] = File(...),
+    image_filter: str = Form("none"),
+) -> UploadResponse:
     try:
+        try:
+            validate_filter_name(image_filter)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
+
         urls = []
         srcsets = []
         dimensions = []
@@ -299,7 +333,7 @@ async def upload_media(request: Request, files: List[UploadFile] = File(...)) ->
 
         for file in files:
             try:
-                processed_file = await process_single_file(file, bucket)
+                processed_file = await process_single_file(file, bucket, image_filter)
                 urls.append(processed_file.primary_url)
                 srcsets.append(processed_file.srcset)
                 dimensions.append(
@@ -317,16 +351,114 @@ async def upload_media(request: Request, files: List[UploadFile] = File(...)) ->
         handle_error(e, "processing uploads")
 
 
-def resize_image(content: bytes, target_width: int) -> bytes:
+_last_cleanup_time: float = 0
+_CLEANUP_INTERVAL = 60  # seconds between cleanup runs
+
+
+async def _cleanup_old_previews():
+    """Remove preview files older than 10 minutes from local or GCS storage."""
+    global _last_cleanup_time
+    now = datetime.now().timestamp()
+    if now - _last_cleanup_time < _CLEANUP_INTERVAL:
+        return
+    _last_cleanup_time = now
+
+    cutoff_seconds = 600  # 10 minutes
+
+    if LOCAL_STORAGE_PATH:
+        preview_dir = os.path.join(LOCAL_STORAGE_PATH, "uploads", PREVIEW_TEMP_DIR)
+        if not os.path.exists(preview_dir):
+            return
+        # Naive timestamp matches os.path.getmtime (local filesystem)
+        cutoff = datetime.now().timestamp() - cutoff_seconds
+        for filename in os.listdir(preview_dir):
+            filepath = os.path.join(preview_dir, filename)
+            if os.path.isfile(filepath) and os.path.getmtime(filepath) < cutoff:
+                try:
+                    os.remove(filepath)
+                    logger.info(f"Removed old preview file: {filepath}")
+                except OSError as e:
+                    logger.error(f"Failed to remove preview file {filepath}: {e}")
+    else:
+
+        def _gcs_cleanup():
+            bucket = get_gcs_bucket()
+            prefix = f"uploads/{PREVIEW_TEMP_DIR}/"
+            # UTC matches blob.time_created (GCS metadata)
+            cutoff_dt = datetime.now(timezone.utc) - timedelta(seconds=cutoff_seconds)
+            blobs = bucket.list_blobs(prefix=prefix)
+            for blob in blobs:
+                if blob.time_created and blob.time_created < cutoff_dt:
+                    blob.delete()
+                    logger.info(f"Removed old GCS preview: {blob.name}")
+
+        try:
+            await asyncio.to_thread(_gcs_cleanup)
+        except Exception as e:
+            logger.error(f"Failed to clean up GCS previews: {e}")
+
+
+@router.post("/uploads/filter-previews")
+@requires_auth
+@limiter.limit("15/minute")
+async def filter_previews(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+):
+    try:
+        background_tasks.add_task(_cleanup_old_previews)
+
+        contents = await file.read()
+        file_size = len(contents)
+        validate_image(file.content_type, file_size)
+
+        def _prepare_image(raw_bytes):
+            img = Image.open(io.BytesIO(raw_bytes))
+            img = ImageOps.exif_transpose(img)
+            orig_width, orig_height = img.size
+            new_height = int(orig_height * PREVIEW_WIDTH / orig_width)
+            return img.resize((PREVIEW_WIDTH, new_height), resample=Image.Resampling.LANCZOS)
+
+        image = await asyncio.to_thread(_prepare_image, contents)
+
+        bucket = None if LOCAL_STORAGE_PATH else get_gcs_bucket()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = str(uuid.uuid4())[:8]
+
+        # Generate filter previews and upload in parallel
+        filter_names = [f for f in AVAILABLE_FILTERS if f != "none"]
+
+        async def _generate_preview(filter_name):
+            def _apply_and_encode():
+                filtered_image = apply_filter(image.copy(), filter_name)
+                buf = io.BytesIO()
+                filtered_image.save(buf, format="WEBP", quality=80)
+                return buf.getvalue()
+
+            preview_bytes = await asyncio.to_thread(_apply_and_encode)
+            preview_filename = f"{PREVIEW_TEMP_DIR}/{timestamp}_{unique_id}_{filter_name}.webp"
+            await upload_file(preview_bytes, preview_filename, "image/webp", bucket)
+            return filter_name, f"/uploads/{preview_filename}"
+
+        results = await asyncio.gather(*[_generate_preview(f) for f in filter_names])
+        previews = dict(results)
+
+        return {"previews": previews}
+
+    except Exception as e:
+        handle_error(e, "generating filter previews")
+
+
+def resize_image(content: bytes, target_width: int, exif_corrected: bool = False) -> bytes:
     image = Image.open(io.BytesIO(content))
-    image = ImageOps.exif_transpose(image)
+    if not exif_corrected:
+        image = ImageOps.exif_transpose(image)
     width, height = image.size
 
-    new_width = target_width
-    new_height = int(height * target_width / width)
-
     if width > target_width:
-        image = image.resize((new_width, new_height), resample=Image.Resampling.LANCZOS)
+        new_height = int(height * target_width / width)
+        image = image.resize((target_width, new_height), resample=Image.Resampling.LANCZOS)
 
     output = io.BytesIO()
     image.save(output, format=OUTPUT_FORMAT.upper(), quality=85)
