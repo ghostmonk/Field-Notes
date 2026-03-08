@@ -24,6 +24,7 @@ export interface UseFileUploadOptions {
 export interface UseFileUploadReturn {
   uploading: boolean;
   error: StandardErrorResponse | string | ApiRequestError | null;
+  setError: (error: StandardErrorResponse | string | ApiRequestError | null) => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
   clearError: () => void;
   upload: (file: File, extraFields?: Record<string, string>) => Promise<UploadResponse | null>;
@@ -122,6 +123,7 @@ export function useFileUpload(options: UseFileUploadOptions): UseFileUploadRetur
   return {
     uploading,
     error,
+    setError,
     inputRef,
     clearError,
     upload,

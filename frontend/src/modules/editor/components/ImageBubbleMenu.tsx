@@ -85,7 +85,11 @@ export function ImageBubbleMenu({ editor, onChangeFilter }: ImageBubbleMenuProps
                 key={value}
                 type="button"
                 onClick={() => updateAttribute('width', isActive ? null : value)}
-                className={`px-2 py-0.5 rounded text-xs ${isActive ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700'}`}
+                className="px-2 py-0.5 rounded text-xs"
+                style={{
+                  backgroundColor: isActive ? 'var(--color-accent-primary)' : 'var(--color-surface-secondary)',
+                  color: isActive ? '#fff' : 'var(--color-text-primary)',
+                }}
                 data-testid={`image-bubble-width-${label}`}
               >
                 {label}
@@ -101,7 +105,11 @@ export function ImageBubbleMenu({ editor, onChangeFilter }: ImageBubbleMenuProps
               const src = attrs['data-original-src'] || attrs.src;
               if (src) onChangeFilter(src);
             }}
-            className="px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700"
+            className="px-2 py-1 rounded text-xs"
+            style={{
+              backgroundColor: 'var(--color-surface-secondary)',
+              color: 'var(--color-text-primary)',
+            }}
             data-testid="image-bubble-change-filter"
           >
             Change Filter

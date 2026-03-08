@@ -79,7 +79,13 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     if (!e.target.files || !e.target.files.length || !editor) return;
 
     const file = e.target.files[0];
-    const resized = await resizeImageFile(file);
+    let resized: File | Blob;
+    try {
+      resized = await resizeImageFile(file);
+    } catch {
+      baseUpload.setError('Failed to process image. Please try a different file.');
+      return;
+    }
     const selectedFilter = await showFilterPicker(resized, file.name);
 
     if (selectedFilter === FILTER_CANCEL) {
@@ -140,7 +146,13 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     const fileName = currentSrc.split('/').pop() || 'image.jpg';
     const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
 
-    const resized = await resizeImageFile(file);
+    let resized: File | Blob;
+    try {
+      resized = await resizeImageFile(file);
+    } catch {
+      baseUpload.setError('Failed to process image for re-filtering.');
+      return;
+    }
     const selectedFilter = await showFilterPicker(resized, fileName);
 
     if (selectedFilter === FILTER_CANCEL) return;
