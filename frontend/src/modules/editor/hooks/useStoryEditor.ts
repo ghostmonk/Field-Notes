@@ -124,7 +124,7 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
       const storyToSave = {
         ...story,
         content: stripEmptyParagraphs(story.content || ''),
-        is_published: shouldPublish ? story.is_published : false,
+        is_published: shouldPublish,
         ...(sectionId && !story.section_id ? { section_id: sectionId } : {}),
       };
 
