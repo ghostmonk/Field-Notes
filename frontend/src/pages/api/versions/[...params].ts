@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
 
+const VALID_SEGMENT = /^[a-zA-Z0-9_-]+$/;
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
 
@@ -21,6 +23,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const params = req.query.params;
     if (!Array.isArray(params) || params.length < 2) {
         return res.status(400).json({ detail: "Invalid path" });
+    }
+
+    // Validate each segment: alphanumeric, hyphens, underscores only — no ".." or slashes
+    for (const segment of params) {
+        if (!VALID_SEGMENT.test(segment)) {
+            return res.status(400).json({ detail: "Invalid path segment" });
+        }
     }
 
     const pathSegments = params.join("/");

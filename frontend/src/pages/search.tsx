@@ -4,16 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { getSiteConfig } from '@/config';
-
-interface SearchResult {
-  id: string;
-  title: string;
-  excerpt: string;
-  content_type: string;
-  slug: string;
-  section_slug: string | null;
-  score: number;
-}
+import { SearchResult } from '@/shared/lib/api-client';
 
 interface SearchPageProps {
   results: SearchResult[];

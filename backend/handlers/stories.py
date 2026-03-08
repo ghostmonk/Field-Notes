@@ -279,7 +279,7 @@ async def update_story(
 
         # Save version snapshot (non-critical — don't fail the update)
         try:
-            from handlers.versions import save_version
+            from services.versions import save_version
 
             await save_version(
                 content_id=story_id,

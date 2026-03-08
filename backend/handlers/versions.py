@@ -1,47 +1,23 @@
-from datetime import datetime, timezone
+from typing import Literal
 
 from database import get_db
 from decorators.auth import requires_auth
 from fastapi import APIRouter, HTTPException, Request
+from models.version import ContentVersion
 
 router = APIRouter(prefix="/versions", tags=["versions"])
 
-
-async def save_version(
-    content_id: str,
-    content_type: str,
-    title: str,
-    content: str,
-    user_id: str,
-    metadata: dict | None = None,
-):
-    """Save a new version snapshot. Called from story/project update handlers."""
-    db = await get_db()
-    # Get next version number
-    latest = await db.content_versions.find_one(
-        {"content_id": content_id, "content_type": content_type},
-        sort=[("version", -1)],
-    )
-    version_num = (latest["version"] + 1) if latest else 1
-
-    await db.content_versions.insert_one(
-        {
-            "content_id": content_id,
-            "content_type": content_type,
-            "version": version_num,
-            "title": title,
-            "content": content,
-            "metadata": metadata or {},
-            "created_by": user_id,
-            "created_at": datetime.now(timezone.utc),
-        }
-    )
-    return version_num
+# Re-export save_version from services for backward compatibility
+from services.versions import save_version  # noqa: E402, F401
 
 
 @router.get("/{content_type}/{content_id}")
 @requires_auth
-async def list_versions(request: Request, content_type: str, content_id: str):
+async def list_versions(
+    request: Request,
+    content_type: Literal["story", "project", "page"],
+    content_id: str,
+):
     db = await get_db()
     versions = []
     async for doc in (
@@ -52,13 +28,18 @@ async def list_versions(request: Request, content_type: str, content_id: str):
         .limit(50)
     ):
         doc["_id"] = str(doc["_id"])
-        versions.append(doc)
+        versions.append(ContentVersion(**doc).model_dump())
     return {"versions": versions, "total": len(versions)}
 
 
 @router.get("/{content_type}/{content_id}/{version}")
 @requires_auth
-async def get_version(request: Request, content_type: str, content_id: str, version: int):
+async def get_version(
+    request: Request,
+    content_type: Literal["story", "project", "page"],
+    content_id: str,
+    version: int,
+):
     db = await get_db()
     doc = await db.content_versions.find_one(
         {
@@ -70,4 +51,4 @@ async def get_version(request: Request, content_type: str, content_id: str, vers
     if not doc:
         raise HTTPException(status_code=404, detail="Version not found")
     doc["_id"] = str(doc["_id"])
-    return doc
+    return ContentVersion(**doc).model_dump()

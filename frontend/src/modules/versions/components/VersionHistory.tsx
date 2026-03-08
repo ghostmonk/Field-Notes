@@ -19,25 +19,36 @@ export function VersionHistory({ contentType, contentId, onSelectVersion }: Vers
   const { data: session } = useSession();
   const [versions, setVersions] = useState<Version[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
 
   useEffect(() => {
     if (!session?.accessToken || !contentId) return;
     setLoading(true);
+    setError(null);
     apiClient.versions.list(contentType, contentId, session.accessToken as string)
       .then((data) => setVersions(data.versions))
-      .catch(() => setVersions([]))
+      .catch((err) => {
+        setVersions([]);
+        setError(err instanceof Error ? err.message : 'Failed to load version history');
+      })
       .finally(() => setLoading(false));
   }, [contentType, contentId, session?.accessToken]);
 
   const handleSelect = async (version: number) => {
     if (!session?.accessToken) return;
     setSelectedVersion(version);
-    const data = await apiClient.versions.get(contentType, contentId, version, session.accessToken as string);
-    onSelectVersion?.({ title: data.title, content: data.content });
+    setError(null);
+    try {
+      const data = await apiClient.versions.get(contentType, contentId, version, session.accessToken as string);
+      onSelectVersion?.({ title: data.title, content: data.content });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load version');
+    }
   };
 
   if (loading) return <p className="version-history__loading">Loading versions...</p>;
+  if (error) return <p className="version-history__error">{error}</p>;
   if (versions.length === 0) return null;
 
   return (

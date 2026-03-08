@@ -11,7 +11,7 @@ class ContentVersion(BaseModel):
     version: int
     title: str
     content: str
-    metadata: dict = {}
+    metadata: dict = Field(default_factory=dict)
     created_by: str
     created_at: datetime
 

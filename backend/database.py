@@ -247,6 +247,21 @@ async def ensure_indexes() -> None:
     await safe_create_index(navlinks, [("sort_order", 1)])
     await safe_create_index(navlinks, "is_published")
 
+    # Content versions indexes
+    content_versions = db["content_versions"]
+    if not await safe_create_index(
+        content_versions,
+        [("content_id", 1), ("version", -1)],
+        unique=True,
+        name="content_versions_lookup",
+    ):
+        failed_indexes.append("content_versions.content_versions_lookup")
+    await safe_create_index(
+        content_versions,
+        [("content_type", 1), ("content_id", 1)],
+        name="content_versions_by_type",
+    )
+
     if failed_indexes:
         logger.error(
             f"Database startup completed with {len(failed_indexes)} failed index(es): "
