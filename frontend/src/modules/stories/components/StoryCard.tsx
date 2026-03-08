@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import type { Session } from 'next-auth';
-import { formatDate } from '@/shared/utils/formatDate';
+import { formatDate, formatRelativeDate } from '@/shared/utils/formatDate';
 import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
+import { estimateReadingTime } from '@/shared/utils/readingTime';
 import { Story } from '@/shared/types/api';
 import { engagementConfig } from '@/config/engagement.config';
 import { LazyStoryContent } from './LazyStoryContent';
@@ -151,12 +152,14 @@ export const StoryCard = React.memo(({
                 </Link>
 
                 <div className="story-header__meta">
-                    <span>{formatDate(story.createdDate)}</span>
+                    <span title={formatDate(story.createdDate)}>{formatRelativeDate(story.createdDate)}</span>
                     {story.updatedDate !== story.createdDate && (
-                        <span className="opacity-70">
-                            (Updated: {formatDate(story.updatedDate)})
+                        <span className="opacity-70" title={formatDate(story.updatedDate)}>
+                            (Updated: {formatRelativeDate(story.updatedDate)})
                         </span>
                     )}
+                    <span style={{ color: 'var(--color-text-tertiary)' }} aria-hidden="true">·</span>
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>{estimateReadingTime(story.content || '')}</span>
                 </div>
             </div>
 
