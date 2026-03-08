@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -55,7 +56,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     }
                 },
             }).configure({
-                HTMLAttributes: { class: 'responsive-image', 'data-zoom-disabled': '' },
+                HTMLAttributes: { class: 'responsive-image' },
                 allowBase64: false,
                 inline: false,
             }),
@@ -256,19 +257,21 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             )}
             <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
             <ImageBubbleMenu editor={editor} onChangeFilter={refilterImage} />
-            {pendingFilter && (
+            {pendingFilter && createPortal(
                 <ImageFilterPicker
                     imageUrl={pendingFilter.imageUrl}
                     previews={pendingFilter.previews}
                     loading={pendingFilter.loading}
                     onConfirm={(filter) => pendingFilter.resolve(filter)}
                     onCancel={() => pendingFilter.resolve('__cancel__')}
-                />
+                />,
+                document.body
             )}
-            {pendingAltText && (
+            {pendingAltText && createPortal(
                 <AltTextDialog
                     onConfirm={pendingAltText.resolve}
-                />
+                />,
+                document.body
             )}
         </div>
     );

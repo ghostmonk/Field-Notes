@@ -51,13 +51,16 @@ export function ImageFilterPicker({
       <div className="p-6">
         <h3 className="text-lg font-medium mb-4">Choose a Filter</h3>
 
-        <div className="flex justify-center mb-4">
+        <div
+          className="flex justify-center items-center mb-4"
+          style={{ height: '300px' }}
+        >
           <img
             src={selectedFilter === 'none' || !previews[selectedFilter] ? imageUrl : previews[selectedFilter]}
             alt="Preview"
             style={{
-              maxHeight: '300px',
-              maxWidth: '100%',
+              width: '100%',
+              height: '100%',
               objectFit: 'contain',
               borderRadius: '0.5rem',
             }}

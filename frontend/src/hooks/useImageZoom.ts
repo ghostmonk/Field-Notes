@@ -20,9 +20,11 @@ export function useImageZoom(
     });
 
     const attachImages = () => {
-      const images = container.querySelectorAll('img:not([data-zoom-disabled])');
+      const images = Array.from(container.querySelectorAll('img')).filter(
+        (img) => !img.closest('.ProseMirror')
+      );
       zoom.detach();
-      zoom.attach(Array.from(images) as HTMLElement[]);
+      zoom.attach(images as HTMLElement[]);
     };
 
     // Attach to initial images
