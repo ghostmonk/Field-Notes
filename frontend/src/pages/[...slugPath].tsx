@@ -206,7 +206,7 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
     if (contentType === 'story') {
         const story = item as Story;
         return (
-            <div style={{ margin: '0 auto', maxWidth: '800px', padding: '2rem 1rem' }}>
+            <div className="detail-container">
                 <Breadcrumbs items={[
                     { label: section.title, href: `/${section.slug}` },
                     { label: story.title },

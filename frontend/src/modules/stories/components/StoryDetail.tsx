@@ -17,19 +17,19 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({ story, children }) => 
             <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
 
             <div className="flex items-center text-sm mb-8">
-                <span className="text-gray-400" title={formatDate(story.createdDate)}>{formatRelativeDate(story.createdDate)}</span>
+                <span style={{ color: 'var(--color-text-tertiary)' }} title={formatDate(story.createdDate)}>{formatRelativeDate(story.createdDate)}</span>
                 {story.updatedDate !== story.createdDate && (
-                    <span className="text-gray-400 text-xs ml-2 opacity-70" title={formatDate(story.updatedDate)}>
+                    <span className="text-xs ml-2 opacity-70" style={{ color: 'var(--color-text-tertiary)' }} title={formatDate(story.updatedDate)}>
                         (Updated: {formatRelativeDate(story.updatedDate)})
                     </span>
                 )}
-                <span className="text-gray-400 mx-2" aria-hidden="true">·</span>
-                <span className="text-gray-400">{estimateReadingTime(story.content || '')}</span>
+                <span className="mx-2" style={{ color: 'var(--color-text-tertiary)' }} aria-hidden="true">·</span>
+                <span style={{ color: 'var(--color-text-tertiary)' }}>{estimateReadingTime(story.content || '')}</span>
             </div>
 
             <LazyStoryContent
                 content={story.content}
-                className="prose--card lg:prose-lg dark:prose-invert dark:text-gray-200"
+                className="prose--card lg:prose-lg dark:prose-invert"
                 data-testid="story-content"
             />
 

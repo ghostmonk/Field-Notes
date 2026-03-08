@@ -66,6 +66,14 @@
   cursor: pointer;
 }
 
+.dark .card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--color-border-primary);
+}
+
+.dark .card--hoverable:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--color-border-secondary);
+}
+
 /* Page container - centered content with max width */
 .page-container {
   margin: 0 auto;
@@ -690,7 +698,7 @@ button.btn--primary:hover:not(:disabled) {
   left: -9999px;
   top: 0;
   z-index: 100;
-  padding: 0.75rem 1.5rem;
+  padding: var(--space-md) var(--space-xl);
   background: var(--color-brand-primary);
   color: white;
   font-weight: 600;
