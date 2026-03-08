@@ -33,14 +33,15 @@
   --font-family-serif: 'Roboto Slab', Georgia, serif;
   --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
 
+  /* Perfect fourth scale (1.333) */
   --font-size-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.8rem);
-  --font-size-sm: clamp(0.875rem, 0.8rem + 0.3vw, 0.95rem);
-  --font-size-base: clamp(1rem, 0.9rem + 0.4vw, 1.125rem);
-  --font-size-lg: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
-  --font-size-xl: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
-  --font-size-2xl: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
-  --font-size-3xl: clamp(1.875rem, 1.6rem + 1.2vw, 2.5rem);
-  --font-size-4xl: clamp(2.25rem, 1.9rem + 1.5vw, 3rem);
+  --font-size-sm: clamp(0.875rem, 0.82rem + 0.25vw, 0.937rem);
+  --font-size-base: clamp(1rem, 0.93rem + 0.35vw, 1.125rem);
+  --font-size-lg: clamp(1.125rem, 1.03rem + 0.45vw, 1.333rem);
+  --font-size-xl: clamp(1.333rem, 1.2rem + 0.6vw, 1.777rem);
+  --font-size-2xl: clamp(1.777rem, 1.55rem + 0.9vw, 2.369rem);
+  --font-size-3xl: clamp(2.369rem, 2rem + 1.3vw, 3.157rem);
+  --font-size-4xl: clamp(3.157rem, 2.6rem + 1.8vw, 4.209rem);
 
   --font-weight-light: 300;
   --font-weight-normal: 400;
