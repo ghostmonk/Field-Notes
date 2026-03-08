@@ -23,12 +23,6 @@ export class TopNavComponent {
   readonly signInButton: Locator;
   readonly logoutButton: Locator;
 
-  // Mobile menu
-  readonly mobileMenuToggle: Locator;
-  readonly mobileMenu: Locator;
-  readonly mobileNewContentLink: Locator;
-  readonly mobileSectionsLink: Locator;
-
   constructor(page: Page) {
     this.page = page;
 
@@ -47,12 +41,6 @@ export class TopNavComponent {
     // Auth
     this.signInButton = page.getByTestId('signin-button');
     this.logoutButton = page.getByTestId('logout-button');
-
-    // Mobile
-    this.mobileMenuToggle = page.getByTestId('mobile-menu-toggle');
-    this.mobileMenu = page.getByTestId('mobile-menu');
-    this.mobileNewContentLink = page.getByTestId('mobile-nav-new-content-link');
-    this.mobileSectionsLink = page.getByTestId('mobile-nav-sections-link');
   }
 
   /**
@@ -143,17 +131,4 @@ export class TopNavComponent {
     return this.logoutButton.isVisible();
   }
 
-  /**
-   * Toggle mobile menu.
-   */
-  async toggleMobileMenu() {
-    await this.mobileMenuToggle.click();
-  }
-
-  /**
-   * Check if mobile menu is open.
-   */
-  async isMobileMenuOpen(): Promise<boolean> {
-    return this.mobileMenu.isVisible();
-  }
 }

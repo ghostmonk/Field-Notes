@@ -1,7 +1,6 @@
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useState } from "react";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { iconMap } from "@/shared/lib/navIcons";
@@ -14,14 +13,9 @@ const config = getSiteConfig();
 
 export default function TopNav() {
     const { data: session } = useSession();
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const sections = useNavSections();
     const activeSlug = useActiveSection(sections);
     const activeSectionId = sections.find(s => s.slug === activeSlug)?.id;
-
-    const toggleMobileMenu = () => {
-        setMobileMenuOpen(!mobileMenuOpen);
-    };
 
     return (
         <nav className="nav" data-testid="top-nav">
@@ -66,19 +60,6 @@ export default function TopNav() {
                         )}
                     </div>
 
-                    {/* Mobile Menu Button */}
-                    {session?.user?.role === 'admin' && (
-                        <button
-                            className="nav__mobile-toggle"
-                            onClick={toggleMobileMenu}
-                            aria-label="Toggle mobile menu"
-                            data-testid="mobile-menu-toggle"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                            </svg>
-                        </button>
-                    )}
                 </div>
 
                 <div className="flex items-center space-x-4">
@@ -103,31 +84,6 @@ export default function TopNav() {
                 </div>
             </div>
 
-            {/* Mobile Menu - Auth/Settings only (sections handled by BottomNav) */}
-            {session?.user?.role === 'admin' && mobileMenuOpen && (
-                <div className="nav__mobile-menu" data-testid="mobile-menu">
-                    <div className="nav__mobile-links">
-                        <Link
-                            href={activeSectionId ? `/editor?section_id=${activeSectionId}` : '/editor'}
-                            className="nav__mobile-link"
-                            onClick={() => setMobileMenuOpen(false)}
-                            data-testid="mobile-nav-new-content-link"
-                        >
-                            <NewStoryIcon className="nav__link-icon" aria-hidden="true" />
-                            <span>New</span>
-                        </Link>
-                        <Link
-                            href="/admin/sections"
-                            className="nav__mobile-link"
-                            onClick={() => setMobileMenuOpen(false)}
-                            data-testid="mobile-nav-sections-link"
-                        >
-                            <HiCog className="nav__link-icon" aria-hidden="true" />
-                            <span>Sections</span>
-                        </Link>
-                    </div>
-                </div>
-            )}
         </nav>
     );
 }
