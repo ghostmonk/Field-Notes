@@ -13,6 +13,7 @@ from handlers.engagement import router as engagement_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
 from handlers.projects import router as projects_router
+from handlers.search import router as search_router
 from handlers.sections import router as sections_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
@@ -227,6 +228,7 @@ app.include_router(uploads_router)
 app.include_router(users_router)
 app.include_router(video_processing_router)
 app.include_router(engagement_router)
+app.include_router(search_router)
 
 if __name__ == "__main__":
     import uvicorn
