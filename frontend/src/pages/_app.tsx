@@ -1,5 +1,6 @@
 import '../styles/globals.css';
-// To switch templates: change this import path to another template's index.css
+// Template CSS — must match template.active in site.config.json
+// To switch templates: change the import path AND the config value, then rebuild
 import '../templates/default/index.css';
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";

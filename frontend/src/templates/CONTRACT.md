@@ -29,6 +29,7 @@ templates/<name>/
 
 ### Fonts
 - `--font-family-sans`, `--font-family-serif`, `--font-family-mono`
+- `--font-family-heading`, `--font-family-body` (semantic aliases — typically map to serif/sans)
 - `--font-size-xs` through `--font-size-4xl`
 - `--font-weight-light`, `--font-weight-normal`, `--font-weight-medium`, `--font-weight-semibold`, `--font-weight-bold`
 - `--line-height-tight`, `--line-height-normal`, `--line-height-relaxed`
@@ -58,16 +59,37 @@ These classes are referenced directly in React components:
 ### Buttons: `.btn`, `.btn--primary`, `.btn--secondary`, `.btn--danger`, `.btn--sm`, `.btn--lg`
 ### Badges: `.badge`, `.badge--draft`, `.badge--featured`
 ### Grid: `.grid`, `.grid--responsive`, `.grid--3-cols`, `.grid--1-col`
+### Hero: `.hero`, `.hero__title`, `.hero__subtitle`
 ### Story: `.story-header`, `.story-title`, `.story-content`, `.story-excerpt`
 ### Prose: `.prose`, `.prose--card`
 ### Utility: `.sr-only`, `.transition-colors`, `.pb-safe`
 
+## Required Layout Config
+
+Each template must include a `layout.config.json` that describes its structural layout:
+
+```json
+{
+  "navigation": { "desktop": "top", "mobile": "bottom" }
+}
+```
+
+Currently supported: `navigation.desktop: "top"`, `navigation.mobile: "bottom"`. Additional variants (`sidebar`, `hamburger`) will be added when their components are implemented.
+
 ## Switching Templates
 
-1. Copy `templates/default/` to `templates/<name>/`
-2. Modify the CSS files
-3. Update `_app.tsx`: change `import '../templates/default/index.css'` to `import '../templates/<name>/index.css'`
+Template switching is a **build-time** operation. Next.js Pages Router requires global CSS
+imports to be static — dynamic `import()` for CSS is not supported. Three things must change
+in lockstep:
+
+1. Set `template.active` in `site.config.json` to the template directory name (e.g. `"default"`)
+2. Update the CSS import in `_app.tsx` to match: `import '../templates/<name>/index.css'`
+3. Update the layout config import in `src/config/site-config.ts` to match: `import layoutConfig from '@/templates/<name>/layout.config.json'`
 4. Update `site.config.json` `fonts` if the template uses different Google Fonts
 5. Update the FOUC background color in `_document.tsx` (`style={{backgroundColor: '...'}}`
    on `<Html>` and `<body>`) to match the new template's `--color-surface-primary` dark value.
    CSS variables are not available at SSR paint time, so this must be a hardcoded hex value.
+6. Rebuild and deploy
+
+The `template.active` value in config is the source of truth for which template is active.
+The CSS import in `_app.tsx` must always match it manually.
