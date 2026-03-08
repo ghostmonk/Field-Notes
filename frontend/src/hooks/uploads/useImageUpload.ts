@@ -85,17 +85,7 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
       return;
     }
 
-    const loadingText = `![Uploading ${file.name}...]()`;
-    editor.commands.insertContent(loadingText);
-
     const result = await baseUpload.upload(resized instanceof File ? resized : new File([resized], file.name, { type: resized.type }), { image_filter: selectedFilter });
-
-    // Remove loading placeholder
-    const content = editor.getHTML();
-    const updatedContent = result
-      ? content.replace(loadingText, '')
-      : content.replace(/!\[Uploading .*?\]\(\)/g, '');
-    editor.commands.setContent(updatedContent);
 
     if (result?.urls?.length) {
       // Request alt text from user
@@ -118,25 +108,29 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
   }, [editor, baseUpload]);
 
   const refilterImage = useCallback(async (currentSrc: string) => {
-    if (!editor) return;
+    if (!editor) { console.error('[refilter] no editor'); return; }
 
-    // Fetch the current image to get a file for re-upload
+    console.log('[refilter] fetching image from:', currentSrc);
     let response: Response;
     try {
       response = await fetch(currentSrc, { credentials: 'include' });
-      if (!response.ok) return;
-    } catch {
+      if (!response.ok) { console.error('[refilter] fetch failed:', response.status); return; }
+    } catch (err) {
+      console.error('[refilter] fetch error:', err);
       return;
     }
     const blob = await response.blob();
+    console.log('[refilter] blob:', blob.size, blob.type);
     const fileName = currentSrc.split('/').pop() || 'image.jpg';
     const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
 
     const resized = await resizeImageFile(file);
+    console.log('[refilter] resized:', resized instanceof File ? 'File' : 'Blob', (resized as Blob).size);
     const imageUrl = URL.createObjectURL(resized);
 
     // Show filter picker
     const filterPromise = new Promise<string>((resolve) => {
+      console.log('[refilter] opening filter picker');
       setPendingFilter({ imageUrl, previews: {}, loading: true, resolve });
     });
 
@@ -149,17 +143,23 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
         body: previewFormData,
         credentials: 'include',
       });
+      console.log('[refilter] preview response:', previewResponse.status);
       if (previewResponse.ok) {
         const previewData = await previewResponse.json();
+        console.log('[refilter] preview keys:', Object.keys(previewData.previews || {}));
         setPendingFilter((prev) => prev ? { ...prev, previews: previewData.previews || {}, loading: false } : null);
       } else {
+        console.error('[refilter] preview failed:', previewResponse.status);
         setPendingFilter((prev) => prev ? { ...prev, loading: false } : null);
       }
-    } catch {
+    } catch (err) {
+      console.error('[refilter] preview error:', err);
       setPendingFilter((prev) => prev ? { ...prev, loading: false } : null);
     }
 
+    console.log('[refilter] waiting for user filter selection...');
     const selectedFilter = await filterPromise;
+    console.log('[refilter] selected:', selectedFilter);
     setPendingFilter(null);
     URL.revokeObjectURL(imageUrl);
 
