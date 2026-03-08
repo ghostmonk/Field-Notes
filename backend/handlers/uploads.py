@@ -231,7 +231,7 @@ async def process_image_file(
             if size != MAX_IMAGE_SIZE
             else f"{base_name}{webp_extension}"
         )
-        resized_image = resize_image(contents, size, exif_corrected=True)
+        resized_image = resize_image(contents, size, exif_corrected=(image_filter != "none"))
 
         blob_path, _ = await upload_file(
             resized_image, sized_filename, f"image/{OUTPUT_FORMAT}", bucket
