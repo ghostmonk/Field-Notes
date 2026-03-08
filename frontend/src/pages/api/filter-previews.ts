@@ -30,13 +30,20 @@ export default async function handler(
       throw new Error('Backend URL not configured');
     }
 
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${session.accessToken}`,
+    };
+    if (req.headers['content-type']) {
+      headers['content-type'] = req.headers['content-type'] as string;
+    }
+    if (req.headers['content-length']) {
+      headers['content-length'] = req.headers['content-length'] as string;
+    }
+
     const response = await fetch(`${backendUrl}/uploads/filter-previews`, {
       method: 'POST',
-      headers: {
-        ...req.headers as Record<string, string>,
-        'Authorization': `Bearer ${session.accessToken}`,
-      },
-      // @ts-ignore - Stream the body
+      headers,
+      // @ts-expect-error Stream the request body (Node.js fetch supports ReadableStream)
       body: req,
       duplex: 'half',
     });
@@ -46,6 +53,6 @@ export default async function handler(
   } catch (error: unknown) {
     const e = error instanceof Error ? error : new Error(String(error));
     apiLogger.error('Filter preview proxy error', e);
-    return res.status(500).json({ error: e.message || 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

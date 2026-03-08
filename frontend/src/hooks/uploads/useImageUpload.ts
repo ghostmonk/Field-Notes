@@ -87,7 +87,7 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     const loadingText = `![Uploading ${file.name}...]()`;
     editor.commands.insertContent(loadingText);
 
-    const result = await baseUpload.upload(file, { image_filter: selectedFilter });
+    const result = await baseUpload.upload(resized instanceof File ? resized : new File([resized], file.name, { type: resized.type }), { image_filter: selectedFilter });
 
     // Remove loading placeholder
     const content = editor.getHTML();
