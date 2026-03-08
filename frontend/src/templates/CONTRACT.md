@@ -70,12 +70,11 @@ Each template must include a `layout.config.json` that describes its structural 
 
 ```json
 {
-  "structure": "top-content-bottom",
   "navigation": { "desktop": "top", "mobile": "bottom" }
 }
 ```
 
-Valid `structure` values: `top-content-bottom`, `sidebar-content`, `top-content`.
+Valid `navigation.desktop` values: `top`, `sidebar`. Valid `navigation.mobile` values: `bottom`, `hamburger`.
 
 ## Switching Templates
 

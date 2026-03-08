@@ -12,8 +12,8 @@
     "showOnHome": true
   },
   "fonts": {
-    "heading": "Poppins",
-    "body": "Roboto Slab"
+    "heading": "Roboto Slab",
+    "body": "Poppins"
   },
   "navigation": {
     "iconMap": {

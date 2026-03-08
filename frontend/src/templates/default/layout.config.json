@@ -1,5 +1,4 @@
 {
-  "structure": "top-content-bottom",
   "navigation": {
     "desktop": "top",
     "mobile": "bottom"

@@ -5,7 +5,6 @@ export interface HeroConfig {
 }
 
 export interface LayoutConfig {
-  structure: "top-content-bottom" | "sidebar-content" | "top-content";
   navigation: {
     desktop: "top" | "sidebar";
     mobile: "bottom" | "hamburger";
