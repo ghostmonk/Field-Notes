@@ -84,7 +84,12 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
       return;
     }
 
-    const result = await baseUpload.upload(resized instanceof File ? resized : new File([resized], file.name, { type: resized.type }), { image_filter: selectedFilter });
+    // Upload unfiltered original first to preserve for future refilter
+    const uploadFile = resized instanceof File ? resized : new File([resized], file.name, { type: resized.type });
+    const originalResult = selectedFilter !== 'none'
+      ? await baseUpload.upload(uploadFile, { image_filter: 'none' })
+      : null;
+    const result = await baseUpload.upload(uploadFile, { image_filter: selectedFilter });
 
     if (result?.urls?.length) {
       // Request alt text from user
@@ -102,6 +107,8 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
       if (dimensions?.length) {
         attrs.push(`width="${dimensions[0].width}"`, `height="${dimensions[0].height}"`);
       }
+      const originalSrc = originalResult?.urls?.[0] || urls[0];
+      attrs.push(`data-original-src="${originalSrc}"`);
       editor.commands.insertContent(`<img ${attrs.join(' ')} />`);
     }
   }, [editor, baseUpload]);

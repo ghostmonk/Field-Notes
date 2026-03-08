@@ -11,7 +11,15 @@ from typing import List, Tuple
 
 from database import get_database
 from decorators.auth import requires_auth
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 from fastapi.responses import RedirectResponse, StreamingResponse
 from glogger import logger
 from handlers.image_filters import AVAILABLE_FILTERS, apply_filter, validate_filter_name
@@ -378,22 +386,24 @@ def _cleanup_old_previews():
 @limiter.limit("5/minute")
 async def filter_previews(
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
 ):
     try:
-        _cleanup_old_previews()
+        background_tasks.add_task(_cleanup_old_previews)
 
         contents = await file.read()
         file_size = len(contents)
         validate_image(file.content_type, file_size)
 
-        image = Image.open(io.BytesIO(contents))
-        image = ImageOps.exif_transpose(image)
+        def _prepare_image(raw_bytes):
+            img = Image.open(io.BytesIO(raw_bytes))
+            img = ImageOps.exif_transpose(img)
+            orig_width, orig_height = img.size
+            new_height = int(orig_height * PREVIEW_WIDTH / orig_width)
+            return img.resize((PREVIEW_WIDTH, new_height), resample=Image.Resampling.LANCZOS)
 
-        # Resize to preview width preserving aspect ratio
-        orig_width, orig_height = image.size
-        new_height = int(orig_height * PREVIEW_WIDTH / orig_width)
-        image = image.resize((PREVIEW_WIDTH, new_height), resample=Image.Resampling.LANCZOS)
+        image = await asyncio.to_thread(_prepare_image, contents)
 
         bucket = None if LOCAL_STORAGE_PATH else get_gcs_bucket()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -403,11 +413,13 @@ async def filter_previews(
         filter_names = [f for f in AVAILABLE_FILTERS if f != "none"]
 
         async def _generate_preview(filter_name):
-            filtered_image = apply_filter(image.copy(), filter_name)
-            buf = io.BytesIO()
-            filtered_image.save(buf, format="WEBP", quality=80)
-            buf.seek(0)
-            preview_bytes = buf.read()
+            def _apply_and_encode():
+                filtered_image = apply_filter(image.copy(), filter_name)
+                buf = io.BytesIO()
+                filtered_image.save(buf, format="WEBP", quality=80)
+                return buf.getvalue()
+
+            preview_bytes = await asyncio.to_thread(_apply_and_encode)
             preview_filename = f"{PREVIEW_TEMP_DIR}/{timestamp}_{unique_id}_{filter_name}.webp"
             await upload_file(preview_bytes, preview_filename, "image/webp", bucket)
             return filter_name, f"/uploads/{preview_filename}"

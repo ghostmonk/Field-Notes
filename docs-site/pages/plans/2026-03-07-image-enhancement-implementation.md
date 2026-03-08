@@ -1,7 +1,5 @@
 # Image Enhancement Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Add client-side image resize, server-side Pillow filters with preview thumbnails, updated responsive variants, and global zoom-in-place image viewer.
 
 **Architecture:** Client-side resize (Canvas API) runs before upload. Backend applies optional Pillow filters during image processing, generates filter preview thumbnails via new endpoint. `medium-zoom` library provides global image zoom with custom wheel/pinch enhancement. Frontend upload flow gains a filter picker step between file selection and alt text dialog.
@@ -115,7 +113,7 @@ class TestAvailableFilters:
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_image_filters.py -v`
+Run: `source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_image_filters.py -v`
 Expected: FAIL with ModuleNotFoundError for `handlers.image_filters`
 
 **Step 3: Write the implementation**
@@ -217,13 +215,13 @@ def apply_filter(image: Image.Image, filter_name: str) -> Image.Image:
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_image_filters.py -v`
+Run: `source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_image_filters.py -v`
 Expected: All PASS
 
 **Step 5: Format and commit**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make format
+make format
 git add backend/handlers/image_filters.py backend/tests/test_image_filters.py
 git commit -m "feat: add Pillow image filter functions with tests"
 ```
@@ -310,7 +308,7 @@ class TestProcessImageFileWithFilter:
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_uploads.py -v`
+Run: `source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_uploads.py -v`
 Expected: FAIL — IMAGE_SIZES mismatch and process_image_file doesn't accept filter param
 
 **Step 3: Modify uploads.py**
@@ -432,17 +430,17 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_uploads.py backend/tests/test_image_filters.py -v`
+Run: `source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_uploads.py backend/tests/test_image_filters.py -v`
 Expected: All PASS
 
 Also run full backend test suite to check for regressions:
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make test`
+Run: `make test`
 Expected: All existing tests still pass
 
 **Step 5: Format and commit**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make format
+make format
 git add backend/handlers/uploads.py backend/handlers/image_filters.py backend/models/upload.py backend/tests/test_uploads.py
 git commit -m "feat: update upload pipeline with filter support and new variant sizes"
 ```
@@ -493,7 +491,7 @@ class TestFilterPreviewEndpoint:
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_uploads.py::TestFilterPreviewEndpoint -v`
+Run: `source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_uploads.py::TestFilterPreviewEndpoint -v`
 Expected: FAIL — endpoint doesn't exist
 
 **Step 3: Add filter preview endpoint to uploads.py**
@@ -569,7 +567,7 @@ def _cleanup_old_previews():
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_uploads.py -v`
+Run: `source ~/Documents/venvs/field-notes/bin/activate && python -m pytest backend/tests/test_uploads.py -v`
 Expected: All PASS
 
 Run full backend suite: `make test`
@@ -578,7 +576,7 @@ Expected: All PASS
 **Step 5: Format and commit**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make format
+make format
 git add backend/handlers/uploads.py backend/tests/test_uploads.py
 git commit -m "feat: add filter preview endpoint"
 ```
@@ -674,7 +672,7 @@ describe('validateImageFile', () => {
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement/frontend && npx vitest run src/shared/utils/uploadUtils.test.ts`
+Run: `cd frontend &&npx vitest run src/shared/utils/uploadUtils.test.ts`
 Expected: FAIL — resizeImageFile not exported
 
 **Step 3: Add resizeImageFile to uploadUtils.ts**
@@ -760,13 +758,13 @@ export async function resizeImageFile(
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement/frontend && npx vitest run src/shared/utils/uploadUtils.test.ts`
+Run: `cd frontend &&npx vitest run src/shared/utils/uploadUtils.test.ts`
 Expected: All PASS
 
 **Step 5: Format and commit**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make format
+make format
 git add frontend/src/shared/utils/uploadUtils.ts frontend/src/shared/utils/uploadUtils.test.ts
 git commit -m "feat: add client-side image resize utility"
 ```
@@ -882,7 +880,7 @@ describe('ImageFilterPicker', () => {
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement/frontend && npx vitest run src/modules/editor/components/ImageFilterPicker.test.tsx`
+Run: `cd frontend &&npx vitest run src/modules/editor/components/ImageFilterPicker.test.tsx`
 Expected: FAIL — module not found
 
 **Step 3: Write the component**
@@ -1061,13 +1059,13 @@ export function ImageFilterPicker({
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement/frontend && npx vitest run src/modules/editor/components/ImageFilterPicker.test.tsx`
+Run: `cd frontend &&npx vitest run src/modules/editor/components/ImageFilterPicker.test.tsx`
 Expected: All PASS
 
 **Step 5: Format and commit**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make format
+make format
 git add frontend/src/modules/editor/components/ImageFilterPicker.tsx frontend/src/modules/editor/components/ImageFilterPicker.test.tsx
 git commit -m "feat: add ImageFilterPicker component"
 ```
@@ -1357,13 +1355,13 @@ export default async function handler(
 
 **Step 5: Run all tests**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make test && make test-frontend-unit`
+Run: `make test && make test-frontend-unit`
 Expected: All PASS
 
 **Step 6: Format and commit**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make format
+make format
 git add frontend/src/hooks/uploads/useFileUpload.ts frontend/src/hooks/uploads/useImageUpload.ts frontend/src/modules/editor/components/RichTextEditor.tsx frontend/src/pages/api/upload-proxy/filter-previews.ts
 git commit -m "feat: integrate resize and filter picker into upload flow"
 ```
@@ -1382,7 +1380,7 @@ git commit -m "feat: integrate resize and filter picker into upload flow"
 **Step 1: Install medium-zoom**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement/frontend && npm install medium-zoom
+cd frontend &&npm install medium-zoom
 ```
 
 **Step 2: Write the failing test**
@@ -1599,14 +1597,14 @@ Replace the published story section (lines 163-189):
 **Step 6: Run all tests**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make test && make test-frontend-unit
+make test && make test-frontend-unit
 ```
 Expected: All PASS. StoryCard tests may need updating if they assert on the Link wrapping content.
 
 **Step 7: Format and commit**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make format
+make format
 git add frontend/package.json frontend/package-lock.json frontend/src/hooks/useImageZoom.ts frontend/src/hooks/useImageZoom.test.ts frontend/src/pages/_app.tsx frontend/src/modules/stories/components/StoryCard.tsx
 git commit -m "feat: add global medium-zoom image viewer with enhanced zoom"
 ```
@@ -1628,13 +1626,13 @@ Any tests asserting that clicking the content/image area navigates to the story 
 
 **Step 3: Run tests to verify they pass**
 
-Run: `cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement/frontend && npx vitest run src/modules/stories/components/StoryCard.test.ts`
+Run: `cd frontend &&npx vitest run src/modules/stories/components/StoryCard.test.ts`
 Expected: All PASS
 
 **Step 4: Format and commit**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make format
+make format
 git add frontend/src/modules/stories/components/StoryCard.test.ts
 git commit -m "test: update StoryCard tests for decoupled image clicks"
 ```
@@ -1646,7 +1644,7 @@ git commit -m "test: update StoryCard tests for decoupled image clicks"
 **Step 1: Start the dev environment**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make dev-local
+make dev-local
 ```
 
 **Step 2: Test client-side resize**
@@ -1677,7 +1675,7 @@ cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && m
 **Step 6: Stop dev environment**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make down
+make down
 ```
 
 ---
@@ -1687,14 +1685,14 @@ cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && m
 **Step 1: Run all formatters and tests**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && make format && make test && make test-frontend-unit
+make format && make test && make test-frontend-unit
 ```
 Expected: All pass, no formatting issues
 
 **Step 2: Final commit if any formatting changes**
 
 ```bash
-cd /Users/ghostmonk/Documents/code/field-notes/.worktrees/image-enhancement && git add -A && git status
+git add -A && git status
 # Only commit if there are changes
 git commit -m "chore: final formatting pass"
 ```

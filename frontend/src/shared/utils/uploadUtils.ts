@@ -150,7 +150,7 @@ export async function resizeImageFile(
 
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        resolve(file);
+        reject(new Error('Failed to create canvas context for image resize'));
         return;
       }
 

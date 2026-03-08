@@ -54,6 +54,11 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                             parseHTML: element => element.getAttribute('sizes'),
                             renderHTML: attributes => attributes.sizes ? { sizes: attributes.sizes } : {},
                         },
+                        'data-original-src': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-original-src'),
+                            renderHTML: attributes => attributes['data-original-src'] ? { 'data-original-src': attributes['data-original-src'] } : {},
+                        },
                     }
                 },
             }).configure({

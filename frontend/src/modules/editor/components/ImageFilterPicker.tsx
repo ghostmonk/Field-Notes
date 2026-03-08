@@ -82,6 +82,7 @@ export function ImageFilterPicker({
             style={{ scrollbarWidth: 'thin' }}
           >
             <button
+              type="button"
               onClick={() => setSelectedFilter('none')}
               className="flex flex-col items-center flex-shrink-0"
               style={{
@@ -114,6 +115,7 @@ export function ImageFilterPicker({
 
               return (
                 <button
+                  type="button"
                   key={key}
                   onClick={() => setSelectedFilter(key)}
                   className="flex flex-col items-center flex-shrink-0"

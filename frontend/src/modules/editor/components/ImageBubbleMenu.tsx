@@ -97,7 +97,8 @@ export function ImageBubbleMenu({ editor, onChangeFilter }: ImageBubbleMenuProps
           <button
             type="button"
             onClick={() => {
-              const src = editor.getAttributes('image').src;
+              const attrs = editor.getAttributes('image');
+              const src = attrs['data-original-src'] || attrs.src;
               if (src) onChangeFilter(src);
             }}
             className="px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700"

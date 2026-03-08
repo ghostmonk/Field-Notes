@@ -48,7 +48,7 @@ export function useImageZoom(
       if (zoomedImage) {
         const extra = currentScale === 1 && translateX === 0 && translateY === 0
           ? ''
-          : ` translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+          : ` scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
         zoomedImage.style.transform = baseTransform + extra;
       }
     };
