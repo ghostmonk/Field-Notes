@@ -1,20 +1,6 @@
 :root {
   --layout-nav-height: 56px;
-  --layout-footer-height: 32px;
-  --layout-bottom-nav-offset: 2rem;
   --layout-container-max-width: 75rem;
   --layout-content-padding: 1.5rem;
   --layout-page-content-max-width: 800px;
-  --layout-bottom-offset: calc(
-    var(--layout-nav-height) +
-    var(--layout-bottom-nav-offset) +
-    var(--layout-footer-height) +
-    env(safe-area-inset-bottom)
-  );
-}
-
-@media (min-width: 768px) {
-  :root {
-    --layout-bottom-offset: calc(4rem + env(safe-area-inset-bottom));
-  }
 }
