@@ -8,7 +8,7 @@ import {
     getFromCache,
     setCache,
     invalidateStoryCache,
-} from './stories/_cache';
+} from '@/shared/lib/story-cache';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;

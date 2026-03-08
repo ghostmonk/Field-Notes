@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
-import { invalidateStoryCache } from './_cache';
+import { invalidateStoryCache } from '@/shared/lib/story-cache';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Use BACKEND_URL for server-to-server communication (in Docker)
