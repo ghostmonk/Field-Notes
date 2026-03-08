@@ -123,7 +123,7 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     // Fetch the current image to get a file for re-upload
     let response: Response;
     try {
-      response = await fetch(currentSrc);
+      response = await fetch(currentSrc, { credentials: 'include' });
       if (!response.ok) return;
     } catch {
       return;

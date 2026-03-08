@@ -44,7 +44,7 @@ export function ImageFilterPicker({
         maxWidth: '40rem',
         width: '100%',
       }}
-      onCancel={onCancel}
+      onCancel={(e) => { e.preventDefault(); onCancel(); }}
       data-testid="filter-picker-dialog"
     >
       <div className="p-6">
@@ -153,10 +153,7 @@ export function ImageFilterPicker({
           </button>
           <button
             type="button"
-            onClick={() => {
-              dialogRef.current?.close();
-              onConfirm(selectedFilter);
-            }}
+            onClick={() => onConfirm(selectedFilter)}
             className="btn btn--primary btn--sm"
             data-testid="filter-picker-apply"
             disabled={loading}
