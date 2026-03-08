@@ -13,7 +13,7 @@ from decorators.auth import requires_auth
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse, StreamingResponse
 from glogger import logger
-from handlers.image_filters import AVAILABLE_FILTERS, apply_filter  # noqa: F401
+from handlers.image_filters import AVAILABLE_FILTERS, apply_filter
 from models.error import (
     ErrorCode,
     create_upload_error_response,
@@ -37,6 +37,8 @@ MAX_VIDEO_SIZE = 100 * 1024 * 1024
 MAX_IMAGE_LENGTH = 2048
 IMAGE_SIZES = [2048, 1536, 768, 400]
 OUTPUT_FORMAT = "webp"
+PREVIEW_WIDTH = 200
+PREVIEW_TEMP_DIR = "filter_previews"
 
 LOCAL_STORAGE_PATH = os.environ.get("LOCAL_STORAGE_PATH")
 
@@ -331,6 +333,70 @@ async def upload_media(
 
     except Exception as e:
         handle_error(e, "processing uploads")
+
+
+def _cleanup_old_previews():
+    """Remove preview files older than 10 minutes. Only works for local storage."""
+    if not LOCAL_STORAGE_PATH:
+        return
+    preview_dir = os.path.join(LOCAL_STORAGE_PATH, "uploads", PREVIEW_TEMP_DIR)
+    if not os.path.exists(preview_dir):
+        return
+    cutoff = datetime.now().timestamp() - 600  # 10 minutes
+    for filename in os.listdir(preview_dir):
+        filepath = os.path.join(preview_dir, filename)
+        if os.path.isfile(filepath) and os.path.getmtime(filepath) < cutoff:
+            try:
+                os.remove(filepath)
+                logger.info(f"Removed old preview file: {filepath}")
+            except OSError as e:
+                logger.error(f"Failed to remove preview file {filepath}: {e}")
+
+
+@router.post("/uploads/filter-previews")
+@requires_auth
+async def filter_previews(
+    request: Request,
+    file: UploadFile = File(...),
+):
+    try:
+        _cleanup_old_previews()
+
+        contents = await file.read()
+        file_size = len(contents)
+        validate_image(file.content_type, file_size)
+
+        image = Image.open(io.BytesIO(contents))
+        image = ImageOps.exif_transpose(image)
+
+        # Resize to preview width preserving aspect ratio
+        orig_width, orig_height = image.size
+        new_height = int(orig_height * PREVIEW_WIDTH / orig_width)
+        image = image.resize((PREVIEW_WIDTH, new_height), resample=Image.Resampling.LANCZOS)
+
+        bucket = None if LOCAL_STORAGE_PATH else get_gcs_bucket()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = str(uuid.uuid4())[:8]
+
+        previews = {}
+        for filter_name in AVAILABLE_FILTERS:
+            if filter_name == "none":
+                continue
+
+            filtered_image = apply_filter(image.copy(), filter_name)
+            buf = io.BytesIO()
+            filtered_image.save(buf, format="WEBP", quality=80)
+            buf.seek(0)
+            preview_bytes = buf.read()
+
+            preview_filename = f"{PREVIEW_TEMP_DIR}/{timestamp}_{unique_id}_{filter_name}.webp"
+            await upload_file(preview_bytes, preview_filename, "image/webp", bucket)
+            previews[filter_name] = f"/uploads/{preview_filename}"
+
+        return {"previews": previews}
+
+    except Exception as e:
+        handle_error(e, "generating filter previews")
 
 
 def resize_image(content: bytes, target_width: int) -> bytes:
