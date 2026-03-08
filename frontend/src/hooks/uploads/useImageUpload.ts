@@ -162,6 +162,7 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
           newAttrs.width = String(dimensions[0].width);
           newAttrs.height = String(dimensions[0].height);
         }
+        newAttrs['data-original-src'] = currentSrc;
         editor.chain().focus().updateAttributes('image', newAttrs).run();
       }
     } finally {

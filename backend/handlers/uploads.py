@@ -359,6 +359,7 @@ async def _cleanup_old_previews():
         preview_dir = os.path.join(LOCAL_STORAGE_PATH, "uploads", PREVIEW_TEMP_DIR)
         if not os.path.exists(preview_dir):
             return
+        # Naive timestamp matches os.path.getmtime (local filesystem)
         cutoff = datetime.now().timestamp() - cutoff_seconds
         for filename in os.listdir(preview_dir):
             filepath = os.path.join(preview_dir, filename)
@@ -373,6 +374,7 @@ async def _cleanup_old_previews():
         def _gcs_cleanup():
             bucket = get_gcs_bucket()
             prefix = f"uploads/{PREVIEW_TEMP_DIR}/"
+            # UTC matches blob.time_created (GCS metadata)
             cutoff_dt = datetime.now(timezone.utc) - timedelta(seconds=cutoff_seconds)
             blobs = bucket.list_blobs(prefix=prefix)
             for blob in blobs:

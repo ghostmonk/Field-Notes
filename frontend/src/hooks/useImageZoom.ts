@@ -65,7 +65,7 @@ export function useImageZoom(
     const handleWheel = (e: WheelEvent) => {
       if (!zoomedImage) return;
       e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const delta = -Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY) * 0.001, 0.2);
       currentScale = Math.min(3, Math.max(1, currentScale + delta));
       applyTransform();
     };
