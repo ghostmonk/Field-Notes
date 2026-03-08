@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 type ToastType = 'success' | 'error' | 'info';
 
 interface Toast {
-  id: number;
+  id: string;
   message: string;
   type: ToastType;
   autoDismiss: boolean;
@@ -14,8 +14,6 @@ interface ToastContextValue {
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
-
-let nextId = 0;
 
 const AUTO_DISMISS_MS = 4000;
 
@@ -35,32 +33,35 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string, type: ToastType = 'success') => {
-    const id = ++nextId;
+    const id = crypto.randomUUID();
     const autoDismiss = type !== 'error';
     setToasts(prev => [...prev, { id, message, type, autoDismiss }]);
   }, []);
 
-  const dismiss = useCallback((id: number) => {
+  const dismiss = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div
-        className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md"
-        role="status"
-        aria-live="polite"
-      >
-        {toasts.map(toast => (
-          <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />
-        ))}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md">
+        <div role="status" aria-live="polite">
+          {toasts.filter(t => t.type !== 'error').map(toast => (
+            <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />
+          ))}
+        </div>
+        <div role="alert" aria-live="assertive">
+          {toasts.filter(t => t.type === 'error').map(toast => (
+            <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />
+          ))}
+        </div>
       </div>
     </ToastContext.Provider>
   );
 }
 
-function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number) => void }) {
+function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string) => void }) {
   useEffect(() => {
     if (toast.autoDismiss) {
       const timer = setTimeout(() => onDismiss(toast.id), AUTO_DISMISS_MS);

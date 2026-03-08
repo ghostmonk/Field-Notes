@@ -67,7 +67,7 @@ interface ConfirmDialogInnerProps {
 function ConfirmDialogInner({
   title,
   message,
-  confirmLabel = 'Delete',
+  confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   destructive = false,
   onConfirm,

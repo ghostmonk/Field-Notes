@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -67,6 +67,23 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     // Upload hooks
     const { pendingAltText, ...imageUpload } = useImageUpload(editor);
     const videoUpload = useVideoUpload(editor);
+
+    // Link input state
+    const [showLinkInput, setShowLinkInput] = useState(false);
+    const [linkUrl, setLinkUrl] = useState('');
+    const linkInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (showLinkInput) linkInputRef.current?.focus();
+    }, [showLinkInput]);
+
+    const applyLink = () => {
+        if (linkUrl.trim() && editor) {
+            editor.chain().focus().setLink({ href: linkUrl.trim() }).run();
+        }
+        setShowLinkInput(false);
+        setLinkUrl('');
+    };
 
     // Sync content from props
     useEffect(() => {
@@ -149,9 +166,10 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                 />
                 <ToolbarButton
                     onClick={() => {
-                        const url = window.prompt('Enter URL:');
-                        if (url) {
-                            editor.chain().focus().setLink({ href: url }).run();
+                        if (editor.isActive('link')) {
+                            editor.chain().focus().unsetLink().run();
+                        } else {
+                            setShowLinkInput(true);
                         }
                     }}
                     isActive={editor.isActive('link')}
@@ -197,6 +215,25 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     data-testid="video-upload-input"
                 />
             </div>
+            {showLinkInput && (
+                <div className="mb-2 flex items-center gap-2" data-testid="link-input-bar">
+                    <input
+                        ref={linkInputRef}
+                        type="url"
+                        value={linkUrl}
+                        onChange={e => setLinkUrl(e.target.value)}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') { e.preventDefault(); applyLink(); }
+                            if (e.key === 'Escape') { setShowLinkInput(false); setLinkUrl(''); }
+                        }}
+                        placeholder="https://..."
+                        className="flex-1 border rounded px-2 py-1 text-sm dark:bg-gray-800 dark:text-white"
+                        data-testid="link-url-input"
+                    />
+                    <button onClick={applyLink} className="btn btn--primary btn--sm" data-testid="link-apply">Apply</button>
+                    <button onClick={() => { setShowLinkInput(false); setLinkUrl(''); }} className="btn btn--secondary btn--sm" data-testid="link-cancel">Cancel</button>
+                </div>
+            )}
             {actionSlot && (
                 <div className="mb-2 flex flex-wrap items-center gap-4">
                     {actionSlot}

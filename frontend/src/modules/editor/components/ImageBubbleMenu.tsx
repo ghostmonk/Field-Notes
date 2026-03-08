@@ -23,6 +23,7 @@ export function ImageBubbleMenu({ editor }: ImageBubbleMenuProps) {
         setAltText(attrs.alt || '');
       }
     };
+    updateAlt();
     editor.on('selectionUpdate', updateAlt);
     return () => { editor.off('selectionUpdate', updateAlt); };
   }, [editor]);
