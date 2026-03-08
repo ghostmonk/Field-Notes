@@ -48,6 +48,15 @@
   border-color: var(--color-border-draft);
 }
 
+.card--featured {
+  border-left: 4px solid var(--color-brand-primary);
+  padding-left: var(--space-xl);
+}
+
+.card--featured .story-title {
+  font-size: var(--font-size-2xl);
+}
+
 .card--link {
   text-decoration: none;
   display: block;
@@ -62,6 +71,13 @@
   margin: 0 auto;
   max-width: var(--layout-page-content-max-width);
   padding: 0 var(--space-lg);
+}
+
+/* Detail container - centered content for detail views */
+.detail-container {
+  margin: 0 auto;
+  max-width: var(--layout-page-content-max-width);
+  padding: var(--space-2xl) var(--space-lg);
 }
 
 /* Project styles */

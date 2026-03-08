@@ -85,6 +85,7 @@ export interface StoryCardProps {
     deleteLoading: boolean;
     engagementCounts?: EngagementCounts;
     basePath?: string;
+    featured?: boolean;
 }
 
 export const StoryCard = React.memo(({
@@ -94,7 +95,8 @@ export const StoryCard = React.memo(({
     onDelete,
     deleteLoading,
     engagementCounts,
-    basePath
+    basePath,
+    featured
 }: StoryCardProps) => {
     const isDraft = !story.is_published;
     const storyPath = getStoryPath(story, basePath);
@@ -104,7 +106,7 @@ export const StoryCard = React.memo(({
     return (
         <div
             key={story.id}
-            className={`card ${isDraft ? 'card--draft' : ''}`}
+            className={`card ${isDraft ? 'card--draft' : ''} ${featured ? 'card--featured' : ''}`}
             data-testid={`story-card-${story.id}`}
         >
             <div className="story-header">

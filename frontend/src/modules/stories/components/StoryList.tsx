@@ -16,9 +16,10 @@ interface StoriesProps {
     initialData?: PaginatedResponse<Story>;
     initialError?: string;
     basePath?: string;
+    featureFirst?: boolean;
 }
 
-const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }) => {
+const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath, featureFirst }) => {
     const { data: session } = useSession();
     const router = useRouter();
     const {
@@ -90,7 +91,7 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }
 
     // Memoize the story list to prevent unnecessary re-renders
     const storyItems = useMemo(() => {
-        return stories.map(story => (
+        return stories.map((story, index) => (
             <StoryCard
                 key={story.id}
                 story={story}
@@ -100,9 +101,10 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }
                 deleteLoading={deleteLoading}
                 engagementCounts={engagementCounts[`story:${story.id}`]}
                 basePath={basePath}
+                featured={featureFirst && index === 0 && story.is_published}
             />
         ));
-    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath]);
+    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath, featureFirst]);
 
     // Handle error state
     if (error) {
