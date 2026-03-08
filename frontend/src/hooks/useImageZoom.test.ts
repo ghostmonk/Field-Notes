@@ -11,6 +11,10 @@ vi.mock('medium-zoom', () => ({
   })),
 }));
 
+vi.mock('next/router', () => ({
+  useRouter: () => ({ asPath: '/' }),
+}));
+
 describe('useImageZoom', () => {
   it('should export useImageZoom hook', () => {
     expect(typeof useImageZoom).toBe('function');

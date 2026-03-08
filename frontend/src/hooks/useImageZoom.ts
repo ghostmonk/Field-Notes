@@ -1,21 +1,36 @@
 import { useEffect, RefObject } from 'react';
+import { useRouter } from 'next/router';
 import mediumZoom, { Zoom } from 'medium-zoom';
 
 export function useImageZoom(
   containerRef: RefObject<HTMLElement | null>,
   enabled: boolean = true
 ) {
+  const pathname = useRouter().asPath;
+
   useEffect(() => {
     if (!enabled || !containerRef.current) return;
 
     const container = containerRef.current;
-    const images = container.querySelectorAll('img:not([data-zoom-disabled])');
-    if (images.length === 0) return;
 
-    const zoom: Zoom = mediumZoom(images as unknown as HTMLElement[], {
+    // Create zoom instance, then attach to current images
+    const zoom: Zoom = mediumZoom([], {
       margin: 24,
       background: 'var(--color-bg-overlay, rgba(0, 0, 0, 0.85))',
     });
+
+    const attachImages = () => {
+      const images = container.querySelectorAll('img:not([data-zoom-disabled])');
+      zoom.detach();
+      zoom.attach(images as unknown as HTMLElement[]);
+    };
+
+    // Attach to initial images
+    attachImages();
+
+    // Re-attach when DOM changes (async-loaded content)
+    const observer = new MutationObserver(attachImages);
+    observer.observe(container, { childList: true, subtree: true });
 
     let currentScale = 1;
     let translateX = 0;
@@ -24,7 +39,7 @@ export function useImageZoom(
 
     const applyTransform = () => {
       if (zoomedImage) {
-        zoomedImage.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+        zoomedImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
       }
     };
 
@@ -114,7 +129,8 @@ export function useImageZoom(
     });
 
     return () => {
+      observer.disconnect();
       zoom.detach();
     };
-  }, [containerRef, enabled]);
+  }, [containerRef, enabled, pathname]);
 }
