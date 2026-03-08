@@ -1,7 +1,5 @@
 # UX Tier 4A: CSS & Frontend Polish Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Implement 6 frontend-only refinements from UX Tier 4A — scroll error states, toolbar touch targets, typographic scale, prose styling, card differentiation, and microinteractions.
 
 **Architecture:** All changes are CSS/component-level. No backend changes, no new API endpoints, no data model changes. Template token system is the source of truth for design values.

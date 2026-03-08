@@ -51,6 +51,11 @@
     transform var(--transition-fast);
   animation: fadeInUp var(--transition-normal) ease-out both;
 }
+.card:nth-child(2) { animation-delay: 60ms; }
+.card:nth-child(3) { animation-delay: 120ms; }
+.card:nth-child(4) { animation-delay: 180ms; }
+.card:nth-child(5) { animation-delay: 240ms; }
+.card:nth-child(n+6) { animation-delay: 300ms; }
 
 .card:hover {
   box-shadow: 0 4px 12px var(--color-shadow-medium);
@@ -982,15 +987,12 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
   }
 }
 
-/* Card hover: disable transform lift for reduced motion */
+/* Reduced motion: disable animations and transitions for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   .card:hover {
     transform: none;
   }
-}
 
-/* Reduced motion: disable animations and transitions for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {

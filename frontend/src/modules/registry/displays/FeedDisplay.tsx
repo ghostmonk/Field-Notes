@@ -7,30 +7,14 @@ export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtr
     const skipTargetId = useId();
     const [loadError, setLoadError] = useState(false);
 
-    const handleLoadMore = useCallback(() => {
+    const handleLoadMore = useCallback(async () => {
         setLoadError(false);
         try {
-            const result = onLoadMore();
-            if (result && typeof (result as Promise<void>).catch === 'function') {
-                (result as Promise<void>).catch(() => setLoadError(true));
-            }
+            await onLoadMore();
         } catch {
             setLoadError(true);
         }
     }, [onLoadMore]);
-
-    const loader = loadError ? (
-        <div className="feed-load-error" role="alert">
-            <p>Failed to load more content.</p>
-            <button className="btn btn--secondary btn--sm" onClick={handleLoadMore}>
-                Retry
-            </button>
-        </div>
-    ) : (
-        <div className="flex justify-center items-center py-4" role="status" aria-label="Loading more content">
-            <ClipLoader color="var(--color-brand-primary)" loading={true} size={35} />
-        </div>
-    );
 
     return (
         <section aria-label="Content feed" className="mt-4">
@@ -40,8 +24,12 @@ export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtr
             <InfiniteScroll
                 dataLength={items.length}
                 next={handleLoadMore}
-                hasMore={hasMore}
-                loader={loader}
+                hasMore={hasMore && !loadError}
+                loader={
+                    <div className="flex justify-center items-center py-4" role="status" aria-label="Loading more content">
+                        <ClipLoader color="var(--color-brand-primary)" loading={true} size={35} />
+                    </div>
+                }
                 endMessage={
                     <div className="text-center py-4 text-text-secondary">
                         You&apos;ve reached the end
@@ -56,6 +44,14 @@ export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtr
                     ))}
                 </div>
             </InfiniteScroll>
+            {loadError && (
+                <div className="feed-load-error" role="alert">
+                    <p>Failed to load more content.</p>
+                    <button className="btn btn--secondary btn--sm" onClick={handleLoadMore}>
+                        Retry
+                    </button>
+                </div>
+            )}
             <div id={skipTargetId} tabIndex={-1} />
         </section>
     );
