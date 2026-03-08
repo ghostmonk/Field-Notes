@@ -30,9 +30,18 @@ export function useImageZoom(
     // Attach to initial images
     attachImages();
 
-    // Re-attach when DOM changes (async-loaded content), debounced
+    // Re-attach when img elements are added/removed (async-loaded content), debounced
     let debounceTimer: ReturnType<typeof setTimeout>;
-    const observer = new MutationObserver(() => {
+    const observer = new MutationObserver((mutations) => {
+      const hasImageChange = mutations.some((m) => {
+        const nodes = [...Array.from(m.addedNodes), ...Array.from(m.removedNodes)];
+        return nodes.some(
+          (n) =>
+            (n instanceof HTMLImageElement) ||
+            (n instanceof HTMLElement && n.querySelector('img'))
+        );
+      });
+      if (!hasImageChange) return;
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(attachImages, 150);
     });
@@ -143,6 +152,13 @@ export function useImageZoom(
     return () => {
       clearTimeout(debounceTimer);
       observer.disconnect();
+      // Explicitly remove listeners in case zoom.close() fires async
+      document.removeEventListener('wheel', handleWheel);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
       zoom.close();
       zoom.detach();
     };

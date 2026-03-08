@@ -46,6 +46,7 @@ MAX_FILE_SIZE = 5 * 1024 * 1024
 MAX_VIDEO_SIZE = 100 * 1024 * 1024
 MAX_IMAGE_LENGTH = 2048
 IMAGE_SIZES = [2048, 1536, 768, 400]
+MAX_IMAGE_SIZE = max(IMAGE_SIZES)
 OUTPUT_FORMAT = "webp"
 PREVIEW_WIDTH = 200
 PREVIEW_TEMP_DIR = "filter_previews"
@@ -227,10 +228,10 @@ async def process_image_file(
     for size in IMAGE_SIZES:
         sized_filename = (
             f"{base_name}_{size}{webp_extension}"
-            if size != max(IMAGE_SIZES)
+            if size != MAX_IMAGE_SIZE
             else f"{base_name}{webp_extension}"
         )
-        resized_image = resize_image(contents, size)
+        resized_image = resize_image(contents, size, exif_corrected=True)
 
         blob_path, _ = await upload_file(
             resized_image, sized_filename, f"image/{OUTPUT_FORMAT}", bucket
@@ -241,7 +242,7 @@ async def process_image_file(
         url = f"/uploads/{sized_filename}"
 
         srcset_entries.append(f"{url} {size}w")
-        if size == max(IMAGE_SIZES):
+        if size == MAX_IMAGE_SIZE:
             primary_url = url
             # Calculate final dimensions for the largest size
             if original_width > size:
@@ -350,7 +351,7 @@ async def upload_media(
         handle_error(e, "processing uploads")
 
 
-def _cleanup_old_previews():
+async def _cleanup_old_previews():
     """Remove preview files older than 10 minutes from local or GCS storage."""
     cutoff_seconds = 600  # 10 minutes
 
@@ -368,7 +369,8 @@ def _cleanup_old_previews():
                 except OSError as e:
                     logger.error(f"Failed to remove preview file {filepath}: {e}")
     else:
-        try:
+
+        def _gcs_cleanup():
             bucket = get_gcs_bucket()
             prefix = f"uploads/{PREVIEW_TEMP_DIR}/"
             cutoff_dt = datetime.now(timezone.utc) - timedelta(seconds=cutoff_seconds)
@@ -377,13 +379,16 @@ def _cleanup_old_previews():
                 if blob.time_created and blob.time_created < cutoff_dt:
                     blob.delete()
                     logger.info(f"Removed old GCS preview: {blob.name}")
+
+        try:
+            await asyncio.to_thread(_gcs_cleanup)
         except Exception as e:
             logger.error(f"Failed to clean up GCS previews: {e}")
 
 
 @router.post("/uploads/filter-previews")
 @requires_auth
-@limiter.limit("5/minute")
+@limiter.limit("15/minute")
 async def filter_previews(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -433,16 +438,15 @@ async def filter_previews(
         handle_error(e, "generating filter previews")
 
 
-def resize_image(content: bytes, target_width: int) -> bytes:
+def resize_image(content: bytes, target_width: int, exif_corrected: bool = False) -> bytes:
     image = Image.open(io.BytesIO(content))
-    image = ImageOps.exif_transpose(image)
+    if not exif_corrected:
+        image = ImageOps.exif_transpose(image)
     width, height = image.size
 
-    new_width = target_width
-    new_height = int(height * target_width / width)
-
     if width > target_width:
-        image = image.resize((new_width, new_height), resample=Image.Resampling.LANCZOS)
+        new_height = int(height * target_width / width)
+        image = image.resize((target_width, new_height), resample=Image.Resampling.LANCZOS)
 
     output = io.BytesIO()
     image.save(output, format=OUTPUT_FORMAT.upper(), quality=85)

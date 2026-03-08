@@ -8,7 +8,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { VideoExtension } from './VideoExtension';
 import { ErrorService } from '@/services/errorService';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
-import { useImageUpload, useVideoUpload } from '@/hooks/uploads';
+import { useImageUpload, useVideoUpload, FILTER_CANCEL } from '@/hooks/uploads';
 import { AltTextDialog } from './AltTextDialog';
 import { ImageFilterPicker } from './ImageFilterPicker';
 import { ImageBubbleMenu } from './ImageBubbleMenu';
@@ -74,7 +74,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     });
 
     // Upload hooks
-    const { pendingAltText, pendingFilter, refilterImage, ...imageUpload } = useImageUpload(editor);
+    const { pendingAltText, pendingFilter, refilterImage, isProcessing: isImageUploading, ...imageUpload } = useImageUpload(editor);
     const videoUpload = useVideoUpload(editor);
 
     // Preview mode state
@@ -271,6 +271,11 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     {actionSlot}
                 </div>
             )}
+            {isImageUploading && !pendingFilter && (
+                <div className="mb-2 p-2 text-sm" style={{ color: 'var(--color-text-secondary)' }} data-testid="image-upload-progress">
+                    Uploading image...
+                </div>
+            )}
             {isPreview ? (
                 <div
                     className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white prose prose--card lg:prose-lg"
@@ -286,8 +291,8 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     imageUrl={pendingFilter.imageUrl}
                     previews={pendingFilter.previews}
                     loading={pendingFilter.loading}
-                    onConfirm={(filter) => pendingFilter.resolve(filter)}
-                    onCancel={() => pendingFilter.resolve('__cancel__')}
+                    onConfirm={(filter) => pendingFilter?.resolve(filter)}
+                    onCancel={() => pendingFilter?.resolve(FILTER_CANCEL)}
                 />,
                 document.body
             )}

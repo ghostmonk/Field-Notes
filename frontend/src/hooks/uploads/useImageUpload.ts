@@ -7,10 +7,14 @@ import { useFileUpload, UseFileUploadReturn } from './useFileUpload';
 import { validateImageType, createFileValidationError, ALLOWED_IMAGE_TYPES, resizeImageFile } from '@/shared/utils/uploadUtils';
 import { escapeHtmlAttr } from '@/shared/utils/htmlUtils';
 
+export const FILTER_CANCEL = '__cancel__';
+const RESPONSIVE_SIZES = '(max-width: 400px) 400px, (max-width: 768px) 768px, (max-width: 1536px) 1536px, 2048px';
+
 export interface UseImageUploadReturn extends UseFileUploadReturn {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   refilterImage: (currentSrc: string) => Promise<void>;
   acceptTypes: string;
+  isProcessing: boolean;
   pendingAltText: { resolve: (altText: string) => void } | null;
   pendingFilter: {
     imageUrl: string;
@@ -38,104 +42,15 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     resolve: (filter: string) => void;
   } | null>(null);
 
-  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || !e.target.files.length || !editor) return;
+  const [isProcessing, setIsProcessing] = useState(false);
 
-    const file = e.target.files[0];
-
-    // Resize first for preview and filter thumbnails
-    const resized = await resizeImageFile(file);
+  const showFilterPicker = useCallback(async (resized: File | Blob, fileName: string): Promise<string> => {
     const imageUrl = URL.createObjectURL(resized);
 
-    // Start filter selection flow
     const filterPromise = new Promise<string>((resolve) => {
       setPendingFilter({ imageUrl, previews: {}, loading: true, resolve });
     });
 
-    // Fetch filter previews in background
-    const previewFormData = new FormData();
-    previewFormData.append('file', resized, file.name);
-    try {
-      const previewResponse = await fetch('/api/filter-previews', {
-        method: 'POST',
-        body: previewFormData,
-        credentials: 'include',
-      });
-      if (previewResponse.ok) {
-        const previewData = await previewResponse.json();
-        setPendingFilter((prev) => prev ? { ...prev, previews: previewData.previews || {}, loading: false } : null);
-      } else {
-        setPendingFilter((prev) => prev ? { ...prev, loading: false } : null);
-      }
-    } catch {
-      setPendingFilter((prev) => prev ? { ...prev, loading: false } : null);
-    }
-
-    // Wait for user to pick a filter
-    const selectedFilter = await filterPromise;
-    setPendingFilter(null);
-    URL.revokeObjectURL(imageUrl);
-
-    if (selectedFilter === '__cancel__') {
-      // Reset input so same file can be selected again
-      if (baseUpload.inputRef.current) {
-        baseUpload.inputRef.current.value = '';
-      }
-      return;
-    }
-
-    // Upload unfiltered original first to preserve for future refilter
-    const uploadFile = resized instanceof File ? resized : new File([resized], file.name, { type: resized.type });
-    const originalResult = selectedFilter !== 'none'
-      ? await baseUpload.upload(uploadFile, { image_filter: 'none' })
-      : null;
-    const result = await baseUpload.upload(uploadFile, { image_filter: selectedFilter });
-
-    if (result?.urls?.length) {
-      // Request alt text from user
-      const altText = await new Promise<string>((resolve) => {
-        setPendingAltText({ resolve });
-      });
-      setPendingAltText(null);
-
-      const { urls, srcsets, dimensions } = result;
-      const safeAlt = escapeHtmlAttr(altText);
-      const attrs = [`src="${urls[0]}"`, `alt="${safeAlt}"`];
-      if (srcsets?.length) {
-        attrs.push(`srcset="${srcsets[0]}"`, `sizes="(max-width: 400px) 400px, (max-width: 768px) 768px, (max-width: 1536px) 1536px, 2048px"`);
-      }
-      if (dimensions?.length) {
-        attrs.push(`width="${dimensions[0].width}"`, `height="${dimensions[0].height}"`);
-      }
-      const originalSrc = originalResult?.urls?.[0] || urls[0];
-      attrs.push(`data-original-src="${originalSrc}"`);
-      editor.commands.insertContent(`<img ${attrs.join(' ')} />`);
-    }
-  }, [editor, baseUpload]);
-
-  const refilterImage = useCallback(async (currentSrc: string) => {
-    if (!editor) return;
-
-    let response: Response;
-    try {
-      response = await fetch(currentSrc, { credentials: 'include' });
-      if (!response.ok) return;
-    } catch {
-      return;
-    }
-    const blob = await response.blob();
-    const fileName = currentSrc.split('/').pop() || 'image.jpg';
-    const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
-
-    const resized = await resizeImageFile(file);
-    const imageUrl = URL.createObjectURL(resized);
-
-    // Show filter picker
-    const filterPromise = new Promise<string>((resolve) => {
-      setPendingFilter({ imageUrl, previews: {}, loading: true, resolve });
-    });
-
-    // Fetch previews
     const previewFormData = new FormData();
     previewFormData.append('file', resized, fileName);
     try {
@@ -157,34 +72,109 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     const selectedFilter = await filterPromise;
     setPendingFilter(null);
     URL.revokeObjectURL(imageUrl);
+    return selectedFilter;
+  }, []);
 
-    if (selectedFilter === '__cancel__') return;
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files.length || !editor) return;
 
-    // Re-upload with new filter
-    const uploadFile = resized instanceof File ? resized : new File([resized], fileName, { type: resized.type });
-    const result = await baseUpload.upload(uploadFile, { image_filter: selectedFilter });
+    const file = e.target.files[0];
+    const resized = await resizeImageFile(file);
+    const selectedFilter = await showFilterPicker(resized, file.name);
 
-    if (result?.urls?.length) {
-      // Update the currently selected image node's attributes
-      const { urls, srcsets, dimensions } = result;
-      const newAttrs: Record<string, string | null> = { src: urls[0] };
-      if (srcsets?.length) {
-        newAttrs.srcset = srcsets[0];
-        newAttrs.sizes = '(max-width: 400px) 400px, (max-width: 768px) 768px, (max-width: 1536px) 1536px, 2048px';
+    if (selectedFilter === FILTER_CANCEL) {
+      if (baseUpload.inputRef.current) {
+        baseUpload.inputRef.current.value = '';
       }
-      if (dimensions?.length) {
-        newAttrs.width = String(dimensions[0].width);
-        newAttrs.height = String(dimensions[0].height);
-      }
-      editor.chain().focus().updateAttributes('image', newAttrs).run();
+      return;
     }
-  }, [editor, baseUpload]);
+
+    const uploadFile = resized instanceof File ? resized : new File([resized], file.name, { type: resized.type });
+
+    setIsProcessing(true);
+    try {
+      // Upload original and filtered in parallel when filter is applied
+      const [originalResult, result] = await Promise.all([
+        selectedFilter !== 'none'
+          ? baseUpload.upload(uploadFile, { image_filter: 'none' })
+          : Promise.resolve(null),
+        baseUpload.upload(uploadFile, { image_filter: selectedFilter }),
+      ]);
+
+      if (result?.urls?.length) {
+        const altText = await new Promise<string>((resolve) => {
+          setPendingAltText({ resolve });
+        });
+        setPendingAltText(null);
+
+        const { urls, srcsets, dimensions } = result;
+        const safeAlt = escapeHtmlAttr(altText);
+        const attrs = [`src="${urls[0]}"`, `alt="${safeAlt}"`];
+        if (srcsets?.length) {
+          attrs.push(`srcset="${srcsets[0]}"`, `sizes="${RESPONSIVE_SIZES}"`);
+        }
+        if (dimensions?.length) {
+          attrs.push(`width="${dimensions[0].width}"`, `height="${dimensions[0].height}"`);
+        }
+        if (selectedFilter !== 'none' && originalResult?.urls?.[0]) {
+          attrs.push(`data-original-src="${originalResult.urls[0]}"`);
+        }
+        editor.commands.insertContent(`<img ${attrs.join(' ')} />`);
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [editor, baseUpload, showFilterPicker]);
+
+  const refilterImage = useCallback(async (currentSrc: string) => {
+    if (!editor) return;
+
+    let response: Response;
+    try {
+      response = await fetch(currentSrc, { credentials: 'include' });
+      if (!response.ok) return;
+    } catch {
+      return;
+    }
+    const blob = await response.blob();
+    const fileName = currentSrc.split('/').pop() || 'image.jpg';
+    const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+
+    const resized = await resizeImageFile(file);
+    const selectedFilter = await showFilterPicker(resized, fileName);
+
+    if (selectedFilter === FILTER_CANCEL) return;
+
+    const uploadFile = resized instanceof File ? resized : new File([resized], fileName, { type: resized.type });
+
+    setIsProcessing(true);
+    try {
+      const result = await baseUpload.upload(uploadFile, { image_filter: selectedFilter });
+
+      if (result?.urls?.length) {
+        const { urls, srcsets, dimensions } = result;
+        const newAttrs: Record<string, string | null> = { src: urls[0] };
+        if (srcsets?.length) {
+          newAttrs.srcset = srcsets[0];
+          newAttrs.sizes = RESPONSIVE_SIZES;
+        }
+        if (dimensions?.length) {
+          newAttrs.width = String(dimensions[0].width);
+          newAttrs.height = String(dimensions[0].height);
+        }
+        editor.chain().focus().updateAttributes('image', newAttrs).run();
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [editor, baseUpload, showFilterPicker]);
 
   return {
     ...baseUpload,
     handleFileChange,
     refilterImage,
     acceptTypes: ALLOWED_IMAGE_TYPES.join(','),
+    isProcessing,
     pendingAltText,
     pendingFilter,
   };
