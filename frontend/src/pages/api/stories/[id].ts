@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
+import { invalidateStoryCache } from '@/shared/lib/story-cache';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Use BACKEND_URL for server-to-server communication (in Docker)
@@ -64,6 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 });
             }
 
+            invalidateStoryCache();
             try { await res.revalidate('/'); } catch { /* non-fatal */ }
             return res.status(204).end();
         } else if (req.method === 'PUT') {
@@ -91,6 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             const data = await response.json();
+            invalidateStoryCache();
             try { await res.revalidate('/'); } catch { /* non-fatal */ }
             return res.status(200).json(data);
         } else if (req.method === 'GET') {

@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useConfirm } from '@/components/ConfirmDialog';
+import { useToast } from '@/components/Toast';
 import { Section, Story, Project, Page, PaginatedResponse, ProjectCard as ProjectCardType, BulkCountsResponse } from '@/shared/types/api';
 import { displayRegistry, useFetchContent } from '@/modules/registry';
 import type { ContentType, DisplayType } from '@/modules/registry';
@@ -57,6 +59,8 @@ function SectionListView({ section, initialListData }: { section: Section; initi
     const { data: session } = useSession();
     const router = useRouter();
     const { deleteStory, loading: deleteLoading } = useStoryMutations();
+    const confirm = useConfirm();
+    const { showToast } = useToast();
     const [engagementCounts, setEngagementCounts] = useState<BulkCountsResponse['counts']>({});
 
     const { items, loading, error, hasMore, loadMore, reset } = useFetchContent({
@@ -99,14 +103,19 @@ function SectionListView({ section, initialListData }: { section: Section; initi
             router.push('/api/auth/signin');
             return;
         }
-        if (!confirm(`Are you sure you want to delete "${story.title}"? This action cannot be undone.`)) {
-            return;
-        }
+        const confirmed = await confirm({
+            title: 'Delete Story',
+            message: `Are you sure you want to delete "${story.title}"? This action cannot be undone.`,
+            confirmLabel: 'Delete',
+            destructive: true,
+        });
+        if (!confirmed) return;
         const success = await deleteStory(story.id);
         if (success) {
+            showToast('Story deleted');
             reset();
         }
-    }, [session, router, deleteStory, reset]);
+    }, [session, router, deleteStory, reset, confirm, showToast]);
 
     const basePath = `/${section.slug}`;
 

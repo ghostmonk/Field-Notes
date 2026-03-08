@@ -44,13 +44,8 @@
 }
 
 .card--draft {
-  background-color: rgb(254 252 232);
-  border-color: rgb(254 240 138);
-}
-
-.dark .card--draft {
-  background-color: rgb(120 113 108 / 0.2);
-  border-color: rgb(133 77 14);
+  background-color: var(--color-surface-draft);
+  border-color: var(--color-border-draft);
 }
 
 .card--link {
@@ -277,7 +272,7 @@ button.btn--primary:hover:not(:disabled) {
 
 .nav__links {
   display: flex;
-  gap: var(--space-lg);
+  gap: var(--space-xs);
   align-items: center;
 }
 
@@ -526,6 +521,27 @@ button.btn--primary:hover:not(:disabled) {
   font-family: var(--font-family-sans);
   color: var(--color-text-primary);
   line-height: var(--line-height-relaxed);
+}
+
+.story-content--truncated {
+  max-height: 12rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.story-content--truncated::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  background: linear-gradient(transparent, var(--color-surface-secondary));
+  pointer-events: none;
+}
+
+.card--draft .story-content--truncated::after {
+  background: linear-gradient(transparent, var(--color-surface-draft));
 }
 
 .story-excerpt {
@@ -853,5 +869,17 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
     background: var(--color-brand-primary);
     opacity: 1;
     box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
+  }
+}
+
+/* Reduced motion: disable animations and transitions for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

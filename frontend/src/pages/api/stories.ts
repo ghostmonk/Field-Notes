@@ -1,51 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
-
-// Simple in-memory cache for stories
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
-const CACHE_TTL = 2 * 60 * 1000; // 2 minutes for stories
-const PUBLIC_CACHE_TTL = 5 * 60 * 1000; // 5 minutes for public stories
-
-function getCacheKey(req: NextApiRequest, isAuthenticated: boolean): string {
-    const { limit, offset, section_id } = req.query;
-    // Key on auth state, not client-sent include_drafts — the proxy overrides
-    // include_drafts based on token presence, so cache must reflect actual auth state
-    return `stories:${isAuthenticated ? 'auth' : 'anon'}:${limit || 'all'}:${offset || 0}:${section_id || 'none'}`;
-}
-
-function getFromCache(key: string): any | null {
-    const cached = cache.get(key);
-    if (!cached) return null;
-    
-    if (Date.now() - cached.timestamp > cached.ttl) {
-        cache.delete(key);
-        return null;
-    }
-    
-    return cached.data;
-}
-
-function setCache(key: string, data: any, ttl: number): void {
-    cache.set(key, {
-        data,
-        timestamp: Date.now(),
-        ttl
-    });
-}
-
-function invalidateCache(pattern?: string): void {
-    if (!pattern) {
-        cache.clear();
-        return;
-    }
-    
-    for (const key of cache.keys()) {
-        if (key.includes(pattern)) {
-            cache.delete(key);
-        }
-    }
-}
+import {
+    CACHE_TTL,
+    PUBLIC_CACHE_TTL,
+    getCacheKey,
+    getFromCache,
+    setCache,
+    invalidateStoryCache,
+} from '@/shared/lib/story-cache';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
@@ -75,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Check cache for GET requests
         if (req.method === 'GET') {
-            const cacheKey = getCacheKey(req, isAuthenticated);
+            const cacheKey = getCacheKey(isAuthenticated, req.query);
             const cachedData = getFromCache(cacheKey);
 
             if (cachedData) {
@@ -102,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             // Invalidate cache on mutations
-            invalidateCache('stories');
+            invalidateStoryCache();
         }
 
         let apiUrl = `${API_BASE_URL}/stories`;
@@ -197,7 +160,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Cache successful GET responses
         if (req.method === 'GET') {
-            const cacheKey = getCacheKey(req, isAuthenticated);
+            const cacheKey = getCacheKey(isAuthenticated, req.query);
             const ttl = isAuthenticated ? CACHE_TTL : PUBLIC_CACHE_TTL;
             
             setCache(cacheKey, data, ttl);

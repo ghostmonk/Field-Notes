@@ -8,6 +8,8 @@ import { useFetchStories, useStoryMutations } from '../hooks';
 import { StoriesListSkeleton } from '@/components/LoadingSkeletons';
 import { StoryCard } from './StoryCard';
 import apiClient from '@/shared/lib/api-client';
+import { useConfirm } from '@/components/ConfirmDialog';
+import { useToast } from '@/components/Toast';
 
 interface StoriesProps {
     initialData?: PaginatedResponse<Story>;
@@ -27,6 +29,8 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }
         resetStories
     } = useFetchStories({ initialData, initialError });
     const { deleteStory, loading: deleteLoading } = useStoryMutations();
+    const confirm = useConfirm();
+    const { showToast } = useToast();
     const [engagementCounts, setEngagementCounts] = useState<BulkCountsResponse['counts']>({});
 
     // Fetch engagement counts only for newly loaded stories
@@ -68,15 +72,20 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }
             return;
         }
         
-        if (!confirm(`Are you sure you want to delete "${story.title}"? This action cannot be undone.`)) {
-            return;
-        }
-        
+        const confirmed = await confirm({
+            title: 'Delete Story',
+            message: `Are you sure you want to delete "${story.title}"? This action cannot be undone.`,
+            confirmLabel: 'Delete',
+            destructive: true,
+        });
+        if (!confirmed) return;
+
         const success = await deleteStory(story.id);
         if (success) {
-            resetStories(); // Refresh the list
+            showToast('Story deleted');
+            resetStories();
         }
-    }, [session, router, deleteStory, resetStories]);
+    }, [session, router, deleteStory, resetStories, confirm, showToast]);
 
     // Memoize the story list to prevent unnecessary re-renders
     const storyItems = useMemo(() => {

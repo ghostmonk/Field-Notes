@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { Comment } from '@/shared/types/api';
+import { useConfirm } from '@/components/ConfirmDialog';
 
 interface CommentThreadProps {
   comment: Comment;
@@ -11,6 +12,7 @@ interface CommentThreadProps {
 
 export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps) {
   const { data: session } = useSession();
+  const confirm = useConfirm();
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,7 +33,13 @@ export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this comment?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Comment',
+      message: 'Delete this comment?',
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!confirmed) return;
     await onDelete(comment.id);
   };
 

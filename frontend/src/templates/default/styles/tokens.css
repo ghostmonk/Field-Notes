@@ -74,6 +74,9 @@
   --transition-slow: 500ms ease;
   --transition-colors: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
 
+  --color-surface-draft: rgb(254 252 232);
+  --color-border-draft: rgb(254 240 138);
+
   --color-nav-backdrop: rgba(255, 255, 255, 0.95);
 }
 
@@ -85,7 +88,7 @@
 
   --color-text-primary: #f8fafc;
   --color-text-secondary: #cbd5e1;
-  --color-text-tertiary: #94a3b8;
+  --color-text-tertiary: #a1b1c4;
   --color-text-inverse: #0f172a;
   --color-text-brand: #3b82f6;
   --color-text-link: #3b82f6;
@@ -98,6 +101,9 @@
   --color-shadow-light: rgba(0, 0, 0, 0.3);
   --color-shadow-medium: rgba(0, 0, 0, 0.4);
   --color-shadow-dark: rgba(0, 0, 0, 0.6);
+
+  --color-surface-draft: rgb(120 113 108 / 0.2);
+  --color-border-draft: rgb(133 77 14);
 
   --color-nav-backdrop: rgba(15, 23, 42, 0.95);
 }

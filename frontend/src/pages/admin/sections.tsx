@@ -6,6 +6,8 @@ import { invalidateNavCache } from '@/hooks/useNavSections';
 import { Section, CreateSectionRequest, DisplayType, SectionContentType, NavVisibility } from '@/shared/types/api';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
+import { useConfirm } from '@/components/ConfirmDialog';
+import { useToast } from '@/components/Toast';
 
 const DISPLAY_TYPES: DisplayType[] = ['feed', 'card-grid', 'static-page', 'gallery'];
 const CONTENT_TYPES: SectionContentType[] = ['story', 'project', 'page', 'image'];
@@ -20,6 +22,8 @@ export default function AdminSectionsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  const confirm = useConfirm();
+  const { showToast } = useToast();
   const error = fetchError || mutateError;
   const clearError = useCallback(() => { clearFetchError(); clearMutateError(); }, [clearFetchError, clearMutateError]);
 
@@ -53,9 +57,16 @@ export default function AdminSectionsPage() {
   };
 
   const handleDelete = async (section: Section) => {
-    if (!confirm(`Delete section "${section.title}"? This cannot be undone.`)) return;
+    const confirmed = await confirm({
+      title: 'Delete Section',
+      message: `Delete section "${section.title}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!confirmed) return;
     const success = await deleteSection(section.id);
     if (success) {
+      showToast('Section deleted');
       invalidateNavCache();
       refetch();
     }

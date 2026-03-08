@@ -4,6 +4,9 @@ import '../templates/default/index.css';
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
 import { Layout } from "@/layout";
+import { ToastProvider } from "@/components/Toast";
+import { ConfirmProvider } from "@/components/ConfirmDialog";
+import { NetworkStatus } from "@/components/NetworkStatus";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from 'next/router';
 import Head from "next/head";
@@ -74,22 +77,27 @@ function MyApp({ Component, pageProps }: AppProps) {
 
     return (
         <SessionProvider session={pageProps.session}>
-            <Head>
-                <meta
-                    name="viewport"
-                    content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes"
-                />
-                <meta name="author" content={getSiteConfig().site.author}/>
-                <link rel="canonical" href="https://ghostmonk.com/"/>
-            </Head>
-            <Layout>
-                <BackendWarmupBanner
-                    isWarming={isWarming}
-                    warmupFailed={warmupFailed}
-                    onRetry={handleWarmupRetry}
-                />
-                <Component {...pageProps} />
-            </Layout>
+            <ToastProvider>
+                <ConfirmProvider>
+                    <Head>
+                        <meta
+                            name="viewport"
+                            content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+                        />
+                        <meta name="author" content={getSiteConfig().site.author}/>
+                        <link rel="canonical" href="https://ghostmonk.com/"/>
+                    </Head>
+                    <NetworkStatus />
+                    <Layout>
+                        <BackendWarmupBanner
+                            isWarming={isWarming}
+                            warmupFailed={warmupFailed}
+                            onRetry={handleWarmupRetry}
+                        />
+                        <Component {...pageProps} />
+                    </Layout>
+                </ConfirmProvider>
+            </ToastProvider>
         </SessionProvider>
     );
 };

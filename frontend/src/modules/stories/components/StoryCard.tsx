@@ -1,17 +1,54 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import type { Session } from 'next-auth';
 import { formatDate } from '@/shared/utils/formatDate';
+import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
 import { Story } from '@/shared/types/api';
+import { engagementConfig } from '@/config/engagement.config';
 import { LazyStoryContent } from './LazyStoryContent';
 
-export const REACTION_ICONS: Record<string, string> = {
-    thumbup: '👍',
-    heart: '❤️',
-    surprise: '😮',
-    celebrate: '🎉',
-    insightful: '💡',
-};
+// Pre-compiled regexes for splitLeadingImage
+const MEDIA_IN_PARAGRAPH = /^<p>\s*(<img[^>]*>|<video[^>]*>[\s\S]*?<\/video>)\s*<\/p>/i;
+const MEDIA_DIRECT = /^(<img[^>]*>|<video[^>]*>[\s\S]*?<\/video>)/i;
+
+/**
+ * Splits HTML content into a leading media element (image or video) and the rest.
+ * The leading media is shown full-size above the truncated text.
+ */
+export function splitLeadingImage(html: string): { leadImage: string | null; rest: string } {
+    const trimmed = stripEmptyParagraphs(html).trimStart();
+
+    let match = trimmed.match(MEDIA_IN_PARAGRAPH);
+    if (match) {
+        return { leadImage: match[1], rest: trimmed.slice(match[0].length) };
+    }
+    match = trimmed.match(MEDIA_DIRECT);
+    if (match) {
+        return { leadImage: match[1], rest: trimmed.slice(match[0].length) };
+    }
+    return { leadImage: null, rest: html };
+}
+
+export const REACTION_ICONS = engagementConfig.reactionIcons;
+
+function StoryMediaPreview({ leadImage, rest }: { leadImage: string | null; rest: string }) {
+    return (
+        <>
+            {leadImage && (
+                <LazyStoryContent
+                    content={leadImage}
+                    className="story-content prose--card"
+                />
+            )}
+            {rest.trim() && (
+                <LazyStoryContent
+                    content={rest}
+                    className="story-content prose--card story-content--truncated"
+                />
+            )}
+        </>
+    );
+}
 
 /**
  * Safely gets the story URL based on the slug
@@ -61,6 +98,7 @@ export const StoryCard = React.memo(({
     const isDraft = !story.is_published;
     const storyPath = getStoryPath(story, basePath);
     const canEdit = canEditStory(session, story);
+    const { leadImage, rest } = useMemo(() => splitLeadingImage(story.content || ''), [story.content]);
 
     return (
         <div
@@ -122,13 +160,10 @@ export const StoryCard = React.memo(({
                 </div>
             </div>
 
-            {!isDraft && (
+            {!isDraft ? (
                 <>
                     <Link href={storyPath} className="block" data-testid={`story-content-link-${story.id}`}>
-                        <LazyStoryContent
-                            content={story.content}
-                            className="story-content prose--card"
-                        />
+                        <StoryMediaPreview leadImage={leadImage} rest={rest} />
                         <div className="mt-4">
                             <span className="btn btn--secondary btn--sm" data-testid={`story-read-more-${story.id}`}>
                                 Read full story →
@@ -152,12 +187,8 @@ export const StoryCard = React.memo(({
                         </div>
                     )}
                 </>
-            )}
-            {isDraft && (
-                <LazyStoryContent
-                    content={story.content}
-                    className="story-content prose--card"
-                />
+            ) : (
+                <StoryMediaPreview leadImage={leadImage} rest={rest} />
             )}
         </div>
     );

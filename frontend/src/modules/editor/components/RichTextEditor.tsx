@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -8,6 +8,7 @@ import { ErrorService } from '@/services/errorService';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { useImageUpload, useVideoUpload } from '@/hooks/uploads';
 import { AltTextDialog } from './AltTextDialog';
+import { ImageBubbleMenu } from './ImageBubbleMenu';
 
 interface RichTextEditorProps {
     onChange: (content: string) => void;
@@ -24,6 +25,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             StarterKit,
             Link.configure({
                 openOnClick: false,
+                validate: (href: string) => /^(https?:\/\/|mailto:|tel:)/i.test(href),
             }),
             Image.extend({
                 addAttributes() {
@@ -66,6 +68,32 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     // Upload hooks
     const { pendingAltText, ...imageUpload } = useImageUpload(editor);
     const videoUpload = useVideoUpload(editor);
+
+    // Link input state
+    const [showLinkInput, setShowLinkInput] = useState(false);
+    const [linkUrl, setLinkUrl] = useState('');
+    const [linkError, setLinkError] = useState('');
+    const linkInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (showLinkInput) linkInputRef.current?.focus();
+    }, [showLinkInput]);
+
+    const LINK_PROTOCOL_RE = /^(https?:\/\/|mailto:|tel:)/i;
+
+    const applyLink = () => {
+        const url = linkUrl.trim();
+        if (url && editor) {
+            if (!LINK_PROTOCOL_RE.test(url)) {
+                setLinkError('URL must start with https://, mailto:, or tel:');
+                return;
+            }
+            editor.chain().focus().setLink({ href: url }).run();
+        }
+        setShowLinkInput(false);
+        setLinkUrl('');
+        setLinkError('');
+    };
 
     // Sync content from props
     useEffect(() => {
@@ -141,6 +169,37 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     testId="toolbar-blockquote"
                 />
                 <ToolbarButton
+                    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                    isActive={editor.isActive('codeBlock')}
+                    label="Code"
+                    testId="toolbar-code-block"
+                />
+                <ToolbarButton
+                    onClick={() => {
+                        if (editor.isActive('link')) {
+                            editor.chain().focus().unsetLink().run();
+                        } else {
+                            setLinkUrl(editor.getAttributes('link').href || '');
+                            setShowLinkInput(true);
+                        }
+                    }}
+                    isActive={editor.isActive('link')}
+                    label="Link"
+                    testId="toolbar-link"
+                />
+                <span className="w-px h-6 bg-gray-300 dark:bg-gray-600 self-center" aria-hidden="true" />
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().undo().run()}
+                    label="Undo"
+                    testId="toolbar-undo"
+                />
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().redo().run()}
+                    label="Redo"
+                    testId="toolbar-redo"
+                />
+                <span className="w-px h-6 bg-gray-300 dark:bg-gray-600 self-center" aria-hidden="true" />
+                <ToolbarButton
                     onClick={imageUpload.triggerFileSelect}
                     label="Image"
                     testId="toolbar-image"
@@ -167,12 +226,35 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     data-testid="video-upload-input"
                 />
             </div>
+            {showLinkInput && (
+                <div className="mb-2" data-testid="link-input-bar">
+                    <div className="flex items-center gap-2">
+                        <input
+                            ref={linkInputRef}
+                            type="url"
+                            value={linkUrl}
+                            onChange={e => { setLinkUrl(e.target.value); setLinkError(''); }}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') { e.preventDefault(); applyLink(); }
+                                if (e.key === 'Escape') { setShowLinkInput(false); setLinkUrl(''); setLinkError(''); }
+                            }}
+                            placeholder="https://..."
+                            className="flex-1 border rounded px-2 py-1 text-sm dark:bg-gray-800 dark:text-white"
+                            data-testid="link-url-input"
+                        />
+                        <button onClick={applyLink} className="btn btn--primary btn--sm" data-testid="link-apply">Apply</button>
+                        <button onClick={() => { setShowLinkInput(false); setLinkUrl(''); setLinkError(''); }} className="btn btn--secondary btn--sm" data-testid="link-cancel">Cancel</button>
+                    </div>
+                    {linkError && <p className="text-xs mt-1" style={{ color: 'var(--color-status-error)' }} data-testid="link-error">{linkError}</p>}
+                </div>
+            )}
             {actionSlot && (
                 <div className="mb-2 flex flex-wrap items-center gap-4">
                     {actionSlot}
                 </div>
             )}
             <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
+            <ImageBubbleMenu editor={editor} />
             {pendingAltText && (
                 <AltTextDialog
                     onConfirm={pendingAltText.resolve}

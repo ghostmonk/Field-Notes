@@ -9,13 +9,8 @@ interface ReactionBarProps {
   compact?: boolean;
 }
 
-const REACTION_ICONS: Record<string, string> = {
-  thumbup: '\uD83D\uDC4D',
-  heart: '\u2764\uFE0F',
-  surprise: '\uD83D\uDE2E',
-  celebrate: '\uD83C\uDF89',
-  insightful: '\uD83D\uDCA1',
-};
+const REACTION_ICONS = engagementConfig.reactionIcons;
+const REACTION_LABELS = engagementConfig.reactionLabels;
 
 export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBarProps) {
   const { data: session } = useSession();
@@ -69,13 +64,14 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
               : 'hover:opacity-75'
           }`}
           style={{ color: 'var(--color-text-secondary)' }}
+          aria-label={`${REACTION_LABELS[tag] || tag} (${count})`}
           title={
             reactions?.details[tag]
               ?.map((u) => u.user_name)
               .join(', ') || ''
           }
         >
-          <span>{REACTION_ICONS[tag]}</span>
+          <span aria-hidden="true">{REACTION_ICONS[tag]}</span>
           <span>{count}</span>
         </button>
       ))}
@@ -87,6 +83,7 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
             onClick={() => setShowPicker(!showPicker)}
             className="px-2 py-1 rounded-full text-sm hover:opacity-75"
             style={{ color: 'var(--color-text-secondary)' }}
+            aria-label="Add reaction"
           >
             +
           </button>
@@ -107,8 +104,9 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
                   onClick={() => handleToggle(tag)}
                   disabled={isLoading}
                   className="p-2 hover:opacity-75 rounded"
+                  aria-label={`React with ${REACTION_LABELS[tag] || tag}`}
                 >
-                  {REACTION_ICONS[tag]}
+                  <span aria-hidden="true">{REACTION_ICONS[tag]}</span>
                 </button>
               ))}
             </div>
