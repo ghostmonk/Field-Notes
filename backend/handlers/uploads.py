@@ -351,8 +351,18 @@ async def upload_media(
         handle_error(e, "processing uploads")
 
 
+_last_cleanup_time: float = 0
+_CLEANUP_INTERVAL = 60  # seconds between cleanup runs
+
+
 async def _cleanup_old_previews():
     """Remove preview files older than 10 minutes from local or GCS storage."""
+    global _last_cleanup_time
+    now = datetime.now().timestamp()
+    if now - _last_cleanup_time < _CLEANUP_INTERVAL:
+        return
+    _last_cleanup_time = now
+
     cutoff_seconds = 600  # 10 minutes
 
     if LOCAL_STORAGE_PATH:

@@ -161,7 +161,11 @@ export async function resizeImageFile(
 
       canvas.toBlob(
         (blob) => {
-          resolve(blob || file);
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to encode resized image'));
+          }
         },
         outputType,
         quality

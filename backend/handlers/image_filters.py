@@ -1,16 +1,5 @@
 from PIL import Image, ImageEnhance, ImageOps
 
-AVAILABLE_FILTERS = [
-    "none",
-    "auto_enhance",
-    "warm",
-    "cool",
-    "high_contrast",
-    "bw",
-    "vivid",
-    "vintage",
-]
-
 
 def _adjust_channel(image, channel_index, offset):
     """Adjust a single RGB channel by a fixed offset, clamping to 0-255."""
@@ -85,10 +74,12 @@ _FILTER_MAP = {
     "vintage": _filter_vintage,
 }
 
+AVAILABLE_FILTERS = list(_FILTER_MAP.keys())
+
 
 def validate_filter_name(filter_name):
     """Raise ValueError if filter_name is not in AVAILABLE_FILTERS."""
-    if filter_name not in AVAILABLE_FILTERS:
+    if filter_name not in _FILTER_MAP:
         raise ValueError(
             f"Invalid filter '{filter_name}'. Must be one of: {', '.join(AVAILABLE_FILTERS)}"
         )
