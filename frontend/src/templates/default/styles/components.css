@@ -272,7 +272,7 @@ button.btn--primary:hover:not(:disabled) {
 
 .nav__links {
   display: flex;
-  gap: var(--space-lg);
+  gap: var(--space-xs);
   align-items: center;
 }
 

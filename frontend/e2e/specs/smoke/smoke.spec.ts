@@ -49,14 +49,11 @@ test.describe('Smoke Tests', () => {
     await expect(homePage.nav.logoutButton).not.toBeVisible();
   });
 
-  test('authenticated user sees welcome message and logout', async ({ mockAuthenticatedApiPage }) => {
+  test('authenticated user sees logout button', async ({ mockAuthenticatedApiPage }) => {
     const homePage = new HomePage(mockAuthenticatedApiPage);
 
     await homePage.goto();
     await homePage.waitForLoad();
-
-    // Verify welcome message is visible
-    await expect(homePage.nav.userWelcome).toBeVisible();
 
     // Verify logout button is visible
     await expect(homePage.nav.logoutButton).toBeVisible();

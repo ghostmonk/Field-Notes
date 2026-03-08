@@ -83,16 +83,13 @@ export default function TopNav() {
 
                 <div className="flex items-center space-x-4">
                     {session ? (
-                        <div className="flex items-center space-x-4">
-                            <span className="hidden md:inline text-text-primary" data-testid="user-welcome">Welcome, {session.user?.name || "User"}!</span>
-                            <button
-                                onClick={() => signOut()}
-                                className="btn btn--secondary"
-                                data-testid="logout-button"
-                            >
-                                Logout
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => signOut()}
+                            className="btn btn--secondary"
+                            data-testid="logout-button"
+                        >
+                            Logout
+                        </button>
                     ) : (
                         <button
                             onClick={() => signIn("google")}

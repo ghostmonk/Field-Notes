@@ -3,7 +3,7 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import type { Editor } from '@tiptap/react';
 
 interface ImageBubbleMenuProps {
-  editor: Editor;
+  editor: Editor | null;
 }
 
 const SIZE_PRESETS = [
@@ -17,6 +17,7 @@ export function ImageBubbleMenu({ editor }: ImageBubbleMenuProps) {
   const [altText, setAltText] = useState('');
 
   useEffect(() => {
+    if (!editor) return;
     const updateAlt = () => {
       if (editor.isActive('image')) {
         const attrs = editor.getAttributes('image');
@@ -27,6 +28,8 @@ export function ImageBubbleMenu({ editor }: ImageBubbleMenuProps) {
     editor.on('selectionUpdate', updateAlt);
     return () => { editor.off('selectionUpdate', updateAlt); };
   }, [editor]);
+
+  if (!editor) return null;
 
   const updateAttribute = (attr: string, value: string | null) => {
     editor.chain().focus().updateAttributes('image', { [attr]: value }).run();

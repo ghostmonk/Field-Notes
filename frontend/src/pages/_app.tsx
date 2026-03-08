@@ -78,25 +78,25 @@ function MyApp({ Component, pageProps }: AppProps) {
     return (
         <SessionProvider session={pageProps.session}>
             <ToastProvider>
-            <ConfirmProvider>
-                <Head>
-                    <meta
-                        name="viewport"
-                        content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes"
-                    />
-                    <meta name="author" content={getSiteConfig().site.author}/>
-                    <link rel="canonical" href="https://ghostmonk.com/"/>
-                </Head>
-                <NetworkStatus />
-                <Layout>
-                    <BackendWarmupBanner
-                        isWarming={isWarming}
-                        warmupFailed={warmupFailed}
-                        onRetry={handleWarmupRetry}
-                    />
-                    <Component {...pageProps} />
-                </Layout>
-            </ConfirmProvider>
+                <ConfirmProvider>
+                    <Head>
+                        <meta
+                            name="viewport"
+                            content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+                        />
+                        <meta name="author" content={getSiteConfig().site.author}/>
+                        <link rel="canonical" href="https://ghostmonk.com/"/>
+                    </Head>
+                    <NetworkStatus />
+                    <Layout>
+                        <BackendWarmupBanner
+                            isWarming={isWarming}
+                            warmupFailed={warmupFailed}
+                            onRetry={handleWarmupRetry}
+                        />
+                        <Component {...pageProps} />
+                    </Layout>
+                </ConfirmProvider>
             </ToastProvider>
         </SessionProvider>
     );

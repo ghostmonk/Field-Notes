@@ -72,18 +72,27 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     // Link input state
     const [showLinkInput, setShowLinkInput] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
+    const [linkError, setLinkError] = useState('');
     const linkInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (showLinkInput) linkInputRef.current?.focus();
     }, [showLinkInput]);
 
+    const LINK_PROTOCOL_RE = /^(https?:\/\/|mailto:|tel:)/i;
+
     const applyLink = () => {
-        if (linkUrl.trim() && editor) {
-            editor.chain().focus().setLink({ href: linkUrl.trim() }).run();
+        const url = linkUrl.trim();
+        if (url && editor) {
+            if (!LINK_PROTOCOL_RE.test(url)) {
+                setLinkError('URL must start with https://, mailto:, or tel:');
+                return;
+            }
+            editor.chain().focus().setLink({ href: url }).run();
         }
         setShowLinkInput(false);
         setLinkUrl('');
+        setLinkError('');
     };
 
     // Sync content from props
@@ -218,22 +227,25 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                 />
             </div>
             {showLinkInput && (
-                <div className="mb-2 flex items-center gap-2" data-testid="link-input-bar">
-                    <input
-                        ref={linkInputRef}
-                        type="url"
-                        value={linkUrl}
-                        onChange={e => setLinkUrl(e.target.value)}
-                        onKeyDown={e => {
-                            if (e.key === 'Enter') { e.preventDefault(); applyLink(); }
-                            if (e.key === 'Escape') { setShowLinkInput(false); setLinkUrl(''); }
-                        }}
-                        placeholder="https://..."
-                        className="flex-1 border rounded px-2 py-1 text-sm dark:bg-gray-800 dark:text-white"
-                        data-testid="link-url-input"
-                    />
-                    <button onClick={applyLink} className="btn btn--primary btn--sm" data-testid="link-apply">Apply</button>
-                    <button onClick={() => { setShowLinkInput(false); setLinkUrl(''); }} className="btn btn--secondary btn--sm" data-testid="link-cancel">Cancel</button>
+                <div className="mb-2" data-testid="link-input-bar">
+                    <div className="flex items-center gap-2">
+                        <input
+                            ref={linkInputRef}
+                            type="url"
+                            value={linkUrl}
+                            onChange={e => { setLinkUrl(e.target.value); setLinkError(''); }}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') { e.preventDefault(); applyLink(); }
+                                if (e.key === 'Escape') { setShowLinkInput(false); setLinkUrl(''); setLinkError(''); }
+                            }}
+                            placeholder="https://..."
+                            className="flex-1 border rounded px-2 py-1 text-sm dark:bg-gray-800 dark:text-white"
+                            data-testid="link-url-input"
+                        />
+                        <button onClick={applyLink} className="btn btn--primary btn--sm" data-testid="link-apply">Apply</button>
+                        <button onClick={() => { setShowLinkInput(false); setLinkUrl(''); setLinkError(''); }} className="btn btn--secondary btn--sm" data-testid="link-cancel">Cancel</button>
+                    </div>
+                    {linkError && <p className="text-xs mt-1" style={{ color: 'var(--color-status-error)' }} data-testid="link-error">{linkError}</p>}
                 </div>
             )}
             {actionSlot && (

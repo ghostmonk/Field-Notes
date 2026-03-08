@@ -22,7 +22,6 @@ export class TopNavComponent {
   // Auth elements
   readonly signInButton: Locator;
   readonly logoutButton: Locator;
-  readonly userWelcome: Locator;
 
   // Mobile menu
   readonly mobileMenuToggle: Locator;
@@ -48,7 +47,6 @@ export class TopNavComponent {
     // Auth
     this.signInButton = page.getByTestId('signin-button');
     this.logoutButton = page.getByTestId('logout-button');
-    this.userWelcome = page.getByTestId('user-welcome');
 
     // Mobile
     this.mobileMenuToggle = page.getByTestId('mobile-menu-toggle');
@@ -139,18 +137,10 @@ export class TopNavComponent {
   }
 
   /**
-   * Check if user is authenticated (welcome message visible).
+   * Check if user is authenticated (logout button visible).
    */
   async isAuthenticated(): Promise<boolean> {
-    return this.userWelcome.isVisible();
-  }
-
-  /**
-   * Get the welcome message text.
-   */
-  async getWelcomeText(): Promise<string> {
-    const text = await this.userWelcome.textContent();
-    return text || '';
+    return this.logoutButton.isVisible();
   }
 
   /**
