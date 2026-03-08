@@ -67,7 +67,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     });
 
     // Upload hooks
-    const { pendingAltText, pendingFilter, ...imageUpload } = useImageUpload(editor);
+    const { pendingAltText, pendingFilter, refilterImage, ...imageUpload } = useImageUpload(editor);
     const videoUpload = useVideoUpload(editor);
 
     // Link input state
@@ -255,7 +255,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                 </div>
             )}
             <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
-            <ImageBubbleMenu editor={editor} />
+            <ImageBubbleMenu editor={editor} onChangeFilter={refilterImage} />
             {pendingFilter && (
                 <ImageFilterPicker
                     imageUrl={pendingFilter.imageUrl}

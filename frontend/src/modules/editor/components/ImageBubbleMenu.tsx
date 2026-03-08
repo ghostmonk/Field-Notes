@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/react';
 
 interface ImageBubbleMenuProps {
   editor: Editor | null;
+  onChangeFilter?: (currentSrc: string) => void;
 }
 
 const SIZE_PRESETS = [
@@ -13,7 +14,7 @@ const SIZE_PRESETS = [
   { label: '100%', value: '100%' },
 ];
 
-export function ImageBubbleMenu({ editor }: ImageBubbleMenuProps) {
+export function ImageBubbleMenu({ editor, onChangeFilter }: ImageBubbleMenuProps) {
   const [altText, setAltText] = useState('');
 
   useEffect(() => {
@@ -92,6 +93,19 @@ export function ImageBubbleMenu({ editor }: ImageBubbleMenuProps) {
             );
           })}
         </div>
+        {onChangeFilter && (
+          <button
+            type="button"
+            onClick={() => {
+              const src = editor.getAttributes('image').src;
+              if (src) onChangeFilter(src);
+            }}
+            className="px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700"
+            data-testid="image-bubble-change-filter"
+          >
+            Change Filter
+          </button>
+        )}
       </div>
     </BubbleMenu>
   );
