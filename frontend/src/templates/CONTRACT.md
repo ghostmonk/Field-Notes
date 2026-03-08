@@ -74,7 +74,7 @@ Each template must include a `layout.config.json` that describes its structural 
 }
 ```
 
-Valid `navigation.desktop` values: `top`, `sidebar`. Valid `navigation.mobile` values: `bottom`, `hamburger`.
+Currently supported: `navigation.desktop: "top"`, `navigation.mobile: "bottom"`. Additional variants (`sidebar`, `hamburger`) will be added when their components are implemented.
 
 ## Switching Templates
 

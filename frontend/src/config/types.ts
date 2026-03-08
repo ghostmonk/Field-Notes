@@ -4,8 +4,8 @@ export interface HeroConfig {
 
 export interface LayoutConfig {
   navigation: {
-    desktop: "top" | "sidebar";
-    mobile: "bottom" | "hamburger";
+    desktop: "top";
+    mobile: "bottom";
   };
 }
 
