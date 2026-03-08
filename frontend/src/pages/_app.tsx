@@ -7,7 +7,8 @@ import { Layout } from "@/layout";
 import { ToastProvider } from "@/components/Toast";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { NetworkStatus } from "@/components/NetworkStatus";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useImageZoom } from "@/hooks/useImageZoom";
 import { useRouter } from 'next/router';
 import Head from "next/head";
 import { getSiteConfig } from '@/config';
@@ -16,6 +17,8 @@ import keepAliveService from '@/shared/lib/keep-alive';
 import { BackendWarmupBanner } from '@/components/LoadingSkeletons';
 
 function MyApp({ Component, pageProps }: AppProps) {
+    const mainRef = useRef<HTMLDivElement>(null);
+    useImageZoom(mainRef);
     const [isWarming, setIsWarming] = useState(false);
     const [warmupFailed, setWarmupFailed] = useState(false);
     const [isSkeletonTest, setIsSkeletonTest] = useState(false);
@@ -94,7 +97,9 @@ function MyApp({ Component, pageProps }: AppProps) {
                             warmupFailed={warmupFailed}
                             onRetry={handleWarmupRetry}
                         />
-                        <Component {...pageProps} />
+                        <div ref={mainRef}>
+                            <Component {...pageProps} />
+                        </div>
                     </Layout>
                 </ConfirmProvider>
             </ToastProvider>

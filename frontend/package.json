@@ -34,6 +34,7 @@
     "he": "^1.2.0",
     "isomorphic-dompurify": "^2.35.0",
     "jwt-decode": "^4.0.0",
+    "medium-zoom": "^1.1.0",
     "next": "^16.1.6",
     "next-auth": "^4.24.13",
     "react": "^19.2.3",
