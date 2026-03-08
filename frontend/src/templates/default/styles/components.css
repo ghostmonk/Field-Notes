@@ -1065,6 +1065,162 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
   }
 }
 
+/* Search */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.search-bar__input {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  width: 200px;
+  transition: border-color var(--transition-normal);
+}
+.search-bar__input:focus {
+  outline: none;
+  border-color: var(--color-brand-primary);
+}
+.search-bar__input--large {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-base);
+}
+.search-bar__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.search-page {
+  max-width: var(--layout-page-content-max-width);
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md);
+}
+.search-page__form {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+.search-page__summary {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-sm);
+}
+.search-page__empty {
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: var(--space-2xl) 0;
+}
+.search-result {
+  display: block;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border-primary);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color var(--transition-normal);
+}
+.search-result:hover {
+  background-color: var(--color-surface-secondary);
+}
+.search-result__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+.search-result__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+.search-result__excerpt {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* Version History */
+.version-history {
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  background-color: var(--color-surface-secondary);
+}
+.version-history__title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.version-history__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.version-history__item {
+  margin-bottom: var(--space-xs);
+}
+.version-history__btn {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-xs) var(--space-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-normal);
+}
+.version-history__btn:hover {
+  background-color: var(--color-surface-tertiary);
+}
+.version-history__btn--active {
+  background-color: var(--color-surface-tertiary);
+  font-weight: var(--font-weight-semibold);
+}
+.version-history__version {
+  color: var(--color-brand-primary);
+  font-weight: var(--font-weight-semibold);
+  min-width: 2rem;
+}
+.version-history__date {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+.version-history__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.version-history__loading {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  padding: var(--space-md);
+}
+.version-history__error {
+  color: var(--color-error, #dc2626);
+  font-size: var(--font-size-sm);
+  padding: var(--space-md);
+}
+
 /* Reduced motion: disable animations and transitions for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   .card:hover {

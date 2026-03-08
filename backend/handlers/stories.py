@@ -277,6 +277,20 @@ async def update_story(
             )
             raise HTTPException(status_code=500, detail="Failed to update story")
 
+        # Save version snapshot (non-critical — don't fail the update)
+        try:
+            from services.versions import save_version
+
+            await save_version(
+                content_id=story_id,
+                content_type="story",
+                title=update_data.get("title", existing_story.title),
+                content=update_data.get("content", existing_story.content or ""),
+                user_id=user.id,
+            )
+        except Exception as version_err:
+            logger.warning(f"Failed to save version snapshot for story {story_id}: {version_err}")
+
         updated_story = await find_one_and_convert(
             collection, {"_id": ObjectId(story_id)}, StoryResponse
         )

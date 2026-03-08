@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-03-08-ux-tier4c-implementation': 'UX Tier 4C: Search & Versioning',
   '2026-03-07-image-enhancement': 'Image Enhancement',
   '2026-03-07-image-enhancement-implementation': 'Image Enhancement Implementation',
   '2026-03-07-ux-review-design': 'UX Review',
