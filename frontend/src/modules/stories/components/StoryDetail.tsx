@@ -3,6 +3,7 @@ import { formatDate, formatRelativeDate } from '@/shared/utils/formatDate';
 import { estimateReadingTime } from '@/shared/utils/readingTime';
 import { Story } from '@/shared/types/api';
 import { LazyStoryContent } from './LazyStoryContent';
+import { ReadingProgressBar } from '@/components/ReadingProgressBar';
 
 interface StoryDetailProps {
     story: Story;
@@ -12,6 +13,7 @@ interface StoryDetailProps {
 export const StoryDetail: React.FC<StoryDetailProps> = ({ story, children }) => {
     return (
         <article className="card" data-testid="story-article">
+            <ReadingProgressBar />
             <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
 
             <div className="flex items-center text-sm mb-8">

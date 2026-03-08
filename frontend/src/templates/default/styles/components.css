@@ -861,12 +861,13 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
 
 /* Story Progress Bar */
 .story-progress-bar {
-  position: absolute;
-  bottom: 0;
+  position: fixed;
+  top: 0;
   left: 0;
   right: 0;
   height: 4px;
   background-color: transparent;
+  z-index: 50;
 }
 
 .story-progress-bar__container {
