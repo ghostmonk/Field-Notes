@@ -16,6 +16,7 @@ import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { EmptyState } from '@/components/EmptyState';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
 import { processStoryDataSSR } from '@/rendering/server';
 import apiClient from '@/shared/lib/api-client';
@@ -170,9 +171,10 @@ function SectionListView({ section, initialListData }: { section: Section; initi
 
     if (items.length === 0 && !loading) {
         return (
-            <div className="empty-state">
-                <h2 className="empty-state__title">No content found</h2>
-            </div>
+            <EmptyState
+                title={`No ${section.title.toLowerCase()} yet`}
+                description="Check back later for new content."
+            />
         );
     }
 

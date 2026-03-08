@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { Story, PaginatedResponse, BulkCountsResponse } from '@/shared/types/api';
 import { useFetchStories, useStoryMutations } from '../hooks';
 import { StoriesListSkeleton } from '@/components/LoadingSkeletons';
+import { EmptyState } from '@/components/EmptyState';
 import { StoryCard } from './StoryCard';
 import apiClient from '@/shared/lib/api-client';
 import { useConfirm } from '@/components/ConfirmDialog';
@@ -128,18 +129,11 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath }
     // Handle empty state
     if (stories.length === 0 && !loading) {
         return (
-            <div className="empty-state" data-testid="stories-empty">
-                <h2 className="empty-state__title">No stories found</h2>
-                {session?.user?.role === 'admin' && (
-                    <button
-                        onClick={() => router.push('/editor')}
-                        className="btn btn--primary"
-                        data-testid="create-first-story-button"
-                    >
-                        Create Your First Story
-                    </button>
-                )}
-            </div>
+            <EmptyState
+                title="No stories yet"
+                description="This is where stories will appear once published."
+                action={session?.user?.role === 'admin' ? { label: 'Write a Story', href: '/editor' } : undefined}
+            />
         );
     }
 
