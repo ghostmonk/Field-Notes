@@ -55,7 +55,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     }
                 },
             }).configure({
-                HTMLAttributes: { class: 'responsive-image' },
+                HTMLAttributes: { class: 'responsive-image', 'data-zoom-disabled': '' },
                 allowBase64: false,
                 inline: false,
             }),
