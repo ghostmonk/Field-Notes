@@ -361,8 +361,8 @@ button.btn--primary:hover:not(:disabled) {
 }
 
 .nav__container {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   max-width: var(--layout-container-max-width);
   margin: 0 auto;
@@ -422,6 +422,8 @@ button.btn--primary:hover:not(:disabled) {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-lg);
   letter-spacing: -0.025em;
+  text-align: center;
+  justify-self: center;
 }
 
 .nav__link-icon {
