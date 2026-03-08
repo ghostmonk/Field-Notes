@@ -28,6 +28,17 @@
   padding: 0 var(--space-lg);
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .card {
   background-color: var(--color-surface-secondary);
   color: var(--color-text-primary);
@@ -36,7 +47,9 @@
   padding: var(--space-xl);
   margin-bottom: var(--space-xl);
   box-shadow: 0 1px 3px var(--color-shadow-light);
-  transition: var(--transition-colors), box-shadow var(--transition-normal);
+  transition: var(--transition-colors), box-shadow var(--transition-normal),
+    transform var(--transition-fast);
+  animation: fadeInUp var(--transition-normal) ease-out both;
 }
 
 .card:hover {
@@ -972,5 +985,13 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .card {
+    animation: none;
+  }
+
+  .btn:active {
+    transform: none;
   }
 }
