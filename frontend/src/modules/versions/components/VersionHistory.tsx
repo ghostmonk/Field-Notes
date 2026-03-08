@@ -10,8 +10,10 @@ interface Version {
   created_by: string;
 }
 
+type ContentType = 'story' | 'project' | 'page';
+
 interface VersionHistoryProps {
-  contentType: string;
+  contentType: ContentType;
   contentId: string;
   onSelectVersion?: (version: { title: string; content: string }) => void;
 }
@@ -52,17 +54,19 @@ export function VersionHistory({ contentType, contentId, onSelectVersion }: Vers
       const data = await apiClient.versions.get(contentType, contentId, version, session.accessToken as string);
       onSelectVersion?.({ title: data.title, content: data.content });
     } catch (err) {
+      setSelectedVersion(null);
       setError(err instanceof Error ? err.message : 'Failed to load version');
     }
   };
 
   if (loading) return <p className="version-history__loading">Loading versions...</p>;
-  if (error) return <p className="version-history__error">{error}</p>;
+  if (error && versions.length === 0) return <p className="version-history__error">{error}</p>;
   if (versions.length === 0) return null;
 
   return (
     <div className="version-history">
       <h3 className="version-history__title">Version History</h3>
+      {error && <p className="version-history__error">{error}</p>}
       <ul className="version-history__list">
         {versions.map((v) => (
           <li key={v.version} className="version-history__item">

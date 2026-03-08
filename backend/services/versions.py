@@ -46,5 +46,3 @@ async def save_version(
         except DuplicateKeyError:
             if attempt == max_attempts - 1:
                 raise
-
-    return version_num

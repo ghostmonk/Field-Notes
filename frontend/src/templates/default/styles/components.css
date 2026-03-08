@@ -1215,6 +1215,11 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
   font-size: var(--font-size-sm);
   padding: var(--space-md);
 }
+.version-history__error {
+  color: var(--color-error, #dc2626);
+  font-size: var(--font-size-sm);
+  padding: var(--space-md);
+}
 
 /* Reduced motion: disable animations and transitions for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
