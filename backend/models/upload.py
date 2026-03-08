@@ -22,8 +22,8 @@ class ProcessedMediaFile(BaseModel):
         json_schema_extra={
             "example": {
                 "primary_url": "/uploads/20241201_123456_abc123.webp",
-                "srcset": "/uploads/20241201_123456_abc123_500.webp 500w, /uploads/20241201_123456_abc123_750.webp 750w, /uploads/20241201_123456_abc123.webp 1200w",
-                "width": 1200,
+                "srcset": "/uploads/20241201_123456_abc123_400.webp 400w, /uploads/20241201_123456_abc123_768.webp 768w, /uploads/20241201_123456_abc123_1536.webp 1536w, /uploads/20241201_123456_abc123.webp 2048w",
+                "width": 2048,
                 "height": 800,
             }
         }
@@ -42,9 +42,9 @@ class UploadResponse(BaseModel):
             "example": {
                 "urls": ["/uploads/20241201_123456_abc123.webp"],
                 "srcsets": [
-                    "/uploads/20241201_123456_abc123_500.webp 500w, /uploads/20241201_123456_abc123_750.webp 750w, /uploads/20241201_123456_abc123.webp 1200w"
+                    "/uploads/20241201_123456_abc123_400.webp 400w, /uploads/20241201_123456_abc123_768.webp 768w, /uploads/20241201_123456_abc123_1536.webp 1536w, /uploads/20241201_123456_abc123.webp 2048w"
                 ],
-                "dimensions": [{"width": 1200, "height": 800}],
+                "dimensions": [{"width": 2048, "height": 800}],
             }
         }
     )

@@ -10,9 +10,10 @@ from typing import List, Tuple
 
 from database import get_database
 from decorators.auth import requires_auth
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse, StreamingResponse
 from glogger import logger
+from handlers.image_filters import AVAILABLE_FILTERS, apply_filter  # noqa: F401
 from models.error import (
     ErrorCode,
     create_upload_error_response,
@@ -33,8 +34,8 @@ ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/avi"
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
 MAX_VIDEO_SIZE = 100 * 1024 * 1024
-MAX_IMAGE_LENGTH = 1200
-IMAGE_SIZES = [1200, 750, 500]
+MAX_IMAGE_LENGTH = 2048
+IMAGE_SIZES = [2048, 1536, 768, 400]
 OUTPUT_FORMAT = "webp"
 
 LOCAL_STORAGE_PATH = os.environ.get("LOCAL_STORAGE_PATH")
@@ -168,13 +169,15 @@ def _serve_local_file(blob_path: str, request: Request):
     return response
 
 
-async def process_single_file(file: UploadFile, bucket) -> ProcessedMediaFile:
+async def process_single_file(
+    file: UploadFile, bucket, image_filter: str = "none"
+) -> ProcessedMediaFile:
     """Process a single uploaded file and return ProcessedMediaFile."""
     contents = await file.read()
     file_size = len(contents)
 
     if file.content_type in ALLOWED_IMAGE_TYPES:
-        return await process_image_file(file, contents, file_size, bucket)
+        return await process_image_file(file, contents, file_size, bucket, image_filter)
     elif file.content_type in ALLOWED_VIDEO_TYPES:
         return await process_video_file(file, contents, file_size, bucket)
     else:
@@ -182,7 +185,7 @@ async def process_single_file(file: UploadFile, bucket) -> ProcessedMediaFile:
 
 
 async def process_image_file(
-    file: UploadFile, contents: bytes, file_size: int, bucket
+    file: UploadFile, contents: bytes, file_size: int, bucket, image_filter: str = "none"
 ) -> ProcessedMediaFile:
     """Process an image file and return ProcessedMediaFile."""
     validate_image(file.content_type, file_size)
@@ -194,6 +197,15 @@ async def process_image_file(
     original_image = Image.open(io.BytesIO(contents))
     original_image = ImageOps.exif_transpose(original_image)
     original_width, original_height = original_image.size
+
+    # Apply filter if specified
+    if image_filter != "none":
+        original_image = apply_filter(original_image, image_filter)
+        # Save filtered image to bytes (PNG to avoid lossy intermediate)
+        buf = io.BytesIO()
+        original_image.save(buf, format="PNG")
+        buf.seek(0)
+        contents = buf.read()
 
     srcset_entries = []
     primary_url = None
@@ -290,7 +302,11 @@ async def process_video_file(
 
 @router.post("/uploads", response_model=UploadResponse)
 @requires_auth
-async def upload_media(request: Request, files: List[UploadFile] = File(...)) -> UploadResponse:
+async def upload_media(
+    request: Request,
+    files: List[UploadFile] = File(...),
+    image_filter: str = Form("none"),
+) -> UploadResponse:
     try:
         urls = []
         srcsets = []
@@ -299,7 +315,7 @@ async def upload_media(request: Request, files: List[UploadFile] = File(...)) ->
 
         for file in files:
             try:
-                processed_file = await process_single_file(file, bucket)
+                processed_file = await process_single_file(file, bucket, image_filter)
                 urls.append(processed_file.primary_url)
                 srcsets.append(processed_file.srcset)
                 dimensions.append(
