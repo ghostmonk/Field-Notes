@@ -4,6 +4,22 @@ export interface HeroConfig {
   showOnHome: boolean;
 }
 
+export interface LayoutConfig {
+  structure: "top-content-bottom" | "sidebar-content" | "top-content";
+  navigation: {
+    desktop: "top" | "sidebar";
+    mobile: "bottom" | "hamburger";
+  };
+  footer: {
+    position: "fixed-bottom" | "inline";
+    showAboveBottomNav: boolean;
+  };
+  content: {
+    maxWidth: string;
+    centered: boolean;
+  };
+}
+
 export interface SiteConfig {
   site: {
     title: string;

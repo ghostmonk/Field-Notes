@@ -2,10 +2,13 @@ import React, { ReactNode } from "react";
 import TopNav from "./TopNav";
 import BottomNav from "./BottomNav";
 import Footer from "./Footer";
+import { getLayoutConfig } from "@/config";
 
 interface LayoutProps {
     children: ReactNode;
 }
+
+const layoutConfig = getLayoutConfig();
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
@@ -17,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
                 Skip to content
             </a>
-            <TopNav />
+            {layoutConfig.navigation.desktop === 'top' && <TopNav />}
             <main
                 id="main-content"
                 className="container mx-auto px-6 pt-6"
@@ -27,7 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {children}
             </main>
             <Footer />
-            <BottomNav />
+            {layoutConfig.navigation.mobile === 'bottom' && <BottomNav />}
         </div>
     );
 };
