@@ -8,7 +8,10 @@ import { Story } from '@/shared/types/api';
 import { isTokenExpired } from '@/shared/lib/auth';
 import { useFetchStory, useStoryMutations } from '@/modules/stories/hooks';
 import { logger } from '@/shared/utils/logger';
+import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
 import { useDraftRecovery } from './useDraftRecovery';
+import { useConfirm } from '@/components/ConfirmDialog';
+import { useToast } from '@/components/Toast';
 
 const EMPTY_STORY: Partial<Story> = {
   title: '',
@@ -52,6 +55,8 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
 
   const { story: fetchedStory, loading: fetchLoading, error: fetchError } = useFetchStory(storyId);
   const { saveStory, deleteStory, loading: saveLoading, error: saveError } = useStoryMutations();
+  const confirm = useConfirm();
+  const { showToast } = useToast();
 
   const [story, setStory] = useState<Partial<Story>>(EMPTY_STORY);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +123,7 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     try {
       const storyToSave = {
         ...story,
+        content: stripEmptyParagraphs(story.content || ''),
         is_published: shouldPublish ? story.is_published : false,
         ...(sectionId && !story.section_id ? { section_id: sectionId } : {}),
       };
@@ -132,13 +138,14 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
       logger.info('Story saved', { id: result.id, title: result.title });
       clearDraft();
       stopAutosave();
+      showToast(storyToSave.is_published ? 'Story published' : 'Draft saved');
       router.push(sectionSlug ? `/${sectionSlug}` : '/');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(`Error: ${message}`);
       setIsSaving(false);
     }
-  }, [session, story, sectionId, sectionSlug, saveStory, router, clearDraft, stopAutosave]);
+  }, [session, story, sectionId, sectionSlug, saveStory, router, clearDraft, stopAutosave, showToast]);
 
   // Delete handler
   const handleDelete = useCallback(async () => {
@@ -147,15 +154,20 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete "${story.title}"? This action cannot be undone.`)) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: 'Delete Story',
+      message: `Are you sure you want to delete "${story.title}"? This action cannot be undone.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!confirmed) return;
 
     const success = await deleteStory(story.id);
     if (success) {
+      showToast('Story deleted');
       router.push(sectionSlug ? `/${sectionSlug}` : '/');
     }
-  }, [story.id, story.title, session, sectionSlug, deleteStory, router]);
+  }, [story.id, story.title, session, sectionSlug, deleteStory, router, confirm, showToast]);
 
   // Sync fetched story to form state
   useEffect(() => {

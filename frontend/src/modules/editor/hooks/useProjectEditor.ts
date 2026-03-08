@@ -5,6 +5,9 @@ import { Project, CreateProjectRequest } from '@/shared/types/api';
 import apiClient from '@/shared/lib/api-client';
 import { ApiRequestError } from '@/shared/types/error';
 import { ErrorService } from '@/services/errorService';
+import { useConfirm } from '@/components/ConfirmDialog';
+import { useToast } from '@/components/Toast';
+import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
 
 const EMPTY_PROJECT: Partial<Project> = {
   title: '',
@@ -38,6 +41,8 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
   const { id } = router.query;
   const projectId = typeof id === 'string' ? id : undefined;
 
+  const confirm = useConfirm();
+  const { showToast } = useToast();
   const [project, setProject] = useState<Partial<Project>>(EMPTY_PROJECT);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -98,7 +103,7 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
       const payload = {
         title: project.title,
         summary: project.summary || '',
-        content: project.content || '',
+        content: stripEmptyParagraphs(project.content || ''),
         technologies: project.technologies || [],
         github_url: project.github_url || undefined,
         live_url: project.live_url || undefined,
@@ -115,6 +120,7 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
         await apiClient.projects.create(payload as CreateProjectRequest, session.accessToken);
       }
 
+      showToast('Project saved');
       router.push(sectionSlug ? `/${sectionSlug}` : '/');
     } catch (err) {
       if (err instanceof ApiRequestError) {
@@ -124,7 +130,7 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
       }
       setIsSaving(false);
     }
-  }, [session, project, sectionId, sectionSlug, router]);
+  }, [session, project, sectionId, sectionSlug, router, showToast]);
 
   const handleDelete = useCallback(async () => {
     if (!project.id || !session?.accessToken) {
@@ -132,10 +138,17 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
       return;
     }
 
-    if (!confirm(`Delete "${project.title}"? This cannot be undone.`)) return;
+    const confirmed = await confirm({
+      title: 'Delete Project',
+      message: `Delete "${project.title}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!confirmed) return;
 
     try {
       await apiClient.projects.delete(project.id, session.accessToken);
+      showToast('Project deleted');
       router.push(sectionSlug ? `/${sectionSlug}` : '/');
     } catch (err) {
       if (err instanceof ApiRequestError) {
@@ -144,7 +157,7 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
         setError('Failed to delete project');
       }
     }
-  }, [project.id, project.title, session, sectionSlug, router]);
+  }, [project.id, project.title, session, sectionSlug, router, confirm, showToast]);
 
   // Redirect unauthenticated users
   useEffect(() => {

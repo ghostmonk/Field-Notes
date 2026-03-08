@@ -528,6 +528,31 @@ button.btn--primary:hover:not(:disabled) {
   line-height: var(--line-height-relaxed);
 }
 
+.story-content--truncated {
+  max-height: 12rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.story-content--truncated::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  background: linear-gradient(transparent, var(--color-surface-secondary));
+  pointer-events: none;
+}
+
+.card--draft .story-content--truncated::after {
+  background: linear-gradient(transparent, rgb(254 252 232));
+}
+
+.dark .card--draft .story-content--truncated::after {
+  background: linear-gradient(transparent, rgb(120 113 108 / 0.2));
+}
+
 .story-excerpt {
   margin-top: var(--space-lg);
   font-size: var(--font-size-sm);
@@ -853,5 +878,17 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
     background: var(--color-brand-primary);
     opacity: 1;
     box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
+  }
+}
+
+/* Reduced motion: disable animations and transitions for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

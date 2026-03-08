@@ -8,6 +8,7 @@ import { ErrorService } from '@/services/errorService';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { useImageUpload, useVideoUpload } from '@/hooks/uploads';
 import { AltTextDialog } from './AltTextDialog';
+import { ImageBubbleMenu } from './ImageBubbleMenu';
 
 interface RichTextEditorProps {
     onChange: (content: string) => void;
@@ -141,6 +142,35 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                     testId="toolbar-blockquote"
                 />
                 <ToolbarButton
+                    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                    isActive={editor.isActive('codeBlock')}
+                    label="Code"
+                    testId="toolbar-code-block"
+                />
+                <ToolbarButton
+                    onClick={() => {
+                        const url = window.prompt('Enter URL:');
+                        if (url) {
+                            editor.chain().focus().setLink({ href: url }).run();
+                        }
+                    }}
+                    isActive={editor.isActive('link')}
+                    label="Link"
+                    testId="toolbar-link"
+                />
+                <span className="w-px h-6 bg-gray-300 dark:bg-gray-600 self-center" aria-hidden="true" />
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().undo().run()}
+                    label="Undo"
+                    testId="toolbar-undo"
+                />
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().redo().run()}
+                    label="Redo"
+                    testId="toolbar-redo"
+                />
+                <span className="w-px h-6 bg-gray-300 dark:bg-gray-600 self-center" aria-hidden="true" />
+                <ToolbarButton
                     onClick={imageUpload.triggerFileSelect}
                     label="Image"
                     testId="toolbar-image"
@@ -173,6 +203,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
                 </div>
             )}
             <EditorContent editor={editor} className="border p-3 rounded min-h-[400px] dark:bg-gray-800 dark:text-white" data-testid="editor-content" />
+            <ImageBubbleMenu editor={editor} />
             {pendingAltText && (
                 <AltTextDialog
                     onConfirm={pendingAltText.resolve}

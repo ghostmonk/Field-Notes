@@ -1,9 +1,32 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import type { Session } from 'next-auth';
 import { formatDate } from '@/shared/utils/formatDate';
 import { Story } from '@/shared/types/api';
 import { LazyStoryContent } from './LazyStoryContent';
+
+/**
+ * Splits HTML content into a leading media element (image or video) and the rest.
+ * The leading media is shown full-size above the truncated text.
+ */
+export function splitLeadingImage(html: string): { leadImage: string | null; rest: string } {
+    // Strip leading whitespace and empty paragraphs (TipTap inserts <p></p> before block nodes)
+    const trimmed = html.trimStart().replace(/^(<p>\s*<\/p>\s*)+/i, '');
+
+    // Match <img> or <video>...</video> (possibly wrapped in <p>) at the very start
+    const mediaInParagraph = /^<p>\s*(<img[^>]*>|<video[^>]*>[\s\S]*?<\/video>)\s*<\/p>/i;
+    const mediaDirect = /^(<img[^>]*>|<video[^>]*>[\s\S]*?<\/video>)/i;
+
+    let match = trimmed.match(mediaInParagraph);
+    if (match) {
+        return { leadImage: match[1], rest: trimmed.slice(match[0].length) };
+    }
+    match = trimmed.match(mediaDirect);
+    if (match) {
+        return { leadImage: match[1], rest: trimmed.slice(match[0].length) };
+    }
+    return { leadImage: null, rest: html };
+}
 
 export const REACTION_ICONS: Record<string, string> = {
     thumbup: '👍',
@@ -61,6 +84,7 @@ export const StoryCard = React.memo(({
     const isDraft = !story.is_published;
     const storyPath = getStoryPath(story, basePath);
     const canEdit = canEditStory(session, story);
+    const { leadImage, rest } = useMemo(() => splitLeadingImage(story.content || ''), [story.content]);
 
     return (
         <div
@@ -125,10 +149,18 @@ export const StoryCard = React.memo(({
             {!isDraft && (
                 <>
                     <Link href={storyPath} className="block" data-testid={`story-content-link-${story.id}`}>
-                        <LazyStoryContent
-                            content={story.content}
-                            className="story-content prose--card"
-                        />
+                        {leadImage && (
+                            <LazyStoryContent
+                                content={leadImage}
+                                className="story-content prose--card"
+                            />
+                        )}
+                        {rest.trim() && (
+                            <LazyStoryContent
+                                content={rest}
+                                className="story-content prose--card story-content--truncated"
+                            />
+                        )}
                         <div className="mt-4">
                             <span className="btn btn--secondary btn--sm" data-testid={`story-read-more-${story.id}`}>
                                 Read full story →
@@ -154,10 +186,20 @@ export const StoryCard = React.memo(({
                 </>
             )}
             {isDraft && (
-                <LazyStoryContent
-                    content={story.content}
-                    className="story-content prose--card"
-                />
+                <>
+                    {leadImage && (
+                        <LazyStoryContent
+                            content={leadImage}
+                            className="story-content prose--card"
+                        />
+                    )}
+                    {rest.trim() && (
+                        <LazyStoryContent
+                            content={rest}
+                            className="story-content prose--card story-content--truncated"
+                        />
+                    )}
+                </>
             )}
         </div>
     );
