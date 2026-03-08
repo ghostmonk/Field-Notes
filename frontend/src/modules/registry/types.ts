@@ -12,7 +12,7 @@ export interface ContentEntry {
 export interface FeedDisplayProps<T = unknown> {
     items: T[];
     renderItem: (item: T) => React.ReactNode;
-    onLoadMore: () => void;
+    onLoadMore: () => void | Promise<void>;
     hasMore: boolean;
     keyExtractor?: (item: T, index: number) => string;
 }

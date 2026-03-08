@@ -310,11 +310,10 @@ function ToolbarButton({ onClick, isActive, label, testId }: {
     label: string;
     testId: string;
 }) {
-    const baseClass = "px-2 py-1 rounded";
-    const activeClass = isActive ? 'bg-gray-200 dark:bg-gray-700' : 'bg-gray-100 dark:bg-gray-800';
+    const stateClass = isActive ? 'editor-toolbar__btn--active' : 'editor-toolbar__btn--inactive';
 
     return (
-        <button type="button" onClick={onClick} className={`${baseClass} ${activeClass}`} data-testid={testId}>
+        <button type="button" onClick={onClick} className={`editor-toolbar__btn ${stateClass}`} data-testid={testId}>
             {label}
         </button>
     );
