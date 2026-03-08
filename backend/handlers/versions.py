@@ -7,9 +7,6 @@ from models.version import ContentVersion
 
 router = APIRouter(prefix="/versions", tags=["versions"])
 
-# Re-export save_version from services for backward compatibility
-from services.versions import save_version  # noqa: E402, F401
-
 
 @router.get("/{content_type}/{content_id}")
 @requires_auth

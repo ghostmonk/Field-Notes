@@ -1,12 +1,15 @@
 from datetime import datetime, timezone
+from typing import Literal
 
 from database import get_db
 from pymongo.errors import DuplicateKeyError
 
+ContentType = Literal["story", "project", "page"]
+
 
 async def save_version(
     content_id: str,
-    content_type: str,
+    content_type: ContentType,
     title: str,
     content: str,
     user_id: str,

@@ -1,3 +1,4 @@
+import asyncio
 import re
 
 from bson import ObjectId
@@ -57,72 +58,63 @@ async def search(
 ):
     db = await get_db()
 
-    # Collect raw results from all collections before resolving sections
-    raw_results: list[dict] = []
+    text_filter = {"$text": {"$search": q}, "is_published": True, "deleted": {"$ne": True}}
+    text_proj = {"score": {"$meta": "textScore"}}
+    text_sort = [("score", {"$meta": "textScore"})]
 
-    # Search stories (published only)
-    async for doc in (
-        db.stories.find(
-            {"$text": {"$search": q}, "is_published": True, "deleted": {"$ne": True}},
-            {"score": {"$meta": "textScore"}},
-        )
-        .sort([("score", {"$meta": "textScore"})])
-        .limit(limit)
-    ):
-        raw_results.append(
-            {
-                "id": str(doc["_id"]),
-                "title": doc["title"],
-                "excerpt": make_excerpt(doc.get("content", "")),
-                "content_type": "story",
-                "slug": doc.get("slug", ""),
-                "section_id": doc.get("section_id", ""),
-                "score": doc.get("score", 0),
-            }
-        )
+    async def _search_stories():
+        results = []
+        async for doc in db.stories.find(text_filter, text_proj).sort(text_sort).limit(limit):
+            results.append(
+                {
+                    "id": str(doc["_id"]),
+                    "title": doc["title"],
+                    "excerpt": make_excerpt(doc.get("content", "")),
+                    "content_type": "story",
+                    "slug": doc.get("slug", ""),
+                    "section_id": doc.get("section_id", ""),
+                    "score": doc.get("score", 0),
+                }
+            )
+        return results
 
-    # Search projects (published only)
-    async for doc in (
-        db.projects.find(
-            {"$text": {"$search": q}, "is_published": True, "deleted": {"$ne": True}},
-            {"score": {"$meta": "textScore"}},
-        )
-        .sort([("score", {"$meta": "textScore"})])
-        .limit(limit)
-    ):
-        raw_results.append(
-            {
-                "id": str(doc["_id"]),
-                "title": doc["title"],
-                "excerpt": make_excerpt(doc.get("summary", doc.get("content", ""))),
-                "content_type": "project",
-                "slug": doc.get("slug", ""),
-                "section_id": doc.get("section_id", ""),
-                "score": doc.get("score", 0),
-            }
-        )
+    async def _search_projects():
+        results = []
+        async for doc in db.projects.find(text_filter, text_proj).sort(text_sort).limit(limit):
+            results.append(
+                {
+                    "id": str(doc["_id"]),
+                    "title": doc["title"],
+                    "excerpt": make_excerpt(doc.get("summary", doc.get("content", ""))),
+                    "content_type": "project",
+                    "slug": doc.get("slug", ""),
+                    "section_id": doc.get("section_id", ""),
+                    "score": doc.get("score", 0),
+                }
+            )
+        return results
 
-    # Search pages (published only)
-    async for doc in (
-        db.pages.find(
-            {"$text": {"$search": q}, "is_published": True, "deleted": {"$ne": True}},
-            {"score": {"$meta": "textScore"}},
-        )
-        .sort([("score", {"$meta": "textScore"})])
-        .limit(limit)
-    ):
-        raw_results.append(
-            {
-                "id": str(doc["_id"]),
-                "title": doc["title"],
-                "excerpt": make_excerpt(doc.get("content", "")),
-                "content_type": "page",
-                "slug": doc.get("page_type", ""),
-                "section_id": None,
-                "section_slug_override": doc.get("page_type"),
-                "score": doc.get("score", 0),
-            }
-        )
+    async def _search_pages():
+        results = []
+        async for doc in db.pages.find(text_filter, text_proj).sort(text_sort).limit(limit):
+            results.append(
+                {
+                    "id": str(doc["_id"]),
+                    "title": doc["title"],
+                    "excerpt": make_excerpt(doc.get("content", "")),
+                    "content_type": "page",
+                    "slug": doc.get("page_type", ""),
+                    "section_id": None,
+                    "section_slug_override": doc.get("page_type"),
+                    "score": doc.get("score", 0),
+                }
+            )
+        return results
+
+    story_results, project_results, page_results = await asyncio.gather(
+        _search_stories(), _search_projects(), _search_pages()
+    )
+    raw_results = story_results + project_results + page_results
 
     # Batch-resolve all section slugs in a single query
     section_ids = {r["section_id"] for r in raw_results if r.get("section_id")}
