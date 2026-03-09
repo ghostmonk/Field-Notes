@@ -1062,13 +1062,15 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
   z-index: 50;
   background-color: var(--color-surface-primary);
   transform: translateY(-100%);
-  transition: transform 0.3s ease-out;
+  visibility: hidden;
+  transition: transform 0.3s ease-out, visibility 0.3s;
   overflow-y: auto;
   padding-top: var(--layout-nav-height);
 }
 
 .menu-overlay--open {
   transform: translateY(0);
+  visibility: visible;
 }
 
 .menu-overlay__content {

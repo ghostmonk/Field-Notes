@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useNavSections } from "@/hooks/useNavSections";
@@ -16,6 +16,8 @@ export default function HamburgerMenu() {
     const sections = useNavSections();
     const activeSlug = useActiveSection(sections);
     const activeSectionId = sections.find(s => s.slug === activeSlug)?.id;
+    const overlayRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
 
     const close = useCallback(() => setIsOpen(false), []);
     const toggle = useCallback(() => setIsOpen(prev => !prev), []);
@@ -40,10 +42,22 @@ export default function HamburgerMenu() {
         return () => window.removeEventListener("keydown", handleKey);
     }, [isOpen, close]);
 
+    // Focus management: move focus into overlay on open, return on close
+    useEffect(() => {
+        if (isOpen) {
+            const firstLink = overlayRef.current?.querySelector<HTMLElement>("a, button");
+            firstLink?.focus();
+        } else {
+            buttonRef.current?.focus();
+        }
+    }, [isOpen]);
+
     return (
         <>
             {/* Overlay */}
             <div
+                ref={overlayRef}
+                id="menu-overlay"
                 className={`menu-overlay ${isOpen ? "menu-overlay--open" : ""}`}
                 data-testid="menu-overlay"
                 aria-hidden={!isOpen}
@@ -143,6 +157,7 @@ export default function HamburgerMenu() {
 
             {/* Hamburger trigger button */}
             <button
+                ref={buttonRef}
                 className={`hamburger ${isOpen ? "hamburger--open" : ""}`}
                 onClick={toggle}
                 aria-expanded={isOpen}

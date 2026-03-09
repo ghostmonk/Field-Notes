@@ -25,7 +25,6 @@ templates/<name>/
 - `--color-border-primary`, `--color-border-secondary`, `--color-border-focus`
 - `--color-status-success`, `--color-status-warning`, `--color-status-error`, `--color-status-info`
 - `--color-shadow-light`, `--color-shadow-medium`, `--color-shadow-dark`
-- `--color-nav-backdrop` (semi-transparent background for nav elements)
 
 ### Fonts
 - `--font-family-sans`, `--font-family-serif`, `--font-family-mono`
