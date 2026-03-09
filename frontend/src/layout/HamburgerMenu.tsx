@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { iconMap } from "@/shared/lib/navIcons";
-import { HiPlusSm, HiCog } from "react-icons/hi";
+import { HiPlusSm, HiCog, HiSearch } from "react-icons/hi";
 import { getSiteConfig } from "@/config";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -70,6 +70,21 @@ export default function HamburgerMenu() {
                                     </Link>
                                 );
                             })}
+                        </div>
+                    </div>
+
+                    {/* Search */}
+                    <div className="menu-overlay__group">
+                        <div className="menu-overlay__links">
+                            <Link
+                                href="/search"
+                                className="menu-overlay__link"
+                                data-testid="nav-search-link"
+                                onClick={close}
+                            >
+                                <HiSearch className="menu-overlay__link-icon" aria-hidden="true" />
+                                <span>Search</span>
+                            </Link>
                         </div>
                     </div>
 

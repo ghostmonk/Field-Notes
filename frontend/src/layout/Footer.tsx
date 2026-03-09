@@ -5,7 +5,7 @@ import { getSiteConfig } from '@/config';
 import { useNavSections } from '@/hooks/useNavSections';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { iconMap } from '@/shared/lib/navIcons';
-import { HiPlusSm, HiCog } from 'react-icons/hi';
+import { HiPlusSm, HiCog, HiSearch } from 'react-icons/hi';
 
 const config = getSiteConfig();
 
@@ -34,6 +34,12 @@ const Footer: React.FC = () => {
                                 </li>
                             );
                         })}
+                        <li>
+                            <Link href="/search" className="site-footer__link" data-testid="footer-search-link">
+                                <HiSearch className="site-footer__link-icon" aria-hidden="true" />
+                                Search
+                            </Link>
+                        </li>
                     </ul>
                 </div>
 
