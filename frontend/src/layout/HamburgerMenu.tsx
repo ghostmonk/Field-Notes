@@ -33,11 +33,29 @@ export default function HamburgerMenu() {
         return () => { document.documentElement.style.overflow = ""; };
     }, [isOpen]);
 
-    // Close on Escape
+    // Keyboard: Escape to close, Tab/Shift+Tab focus trap
     useEffect(() => {
         if (!isOpen) return;
         const handleKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape") close();
+            if (e.key === "Escape") {
+                close();
+                return;
+            }
+            if (e.key === "Tab" && overlayRef.current) {
+                const focusable = overlayRef.current.querySelectorAll<HTMLElement>(
+                    "a[href], button, input, select, textarea, [tabindex]:not([tabindex='-1'])"
+                );
+                if (focusable.length === 0) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
         };
         window.addEventListener("keydown", handleKey);
         return () => window.removeEventListener("keydown", handleKey);
