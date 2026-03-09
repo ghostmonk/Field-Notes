@@ -12,7 +12,7 @@ export default function TopNav() {
         <nav className="nav" data-testid="top-nav">
             <div className="nav__container">
                 <HamburgerMenu />
-                <Link href="/" data-testid="nav-home-link" className="nav__link nav__link--home">
+                <Link href="/" data-testid="nav-home-link" className="nav__link--home">
                     {config.site.title}
                 </Link>
                 <div className="flex items-center">

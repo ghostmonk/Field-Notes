@@ -18,6 +18,7 @@ export default function HamburgerMenu() {
     const activeSectionId = sections.find(s => s.slug === activeSlug)?.id;
     const overlayRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
+    const hasMounted = useRef(false);
 
     const close = useCallback(() => setIsOpen(false), []);
     const toggle = useCallback(() => setIsOpen(prev => !prev), []);
@@ -44,6 +45,10 @@ export default function HamburgerMenu() {
 
     // Focus management: move focus into overlay on open, return on close
     useEffect(() => {
+        if (!hasMounted.current) {
+            hasMounted.current = true;
+            return;
+        }
         if (isOpen) {
             const firstLink = overlayRef.current?.querySelector<HTMLElement>("a, button");
             firstLink?.focus();
@@ -158,7 +163,7 @@ export default function HamburgerMenu() {
             {/* Hamburger trigger button */}
             <button
                 ref={buttonRef}
-                className={`hamburger ${isOpen ? "hamburger--open" : ""}`}
+                className={isOpen ? "hamburger hamburger--open" : "hamburger"}
                 onClick={toggle}
                 aria-expanded={isOpen}
                 aria-controls="menu-overlay"
