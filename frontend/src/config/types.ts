@@ -2,13 +2,6 @@ export interface HeroConfig {
   showOnHome: boolean;
 }
 
-export interface LayoutConfig {
-  navigation: {
-    desktop: "top";
-    mobile: "bottom";
-  };
-}
-
 export interface TemplateConfig {
   active: string;
 }

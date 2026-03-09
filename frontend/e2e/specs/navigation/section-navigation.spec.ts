@@ -5,13 +5,14 @@ import { ContactPage } from '../../page-objects/contact.page';
 import { ProjectsPage } from '../../page-objects/projects.page';
 
 test.describe('Section Navigation', () => {
-  test.describe('Desktop Navigation (Top Nav)', () => {
-    test('displays all section links', async ({ mockApiPage }) => {
+  test.describe('Menu Navigation', () => {
+    test('displays all section links in menu', async ({ mockApiPage }) => {
       const homePage = new HomePage(mockApiPage);
 
       await homePage.goto();
+      await homePage.nav.openMenu();
 
-      // Verify all section links are visible
+      // Verify all section links are visible in the menu overlay
       await expect(homePage.nav.blogLink).toBeVisible();
       await expect(homePage.nav.aboutLink).toBeVisible();
       await expect(homePage.nav.projectsLink).toBeVisible();

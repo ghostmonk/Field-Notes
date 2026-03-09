@@ -79,8 +79,6 @@
 
   --color-surface-draft: rgb(254 252 232);
   --color-border-draft: rgb(254 240 138);
-
-  --color-nav-backdrop: rgba(255, 255, 255, 0.95);
 }
 
 .dark {
@@ -107,6 +105,4 @@
 
   --color-surface-draft: rgb(120 113 108 / 0.2);
   --color-border-draft: rgb(133 77 14);
-
-  --color-nav-backdrop: rgba(15, 23, 42, 0.95);
 }
