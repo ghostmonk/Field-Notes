@@ -48,9 +48,7 @@ export class TopNavComponent {
   }
 
   async openMenu() {
-    const isOpen = await this.menuOverlay.evaluate(
-      el => el.classList.contains('menu-overlay--open')
-    );
+    const isOpen = await this.hamburgerButton.getAttribute('aria-expanded') === 'true';
     if (!isOpen) {
       await this.hamburgerButton.click();
       await this.menuOverlay.waitFor({ state: 'visible' });
@@ -58,11 +56,10 @@ export class TopNavComponent {
   }
 
   async closeMenu() {
-    const isOpen = await this.menuOverlay.evaluate(
-      el => el.classList.contains('menu-overlay--open')
-    );
+    const isOpen = await this.hamburgerButton.getAttribute('aria-expanded') === 'true';
     if (isOpen) {
       await this.hamburgerButton.click();
+      await this.menuOverlay.waitFor({ state: 'hidden' });
     }
   }
 
