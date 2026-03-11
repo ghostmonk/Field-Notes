@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-03-10-photo-essays': 'Photo Essays',
   '2026-03-07-image-enhancement': 'Image Enhancement',
   '2026-03-07-image-enhancement-implementation': 'Image Enhancement Implementation',
   '2026-03-07-ux-review-design': 'UX Review',
