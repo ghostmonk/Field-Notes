@@ -455,8 +455,10 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
                 if (!essayRes.ok) {
                     return { notFound: true };
                 }
-                const essay = await essayRes.json();
+                const essay: PhotoEssay = await essayRes.json();
                 detailItem = essay;
+                ogImage = essay.cover_image_url;
+                excerpt = essay.description;
             }
 
             if (!detailItem) {
