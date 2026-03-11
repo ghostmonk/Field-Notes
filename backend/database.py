@@ -136,6 +136,11 @@ async def get_navlinks_collection() -> AsyncIOMotorCollection:
     return db["navlinks"]
 
 
+async def get_photo_essays_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["photo_essays"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
