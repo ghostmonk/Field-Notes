@@ -7,7 +7,11 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from database import get_db, get_photo_essays_collection
-from decorators.auth import check_write_permission, requires_auth
+from decorators.auth import (
+    check_write_permission,
+    requires_auth,
+    verify_auth_and_get_user,
+)
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
 from middleware.rate_limit import limiter
@@ -31,11 +35,18 @@ async def get_photo_essays_by_section(
     section_id: str,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    include_unpublished: bool = Query(False),
     collection: AsyncIOMotorCollection = Depends(get_photo_essays_collection),
 ):
-    """Get published photo essays for a section (landing page)."""
+    """Get photo essays for a section (landing page)."""
     try:
-        query = {"section_id": section_id, "is_published": True, "deleted": {"$ne": True}}
+        # Require authentication to view unpublished essays
+        if include_unpublished:
+            await verify_auth_and_get_user(request)
+
+        query = {"section_id": section_id, "deleted": {"$ne": True}}
+        if not include_unpublished:
+            query["is_published"] = True
         sort = [("createdDate", -1)]
 
         logger.info_with_context(
@@ -97,11 +108,7 @@ async def get_photo_essays_by_section(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while fetching photo essays",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while fetching photo essays",
         )
 
 
@@ -119,9 +126,17 @@ async def get_photo_essay(
 
         logger.info_with_context("Fetching photo essay by ID", {"essay_id": essay_id})
 
+        query = {"_id": ObjectId(essay_id), "deleted": {"$ne": True}}
+
+        # Only require is_published for unauthenticated requests
+        try:
+            await verify_auth_and_get_user(request)
+        except HTTPException:
+            query["is_published"] = True
+
         essay = await find_one_and_convert(
             collection,
-            {"_id": ObjectId(essay_id), "deleted": {"$ne": True}, "is_published": True},
+            query,
             PhotoEssayResponse,
         )
 
@@ -150,11 +165,7 @@ async def get_photo_essay(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while fetching the photo essay",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while fetching the photo essay",
         )
 
 
@@ -255,11 +266,7 @@ async def create_photo_essay(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while creating the photo essay",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while creating the photo essay",
         )
 
 
@@ -317,8 +324,8 @@ async def update_photo_essay(
 
         current_time = datetime.now(timezone.utc)
 
-        # Build update data from non-None fields
-        update_data = {k: v for k, v in essay.model_dump().items() if v is not None}
+        # Build update data from explicitly provided fields
+        update_data = essay.model_dump(exclude_unset=True)
         update_data["updatedDate"] = current_time
 
         # If title changed, regenerate the slug
@@ -331,7 +338,9 @@ async def update_photo_essay(
         if "photos" in update_data:
             update_data["photo_count"] = len(update_data["photos"])
 
-        result = await collection.update_one({"_id": ObjectId(essay_id)}, {"$set": update_data})
+        result = await collection.update_one(
+            {"_id": ObjectId(essay_id), "deleted": {"$ne": True}}, {"$set": update_data}
+        )
 
         if result.modified_count == 0 and result.matched_count == 0:
             logger.error_with_context(
@@ -386,11 +395,7 @@ async def update_photo_essay(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while updating the photo essay",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while updating the photo essay",
         )
 
 
@@ -472,9 +477,5 @@ async def delete_photo_essay(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while deleting the photo essay",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while deleting the photo essay",
         )

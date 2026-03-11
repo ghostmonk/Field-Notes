@@ -9,9 +9,7 @@ interface Props {
 export function MasonryGrid({ photos, onPhotoClick }: Props) {
     return (
         <div className="masonry-grid" data-testid="masonry-grid">
-            {photos
-                .sort((a, b) => a.sort_order - b.sort_order)
-                .map((photo, index) => (
+            {photos.map((photo, index) => (
                     <button
                         key={`${photo.url}-${index}`}
                         className="masonry-grid__item"

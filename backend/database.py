@@ -252,6 +252,17 @@ async def ensure_indexes() -> None:
     await safe_create_index(navlinks, [("sort_order", 1)])
     await safe_create_index(navlinks, "is_published")
 
+    # Photo essays indexes
+    photo_essays = db["photo_essays"]
+    if not await safe_create_index(photo_essays, "slug", unique=True):
+        failed_indexes.append("photo_essays.slug")
+    await safe_create_index(
+        photo_essays,
+        [("section_id", 1), ("is_published", 1), ("deleted", 1), ("createdDate", -1)],
+        name="photo_essays_section_listing",
+    )
+    await safe_create_index(photo_essays, "user_id")
+
     # Content versions indexes
     content_versions = db["content_versions"]
     if not await safe_create_index(

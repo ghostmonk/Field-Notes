@@ -22,6 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     apiLogger.logApiRequest(req, res);
 
     try {
+        const token = await getToken({ req });
+
         // Check cache for GET requests
         if (req.method === 'GET') {
             const cacheKey = getListCacheKey(req.query);
@@ -37,8 +39,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Require auth for mutations
         if (req.method !== 'GET') {
-            const token = await getToken({ req });
-
             if (!token || !token.accessToken) {
                 return res.status(401).json({
                     detail: 'Not authenticated',
@@ -48,8 +48,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             invalidatePhotoEssayCache();
         }
-
-        const token = await getToken({ req });
 
         // Build URL — GET lists use /photo-essays/section/{section_id}
         let apiUrl: string;
@@ -71,23 +69,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 apiUrl += `?${params.toString()}`;
             }
         } else if (req.method === 'GET') {
-            // No section_id — fall back to a default listing
-            apiUrl = `${API_BASE_URL}/photo-essays/section/all`;
-            const params = new URLSearchParams();
-
-            if (req.query.limit) {
-                params.append('limit', req.query.limit.toString());
-            }
-            if (req.query.offset) {
-                params.append('offset', req.query.offset.toString());
-            }
-            if (token?.accessToken) {
-                params.append('include_unpublished', 'true');
-            }
-
-            if (params.toString()) {
-                apiUrl += `?${params.toString()}`;
-            }
+            return res.status(400).json({
+                detail: 'section_id query parameter is required',
+                error: 'Missing required parameter'
+            });
         } else {
             apiUrl = `${API_BASE_URL}/photo-essays`;
         }
