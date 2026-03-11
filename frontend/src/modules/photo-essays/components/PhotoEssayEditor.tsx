@@ -82,6 +82,8 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
 
     const startIndex = photos.length;
 
+    const failures: string[] = [];
+
     await Promise.all(
       Array.from(files).map(async (file, i) => {
         const formData = new FormData();
@@ -94,7 +96,8 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
           });
 
           if (!response.ok) {
-            throw new Error(`Upload failed: ${response.statusText}`);
+            const errData = await response.json().catch(() => null);
+            throw new Error(errData?.detail || errData?.error || response.statusText);
           }
 
           const data = await response.json();
@@ -114,12 +117,21 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
             )
           );
         } catch (err) {
-          console.error('Upload failed:', err);
-          setPhotos(prev => prev.filter((_, idx) => idx !== startIndex + i));
-          setError(`Failed to upload ${file.name}`);
+          failures.push(file.name);
+          setPhotos(prev =>
+            prev.map((p, idx) =>
+              idx === startIndex + i ? { ...p, uploading: false, url: '' } : p
+            )
+          );
         }
       })
     );
+
+    // Remove all failed uploads and report once
+    if (failures.length > 0) {
+      setPhotos(prev => prev.filter(p => p.url !== ''));
+      setError(`Failed to upload: ${failures.join(', ')}`);
+    }
   }, [photos.length]);
 
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, index: number) => {
