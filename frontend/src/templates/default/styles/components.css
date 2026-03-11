@@ -1257,3 +1257,131 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
     transition: none;
   }
 }
+
+/* Photo Essay — Gallery Landing */
+.gallery-landing {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-8);
+}
+
+.gallery-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: transform var(--transition-normal);
+    background: var(--color-surface-primary);
+    border: 1px solid var(--color-border-primary);
+}
+
+.gallery-card:hover {
+    transform: translateY(-2px);
+}
+
+.gallery-card__image-wrapper {
+    width: 100%;
+    overflow: hidden;
+}
+
+.gallery-card__image {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    max-height: 500px;
+}
+
+.gallery-card__info {
+    padding: var(--spacing-4) var(--spacing-6);
+}
+
+.gallery-card__title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    margin: 0 0 var(--spacing-2);
+}
+
+.gallery-card__description {
+    color: var(--color-text-secondary);
+    margin: 0 0 var(--spacing-2);
+}
+
+.gallery-card__date {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+}
+
+/* Photo Essay — Masonry Grid */
+.masonry-grid {
+    columns: 1;
+    column-gap: var(--spacing-4);
+}
+
+@media (min-width: 640px) {
+    .masonry-grid {
+        columns: 2;
+    }
+}
+
+@media (min-width: 1024px) {
+    .masonry-grid {
+        columns: 3;
+    }
+}
+
+.masonry-grid__item {
+    break-inside: avoid;
+    margin-bottom: var(--spacing-4);
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    position: relative;
+}
+
+.masonry-grid__image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.masonry-grid__caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--spacing-3) var(--spacing-4);
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    color: white;
+    font-size: var(--font-size-sm);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.masonry-grid__item:hover .masonry-grid__caption,
+.masonry-grid__item:focus-visible .masonry-grid__caption {
+    opacity: 1;
+}
+
+/* Photo Essay — Detail Page */
+.photo-essay-page__header {
+    margin-bottom: var(--spacing-8);
+}
+
+.photo-essay-page__title {
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    margin: 0 0 var(--spacing-3);
+}
+
+.photo-essay-page__description {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+    margin: 0;
+}

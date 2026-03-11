@@ -6,13 +6,13 @@ import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
-import { Section, Story, Project, Page, PaginatedResponse, ProjectCard as ProjectCardType, PhotoEssayCard as PhotoEssayCardType, BulkCountsResponse } from '@/shared/types/api';
+import { Section, Story, Project, Page, PaginatedResponse, ProjectCard as ProjectCardType, PhotoEssayCard as PhotoEssayCardType, PhotoEssay, BulkCountsResponse } from '@/shared/types/api';
 import { displayRegistry, useFetchContent } from '@/modules/registry';
 import type { ContentType, DisplayType } from '@/modules/registry';
 import { StoryCard } from '@/modules/stories';
 import { useStoryMutations } from '@/modules/stories';
 import { ProjectCard } from '@/modules/projects';
-import { PhotoEssayCard } from '@/modules/photo-essays';
+import { PhotoEssayCard, PhotoEssayPage } from '@/modules/photo-essays';
 import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
@@ -26,7 +26,7 @@ interface SectionPageProps {
     section: Section;
     view: 'list' | 'detail' | 'static-page';
     initialListData?: PaginatedResponse<any>;
-    detailItem?: Story | Project | null;
+    detailItem?: Story | Project | PhotoEssay | null;
     pageContent?: Page | null;
     ogImage?: string;
     excerpt?: string;
@@ -216,7 +216,7 @@ function SectionListView({ section, initialListData }: { section: Section; initi
     );
 }
 
-function SectionDetailView({ section, item }: { section: Section; item: Story | Project }) {
+function SectionDetailView({ section, item }: { section: Section; item: Story | Project | PhotoEssay }) {
     const contentType = section.content_type as ContentType;
 
     if (contentType === 'story') {
@@ -245,6 +245,19 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
                     { label: project.title },
                 ]} />
                 <ProjectDetail project={project} />
+            </div>
+        );
+    }
+
+    if (contentType === 'photo_essay') {
+        const essay = item as PhotoEssay;
+        return (
+            <div className="page-container">
+                <Breadcrumbs items={[
+                    { label: section.title, href: `/${section.slug}` },
+                    { label: essay.title },
+                ]} />
+                <PhotoEssayPage essay={essay} />
             </div>
         );
     }
@@ -375,7 +388,7 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
     // Detail view (2 segments)
     if (itemSlug) {
         try {
-            let detailItem: Story | Project | null = null;
+            let detailItem: Story | Project | PhotoEssay | null = null;
             let ogImage: string | undefined;
             let excerpt: string | undefined;
 
@@ -398,6 +411,13 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
                 const project: Project = await projectRes.json();
                 detailItem = project;
                 excerpt = project.summary;
+            } else if (contentType === 'photo_essay') {
+                const essayRes = await fetch(`${API_BASE_URL}/photo-essays/${itemSlug}`);
+                if (!essayRes.ok) {
+                    return { notFound: true };
+                }
+                const essay = await essayRes.json();
+                detailItem = essay;
             }
 
             if (!detailItem) {
