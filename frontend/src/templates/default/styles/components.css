@@ -1385,3 +1385,108 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
     font-size: var(--font-size-lg);
     margin: 0;
 }
+
+/* Photo Viewer — Fullscreen Overlay */
+.photo-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--color-bg-overlay, rgba(0, 0, 0, 0.85));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-viewer__content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.photo-viewer__image {
+    max-width: 90vw;
+    max-height: 85vh;
+    object-fit: contain;
+}
+
+.photo-viewer__caption {
+    color: white;
+    text-align: center;
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-sm);
+    max-width: 600px;
+    margin: var(--spacing-2) 0 0;
+}
+
+.photo-viewer__counter {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-2);
+}
+
+.photo-viewer__nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-normal);
+}
+
+.photo-viewer__nav:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.photo-viewer__nav--prev {
+    left: var(--spacing-4);
+}
+
+.photo-viewer__nav--next {
+    right: var(--spacing-4);
+}
+
+.photo-viewer__close {
+    position: fixed;
+    top: var(--spacing-4);
+    right: var(--spacing-4);
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-viewer__toggle-captions {
+    position: fixed;
+    bottom: var(--spacing-4);
+    right: var(--spacing-4);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background var(--transition-normal);
+}
+
+.photo-viewer__toggle-captions:hover {
+    background: rgba(255, 255, 255, 0.25);
+}

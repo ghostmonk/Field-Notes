@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { PhotoEssay } from '@/shared/types/api';
 import { MasonryGrid } from './MasonryGrid';
+import { PhotoViewer } from './PhotoViewer';
 
 interface Props {
     essay: PhotoEssay;
 }
 
 export function PhotoEssayPage({ essay }: Props) {
-    const [_viewerIndex, setViewerIndex] = useState<number | null>(null);
+    const [viewerIndex, setViewerIndex] = useState<number | null>(null);
     const sortedPhotos = [...essay.photos].sort((a, b) => a.sort_order - b.sort_order);
 
     return (
@@ -24,7 +25,13 @@ export function PhotoEssayPage({ essay }: Props) {
                 onPhotoClick={setViewerIndex}
             />
 
-            {/* PhotoViewer will be added in Task 7 */}
+            {viewerIndex !== null && (
+                <PhotoViewer
+                    photos={sortedPhotos}
+                    initialIndex={viewerIndex}
+                    onClose={() => setViewerIndex(null)}
+                />
+            )}
         </div>
     );
 }
