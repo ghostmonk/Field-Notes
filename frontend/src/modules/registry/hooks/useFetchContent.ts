@@ -28,6 +28,7 @@ const contentFetchers: Record<ContentType, (token?: string, params?: Record<stri
     story: (token, params) => apiClient.stories.list(token, params),
     project: (_token, params) => apiClient.projects.list(params),
     page: () => Promise.resolve({ items: [], total: 0, limit: 0, offset: 0 }),
+    photo_essay: (_token, params) => apiClient.photoEssays.list(params),
 };
 
 export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetchContentReturn<T> {

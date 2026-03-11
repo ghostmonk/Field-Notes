@@ -6,12 +6,13 @@ import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
-import { Section, Story, Project, Page, PaginatedResponse, ProjectCard as ProjectCardType, BulkCountsResponse } from '@/shared/types/api';
+import { Section, Story, Project, Page, PaginatedResponse, ProjectCard as ProjectCardType, PhotoEssayCard as PhotoEssayCardType, BulkCountsResponse } from '@/shared/types/api';
 import { displayRegistry, useFetchContent } from '@/modules/registry';
 import type { ContentType, DisplayType } from '@/modules/registry';
 import { StoryCard } from '@/modules/stories';
 import { useStoryMutations } from '@/modules/stories';
 import { ProjectCard } from '@/modules/projects';
+import { PhotoEssayCard } from '@/modules/photo-essays';
 import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
@@ -145,6 +146,12 @@ function SectionListView({ section, initialListData }: { section: Section; initi
                 return <ProjectCard key={project.id} project={project} basePath={basePath} />;
             };
         }
+        if (contentType === 'photo_essay') {
+            return (item: unknown) => {
+                const essay = item as PhotoEssayCardType;
+                return <PhotoEssayCard key={essay.id} essay={essay} basePath={basePath} />;
+            };
+        }
         return (item: unknown) => {
             const data = item as { id: string; title: string };
             return <div key={data.id}>{data.title}</div>;
@@ -179,6 +186,15 @@ function SectionListView({ section, initialListData }: { section: Section; initi
     }
 
     const DisplayComponent = displayRegistry[displayType];
+
+    if (displayType === 'gallery') {
+        return (
+            <DisplayComponent
+                items={items}
+                renderItem={renderItem}
+            />
+        );
+    }
 
     if (displayType === 'feed') {
         return (
@@ -413,6 +429,11 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
             }
         } else if (contentType === 'project') {
             const listRes = await fetch(`${API_BASE_URL}/projects?limit=10&offset=0&section_id=${section.id}`);
+            if (listRes.ok) {
+                initialListData = await listRes.json();
+            }
+        } else if (contentType === 'photo_essay') {
+            const listRes = await fetch(`${API_BASE_URL}/photo-essays/section/${section.id}?limit=20&offset=0`);
             if (listRes.ok) {
                 initialListData = await listRes.json();
             }

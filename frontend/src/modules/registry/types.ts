@@ -1,7 +1,7 @@
 import React from 'react';
 
-export type DisplayType = 'feed' | 'card-grid' | 'static-page';
-export type ContentType = 'story' | 'project' | 'page';
+export type DisplayType = 'feed' | 'card-grid' | 'static-page' | 'gallery';
+export type ContentType = 'story' | 'project' | 'page' | 'photo_essay';
 
 export interface ContentEntry {
     // Components stored as references; prop typing enforced at consumption site (Phase 4)
@@ -25,4 +25,9 @@ export interface CardGridDisplayProps<T = unknown> {
 export interface StaticPageDisplayProps {
     content: string;
     title?: string;
+}
+
+export interface GalleryDisplayProps<T = unknown> {
+    items: T[];
+    renderItem: (item: T) => React.ReactNode;
 }
