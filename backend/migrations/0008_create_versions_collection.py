@@ -5,7 +5,8 @@ dependencies = ["0007_add_text_indexes"]
 
 
 def upgrade(db):
-    db.create_collection("content_versions")
+    if "content_versions" not in db.list_collection_names():
+        db.create_collection("content_versions")
     db.content_versions.create_index(
         [("content_id", 1), ("version", -1)],
         name="content_versions_lookup",
