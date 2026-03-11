@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef, DragEvent } from 'react';
+import { useState, useEffect, useCallback, useRef, DragEvent, MouseEvent as ReactMouseEvent } from 'react';
 import { useRouter } from 'next/router';
 import apiClient from '@/shared/lib/api-client';
+import { resizeImageFile } from '@/shared/utils/uploadUtils';
 
 interface EditorPhoto {
   url: string;
@@ -27,6 +28,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   const [photos, setPhotos] = useState<EditorPhoto[]>([]);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
+  const [coverPosition, setCoverPosition] = useState('center center');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!essayId);
@@ -43,6 +45,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
       setTitle(essay.title);
       setDescription(essay.description || '');
       setCoverUrl(essay.cover_image_url);
+      setCoverPosition(essay.cover_image_position || 'center center');
       setIsPublished(essay.is_published);
       setPhotos(
         essay.photos.map((p, i) => ({
@@ -86,8 +89,9 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
 
     await Promise.all(
       Array.from(files).map(async (file, i) => {
+        const resized = await resizeImageFile(file);
         const formData = new FormData();
-        formData.append('files', file);
+        formData.append('files', resized);
 
         try {
           const response = await fetch('/api/upload-proxy', {
@@ -194,6 +198,17 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
     setCoverUrl(url);
   }, []);
 
+  const positionPreviewRef = useRef<HTMLDivElement>(null);
+
+  const handlePositionClick = useCallback((e: ReactMouseEvent<HTMLDivElement>) => {
+    const container = positionPreviewRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const xPct = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    const yPct = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    setCoverPosition(`${xPct}% ${yPct}%`);
+  }, []);
+
   const handleSave = useCallback(async () => {
     if (!title.trim()) {
       setError('Title is required.');
@@ -228,6 +243,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
           title: title.trim(),
           description: description.trim() || undefined,
           cover_image_url: effectiveCover,
+          cover_image_position: coverPosition,
           photos: photoItems,
           is_published: isPublished,
         }, token);
@@ -236,6 +252,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
           title: title.trim(),
           description: description.trim() || undefined,
           cover_image_url: effectiveCover,
+          cover_image_position: coverPosition,
           photos: photoItems,
           section_id: sectionId,
           is_published: isPublished,
@@ -248,7 +265,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
     } finally {
       setSaving(false);
     }
-  }, [title, description, photos, coverUrl, isPublished, essayId, sectionId, token, router]);
+  }, [title, description, photos, coverUrl, coverPosition, isPublished, essayId, sectionId, token, router]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -256,9 +273,33 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
 
   const uploading = photos.some(p => p.uploading);
 
+  const effectiveCoverUrl = coverUrl || (photos.find(p => !p.uploading && p.url)?.url ?? null);
+
   return (
     <div className="photo-essay-editor" data-testid="photo-essay-editor">
-      <h1 className="page-title">{essayId ? 'Edit Photo Essay' : 'New Photo Essay'}</h1>
+      <div className="photo-essay-editor__top-bar">
+        <h1 className="page-title">{essayId ? 'Edit Photo Essay' : 'New Photo Essay'}</h1>
+        <div className="photo-essay-editor__top-actions">
+          <label className="photo-essay-editor__publish-toggle">
+            <input
+              type="checkbox"
+              checked={isPublished}
+              onChange={e => setIsPublished(e.target.checked)}
+              data-testid="photo-essay-publish-toggle"
+            />
+            {' '}Publish
+          </label>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={handleSave}
+            disabled={saving || uploading}
+            data-testid="photo-essay-save-btn"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
 
       {error && (
         <div className="error-state mb-lg">
@@ -377,26 +418,35 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
         </div>
       )}
 
-      <div className="photo-essay-editor__actions">
-        <label className="photo-essay-editor__publish-toggle">
-          <input
-            type="checkbox"
-            checked={isPublished}
-            onChange={e => setIsPublished(e.target.checked)}
-            data-testid="photo-essay-publish-toggle"
-          />
-          {' '}Publish
-        </label>
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={handleSave}
-          disabled={saving || uploading}
-          data-testid="photo-essay-save-btn"
-        >
-          {saving ? 'Saving...' : 'Save'}
-        </button>
-      </div>
+      {effectiveCoverUrl && (
+        <div className="photo-essay-editor__field">
+          <label>Cover Image Position</label>
+          <p className="photo-essay-editor__hint">Click on the preview to set the focal point for the cover card.</p>
+          <div
+            ref={positionPreviewRef}
+            className="photo-essay-editor__position-preview"
+            onClick={handlePositionClick}
+            data-testid="photo-essay-position-preview"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={effectiveCoverUrl}
+              alt="Cover preview"
+              className="photo-essay-editor__position-image"
+              style={{ objectPosition: coverPosition }}
+              data-no-zoom="true"
+            />
+            <div
+              className="photo-essay-editor__position-marker"
+              style={{
+                left: coverPosition.split(' ')[0],
+                top: coverPosition.split(' ')[1] || coverPosition.split(' ')[0],
+              }}
+              data-testid="photo-essay-position-marker"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

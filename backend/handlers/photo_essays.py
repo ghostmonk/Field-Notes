@@ -54,6 +54,7 @@ async def get_photo_essays_by_section(
             "title": 1,
             "description": 1,
             "cover_image_url": 1,
+            "cover_image_position": 1,
             "is_published": 1,
             "section_id": 1,
             "createdDate": 1,

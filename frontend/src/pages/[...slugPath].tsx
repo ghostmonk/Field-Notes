@@ -216,6 +216,51 @@ function SectionListView({ section, initialListData }: { section: Section; initi
     );
 }
 
+function PhotoEssayDetailView({ section, essay }: { section: Section; essay: PhotoEssay }) {
+    const { data: session } = useSession();
+    const router = useRouter();
+    const confirm = useConfirm();
+    const { showToast } = useToast();
+
+    const handleEdit = useCallback(() => {
+        router.push({ pathname: '/editor', query: { id: essay.id, section_id: section.id } });
+    }, [router, essay.id, section.id]);
+
+    const handleDelete = useCallback(async () => {
+        if (!session?.accessToken) return;
+        const confirmed = await confirm({
+            title: 'Delete Photo Essay',
+            message: `Are you sure you want to delete "${essay.title}"? This action cannot be undone.`,
+            confirmLabel: 'Delete',
+            destructive: true,
+        });
+        if (!confirmed) return;
+        try {
+            await apiClient.photoEssays.delete(essay.id, session.accessToken);
+            showToast('Photo essay deleted');
+            router.push(`/${section.slug}`);
+        } catch {
+            showToast('Failed to delete photo essay');
+        }
+    }, [session, essay.id, essay.title, section.slug, router, confirm, showToast]);
+
+    const isAdmin = session?.user?.role === 'admin';
+
+    return (
+        <div className="page-container">
+            <Breadcrumbs items={[
+                { label: section.title, href: `/${section.slug}` },
+                { label: essay.title },
+            ]} />
+            <PhotoEssayPage
+                essay={essay}
+                onEdit={isAdmin ? handleEdit : undefined}
+                onDelete={isAdmin ? handleDelete : undefined}
+            />
+        </div>
+    );
+}
+
 function SectionDetailView({ section, item }: { section: Section; item: Story | Project | PhotoEssay }) {
     const contentType = section.content_type as ContentType;
 
@@ -252,13 +297,7 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
     if (contentType === 'photo_essay') {
         const essay = item as PhotoEssay;
         return (
-            <div className="page-container">
-                <Breadcrumbs items={[
-                    { label: section.title, href: `/${section.slug}` },
-                    { label: essay.title },
-                ]} />
-                <PhotoEssayPage essay={essay} />
-            </div>
+            <PhotoEssayDetailView section={section} essay={essay} />
         );
     }
 

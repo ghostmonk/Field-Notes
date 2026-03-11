@@ -54,6 +54,18 @@ export default function EditorPage() {
         });
       })
       .catch(() => {
+        if (cancelled) return;
+        // Try as photo essay by ID
+        return apiClient.photoEssays.getById(editId).then(essay => {
+          if (cancelled) return;
+          if (essay.section_id) {
+            router.replace({ pathname: '/editor', query: { id: editId, section_id: essay.section_id } }, undefined, { shallow: true });
+          } else {
+            setSectionError('This content has no section assigned. Edit it from its section page instead.');
+          }
+        });
+      })
+      .catch(() => {
         if (!cancelled) setSectionError('Content not found.');
       })
       .finally(() => { if (!cancelled) setLoadingSection(false); });
@@ -61,10 +73,10 @@ export default function EditorPage() {
     return () => { cancelled = true; };
   }, [editId, sectionId, accessToken, router]);
 
-  // Fetch section when section_id is provided
+  // Fetch section when section_id is provided (wait for session to load)
   useEffect(() => {
-    if (!sectionId) {
-      setSection(null);
+    if (!sectionId || status === 'loading') {
+      if (!sectionId) setSection(null);
       return;
     }
 
@@ -78,7 +90,7 @@ export default function EditorPage() {
       .finally(() => { if (!cancelled) setLoadingSection(false); });
 
     return () => { cancelled = true; };
-  }, [sectionId, session?.accessToken]);
+  }, [sectionId, status, session?.accessToken]);
 
   const handleSectionSelect = useCallback((s: Section) => {
     router.push(`/editor?section_id=${s.id}`);

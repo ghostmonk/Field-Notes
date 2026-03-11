@@ -1,48 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
-
-// Simple in-memory cache for photo essays
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-function getCacheKey(req: NextApiRequest): string {
-    const { limit, offset, section_id } = req.query;
-    return `photo-essays:${limit || 'all'}:${offset || 0}:${section_id || 'none'}`;
-}
-
-function getFromCache(key: string): any | null {
-    const cached = cache.get(key);
-    if (!cached) return null;
-
-    if (Date.now() - cached.timestamp > cached.ttl) {
-        cache.delete(key);
-        return null;
-    }
-
-    return cached.data;
-}
-
-function setCache(key: string, data: any, ttl: number): void {
-    cache.set(key, {
-        data,
-        timestamp: Date.now(),
-        ttl
-    });
-}
-
-function invalidateCache(pattern?: string): void {
-    if (!pattern) {
-        cache.clear();
-        return;
-    }
-
-    for (const key of cache.keys()) {
-        if (key.includes(pattern)) {
-            cache.delete(key);
-        }
-    }
-}
+import {
+    CACHE_TTL,
+    getListCacheKey,
+    getFromCache,
+    setCache,
+    invalidatePhotoEssayCache,
+} from '@/shared/lib/photo-essay-cache';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
@@ -59,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         // Check cache for GET requests
         if (req.method === 'GET') {
-            const cacheKey = getCacheKey(req);
+            const cacheKey = getListCacheKey(req.query);
             const cachedData = getFromCache(cacheKey);
 
             if (cachedData) {
@@ -81,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 });
             }
 
-            invalidateCache('photo-essays');
+            invalidatePhotoEssayCache();
         }
 
         const token = await getToken({ req });
@@ -160,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Cache successful GET responses
         if (req.method === 'GET') {
-            const cacheKey = getCacheKey(req);
+            const cacheKey = getListCacheKey(req.query);
             setCache(cacheKey, data, CACHE_TTL);
             res.setHeader('Cache-Control', 'private, no-store');
             res.setHeader('X-Cache', 'MISS');

@@ -1,43 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
-
-// Simple in-memory cache
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-function getFromCache(key: string): any | null {
-    const cached = cache.get(key);
-    if (!cached) return null;
-
-    if (Date.now() - cached.timestamp > cached.ttl) {
-        cache.delete(key);
-        return null;
-    }
-
-    return cached.data;
-}
-
-function setCache(key: string, data: any, ttl: number): void {
-    cache.set(key, {
-        data,
-        timestamp: Date.now(),
-        ttl
-    });
-}
-
-function invalidateCache(pattern?: string): void {
-    if (!pattern) {
-        cache.clear();
-        return;
-    }
-
-    for (const key of cache.keys()) {
-        if (key.includes(pattern)) {
-            cache.delete(key);
-        }
-    }
-}
+import {
+    CACHE_TTL,
+    getDetailCacheKey,
+    getFromCache,
+    setCache,
+    invalidatePhotoEssayCache,
+} from '@/shared/lib/photo-essay-cache';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
@@ -64,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Check cache for GET requests
         if (req.method === 'GET') {
-            const cacheKey = `photo-essay:${id}`;
+            const cacheKey = getDetailCacheKey(id);
             const cachedData = getFromCache(cacheKey);
 
             if (cachedData) {
@@ -84,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 });
             }
 
-            invalidateCache('photo-essay');
+            invalidatePhotoEssayCache();
         }
 
         const apiUrl = `${API_BASE_URL}/photo-essays/${id}`;
@@ -135,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Cache successful GET responses
         if (req.method === 'GET') {
-            const cacheKey = `photo-essay:${id}`;
+            const cacheKey = getDetailCacheKey(id);
             setCache(cacheKey, data, CACHE_TTL);
             res.setHeader('Cache-Control', 'private, no-store');
             res.setHeader('X-Cache', 'MISS');

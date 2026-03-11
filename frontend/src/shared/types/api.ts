@@ -190,6 +190,7 @@ export interface PhotoEssay {
     title: string;
     description?: string;
     cover_image_url: string;
+    cover_image_position?: string;
     photos: PhotoItem[];
     is_published: boolean;
     section_id?: string;
@@ -206,6 +207,7 @@ export interface PhotoEssayCard {
     title: string;
     description?: string;
     cover_image_url: string;
+    cover_image_position?: string;
     is_published: boolean;
     photo_count: number;
     section_id?: string;
@@ -220,6 +222,7 @@ export interface CreatePhotoEssayRequest {
     title: string;
     description?: string;
     cover_image_url: string;
+    cover_image_position?: string;
     photos: PhotoItem[];
     section_id?: string;
     is_published?: boolean;
@@ -232,6 +235,7 @@ export interface UpdatePhotoEssayRequest {
     title?: string;
     description?: string;
     cover_image_url?: string;
+    cover_image_position?: string;
     photos?: PhotoItem[];
     is_published?: boolean;
 }

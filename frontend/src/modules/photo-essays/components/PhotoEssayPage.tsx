@@ -5,9 +5,11 @@ import { PhotoViewer } from './PhotoViewer';
 
 interface Props {
     essay: PhotoEssay;
+    onEdit?: () => void;
+    onDelete?: () => void;
 }
 
-export function PhotoEssayPage({ essay }: Props) {
+export function PhotoEssayPage({ essay, onEdit, onDelete }: Props) {
     const [viewerIndex, setViewerIndex] = useState<number | null>(null);
     const sortedPhotos = [...essay.photos].sort((a, b) => a.sort_order - b.sort_order);
 
@@ -17,6 +19,20 @@ export function PhotoEssayPage({ essay }: Props) {
                 <h1 className="photo-essay-page__title">{essay.title}</h1>
                 {essay.description && (
                     <p className="photo-essay-page__description">{essay.description}</p>
+                )}
+                {(onEdit || onDelete) && (
+                    <div className="photo-essay-page__actions">
+                        {onEdit && (
+                            <button className="btn btn--secondary btn--sm" onClick={onEdit} data-testid="photo-essay-edit-btn">
+                                Edit
+                            </button>
+                        )}
+                        {onDelete && (
+                            <button className="btn btn--danger btn--sm" onClick={onDelete} data-testid="photo-essay-delete-btn">
+                                Delete
+                            </button>
+                        )}
+                    </div>
                 )}
             </header>
 
