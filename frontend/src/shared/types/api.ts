@@ -170,6 +170,72 @@ export interface Section {
     user_id?: string;
 }
 
+/**
+ * Represents a photo item within a photo essay
+ */
+export interface PhotoItem {
+    url: string;
+    srcset?: string;
+    caption?: string;
+    width: number;
+    height: number;
+    sort_order: number;
+}
+
+/**
+ * Represents a full photo essay with all details
+ */
+export interface PhotoEssay {
+    id: string;
+    title: string;
+    description?: string;
+    cover_image_url: string;
+    photos: PhotoItem[];
+    is_published: boolean;
+    section_id?: string;
+    user_id?: string;
+    createdDate: string;
+    updatedDate: string;
+}
+
+/**
+ * Represents a photo essay card for listings
+ */
+export interface PhotoEssayCard {
+    id: string;
+    title: string;
+    description?: string;
+    cover_image_url: string;
+    is_published: boolean;
+    photo_count: number;
+    section_id?: string;
+    createdDate: string;
+    updatedDate: string;
+}
+
+/**
+ * Request payload for creating a photo essay
+ */
+export interface CreatePhotoEssayRequest {
+    title: string;
+    description?: string;
+    cover_image_url: string;
+    photos: PhotoItem[];
+    section_id?: string;
+    is_published?: boolean;
+}
+
+/**
+ * Request payload for updating a photo essay
+ */
+export interface UpdatePhotoEssayRequest {
+    title?: string;
+    description?: string;
+    cover_image_url?: string;
+    photos?: PhotoItem[];
+    is_published?: boolean;
+}
+
 export interface CreateSectionRequest {
     title: string;
     display_type: DisplayType;
