@@ -152,7 +152,7 @@ export interface PaginatedResponse<T> {
  * Section types for dynamic routing
  */
 export type DisplayType = 'feed' | 'card-grid' | 'static-page' | 'gallery';
-export type SectionContentType = 'story' | 'project' | 'page' | 'image';
+export type SectionContentType = 'story' | 'project' | 'page' | 'photo_essay';
 export type NavVisibility = 'main' | 'secondary' | 'hidden';
 
 export interface Section {

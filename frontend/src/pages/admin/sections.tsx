@@ -10,7 +10,7 @@ import { useConfirm } from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
 
 const DISPLAY_TYPES: DisplayType[] = ['feed', 'card-grid', 'static-page', 'gallery'];
-const CONTENT_TYPES: SectionContentType[] = ['story', 'project', 'page', 'image'];
+const CONTENT_TYPES: SectionContentType[] = ['story', 'project', 'page', 'photo_essay'];
 const NAV_VISIBILITIES: NavVisibility[] = ['main', 'secondary', 'hidden'];
 
 export default function AdminSectionsPage() {

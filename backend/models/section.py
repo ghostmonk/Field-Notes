@@ -8,7 +8,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 DisplayType = Literal["feed", "card-grid", "static-page", "gallery"]
-ContentType = Literal["story", "project", "page", "image"]
+ContentType = Literal["story", "project", "page", "photo_essay"]
 NavVisibility = Literal["main", "secondary", "hidden"]
 
 
