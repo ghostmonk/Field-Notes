@@ -4,6 +4,7 @@ import apiClient from '@/shared/lib/api-client';
 import { resizeImageFile } from '@/shared/utils/uploadUtils';
 
 interface EditorPhoto {
+  id: string;
   url: string;
   srcset?: string;
   caption: string;
@@ -29,7 +30,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   const [photos, setPhotos] = useState<EditorPhoto[]>([]);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
-  const [coverPosition, setCoverPosition] = useState('center center');
+  const [coverPosition, setCoverPosition] = useState('50% 50%');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!essayId);
@@ -46,10 +47,11 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
       setTitle(essay.title);
       setDescription(essay.description || '');
       setCoverUrl(essay.cover_image_url);
-      setCoverPosition(essay.cover_image_position || 'center center');
+      setCoverPosition(essay.cover_image_position || '50% 50%');
       setIsPublished(essay.is_published);
       setPhotos(
         essay.photos.map((p, i) => ({
+          id: crypto.randomUUID(),
           url: p.url,
           srcset: p.srcset,
           caption: p.caption || '',
@@ -74,6 +76,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
     if (!files || files.length === 0) return;
 
     const newPhotos: EditorPhoto[] = Array.from(files).map(() => ({
+      id: crypto.randomUUID(),
       url: '',
       caption: '',
       width: 0,
@@ -335,6 +338,22 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
         <div
           className="photo-essay-editor__upload-area"
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          onDragOver={e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+          }}
+          onDrop={e => {
+            e.preventDefault();
+            handleFilesSelected(e.dataTransfer.files);
+          }}
+          role="button"
+          tabIndex={0}
           data-testid="photo-essay-upload-area"
         >
           Click to select images or drag files here
@@ -366,7 +385,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
 
             return (
               <div
-                key={`${photo.url || 'uploading'}-${index}`}
+                key={photo.id}
                 className={classNames}
                 draggable={!photo.uploading}
                 onDragStart={e => handleDragStart(e, index)}

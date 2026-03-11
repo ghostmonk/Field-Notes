@@ -755,9 +755,9 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
 
   // Mock photo essays detail endpoint
   await page.route('**/api/photo-essays/*', async (route) => {
-    // Only match detail requests, not the list endpoint
+    // Only match detail requests, not the list endpoint or section routes
     const url = route.request().url();
-    if (url.includes('?')) return route.continue();
+    if (url.includes('?') || url.includes('/section/')) return route.continue();
 
     await maybeDelay();
 

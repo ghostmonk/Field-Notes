@@ -134,11 +134,9 @@ export function PhotoViewer({ photos, initialIndex, onClose }: Props) {
                 </p>
             )}
 
-            {!isAnimating && (
-                <div className="photo-viewer__counter" onClick={(e) => e.stopPropagation()}>
-                    {currentIndex + 1} / {photos.length}
-                </div>
-            )}
+            <div className="photo-viewer__counter" onClick={(e) => e.stopPropagation()}>
+                {currentIndex + 1} / {photos.length}
+            </div>
 
             <button
                 className="photo-viewer__nav photo-viewer__nav--prev"
@@ -166,6 +164,7 @@ export function PhotoViewer({ photos, initialIndex, onClose }: Props) {
                 className="photo-viewer__close"
                 onClick={onClose}
                 aria-label="Close viewer"
+                autoFocus
             >
                 &times;
             </button>

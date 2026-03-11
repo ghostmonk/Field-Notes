@@ -10,18 +10,22 @@ A photo essay document in the `photo_essays` MongoDB collection:
 interface PhotoEssay {
   id: string;
   section_id: string;
+  slug: string;
+  user_id: string;
   title: string;
   description: string;
-  cover_image: string;         // URL of the selected cover photo
-  photos: Photo[];             // Embedded array, ordered
+  cover_image_url: string;         // URL of the selected cover photo
+  cover_image_position: string;    // CSS object-position value (e.g. "50% 50%")
+  photos: Photo[];                 // Embedded array, ordered
+  photo_count: number;             // Denormalized count of photos
   is_published: boolean;
-  created_at: string;
-  updated_at: string;
+  createdDate: string;
+  updatedDate: string;
 }
 
 interface Photo {
-  id: string;                  // UUID, generated on upload
   url: string;                 // Storage URL (GCS or local)
+  srcset: string;              // Responsive image srcset
   caption: string;             // Optional text caption
   width: number;               // Original pixel width
   height: number;              // Original pixel height

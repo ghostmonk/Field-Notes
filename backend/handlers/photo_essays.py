@@ -252,7 +252,7 @@ async def create_photo_essay(
         )
         raise HTTPException(
             status_code=400,
-            detail={"message": "Invalid photo essay data", "validation_errors": error_details},
+            detail="Invalid photo essay data",
         )
     except HTTPException:
         raise
@@ -313,7 +313,7 @@ async def update_photo_essay(
 
         owner_id = existing.get("user_id")
 
-        # Check write permission
+        # check_write_permission handles None owner_id (only admins can edit)
         if not check_write_permission(user, owner_id):
             logger.warning_with_context(
                 "Permission denied for photo essay update",
@@ -382,7 +382,7 @@ async def update_photo_essay(
         )
         raise HTTPException(
             status_code=400,
-            detail={"message": "Invalid photo essay data", "validation_errors": error_details},
+            detail="Invalid photo essay data",
         )
     except HTTPException:
         raise
@@ -437,7 +437,8 @@ async def delete_photo_essay(
 
         owner_id = existing.get("user_id")
 
-        # Check write permission
+        # check_write_permission handles None owner_id (only admins can edit)
+
         if not check_write_permission(user, owner_id):
             logger.warning_with_context(
                 "Permission denied for photo essay delete",

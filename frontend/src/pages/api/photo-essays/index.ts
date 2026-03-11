@@ -52,7 +52,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Build URL — GET lists use /photo-essays/section/{section_id}
         let apiUrl: string;
         if (req.method === 'GET' && req.query.section_id) {
-            apiUrl = `${API_BASE_URL}/photo-essays/section/${req.query.section_id}`;
+            const sectionId = req.query.section_id.toString();
+            if (!/^[a-f0-9]{24}$/i.test(sectionId)) {
+                return res.status(400).json({
+                    detail: 'Invalid section_id format',
+                    error: 'section_id must be a 24-character hex string'
+                });
+            }
+            apiUrl = `${API_BASE_URL}/photo-essays/section/${sectionId}`;
             const params = new URLSearchParams();
 
             if (req.query.limit) {
