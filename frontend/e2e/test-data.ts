@@ -295,6 +295,7 @@ export const TEST_SECTION_IDS = {
   ABOUT: 'section-about',
   PROJECTS: 'section-projects',
   CONTACT: 'section-contact',
+  PHOTO_ESSAYS: '507f1f77bcf86cd799439019',
 } as const;
 
 export const sampleSections: TestSection[] = [
@@ -346,6 +347,19 @@ export const sampleSections: TestSection[] = [
     content_type: 'page',
     nav_visibility: 'main',
     sort_order: 3,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+  {
+    id: TEST_SECTION_IDS.PHOTO_ESSAYS,
+    title: 'Photo Essays',
+    slug: 'photo-essays',
+    parent_id: null,
+    display_type: 'gallery',
+    content_type: 'photo_essay',
+    nav_visibility: 'main',
+    sort_order: 4,
     is_published: true,
     createdDate: FIXED_TIMESTAMP,
     updatedDate: FIXED_TIMESTAMP,
@@ -512,3 +526,82 @@ export function createTestComment(overrides: Partial<TestComment> = {}): TestCom
     ...overrides,
   };
 }
+
+// ============================================================================
+// Photo Essays
+// ============================================================================
+
+export interface TestPhotoEssayCard {
+  id: string;
+  title: string;
+  description: string;
+  cover_image_url: string;
+  is_published: boolean;
+  photo_count: number;
+  section_id: string;
+  createdDate: string;
+  updatedDate: string;
+}
+
+export interface TestPhotoEssayPhoto {
+  url: string;
+  caption?: string;
+  width: number;
+  height: number;
+  sort_order: number;
+}
+
+export interface TestPhotoEssay {
+  id: string;
+  title: string;
+  description: string;
+  cover_image_url: string;
+  photos: TestPhotoEssayPhoto[];
+  is_published: boolean;
+  section_id: string;
+  user_id: string;
+  createdDate: string;
+  updatedDate: string;
+}
+
+export const samplePhotoEssayCards: TestPhotoEssayCard[] = [
+  {
+    id: '507f1f77bcf86cd799439020',
+    title: 'Trip to Japan',
+    description: 'Cherry blossoms and temples',
+    cover_image_url: 'https://example.com/japan-cover.jpg',
+    is_published: true,
+    photo_count: 5,
+    section_id: TEST_SECTION_IDS.PHOTO_ESSAYS,
+    createdDate: '2025-06-15T10:00:00Z',
+    updatedDate: '2025-06-15T10:00:00Z',
+  },
+  {
+    id: '507f1f77bcf86cd799439021',
+    title: 'West Coast Trail',
+    description: 'A week on the Pacific coast',
+    cover_image_url: 'https://example.com/wct-cover.jpg',
+    is_published: true,
+    photo_count: 8,
+    section_id: TEST_SECTION_IDS.PHOTO_ESSAYS,
+    createdDate: '2025-05-10T10:00:00Z',
+    updatedDate: '2025-05-10T10:00:00Z',
+  },
+];
+
+export const samplePhotoEssayDetail: TestPhotoEssay = {
+  id: '507f1f77bcf86cd799439020',
+  title: 'Trip to Japan',
+  description: 'Cherry blossoms and temples',
+  cover_image_url: 'https://example.com/japan-cover.jpg',
+  photos: [
+    { url: 'https://example.com/japan-1.jpg', caption: 'Fushimi Inari', width: 1920, height: 1080, sort_order: 0 },
+    { url: 'https://example.com/japan-2.jpg', caption: 'Kinkaku-ji', width: 1200, height: 1600, sort_order: 1 },
+    { url: 'https://example.com/japan-3.jpg', width: 1920, height: 1280, sort_order: 2 },
+  ],
+  is_published: true,
+  section_id: TEST_SECTION_IDS.PHOTO_ESSAYS,
+  user_id: '507f1f77bcf86cd799439099',
+  createdDate: '2025-06-15T10:00:00Z',
+  updatedDate: '2025-06-15T10:00:00Z',
+};

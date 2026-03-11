@@ -10,6 +10,8 @@ import {
   sampleComments,
   createTestComment,
   createTestSection,
+  samplePhotoEssayCards,
+  samplePhotoEssayDetail,
 } from './test-data';
 
 const app = express();
@@ -358,6 +360,29 @@ app.put('/sections/:id', (req: Request, res: Response) => {
 // DELETE /sections/:id - Delete section
 app.delete('/sections/:id', (req: Request, res: Response) => {
   res.status(204).send();
+});
+
+// ============================================================================
+// Photo Essays
+// ============================================================================
+
+// GET /photo-essays/section/:sectionId - List photo essays by section
+app.get('/photo-essays/section/:sectionId', (req: Request, res: Response) => {
+  res.json({
+    items: samplePhotoEssayCards,
+    total: samplePhotoEssayCards.length,
+    limit: 20,
+    offset: 0,
+  });
+});
+
+// GET /photo-essays/:id - Get photo essay by ID
+app.get('/photo-essays/:id', (req: Request, res: Response) => {
+  if (req.params.id === samplePhotoEssayDetail.id) {
+    res.json(samplePhotoEssayDetail);
+  } else {
+    res.status(404).json({ detail: 'Not found' });
+  }
 });
 
 // Health check
