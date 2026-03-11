@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { PhotoEssay } from '@/shared/types/api';
 import { MasonryGrid } from './MasonryGrid';
 import { PhotoViewer } from './PhotoViewer';
@@ -11,6 +11,7 @@ interface Props {
 
 export function PhotoEssayPage({ essay, onEdit, onDelete }: Props) {
     const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+    const handleCloseViewer = useCallback(() => setViewerIndex(null), []);
     const sortedPhotos = useMemo(
         () => [...essay.photos].sort((a, b) => a.sort_order - b.sort_order),
         [essay.photos]
@@ -48,7 +49,7 @@ export function PhotoEssayPage({ essay, onEdit, onDelete }: Props) {
                 <PhotoViewer
                     photos={sortedPhotos}
                     initialIndex={viewerIndex}
-                    onClose={() => setViewerIndex(null)}
+                    onClose={handleCloseViewer}
                 />
             )}
         </div>

@@ -2,10 +2,22 @@
 Photo essay Pydantic models.
 """
 
+import re
 from datetime import datetime, timezone
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+_POSITION_PATTERN = re.compile(r"^\d{1,3}%\s+\d{1,3}%$")
+
+
+def _validate_position(value: str | None) -> str | None:
+    """Validate cover_image_position is a valid CSS percentage pair."""
+    if value is None:
+        return None
+    if not _POSITION_PATTERN.match(value):
+        raise ValueError("cover_image_position must be in format 'X% Y%' (e.g. '50% 50%')")
+    return value
 
 
 def _ensure_utc(value: datetime | None) -> datetime | None:
@@ -39,6 +51,8 @@ class PhotoEssayCreate(BaseModel):
     section_id: Optional[str] = None
     is_published: bool = False
 
+    validate_position = field_validator("cover_image_position")(_validate_position)
+
 
 class PhotoEssayUpdate(BaseModel):
     """All-optional model for updating a photo essay."""
@@ -50,6 +64,8 @@ class PhotoEssayUpdate(BaseModel):
     photos: Optional[List[PhotoItem]] = None
     section_id: Optional[str] = None
     is_published: Optional[bool] = None
+
+    validate_position = field_validator("cover_image_position")(_validate_position)
 
 
 class PhotoEssayResponse(BaseModel):

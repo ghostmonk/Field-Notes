@@ -1,7 +1,5 @@
 # Photo Essays Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Add photo essay support — themed photo collections with mosaic display, cover-image landing page, and navigable fullscreen viewer.
 
 **Architecture:** New `photo_essay` content type backed by a `photo_essays` MongoDB collection. Each document embeds an ordered array of photo objects (url, srcset, caption, dimensions). Frontend adds `GalleryDisplay` to the display registry, a masonry `PhotoEssayPage` for detail view, and extends the existing `useImageZoom` hook with prev/next navigation for sequential viewing. A dedicated admin editor handles bulk upload, drag-to-reorder, and per-image captions.

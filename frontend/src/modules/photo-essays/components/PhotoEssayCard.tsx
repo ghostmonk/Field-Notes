@@ -16,7 +16,7 @@ export function PhotoEssayCard({ essay, basePath }: Props) {
                 alt={essay.title}
                 className="gallery-card__image"
                 loading="lazy"
-                style={{ objectPosition: essay.cover_image_position || 'center center' }}
+                style={{ objectPosition: essay.cover_image_position || '50% 50%' }}
             />
             <div className="gallery-card__overlay">
                 <h2 className="gallery-card__title">{essay.title}</h2>
