@@ -44,7 +44,7 @@ test.describe('Admin Sections Page', () => {
     await page.fillCreateForm({
       title: 'Gallery',
       displayType: 'gallery',
-      contentType: 'image',
+      contentType: 'photo_essay',
       navVisibility: 'main',
     });
 
@@ -58,7 +58,7 @@ test.describe('Admin Sections Page', () => {
     const body = createRequest.postDataJSON();
     expect(body.title).toBe('Gallery');
     expect(body.display_type).toBe('gallery');
-    expect(body.content_type).toBe('image');
+    expect(body.content_type).toBe('photo_essay');
   });
 
   test('opens edit form for a section', async ({ mockAuthenticatedApiPage }) => {

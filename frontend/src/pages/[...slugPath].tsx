@@ -6,12 +6,13 @@ import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
-import { Section, Story, Project, Page, PaginatedResponse, ProjectCard as ProjectCardType, BulkCountsResponse } from '@/shared/types/api';
+import { Section, Story, Project, Page, PaginatedResponse, ProjectCard as ProjectCardType, PhotoEssayCard as PhotoEssayCardType, PhotoEssay, BulkCountsResponse } from '@/shared/types/api';
 import { displayRegistry, useFetchContent } from '@/modules/registry';
 import type { ContentType, DisplayType } from '@/modules/registry';
 import { StoryCard } from '@/modules/stories';
 import { useStoryMutations } from '@/modules/stories';
 import { ProjectCard } from '@/modules/projects';
+import { PhotoEssayCard, PhotoEssayPage } from '@/modules/photo-essays';
 import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
@@ -25,7 +26,7 @@ interface SectionPageProps {
     section: Section;
     view: 'list' | 'detail' | 'static-page';
     initialListData?: PaginatedResponse<any>;
-    detailItem?: Story | Project | null;
+    detailItem?: Story | Project | PhotoEssay | null;
     pageContent?: Page | null;
     ogImage?: string;
     excerpt?: string;
@@ -145,6 +146,12 @@ function SectionListView({ section, initialListData }: { section: Section; initi
                 return <ProjectCard key={project.id} project={project} basePath={basePath} />;
             };
         }
+        if (contentType === 'photo_essay') {
+            return (item: unknown) => {
+                const essay = item as PhotoEssayCardType;
+                return <PhotoEssayCard key={essay.id} essay={essay} basePath={basePath} />;
+            };
+        }
         return (item: unknown) => {
             const data = item as { id: string; title: string };
             return <div key={data.id}>{data.title}</div>;
@@ -180,6 +187,15 @@ function SectionListView({ section, initialListData }: { section: Section; initi
 
     const DisplayComponent = displayRegistry[displayType];
 
+    if (displayType === 'gallery') {
+        return (
+            <DisplayComponent
+                items={items}
+                renderItem={renderItem}
+            />
+        );
+    }
+
     if (displayType === 'feed') {
         return (
             <DisplayComponent
@@ -200,7 +216,52 @@ function SectionListView({ section, initialListData }: { section: Section; initi
     );
 }
 
-function SectionDetailView({ section, item }: { section: Section; item: Story | Project }) {
+function PhotoEssayDetailView({ section, essay }: { section: Section; essay: PhotoEssay }) {
+    const { data: session } = useSession();
+    const router = useRouter();
+    const confirm = useConfirm();
+    const { showToast } = useToast();
+
+    const handleEdit = useCallback(() => {
+        router.push({ pathname: '/editor', query: { id: essay.id, section_id: section.id } });
+    }, [router, essay.id, section.id]);
+
+    const handleDelete = useCallback(async () => {
+        if (!session?.accessToken) return;
+        const confirmed = await confirm({
+            title: 'Delete Photo Essay',
+            message: `Are you sure you want to delete "${essay.title}"? This action cannot be undone.`,
+            confirmLabel: 'Delete',
+            destructive: true,
+        });
+        if (!confirmed) return;
+        try {
+            await apiClient.photoEssays.delete(essay.id, session.accessToken);
+            showToast('Photo essay deleted');
+            router.push(`/${section.slug}`);
+        } catch {
+            showToast('Failed to delete photo essay');
+        }
+    }, [session, essay.id, essay.title, section.slug, router, confirm, showToast]);
+
+    const isAdmin = session?.user?.role === 'admin';
+
+    return (
+        <div className="page-container">
+            <Breadcrumbs items={[
+                { label: section.title, href: `/${section.slug}` },
+                { label: essay.title },
+            ]} />
+            <PhotoEssayPage
+                essay={essay}
+                onEdit={isAdmin ? handleEdit : undefined}
+                onDelete={isAdmin ? handleDelete : undefined}
+            />
+        </div>
+    );
+}
+
+function SectionDetailView({ section, item }: { section: Section; item: Story | Project | PhotoEssay }) {
     const contentType = section.content_type as ContentType;
 
     if (contentType === 'story') {
@@ -230,6 +291,13 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
                 ]} />
                 <ProjectDetail project={project} />
             </div>
+        );
+    }
+
+    if (contentType === 'photo_essay') {
+        const essay = item as PhotoEssay;
+        return (
+            <PhotoEssayDetailView section={section} essay={essay} />
         );
     }
 
@@ -359,7 +427,7 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
     // Detail view (2 segments)
     if (itemSlug) {
         try {
-            let detailItem: Story | Project | null = null;
+            let detailItem: Story | Project | PhotoEssay | null = null;
             let ogImage: string | undefined;
             let excerpt: string | undefined;
 
@@ -382,6 +450,15 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
                 const project: Project = await projectRes.json();
                 detailItem = project;
                 excerpt = project.summary;
+            } else if (contentType === 'photo_essay') {
+                const essayRes = await fetch(`${API_BASE_URL}/photo-essays/${itemSlug}`);
+                if (!essayRes.ok) {
+                    return { notFound: true };
+                }
+                const essay: PhotoEssay = await essayRes.json();
+                detailItem = essay;
+                ogImage = essay.cover_image_url;
+                excerpt = essay.description;
             }
 
             if (!detailItem) {
@@ -413,6 +490,11 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
             }
         } else if (contentType === 'project') {
             const listRes = await fetch(`${API_BASE_URL}/projects?limit=10&offset=0&section_id=${section.id}`);
+            if (listRes.ok) {
+                initialListData = await listRes.json();
+            }
+        } else if (contentType === 'photo_essay') {
+            const listRes = await fetch(`${API_BASE_URL}/photo-essays/section/${section.id}?limit=20&offset=0`);
             if (listRes.ok) {
                 initialListData = await listRes.json();
             }

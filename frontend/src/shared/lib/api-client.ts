@@ -24,6 +24,10 @@ import {
   Comment,
   BulkCountsRequest,
   BulkCountsResponse,
+  PhotoEssay,
+  PhotoEssayCard,
+  CreatePhotoEssayRequest,
+  UpdatePhotoEssayRequest,
 } from '@/shared/types/api';
 import { ApiRequestError } from '@/shared/types/error';
 
@@ -186,6 +190,13 @@ const apiRoutes = {
       `/api/versions/${contentType}/${contentId}`,
     get: (contentType: string, contentId: string, version: number) =>
       `/api/versions/${contentType}/${contentId}/${version}`,
+  },
+  photoEssays: {
+    list: () => '/api/photo-essays',
+    getById: (id: string) => `/api/photo-essays/${id}`,
+    create: () => '/api/photo-essays',
+    update: (id: string) => `/api/photo-essays/${id}`,
+    delete: (id: string) => `/api/photo-essays/${id}`,
   },
 };
 
@@ -423,6 +434,37 @@ const apiClient = {
 
     get: (contentType: string, contentId: string, version: number, token: string) =>
       fetchApi<ContentVersion>(apiRoutes.versions.get(contentType, contentId, version), { token }),
+  },
+
+  /**
+   * Photo essay methods
+   */
+  photoEssays: {
+    list: (params?: Record<string, string | number>) =>
+      fetchApi<PaginatedResponse<PhotoEssayCard>>(apiRoutes.photoEssays.list(), { params }),
+
+    getById: (id: string) =>
+      fetchApi<PhotoEssay>(apiRoutes.photoEssays.getById(id)),
+
+    create: (data: CreatePhotoEssayRequest, token: string) =>
+      fetchApi<PhotoEssay, CreatePhotoEssayRequest>(apiRoutes.photoEssays.create(), {
+        method: 'POST',
+        body: data,
+        token,
+      }),
+
+    update: (id: string, data: UpdatePhotoEssayRequest, token: string) =>
+      fetchApi<PhotoEssay, UpdatePhotoEssayRequest>(apiRoutes.photoEssays.update(id), {
+        method: 'PUT',
+        body: data,
+        token,
+      }),
+
+    delete: (id: string, token: string) =>
+      fetchApi<void>(apiRoutes.photoEssays.delete(id), {
+        method: 'DELETE',
+        token,
+      }),
   },
 };
 

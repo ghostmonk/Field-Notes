@@ -171,13 +171,12 @@ async def get_section_by_slug(
 
 
 @router.get("/sections/{section_id}", response_model=SectionResponse)
-@requires_auth
 async def get_section(
     request: Request,
     section_id: str,
     collection: AsyncIOMotorCollection = Depends(get_sections_collection),
 ):
-    """Get a section by ID (admin use, requires auth)."""
+    """Get a section by ID (public endpoint, same as by-slug)."""
     try:
         if not ObjectId.is_valid(section_id):
             logger.warning_with_context("Invalid section ID format", {"section_id": section_id})

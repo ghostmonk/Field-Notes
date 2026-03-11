@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock
 import mongomock_motor
 import pytest
 import pytest_asyncio
+from bson import ObjectId
 
 # Set environment variables before importing handlers that check them at module load time
 os.environ.setdefault("GCS_BUCKET_NAME", "test-bucket")
@@ -22,6 +23,7 @@ from database import (
     get_comments_collection,
     get_navlinks_collection,
     get_pages_collection,
+    get_photo_essays_collection,
     get_projects_collection,
     get_reactions_collection,
     get_sections_collection,
@@ -35,6 +37,7 @@ from fastapi.testclient import TestClient
 from handlers.engagement import router as engagement_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
+from handlers.photo_essays import router as photo_essays_router
 from handlers.projects import router as projects_router
 from handlers.sections import router as sections_router
 from handlers.stories import router as stories_router
@@ -53,6 +56,7 @@ test_app.include_router(projects_router)
 test_app.include_router(sections_router)
 test_app.include_router(navlinks_router)
 test_app.include_router(engagement_router)
+test_app.include_router(photo_essays_router)
 
 
 @pytest.fixture
@@ -612,6 +616,70 @@ def sample_navlink_data():
         "url": "https://github.com/example",
         "sort_order": 0,
         "is_published": True,
+        "createdDate": fixed_datetime,
+        "updatedDate": fixed_datetime,
+    }
+
+
+@pytest.fixture
+def mock_photo_essays_collection():
+    """Mock collection for photo essays testing"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    mock.count_documents = AsyncMock()
+    mock.insert_one = AsyncMock()
+    mock.update_one = AsyncMock()
+    mock.delete_one = AsyncMock()
+    return mock
+
+
+@pytest.fixture
+def override_photo_essays_database(mock_photo_essays_collection):
+    """Override the photo essays collection to use mocks"""
+
+    async def get_mock_photo_essays_collection():
+        return mock_photo_essays_collection
+
+    test_app.dependency_overrides[get_photo_essays_collection] = get_mock_photo_essays_collection
+    yield mock_photo_essays_collection
+    test_app.dependency_overrides.pop(get_photo_essays_collection, None)
+
+
+@pytest_asyncio.fixture
+async def photo_essays_async_client(override_photo_essays_database):
+    """Async test client for photo essays tests"""
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+        yield ac
+
+
+@pytest.fixture
+def sample_photo_essay_data():
+    """Sample photo essay data for testing"""
+    fixed_datetime = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    return {
+        "title": "Mountain Landscapes",
+        "description": "A collection of mountain photography",
+        "cover_image_url": "https://example.com/cover.jpg",
+        "photos": [
+            {
+                "url": "https://example.com/photo1.jpg",
+                "caption": "Summit view",
+                "width": 1920,
+                "height": 1080,
+                "sort_order": 0,
+            },
+            {
+                "url": "https://example.com/photo2.jpg",
+                "caption": "Valley floor",
+                "width": 1920,
+                "height": 1280,
+                "sort_order": 1,
+            },
+        ],
+        "photo_count": 2,
+        "is_published": True,
+        "slug": "mountain-landscapes",
+        "section_id": str(ObjectId()),
         "createdDate": fixed_datetime,
         "updatedDate": fixed_datetime,
     }

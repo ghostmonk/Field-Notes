@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { Section } from '@/shared/types/api';
 import apiClient from '@/shared/lib/api-client';
 import { StoryEditorForm, ProjectEditorForm, PageEditorForm } from '@/modules/editor/components';
+import { PhotoEssayEditor } from '@/modules/photo-essays';
 import { useFetchSections } from '@/modules/sections';
 
 export default function EditorPage() {
@@ -53,6 +54,18 @@ export default function EditorPage() {
         });
       })
       .catch(() => {
+        if (cancelled) return;
+        // Try as photo essay by ID
+        return apiClient.photoEssays.getById(editId).then(essay => {
+          if (cancelled) return;
+          if (essay.section_id) {
+            router.replace({ pathname: '/editor', query: { id: editId, section_id: essay.section_id } }, undefined, { shallow: true });
+          } else {
+            setSectionError('This content has no section assigned. Edit it from its section page instead.');
+          }
+        });
+      })
+      .catch(() => {
         if (!cancelled) setSectionError('Content not found.');
       })
       .finally(() => { if (!cancelled) setLoadingSection(false); });
@@ -60,10 +73,10 @@ export default function EditorPage() {
     return () => { cancelled = true; };
   }, [editId, sectionId, accessToken, router]);
 
-  // Fetch section when section_id is provided
+  // Fetch section when section_id is provided (wait for session to load)
   useEffect(() => {
-    if (!sectionId) {
-      setSection(null);
+    if (!sectionId || status === 'loading') {
+      if (!sectionId) setSection(null);
       return;
     }
 
@@ -77,7 +90,7 @@ export default function EditorPage() {
       .finally(() => { if (!cancelled) setLoadingSection(false); });
 
     return () => { cancelled = true; };
-  }, [sectionId, session?.accessToken]);
+  }, [sectionId, status, session?.accessToken]);
 
   const handleSectionSelect = useCallback((s: Section) => {
     router.push(`/editor?section_id=${s.id}`);
@@ -110,7 +123,10 @@ export default function EditorPage() {
       {section.content_type === 'story' && <StoryEditorForm section={section} />}
       {section.content_type === 'project' && <ProjectEditorForm section={section} />}
       {section.content_type === 'page' && <PageEditorForm section={section} />}
-      {!['story', 'project', 'page'].includes(section.content_type) && (
+      {section.content_type === 'photo_essay' && session?.accessToken && (
+        <PhotoEssayEditor sectionId={section.id} essayId={editId} token={session.accessToken} />
+      )}
+      {!['story', 'project', 'page', 'photo_essay'].includes(section.content_type) && (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           Content type &quot;{section.content_type}&quot; does not have an editor form yet.
         </div>
@@ -122,7 +138,7 @@ export default function EditorPage() {
 function SectionPicker({ onSelect }: { onSelect: (section: Section) => void }) {
   const { sections, loading } = useFetchSections();
   const editableSections = sections.filter(s =>
-    ['story', 'project', 'page'].includes(s.content_type)
+    ['story', 'project', 'page', 'photo_essay'].includes(s.content_type)
   );
 
   useEffect(() => {

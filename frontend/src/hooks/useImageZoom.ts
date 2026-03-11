@@ -21,7 +21,7 @@ export function useImageZoom(
 
     const attachImages = () => {
       const images = Array.from(container.querySelectorAll('img')).filter(
-        (img) => !img.closest('.ProseMirror')
+        (img) => !img.closest('.ProseMirror') && !img.hasAttribute('data-no-zoom')
       );
       zoom.detach();
       zoom.attach(images as HTMLElement[]);

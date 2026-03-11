@@ -167,29 +167,30 @@ class TestSectionsPublicEndpoints:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_get_section_by_id_unauthorized(self, sections_async_client):
-        """Test accessing section by ID without authorization"""
+    async def test_get_section_by_id_no_auth_required(
+        self, sections_async_client, override_sections_database
+    ):
+        """Test GET /sections/{id} is public (no auth required), returns 404 for missing"""
+        override_sections_database.find_one.return_value = None
         response = await sections_async_client.get(f"/sections/{ObjectId()}")
-        assert response.status_code == 401
+        assert response.status_code == 404
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_get_section_by_id_invalid_id(
-        self, sections_async_client, mock_auth, auth_headers
-    ):
+    async def test_get_section_by_id_invalid_id(self, sections_async_client):
         """Test retrieval with invalid ObjectId format"""
-        response = await sections_async_client.get("/sections/invalid_id", headers=auth_headers)
+        response = await sections_async_client.get("/sections/invalid_id")
         assert response.status_code == 400
 
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_get_section_by_id_not_found(
-        self, sections_async_client, override_sections_database, mock_auth, auth_headers
+        self, sections_async_client, override_sections_database
     ):
         """Test 404 when section doesn't exist by ID"""
         override_sections_database.find_one.return_value = None
 
-        response = await sections_async_client.get(f"/sections/{ObjectId()}", headers=auth_headers)
+        response = await sections_async_client.get(f"/sections/{ObjectId()}")
 
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()

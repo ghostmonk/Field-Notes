@@ -12,6 +12,7 @@ from handlers.backfill import backfill_published_flag
 from handlers.engagement import router as engagement_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
+from handlers.photo_essays import router as photo_essays_router
 from handlers.projects import router as projects_router
 from handlers.search import router as search_router
 from handlers.sections import router as sections_router
@@ -223,6 +224,7 @@ async def warmup():
 app.include_router(stories_router)
 app.include_router(pages_router)
 app.include_router(projects_router)
+app.include_router(photo_essays_router)
 app.include_router(sections_router)
 app.include_router(navlinks_router)
 app.include_router(uploads_router)

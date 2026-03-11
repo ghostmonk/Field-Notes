@@ -654,7 +654,7 @@ class TestSectionBase:
             title="Photography",
             slug="photography",
             display_type="gallery",
-            content_type="image",
+            content_type="photo_essay",
             nav_visibility="main",
             sort_order=1,
             parent_id="507f1f77bcf86cd799439011",

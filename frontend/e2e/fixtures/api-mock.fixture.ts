@@ -7,6 +7,8 @@ import {
   sampleSections as sharedSections,
   sampleReactions as sharedReactions,
   sampleComments as sharedComments,
+  samplePhotoEssayCards as sharedPhotoEssayCards,
+  samplePhotoEssayDetail as sharedPhotoEssayDetail,
   FIXED_TIMESTAMP,
   TestStory,
   TestPage,
@@ -724,6 +726,55 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
     } else {
       await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ detail: 'Section not found' }) });
     }
+  });
+
+  // Mock photo essays list endpoint
+  await page.route('**/api/photo-essays?**', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        items: sharedPhotoEssayCards,
+        total: sharedPhotoEssayCards.length,
+        limit: 20,
+        offset: 0,
+      }),
+    });
+  });
+
+  // Mock photo essays detail endpoint
+  await page.route('**/api/photo-essays/*', async (route) => {
+    // Only match detail requests, not the list endpoint or section routes
+    const url = route.request().url();
+    if (url.includes('?') || url.includes('/section/')) return route.continue();
+
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(sharedPhotoEssayDetail),
+    });
   });
 
   // Mock bulk counts endpoint
