@@ -85,7 +85,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
     await Promise.all(
       Array.from(files).map(async (file, i) => {
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('files', file);
 
         try {
           const response = await fetch('/api/upload-proxy', {
@@ -104,18 +104,19 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
               idx === startIndex + i
                 ? {
                     ...p,
-                    url: data.url,
-                    srcset: data.srcset,
-                    width: data.width || 0,
-                    height: data.height || 0,
+                    url: data.urls[0],
+                    srcset: data.srcsets?.[0],
+                    width: data.dimensions?.[0]?.width || 0,
+                    height: data.dimensions?.[0]?.height || 0,
                     uploading: false,
                   }
                 : p
             )
           );
-        } catch {
-          // Remove failed upload
+        } catch (err) {
+          console.error('Upload failed:', err);
           setPhotos(prev => prev.filter((_, idx) => idx !== startIndex + i));
+          setError(`Failed to upload ${file.name}`);
         }
       })
     );
