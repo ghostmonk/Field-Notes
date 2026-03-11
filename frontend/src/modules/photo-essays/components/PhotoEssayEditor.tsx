@@ -22,6 +22,7 @@ interface Props {
 export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const startIndexRef = useRef(0);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -72,18 +73,21 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   const handleFilesSelected = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    const newPhotos: EditorPhoto[] = Array.from(files).map((_, i) => ({
+    const newPhotos: EditorPhoto[] = Array.from(files).map(() => ({
       url: '',
       caption: '',
       width: 0,
       height: 0,
-      sort_order: photos.length + i,
+      sort_order: 0,
       uploading: true,
     }));
 
-    setPhotos(prev => [...prev, ...newPhotos]);
+    setPhotos(prev => {
+      startIndexRef.current = prev.length;
+      return [...prev, ...newPhotos.map((p, i) => ({ ...p, sort_order: prev.length + i }))];
+    });
 
-    const startIndex = photos.length;
+    const startIndex = startIndexRef.current;
 
     const failures: string[] = [];
 
@@ -120,7 +124,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
                 : p
             )
           );
-        } catch (err) {
+        } catch (_err) {
           failures.push(file.name);
           setPhotos(prev =>
             prev.map((p, idx) =>
@@ -136,7 +140,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
       setPhotos(prev => prev.filter(p => p.url !== ''));
       setError(`Failed to upload: ${failures.join(', ')}`);
     }
-  }, [photos.length]);
+  }, []);
 
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, index: number) => {
     setDragIndex(index);
@@ -192,10 +196,6 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
     setPhotos(prev =>
       prev.map((p, i) => (i === index ? { ...p, caption } : p))
     );
-  }, []);
-
-  const handleSetCover = useCallback((url: string) => {
-    setCoverUrl(url);
   }, []);
 
   const positionPreviewRef = useRef<HTMLDivElement>(null);
@@ -389,7 +389,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
                     <button
                       type="button"
                       className="btn btn--sm btn--secondary"
-                      onClick={() => handleSetCover(photo.url)}
+                      onClick={() => setCoverUrl(photo.url)}
                       data-testid={`photo-essay-set-cover-${index}`}
                     >
                       {isCover ? 'Cover' : 'Set cover'}

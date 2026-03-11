@@ -36,7 +36,13 @@ export function getFromCache(key: string): unknown | null {
     return cached.data;
 }
 
+const MAX_ENTRIES = 100;
+
 export function setCache(key: string, data: unknown, ttl: number): void {
+    if (cache.size >= MAX_ENTRIES) {
+        const firstKey = cache.keys().next().value;
+        if (firstKey) cache.delete(firstKey);
+    }
     cache.set(key, { data, timestamp: Date.now(), ttl });
 }
 

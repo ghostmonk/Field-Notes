@@ -8,6 +8,15 @@ from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
+def _ensure_utc(value: datetime | None) -> datetime | None:
+    """Ensure datetime values are in UTC timezone."""
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 class PhotoItem(BaseModel):
     """Single photo within a photo essay."""
 
@@ -58,14 +67,7 @@ class PhotoEssayResponse(BaseModel):
     createdDate: datetime
     updatedDate: datetime
 
-    @field_validator("createdDate", "updatedDate")
-    def ensure_utc(cls, value: datetime | None) -> datetime | None:
-        """Ensure datetime values are in UTC timezone."""
-        if value is None:
-            return None
-        if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
-        return value.astimezone(timezone.utc)
+    ensure_utc = field_validator("createdDate", "updatedDate")(_ensure_utc)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -84,13 +86,6 @@ class PhotoEssayCard(BaseModel):
     createdDate: datetime
     updatedDate: datetime
 
-    @field_validator("createdDate", "updatedDate")
-    def ensure_utc(cls, value: datetime | None) -> datetime | None:
-        """Ensure datetime values are in UTC timezone."""
-        if value is None:
-            return None
-        if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
-        return value.astimezone(timezone.utc)
+    ensure_utc = field_validator("createdDate", "updatedDate")(_ensure_utc)
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PhotoEssay } from '@/shared/types/api';
 import { MasonryGrid } from './MasonryGrid';
 import { PhotoViewer } from './PhotoViewer';
@@ -11,7 +11,10 @@ interface Props {
 
 export function PhotoEssayPage({ essay, onEdit, onDelete }: Props) {
     const [viewerIndex, setViewerIndex] = useState<number | null>(null);
-    const sortedPhotos = [...essay.photos].sort((a, b) => a.sort_order - b.sort_order);
+    const sortedPhotos = useMemo(
+        () => [...essay.photos].sort((a, b) => a.sort_order - b.sort_order),
+        [essay.photos]
+    );
 
     return (
         <div className="photo-essay-page" data-testid="photo-essay-page">

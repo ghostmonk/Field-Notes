@@ -129,10 +129,14 @@ async def get_photo_essay(
         query = {"_id": ObjectId(essay_id), "deleted": {"$ne": True}}
 
         # Only require is_published for unauthenticated requests
-        try:
-            await verify_auth_and_get_user(request)
-        except HTTPException:
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
             query["is_published"] = True
+        else:
+            try:
+                await verify_auth_and_get_user(request)
+            except HTTPException:
+                query["is_published"] = True
 
         essay = await find_one_and_convert(
             collection,
@@ -298,24 +302,25 @@ async def update_photo_essay(
             },
         )
 
-        existing_essay = await find_one_and_convert(
-            collection,
+        existing = await collection.find_one(
             {"_id": ObjectId(essay_id), "deleted": {"$ne": True}},
-            PhotoEssayResponse,
+            projection={"_id": 1, "user_id": 1, "title": 1},
         )
 
-        if not existing_essay:
+        if not existing:
             logger.warning_with_context("Photo essay not found for update", {"essay_id": essay_id})
             raise HTTPException(status_code=404, detail="Photo essay not found")
 
+        owner_id = existing.get("user_id")
+
         # Check write permission
-        if not check_write_permission(user, existing_essay.user_id):
+        if not check_write_permission(user, owner_id):
             logger.warning_with_context(
                 "Permission denied for photo essay update",
                 {
                     "essay_id": essay_id,
                     "user_id": user.id,
-                    "owner_id": existing_essay.user_id,
+                    "owner_id": owner_id,
                 },
             )
             raise HTTPException(
@@ -329,7 +334,7 @@ async def update_photo_essay(
         update_data["updatedDate"] = current_time
 
         # If title changed, regenerate the slug
-        if essay.title and existing_essay.title != essay.title:
+        if essay.title and existing.get("title") != essay.title:
             update_data["slug"] = await generate_unique_slug(
                 collection, essay.title, ObjectId(essay_id)
             )
@@ -421,24 +426,25 @@ async def delete_photo_essay(
             "Soft deleting photo essay", {"essay_id": essay_id, "user_id": user.id}
         )
 
-        existing_essay = await find_one_and_convert(
-            collection,
+        existing = await collection.find_one(
             {"_id": ObjectId(essay_id), "deleted": {"$ne": True}},
-            PhotoEssayResponse,
+            projection={"_id": 1, "user_id": 1, "title": 1},
         )
 
-        if not existing_essay:
+        if not existing:
             logger.warning_with_context("Photo essay not found for delete", {"essay_id": essay_id})
             raise HTTPException(status_code=404, detail="Photo essay not found")
 
+        owner_id = existing.get("user_id")
+
         # Check write permission
-        if not check_write_permission(user, existing_essay.user_id):
+        if not check_write_permission(user, owner_id):
             logger.warning_with_context(
                 "Permission denied for photo essay delete",
                 {
                     "essay_id": essay_id,
                     "user_id": user.id,
-                    "owner_id": existing_essay.user_id,
+                    "owner_id": owner_id,
                 },
             )
             raise HTTPException(
@@ -458,7 +464,7 @@ async def delete_photo_essay(
 
         logger.info_with_context(
             "Photo essay soft deleted successfully",
-            {"essay_id": essay_id, "title": existing_essay.title},
+            {"essay_id": essay_id, "title": existing.get("title")},
         )
 
     except HTTPException:
