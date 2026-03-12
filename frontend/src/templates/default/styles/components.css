@@ -1353,6 +1353,64 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
     display: block;
 }
 
+/* Shimmer for masonry images before load */
+.masonry-grid__image:not([data-loaded="true"]) {
+    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    animation: imageShimmer 1.5s ease-in-out infinite;
+}
+
+html:not(.dark) .masonry-grid__image:not([data-loaded="true"]) {
+    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme]) .masonry-grid__image:not([data-loaded="true"]) {
+        background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+        background-size: 200% 100%;
+    }
+}
+
+.dark .masonry-grid__image:not([data-loaded="true"]) {
+    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+    background-size: 200% 100%;
+}
+
+.masonry-grid__image[data-loaded="true"] {
+    background: transparent;
+    animation: none;
+}
+
+/* Shimmer for gallery card cover images */
+.gallery-card__image:not([data-loaded="true"]) {
+    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    animation: imageShimmer 1.5s ease-in-out infinite;
+}
+
+html:not(.dark) .gallery-card__image:not([data-loaded="true"]) {
+    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme]) .gallery-card__image:not([data-loaded="true"]) {
+        background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+        background-size: 200% 100%;
+    }
+}
+
+.dark .gallery-card__image:not([data-loaded="true"]) {
+    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+    background-size: 200% 100%;
+}
+
+.gallery-card__image[data-loaded="true"] {
+    background: transparent;
+    animation: none;
+}
+
 .masonry-grid__caption {
     position: absolute;
     bottom: 0;

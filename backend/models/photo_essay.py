@@ -46,6 +46,7 @@ class PhotoEssayCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
     cover_image_url: str = Field(..., min_length=1)
+    cover_image_srcset: Optional[str] = None
     cover_image_position: Optional[str] = "50% 50%"
     photos: List[PhotoItem] = Field(default_factory=list)
     section_id: Optional[str] = None
@@ -60,6 +61,7 @@ class PhotoEssayUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
     cover_image_url: Optional[str] = Field(None, min_length=1)
+    cover_image_srcset: Optional[str] = None
     cover_image_position: Optional[str] = None
     photos: Optional[List[PhotoItem]] = None
     section_id: Optional[str] = None
@@ -75,6 +77,7 @@ class PhotoEssayResponse(BaseModel):
     title: str
     description: Optional[str] = None
     cover_image_url: str
+    cover_image_srcset: Optional[str] = None
     cover_image_position: Optional[str] = "50% 50%"
     photos: List[PhotoItem]
     is_published: bool
@@ -95,6 +98,7 @@ class PhotoEssayCard(BaseModel):
     title: str
     description: Optional[str] = None
     cover_image_url: str
+    cover_image_srcset: Optional[str] = None
     cover_image_position: Optional[str] = "50% 50%"
     is_published: bool
     photo_count: int = 0

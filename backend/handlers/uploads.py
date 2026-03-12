@@ -86,10 +86,14 @@ def generate_signed_url_or_none(blob, blob_path: str) -> str | None:
         return None
 
 
-def set_media_response_headers(response, request: Request):
+def set_media_response_headers(response, request: Request, *, is_redirect: bool = False):
     """Set consistent headers for media responses (both redirect and streaming)."""
-    # Cache headers - mobile-friendly, always revalidate
-    response.headers["Cache-Control"] = "public, max-age=3600, no-cache"
+    if is_redirect:
+        # Signed URLs expire in 1 hour — cache redirect for less than that
+        response.headers["Cache-Control"] = "public, max-age=1800"
+    else:
+        # Direct responses (local files, streaming) — immutable, filename has timestamp+uuid
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     response.headers["Vary"] = "Accept-Encoding, Origin"
 
     # CORS headers - only for allowed origins
@@ -151,7 +155,7 @@ async def get_media(request: Request, filename: str, size: int | None = None):
         if signed_url:
             logger.info(f"Redirecting media request to signed URL: {filename}")
             response = RedirectResponse(url=signed_url, status_code=307)
-            set_media_response_headers(response, request)
+            set_media_response_headers(response, request, is_redirect=True)
             return response
 
         logger.info(f"Falling back to streaming response for: {filename}")

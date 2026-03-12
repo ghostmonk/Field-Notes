@@ -224,9 +224,9 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
       return;
     }
 
-    const effectiveCover = coverUrl && readyPhotos.some(p => p.url === coverUrl)
-      ? coverUrl
-      : readyPhotos[0].url;
+    const coverPhoto = readyPhotos.find(p => p.url === coverUrl) || readyPhotos[0];
+    const effectiveCover = coverPhoto.url;
+    const effectiveCoverSrcset = coverPhoto.srcset || undefined;
 
     setSaving(true);
     setError(null);
@@ -246,6 +246,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
           title: title.trim(),
           description: description.trim() || undefined,
           cover_image_url: effectiveCover,
+          cover_image_srcset: effectiveCoverSrcset,
           cover_image_position: coverPosition,
           photos: photoItems,
           is_published: isPublished,
@@ -255,6 +256,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
           title: title.trim(),
           description: description.trim() || undefined,
           cover_image_url: effectiveCover,
+          cover_image_srcset: effectiveCoverSrcset,
           cover_image_position: coverPosition,
           photos: photoItems,
           section_id: sectionId,
