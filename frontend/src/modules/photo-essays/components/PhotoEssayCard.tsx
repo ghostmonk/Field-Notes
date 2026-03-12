@@ -17,6 +17,8 @@ export function PhotoEssayCard({ essay, basePath }: Props) {
                 className="gallery-card__image"
                 loading="lazy"
                 style={{ objectPosition: essay.cover_image_position || '50% 50%' }}
+                onLoad={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
+                onError={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
             />
             <div className="gallery-card__overlay">
                 <h2 className="gallery-card__title">{essay.title}</h2>

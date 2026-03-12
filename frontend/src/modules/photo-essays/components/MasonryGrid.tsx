@@ -27,6 +27,8 @@ export function MasonryGrid({ photos, onPhotoClick }: Props) {
                             style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
                             className="masonry-grid__image"
                             data-no-zoom="true"
+                            onLoad={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
+                            onError={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
                         />
                         {photo.caption && (
                             <span className="masonry-grid__caption">{photo.caption}</span>
