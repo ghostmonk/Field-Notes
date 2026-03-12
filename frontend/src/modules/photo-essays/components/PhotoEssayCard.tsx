@@ -16,6 +16,7 @@ export function PhotoEssayCard({ essay, basePath }: Props) {
                 alt={essay.title}
                 className="gallery-card__image"
                 loading="lazy"
+                decoding="async"
                 style={{ objectPosition: essay.cover_image_position || '50% 50%' }}
                 onLoad={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
                 onError={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}

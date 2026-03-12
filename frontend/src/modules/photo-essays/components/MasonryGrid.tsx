@@ -20,10 +20,12 @@ export function MasonryGrid({ photos, onPhotoClick }: Props) {
                         <img
                             src={photo.url}
                             srcSet={photo.srcset || undefined}
+                            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                             alt={photo.caption || ''}
                             width={photo.width}
                             height={photo.height}
                             loading="lazy"
+                            decoding="async"
                             style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
                             className="masonry-grid__image"
                             data-no-zoom="true"
