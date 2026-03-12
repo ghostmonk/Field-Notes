@@ -88,8 +88,8 @@ def generate_signed_url_or_none(blob, blob_path: str) -> str | None:
 
 def set_media_response_headers(response, request: Request):
     """Set consistent headers for media responses (both redirect and streaming)."""
-    # Cache headers - mobile-friendly, always revalidate
-    response.headers["Cache-Control"] = "public, max-age=3600, no-cache"
+    # Cache headers - images are immutable (filename includes timestamp+uuid)
+    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     response.headers["Vary"] = "Accept-Encoding, Origin"
 
     # CORS headers - only for allowed origins

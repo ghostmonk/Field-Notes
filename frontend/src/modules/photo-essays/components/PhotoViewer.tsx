@@ -101,10 +101,11 @@ export function PhotoViewer({ photos, initialIndex, onClose }: Props) {
                     <img
                         src={photo.url}
                         srcSet={photo.srcset || undefined}
-                        sizes="100vw"
+                        sizes="90vw"
                         alt={photo.caption || ''}
                         className="photo-viewer__image"
                         data-no-zoom="true"
+                        fetchPriority="high"
                     />
                 </div>
 
@@ -119,7 +120,7 @@ export function PhotoViewer({ photos, initialIndex, onClose }: Props) {
                         <img
                             src={nextPhoto.url}
                             srcSet={nextPhoto.srcset || undefined}
-                            sizes="100vw"
+                            sizes="90vw"
                             alt={nextPhoto.caption || ''}
                             className="photo-viewer__image"
                             data-no-zoom="true"
