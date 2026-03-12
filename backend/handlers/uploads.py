@@ -86,9 +86,7 @@ def generate_signed_url_or_none(blob, blob_path: str) -> str | None:
         return None
 
 
-def set_media_response_headers(
-    response, request: Request, *, is_redirect: bool = False
-):
+def set_media_response_headers(response, request: Request, *, is_redirect: bool = False):
     """Set consistent headers for media responses (both redirect and streaming)."""
     if is_redirect:
         # Signed URLs expire in 1 hour — cache redirect for less than that
