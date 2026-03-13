@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { PhotoItem } from '@/shared/types/api';
 
 interface Props {
@@ -11,20 +11,61 @@ const SWIPE_THRESHOLD = 50;
 
 type SlideDirection = 'left' | 'right' | null;
 
+function preloadImage(photo: PhotoItem): Promise<void> {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        if (photo.srcset) img.srcset = photo.srcset;
+        img.sizes = '90vw';
+        img.src = photo.url;
+    });
+}
+
 export function PhotoViewer({ photos, initialIndex, onClose }: Props) {
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
     const [showCaptions, setShowCaptions] = useState(true);
     const [direction, setDirection] = useState<SlideDirection>(null);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [nextImageReady, setNextImageReady] = useState(false);
     const photo = photos[currentIndex];
     const touchStartX = useRef(0);
     const touchStartY = useRef(0);
+    const preloadedUrls = useRef(new Set<string>());
+
+    // Preload adjacent images whenever currentIndex changes
+    useEffect(() => {
+        const nextIdx = (currentIndex + 1) % photos.length;
+        const prevIdx = (currentIndex - 1 + photos.length) % photos.length;
+        [nextIdx, prevIdx].forEach((idx) => {
+            const p = photos[idx];
+            if (p && !preloadedUrls.current.has(p.url)) {
+                preloadedUrls.current.add(p.url);
+                preloadImage(p);
+            }
+        });
+    }, [currentIndex, photos]);
 
     const navigate = useCallback((dir: 'left' | 'right') => {
         if (isAnimating) return;
-        setDirection(dir);
-        setIsAnimating(true);
-    }, [isAnimating]);
+        const targetIdx = dir === 'left'
+            ? (currentIndex + 1) % photos.length
+            : (currentIndex - 1 + photos.length) % photos.length;
+        const targetPhoto = photos[targetIdx];
+
+        if (preloadedUrls.current.has(targetPhoto.url)) {
+            setNextImageReady(true);
+            setDirection(dir);
+            setIsAnimating(true);
+        } else {
+            // Image not preloaded — start preload, show shimmer, animate immediately
+            setNextImageReady(false);
+            setDirection(dir);
+            setIsAnimating(true);
+            preloadedUrls.current.add(targetPhoto.url);
+            preloadImage(targetPhoto).then(() => setNextImageReady(true));
+        }
+    }, [isAnimating, currentIndex, photos]);
 
     const goNext = useCallback(() => navigate('left'), [navigate]);
     const goPrev = useCallback(() => navigate('right'), [navigate]);
@@ -37,6 +78,7 @@ export function PhotoViewer({ photos, initialIndex, onClose }: Props) {
         });
         setDirection(null);
         setIsAnimating(false);
+        setNextImageReady(false);
     }, [direction, photos.length]);
 
     useEffect(() => {
@@ -99,6 +141,7 @@ export function PhotoViewer({ photos, initialIndex, onClose }: Props) {
                 >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
+                        key={photo.url}
                         src={photo.url}
                         srcSet={photo.srcset || undefined}
                         sizes="90vw"
@@ -111,19 +154,21 @@ export function PhotoViewer({ photos, initialIndex, onClose }: Props) {
 
                 {nextPhoto && (
                     <div
-                        className={`photo-viewer__slide ${
+                        className={`photo-viewer__slide photo-viewer__slide--shimmer ${
                             direction === 'left' ? 'photo-viewer__slide--enter-right' :
                             direction === 'right' ? 'photo-viewer__slide--enter-left' : ''
                         }`}
                     >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
+                            key={nextPhoto.url}
                             src={nextPhoto.url}
                             srcSet={nextPhoto.srcset || undefined}
                             sizes="90vw"
                             alt={nextPhoto.caption || ''}
-                            className="photo-viewer__image"
+                            className={`photo-viewer__image ${!nextImageReady ? 'photo-viewer__image--loading' : ''}`}
                             data-no-zoom="true"
+                            onLoad={() => setNextImageReady(true)}
                         />
                     </div>
                 )}
