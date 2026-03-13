@@ -8,8 +8,15 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
+import IconPicker from '@/components/IconPicker';
+import { SectionIcon, iconMap } from '@/shared/lib/navIcons';
 
-const DISPLAY_TYPES: DisplayType[] = ['feed', 'card-grid', 'static-page', 'gallery'];
+const CONTENT_TYPE_DISPLAYS: Record<SectionContentType, DisplayType[]> = {
+  story: ['feed', 'card-grid'],
+  project: ['feed', 'card-grid'],
+  page: ['static-page'],
+  photo_essay: ['gallery'],
+};
 const CONTENT_TYPES: SectionContentType[] = ['story', 'project', 'page', 'photo_essay'];
 const NAV_VISIBILITIES: NavVisibility[] = ['main', 'secondary', 'hidden'];
 
@@ -140,14 +147,23 @@ function SectionCreateForm({
   disabled: boolean;
 }) {
   const [title, setTitle] = useState('');
-  const [displayType, setDisplayType] = useState<DisplayType>('feed');
   const [contentType, setContentType] = useState<SectionContentType>('story');
+  const [displayType, setDisplayType] = useState<DisplayType>('feed');
   const [navVisibility, setNavVisibility] = useState<NavVisibility>('main');
+  const [icon, setIcon] = useState<SectionIcon>('default');
+
+  const validDisplayTypes = CONTENT_TYPE_DISPLAYS[contentType];
+
+  const handleContentTypeChange = (ct: SectionContentType) => {
+    setContentType(ct);
+    const valid = CONTENT_TYPE_DISPLAYS[ct];
+    if (!valid.includes(displayType)) setDisplayType(valid[0]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSubmit({ title: title.trim(), display_type: displayType, content_type: contentType, nav_visibility: navVisibility });
+    onSubmit({ title: title.trim(), display_type: displayType, content_type: contentType, nav_visibility: navVisibility, icon });
   };
 
   return (
@@ -165,19 +181,21 @@ function SectionCreateForm({
           data-testid="section-title-input"
         />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div>
-          <label htmlFor="new-section-display" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Type</label>
-          <select id="new-section-display" value={displayType} onChange={e => setDisplayType(e.target.value as DisplayType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled} data-testid="section-display-type-select">
-            {DISPLAY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
+      <div className={`grid grid-cols-1 gap-3 ${validDisplayTypes.length > 1 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         <div>
           <label htmlFor="new-section-content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Content Type</label>
-          <select id="new-section-content" value={contentType} onChange={e => setContentType(e.target.value as SectionContentType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled} data-testid="section-content-type-select">
+          <select id="new-section-content" value={contentType} onChange={e => handleContentTypeChange(e.target.value as SectionContentType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled} data-testid="section-content-type-select">
             {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
+        {validDisplayTypes.length > 1 && (
+          <div>
+            <label htmlFor="new-section-display" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Type</label>
+            <select id="new-section-display" value={displayType} onChange={e => setDisplayType(e.target.value as DisplayType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled} data-testid="section-display-type-select">
+              {validDisplayTypes.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        )}
         <div>
           <label htmlFor="new-section-nav" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nav Visibility</label>
           <select id="new-section-nav" value={navVisibility} onChange={e => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled} data-testid="section-nav-visibility-select">
@@ -185,6 +203,7 @@ function SectionCreateForm({
           </select>
         </div>
       </div>
+      <IconPicker value={icon} onChange={setIcon} disabled={disabled} />
       <button type="submit" disabled={disabled} className="btn btn--primary" data-testid="section-create-submit">
         Create Section
       </button>
@@ -205,9 +224,11 @@ function SectionRow({
   onAddContent: () => void;
   disabled: boolean;
 }) {
+  const Icon = iconMap[(section.icon || 'default') as SectionIcon];
   return (
     <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg space-y-2" data-testid={`section-row-${section.id}`}>
       <div>
+        <Icon className="inline-block w-4 h-4 mr-1.5 text-gray-500 dark:text-gray-400" />
         <span className="font-medium text-text-primary">{section.title}</span>
         <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">/{section.slug}</span>
       </div>
@@ -261,19 +282,28 @@ function SectionEditForm({
   disabled: boolean;
 }) {
   const [title, setTitle] = useState(section.title);
-  const [displayType, setDisplayType] = useState<DisplayType>(section.display_type);
   const [contentType, setContentType] = useState<SectionContentType>(section.content_type);
+  const [displayType, setDisplayType] = useState<DisplayType>(section.display_type);
   const [navVisibility, setNavVisibility] = useState<NavVisibility>(section.nav_visibility);
+  const [icon, setIcon] = useState<SectionIcon>((section.icon || 'default') as SectionIcon);
+
+  const validDisplayTypes = CONTENT_TYPE_DISPLAYS[contentType];
+
+  const handleContentTypeChange = (ct: SectionContentType) => {
+    setContentType(ct);
+    const valid = CONTENT_TYPE_DISPLAYS[ct];
+    if (!valid.includes(displayType)) setDisplayType(valid[0]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSubmit({ title: title.trim(), display_type: displayType, content_type: contentType, nav_visibility: navVisibility });
+    onSubmit({ title: title.trim(), display_type: displayType, content_type: contentType, nav_visibility: navVisibility, icon });
   };
 
   return (
     <form onSubmit={handleSubmit} className="p-3 border-2 border-indigo-500 rounded-lg space-y-3" data-testid={`section-edit-form-${section.id}`}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className={`grid grid-cols-1 gap-3 ${validDisplayTypes.length > 1 ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
         <div>
           <label htmlFor={`edit-title-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
           <input
@@ -288,17 +318,19 @@ function SectionEditForm({
           />
         </div>
         <div>
-          <label htmlFor={`edit-display-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Type</label>
-          <select id={`edit-display-${section.id}`} value={displayType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setDisplayType(e.target.value as DisplayType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
-            {DISPLAY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-        <div>
           <label htmlFor={`edit-content-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Content Type</label>
-          <select id={`edit-content-${section.id}`} value={contentType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setContentType(e.target.value as SectionContentType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
+          <select id={`edit-content-${section.id}`} value={contentType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleContentTypeChange(e.target.value as SectionContentType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
             {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
+        {validDisplayTypes.length > 1 && (
+          <div>
+            <label htmlFor={`edit-display-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Type</label>
+            <select id={`edit-display-${section.id}`} value={displayType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setDisplayType(e.target.value as DisplayType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
+              {validDisplayTypes.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        )}
         <div>
           <label htmlFor={`edit-nav-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nav Visibility</label>
           <select id={`edit-nav-${section.id}`} value={navVisibility} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
@@ -306,6 +338,7 @@ function SectionEditForm({
           </select>
         </div>
       </div>
+      <IconPicker value={icon} onChange={setIcon} disabled={disabled} />
       <div className="flex gap-2">
         <button type="submit" disabled={disabled} className="btn btn--primary" data-testid={`section-edit-submit-${section.id}`}>
           Save

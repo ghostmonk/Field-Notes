@@ -6,7 +6,6 @@ describe('getSiteConfig', () => {
     const config = getSiteConfig();
     expect(config).toHaveProperty('site');
     expect(config).toHaveProperty('fonts');
-    expect(config).toHaveProperty('navigation');
     expect(config).toHaveProperty('footer');
   });
 

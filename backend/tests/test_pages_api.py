@@ -55,10 +55,11 @@ class TestGetPage:
         assert "not found" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_get_page_invalid_type(self, pages_async_client):
-        """Test 422 for invalid page type"""
-        response = await pages_async_client.get("/pages/invalid")
-        assert response.status_code == 422
+    async def test_get_page_unknown_type(self, pages_async_client, override_pages_database):
+        """Test 404 for unknown page type"""
+        override_pages_database.find_one.return_value = None
+        response = await pages_async_client.get("/pages/photography")
+        assert response.status_code == 404
 
 
 class TestUpsertPage:

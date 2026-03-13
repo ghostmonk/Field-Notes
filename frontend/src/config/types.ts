@@ -19,9 +19,6 @@ export interface SiteConfig {
     heading: string;
     body: string;
   };
-  navigation: {
-    iconMap: Record<string, string>;
-  };
   footer: {
     links: Array<{ label: string; href: string }>;
   };

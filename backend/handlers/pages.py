@@ -9,7 +9,7 @@ from database import get_pages_collection
 from decorators.auth import check_write_permission, requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from glogger import logger
-from models.page import PageResponse, PageType, PageUpdate
+from models.page import PageResponse, PageUpdate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
@@ -21,7 +21,7 @@ router = APIRouter()
 @router.get("/pages/{page_type}", response_model=PageResponse)
 async def get_page(
     request: Request,
-    page_type: PageType,
+    page_type: str,
     collection: AsyncIOMotorCollection = Depends(get_pages_collection),
 ):
     """Get a page by type (about or contact)."""
@@ -70,7 +70,7 @@ async def get_page(
 @requires_auth
 async def upsert_page(
     request: Request,
-    page_type: PageType,
+    page_type: str,
     page: PageUpdate,
     collection: AsyncIOMotorCollection = Depends(get_pages_collection),
 ):
@@ -196,7 +196,7 @@ async def upsert_page(
 @requires_auth
 async def delete_page(
     request: Request,
-    page_type: PageType,
+    page_type: str,
     collection: AsyncIOMotorCollection = Depends(get_pages_collection),
 ):
     """Soft delete a page."""

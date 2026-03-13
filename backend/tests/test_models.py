@@ -254,19 +254,16 @@ class TestPageBase:
         assert page.page_type == "contact"
 
     @pytest.mark.unit
-    def test_page_base_invalid_page_type(self):
-        """Test that invalid page type raises validation error"""
-        page_data = {
-            "title": "Invalid",
-            "content": "Content here",
-            "page_type": "invalid",
-        }
+    def test_page_base_accepts_any_page_type(self):
+        """Test that page_type accepts any non-empty string"""
+        page = PageBase(title="Photography", content="Content here", page_type="photography")
+        assert page.page_type == "photography"
 
-        with pytest.raises(ValidationError) as exc_info:
-            PageBase(**page_data)
-
-        errors = exc_info.value.errors()
-        assert any("page_type" in str(error["loc"]) for error in errors)
+    @pytest.mark.unit
+    def test_page_base_empty_page_type(self):
+        """Test that empty page_type raises validation error"""
+        with pytest.raises(ValidationError):
+            PageBase(title="Invalid", content="Content here", page_type="")
 
     @pytest.mark.unit
     def test_page_base_empty_title(self):

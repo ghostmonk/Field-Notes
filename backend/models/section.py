@@ -7,6 +7,47 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+VALID_ICONS = {
+    "home",
+    "user",
+    "folder",
+    "mail",
+    "star",
+    "heart",
+    "tag",
+    "globe",
+    "chat",
+    "bell",
+    "fire",
+    "thumb-up",
+    "eye",
+    "clock",
+    "shield-check",
+    "camera",
+    "photograph",
+    "film",
+    "music-note",
+    "book-open",
+    "document-text",
+    "pencil",
+    "code",
+    "lightning-bolt",
+    "chip",
+    "beaker",
+    "terminal",
+    "cube",
+    "color-swatch",
+    "sparkles",
+    "puzzle",
+    "academic-cap",
+    "light-bulb",
+    "map",
+    "calendar",
+    "collection",
+    "clipboard-list",
+    "default",
+}
+
 DisplayType = Literal["feed", "card-grid", "static-page", "gallery"]
 ContentType = Literal["story", "project", "page", "photo_essay"]
 NavVisibility = Literal["main", "secondary", "hidden"]
@@ -23,6 +64,14 @@ class SectionBase(BaseModel):
     nav_visibility: NavVisibility = "main"
     sort_order: int = Field(0, ge=0)
     is_published: bool = True
+    icon: str = Field("default", description="Icon key from HeroIcons v1 set")
+
+    @field_validator("icon")
+    @classmethod
+    def validate_icon(cls, v: str) -> str:
+        if v not in VALID_ICONS:
+            raise ValueError(f"Invalid icon '{v}'. Must be one of: {sorted(VALID_ICONS)}")
+        return v
 
 
 class SectionCreate(BaseModel):
@@ -36,6 +85,14 @@ class SectionCreate(BaseModel):
     nav_visibility: NavVisibility = "main"
     sort_order: int = Field(0, ge=0)
     is_published: bool = True
+    icon: str = Field("default", description="Icon key from HeroIcons v1 set")
+
+    @field_validator("icon")
+    @classmethod
+    def validate_icon(cls, v: str) -> str:
+        if v not in VALID_ICONS:
+            raise ValueError(f"Invalid icon '{v}'. Must be one of: {sorted(VALID_ICONS)}")
+        return v
 
 
 class SectionUpdate(BaseModel):
@@ -49,6 +106,14 @@ class SectionUpdate(BaseModel):
     nav_visibility: NavVisibility | None = None
     sort_order: int | None = Field(None, ge=0)
     is_published: bool | None = None
+    icon: str | None = None
+
+    @field_validator("icon")
+    @classmethod
+    def validate_icon(cls, v: str | None) -> str | None:
+        if v is not None and v not in VALID_ICONS:
+            raise ValueError(f"Invalid icon '{v}'. Must be one of: {sorted(VALID_ICONS)}")
+        return v
 
 
 class SectionResponse(SectionBase):

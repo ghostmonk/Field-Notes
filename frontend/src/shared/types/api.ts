@@ -37,7 +37,7 @@ export interface Story {
 /**
  * Page types for static pages
  */
-export type PageType = 'about' | 'contact';
+export type PageType = string;
 
 /**
  * Represents a static page (About, Contact)
@@ -165,6 +165,7 @@ export interface Section {
     sort_order: number;
     is_published: boolean;
     parent_id: string | null;
+    icon: string;
     createdDate: string;
     updatedDate: string;
     user_id?: string;
@@ -252,6 +253,7 @@ export interface CreateSectionRequest {
     sort_order?: number;
     is_published?: boolean;
     parent_id?: string | null;
+    icon?: string;
 }
 
 export type UpdateSectionRequest = Partial<CreateSectionRequest>;

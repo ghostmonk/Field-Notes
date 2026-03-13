@@ -15,14 +15,6 @@
     "heading": "Roboto Slab",
     "body": "Poppins"
   },
-  "navigation": {
-    "iconMap": {
-      "blog": "home",
-      "about": "user",
-      "projects": "folder",
-      "contact": "mail"
-    }
-  },
   "footer": {
     "links": [
       { "label": "Privacy", "href": "/privacy" },

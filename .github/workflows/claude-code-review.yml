@@ -40,9 +40,18 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Review this PR. Only comment on issues that are clearly bugs, security vulnerabilities, or will break production. Do not comment on style, naming, documentation, test coverage suggestions, or minor improvements. If there are no real issues, leave a single short comment saying the PR looks good.
+            Review this PR thoroughly. Flag:
+            - Bugs, logic errors, off-by-one mistakes, race conditions
+            - Security vulnerabilities (XSS, injection, auth bypass, secrets in code)
+            - Missing error handling that could break production
+            - Breaking API changes (backend contract changes without frontend updates, missing migrations)
+            - Performance issues (N+1 queries, unnecessary re-renders, missing indexes)
+            - Dead code or unused imports introduced in this PR
+            - Inconsistencies with patterns established in the codebase
 
-            Keep your comment concise — bullet points, no preamble, no summaries of what the PR does. The author already knows what they wrote.
+            Do not comment on: style preferences, naming bikeshedding, or suggestions to add features not in the PR scope. Do not summarize what the PR does.
+
+            If there are no issues worth flagging, say so in one line. If there are issues, list them as bullet points with file:line references. Be direct.
 
             Use the repository's CLAUDE.md for guidance on conventions.
 

@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { Section, Page, PageType, UpdatePageRequest } from '@/shared/types/api';
+import { Section, Page, UpdatePageRequest } from '@/shared/types/api';
 import apiClient from '@/shared/lib/api-client';
 import { ApiRequestError } from '@/shared/types/error';
 import { ErrorService } from '@/services/errorService';
@@ -15,15 +15,11 @@ interface PageEditorFormProps {
   section: Section;
 }
 
-const VALID_PAGE_TYPES: PageType[] = ['about', 'contact'];
-
 export function PageEditorForm({ section }: PageEditorFormProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  const pageType = VALID_PAGE_TYPES.includes(section.slug as PageType)
-    ? (section.slug as PageType)
-    : null;
+  const pageType = section.slug;
 
   const [page, setPage] = useState<Partial<Page>>({ title: '', content: '', is_published: true });
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +32,6 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
 
   // Fetch existing page
   useEffect(() => {
-    if (!pageType) return;
     let cancelled = false;
 
     setIsLoading(true);
@@ -53,11 +48,6 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
 
     if (!session?.accessToken) {
       setError('You must be logged in to save a page');
-      return;
-    }
-
-    if (!pageType) {
-      setError(`Section slug "${section.slug}" is not a valid page type. Valid types: ${VALID_PAGE_TYPES.join(', ')}`);
       return;
     }
 
@@ -95,14 +85,6 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
 
   if (isLoading && !isSaving) {
     return <div>Loading...</div>;
-  }
-
-  if (!pageType) {
-    return (
-      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-        Section &quot;{section.title}&quot; (slug: {section.slug}) is not a recognized page type. Valid page types: {VALID_PAGE_TYPES.join(', ')}.
-      </div>
-    );
   }
 
   return (

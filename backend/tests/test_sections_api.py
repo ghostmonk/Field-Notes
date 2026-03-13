@@ -313,6 +313,92 @@ class TestCreateSection:
 
         assert response.status_code == 422
 
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_section_with_icon(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Test section creation with icon field."""
+        section_id = ObjectId("507f1f77bcf86cd799439011")
+        override_sections_database.find_one.side_effect = [
+            None,
+            {**sample_section_data, "_id": section_id, "slug": "photos", "icon": "camera"},
+        ]
+        override_sections_database.insert_one.return_value = MagicMock(inserted_id=section_id)
+
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Photos",
+                "display_type": "gallery",
+                "content_type": "photo_essay",
+                "icon": "camera",
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 201
+        assert response.json()["icon"] == "camera"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_section_invalid_icon(
+        self,
+        sections_async_client,
+        override_sections_database,
+        mock_auth,
+        auth_headers,
+    ):
+        """Test section creation rejects invalid icon value."""
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Photos",
+                "display_type": "gallery",
+                "content_type": "photo_essay",
+                "icon": "nonexistent-icon",
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 422
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_section_default_icon(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Test section creation defaults icon to 'default' when omitted."""
+        section_id = ObjectId("507f1f77bcf86cd799439011")
+        override_sections_database.find_one.side_effect = [
+            None,
+            {**sample_section_data, "_id": section_id, "slug": "blog", "icon": "default"},
+        ]
+        override_sections_database.insert_one.return_value = MagicMock(inserted_id=section_id)
+
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Blog",
+                "display_type": "feed",
+                "content_type": "story",
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 201
+        assert response.json()["icon"] == "default"
+
 
 class TestUpdateSection:
     """Tests for PUT /sections/{section_id} endpoint."""

@@ -571,6 +571,7 @@ def sample_section_data():
         "nav_visibility": "main",
         "sort_order": 0,
         "is_published": True,
+        "icon": "default",
         "createdDate": fixed_datetime,
         "updatedDate": fixed_datetime,
     }
