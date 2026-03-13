@@ -280,6 +280,7 @@ export interface TestSection {
   id: string;
   title: string;
   slug: string;
+  icon: string;
   parent_id: string | null;
   display_type: string;
   content_type: string;
@@ -303,6 +304,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.BLOG,
     title: 'Blog',
     slug: 'blog',
+    icon: 'home',
     parent_id: null,
     display_type: 'feed',
     content_type: 'story',
@@ -316,6 +318,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.ABOUT,
     title: 'About',
     slug: 'about',
+    icon: 'user',
     parent_id: null,
     display_type: 'static-page',
     content_type: 'page',
@@ -329,6 +332,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.PROJECTS,
     title: 'Projects',
     slug: 'projects',
+    icon: 'folder',
     parent_id: null,
     display_type: 'card-grid',
     content_type: 'project',
@@ -342,6 +346,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.CONTACT,
     title: 'Contact',
     slug: 'contact',
+    icon: 'mail',
     parent_id: null,
     display_type: 'static-page',
     content_type: 'page',
@@ -355,6 +360,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.PHOTO_ESSAYS,
     title: 'Photo Essays',
     slug: 'photo-essays',
+    icon: 'photograph',
     parent_id: null,
     display_type: 'gallery',
     content_type: 'photo_essay',
@@ -374,6 +380,7 @@ export function createTestSection(overrides: Partial<TestSection> = {}): TestSec
     id: `section-${Date.now()}`,
     title: 'Test Section',
     slug: 'test-section',
+    icon: 'default',
     parent_id: null,
     display_type: 'feed',
     content_type: 'story',
