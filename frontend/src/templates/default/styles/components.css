@@ -1508,10 +1508,27 @@ html:not(.dark) .gallery-card__image:not([data-loaded="true"]) {
     to { transform: translateX(0); opacity: 1; }
 }
 
+.photo-viewer__slide--shimmer {
+    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+    background-size: 200% 100%;
+}
+
+.photo-viewer__slide--shimmer.photo-viewer__slide--enter-left {
+    animation: slideInLeft 0.3s ease forwards, imageShimmer 1.5s ease-in-out infinite;
+}
+
+.photo-viewer__slide--shimmer.photo-viewer__slide--enter-right {
+    animation: slideInRight 0.3s ease forwards, imageShimmer 1.5s ease-in-out infinite;
+}
+
 .photo-viewer__image {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+}
+
+.photo-viewer__image--loading {
+    opacity: 0;
 }
 
 .photo-viewer__caption {
