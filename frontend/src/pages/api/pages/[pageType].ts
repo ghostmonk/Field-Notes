@@ -54,14 +54,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
     }
 
-    // Validate page type
-    if (pageType !== 'about' && pageType !== 'contact') {
-        return res.status(400).json({
-            detail: 'Invalid page type. Must be "about" or "contact"',
-            error: 'Validation error'
-        });
-    }
-
     apiLogger.logApiRequest(req, res);
 
     try {

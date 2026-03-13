@@ -1,13 +1,10 @@
 """
-Page-related Pydantic models for static pages (About, Contact).
+Page-related Pydantic models for static pages.
 """
 
 from datetime import datetime, timezone
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-PageType = Literal["about", "contact"]
 
 
 class PageBase(BaseModel):
@@ -15,7 +12,7 @@ class PageBase(BaseModel):
 
     title: str = Field(..., min_length=1, max_length=200)
     content: str = Field(..., min_length=1, max_length=50000)
-    page_type: PageType
+    page_type: str = Field(..., min_length=1, max_length=100)
     is_published: bool = True
 
 

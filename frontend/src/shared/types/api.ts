@@ -37,7 +37,7 @@ export interface Story {
 /**
  * Page types for static pages
  */
-export type PageType = 'about' | 'contact';
+export type PageType = string;
 
 /**
  * Represents a static page (About, Contact)
