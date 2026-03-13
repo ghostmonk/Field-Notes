@@ -154,11 +154,17 @@ export function PhotoViewer({ photos, initialIndex, onClose }: Props) {
 
                 {nextPhoto && (
                     <div
-                        className={`photo-viewer__slide photo-viewer__slide--shimmer ${
+                        className={`photo-viewer__slide ${
                             direction === 'left' ? 'photo-viewer__slide--enter-right' :
                             direction === 'right' ? 'photo-viewer__slide--enter-left' : ''
                         }`}
                     >
+                        {!nextImageReady && (
+                            <div
+                                className="photo-viewer__shimmer"
+                                style={{ aspectRatio: `${nextPhoto.width} / ${nextPhoto.height}` }}
+                            />
+                        )}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             key={nextPhoto.url}
