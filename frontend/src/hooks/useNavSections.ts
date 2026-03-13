@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@/shared/lib/api-client';
 import { sectionsToNavItems, NavSectionItem } from '@/shared/lib/navigation';
-import { getSiteConfig } from '@/config';
 
 let cachedSections: NavSectionItem[] | null = null;
 let fetchPromise: Promise<NavSectionItem[]> | null = null;
@@ -19,7 +18,7 @@ function fetchNavSections(): Promise<NavSectionItem[]> {
 
     fetchPromise = apiClient.sections.navigation()
         .then((response: { items: import('@/shared/types/api').Section[] }) => {
-            const items = sectionsToNavItems(response.items, getSiteConfig().navigation.iconMap);
+            const items = sectionsToNavItems(response.items);
             cachedSections = items;
             return cachedSections;
         })
