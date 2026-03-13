@@ -1,11 +1,65 @@
 import React from 'react';
-import { NavIcon } from '@/shared/lib/navigation';
-import { HiHome, HiUser, HiFolder, HiMail, HiViewGrid } from 'react-icons/hi';
+import {
+    HiHome, HiUser, HiFolder, HiMail, HiStar, HiHeart, HiTag, HiGlobe,
+    HiChat, HiBell, HiFire, HiThumbUp, HiEye, HiClock, HiShieldCheck,
+    HiCamera, HiPhotograph, HiFilm, HiMusicNote,
+    HiBookOpen, HiDocumentText, HiPencil,
+    HiCode, HiLightningBolt, HiChip, HiBeaker, HiTerminal, HiCube,
+    HiColorSwatch, HiSparkles, HiPuzzle, HiAcademicCap, HiLightBulb,
+    HiMap, HiCalendar, HiCollection, HiClipboardList,
+    HiViewGrid,
+} from 'react-icons/hi';
 
-export const iconMap: Record<NavIcon, React.ComponentType<{ className?: string }>> = {
+export const SECTION_ICONS = [
+    'home', 'user', 'folder', 'mail', 'star', 'heart', 'tag', 'globe',
+    'chat', 'bell', 'fire', 'thumb-up', 'eye', 'clock', 'shield-check',
+    'camera', 'photograph', 'film', 'music-note',
+    'book-open', 'document-text', 'pencil',
+    'code', 'lightning-bolt', 'chip', 'beaker', 'terminal', 'cube',
+    'color-swatch', 'sparkles', 'puzzle', 'academic-cap', 'light-bulb',
+    'map', 'calendar', 'collection', 'clipboard-list',
+    'default',
+] as const;
+
+export type SectionIcon = (typeof SECTION_ICONS)[number];
+
+export const iconMap: Record<SectionIcon, React.ComponentType<{ className?: string }>> = {
     home: HiHome,
     user: HiUser,
     folder: HiFolder,
     mail: HiMail,
+    star: HiStar,
+    heart: HiHeart,
+    tag: HiTag,
+    globe: HiGlobe,
+    chat: HiChat,
+    bell: HiBell,
+    fire: HiFire,
+    'thumb-up': HiThumbUp,
+    eye: HiEye,
+    clock: HiClock,
+    'shield-check': HiShieldCheck,
+    camera: HiCamera,
+    photograph: HiPhotograph,
+    film: HiFilm,
+    'music-note': HiMusicNote,
+    'book-open': HiBookOpen,
+    'document-text': HiDocumentText,
+    pencil: HiPencil,
+    code: HiCode,
+    'lightning-bolt': HiLightningBolt,
+    chip: HiChip,
+    beaker: HiBeaker,
+    terminal: HiTerminal,
+    cube: HiCube,
+    'color-swatch': HiColorSwatch,
+    sparkles: HiSparkles,
+    puzzle: HiPuzzle,
+    'academic-cap': HiAcademicCap,
+    'light-bulb': HiLightBulb,
+    map: HiMap,
+    calendar: HiCalendar,
+    collection: HiCollection,
+    'clipboard-list': HiClipboardList,
     default: HiViewGrid,
 };
