@@ -151,6 +151,14 @@ Assume all work happens in a worktree unless the user explicitly says to work on
 - **Dev testing**: use `make dev-local` or `make dev` to start services — don't run commands manually
 - **Cleanup**: run `make down` in the worktree to stop all Docker containers before removing the worktree with `git worktree remove`
 
+### Squash Merge Commit Messages
+
+When squash-merging a PR via `gh pr merge --squash`, the `--body` becomes the commit message in git history. Keep it tight:
+- One-line summary as `--subject` (under 72 chars)
+- Body: 3-8 bullet points covering what changed and why, no headers/sections/markdown formatting
+- No test plan, no checkboxes, no "Generated with" footers
+- The PR description (visible on GitHub) can be detailed; the commit message must be concise
+
 ### Formatting Rules
 
 `make format` is mandatory before every commit — CI rejects unformatted code.
