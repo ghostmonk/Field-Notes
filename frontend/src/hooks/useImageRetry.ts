@@ -17,6 +17,7 @@ export function useImageRetry(): {
             clearTimeout(id);
         }
         timeoutIdsRef.current.clear();
+        retryCountsRef.current.clear();
     }, []);
 
     const handleError = useCallback(

@@ -127,9 +127,16 @@ async def get_media(request: Request, filename: str, size: int | None = None):
 
         logger.info(f"Streaming media response for: {filename}")
         content_type = blob.content_type or "application/octet-stream"
-        media_data = await asyncio.to_thread(blob.download_as_bytes)
 
-        response = StreamingResponse(io.BytesIO(media_data), media_type=content_type)
+        def _iter_blob():
+            with blob.open("rb") as reader:
+                while True:
+                    chunk = reader.read(65536)
+                    if not chunk:
+                        break
+                    yield chunk
+
+        response = StreamingResponse(_iter_blob(), media_type=content_type)
         set_media_response_headers(response, request)
         return response
 
