@@ -1,5 +1,6 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { PhotoItem } from '@/shared/types/api';
+import { useImageRetry } from '@/hooks/useImageRetry';
 
 interface Props {
     photos: PhotoItem[];
@@ -7,6 +8,12 @@ interface Props {
 }
 
 export function MasonryGrid({ photos, onPhotoClick }: Props) {
+    const { handleError, cleanup } = useImageRetry();
+
+    useEffect(() => {
+        return cleanup;
+    }, [cleanup]);
+
     return (
         <div className="masonry-grid" data-testid="masonry-grid">
             {photos.map((photo, index) => (
@@ -30,7 +37,7 @@ export function MasonryGrid({ photos, onPhotoClick }: Props) {
                             className="masonry-grid__image"
                             data-no-zoom="true"
                             onLoad={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
-                            onError={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
+                            onError={handleError}
                         />
                         {photo.caption && (
                             <span className="masonry-grid__caption">{photo.caption}</span>
