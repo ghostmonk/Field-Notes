@@ -20,7 +20,7 @@ from fastapi import (
     Request,
     UploadFile,
 )
-from fastapi.responses import RedirectResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from glogger import logger
 from handlers.image_filters import AVAILABLE_FILTERS, apply_filter, validate_filter_name
 from middleware.rate_limit import limiter
@@ -73,36 +73,15 @@ ALLOWED_ORIGINS = [
 ]
 
 
-def generate_signed_url_or_none(blob, blob_path: str) -> str | None:
-    """Generate a signed URL for the blob, returning None if it fails."""
-    try:
-        signed_url = blob.generate_signed_url(
-            version="v4", expiration=timedelta(hours=1), method="GET"
-        )
-        logger.info(f"Generated signed URL: {signed_url}")
-        return signed_url
-    except Exception as e:
-        logger.error(f"Failed to generate signed URL for {blob_path}: {str(e)}")
-        return None
-
-
-def set_media_response_headers(response, request: Request, *, is_redirect: bool = False):
-    """Set consistent headers for media responses (both redirect and streaming)."""
-    if is_redirect:
-        # Signed URLs expire in 1 hour — cache redirect for less than that
-        response.headers["Cache-Control"] = "public, max-age=1800"
-    else:
-        # Direct responses (local files, streaming) — immutable, filename has timestamp+uuid
-        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+def set_media_response_headers(response, request: Request):
+    """Set consistent headers for media responses."""
+    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     response.headers["Vary"] = "Accept-Encoding, Origin"
 
-    # CORS headers - only for allowed origins
     origin = request.headers.get("origin", "")
     if origin in ALLOWED_ORIGINS:
         response.headers["Access-Control-Allow-Origin"] = origin
-    # No CORS header for unauthorized domains - blocks cross-origin requests
 
-    # Security and method headers
     response.headers["Access-Control-Allow-Methods"] = "GET"
     response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
 
@@ -137,32 +116,27 @@ async def get_media(request: Request, filename: str, size: int | None = None):
         if LOCAL_STORAGE_PATH:
             return _serve_local_file(blob_path, request)
 
-        user_agent = request.headers.get("user-agent", "Unknown")
-        logger.info(f"User-Agent: {user_agent}")
-
         bucket = get_gcs_bucket()
 
         logger.info(f"Looking for blob at path: {blob_path}")
         blob = bucket.blob(blob_path)
 
-        if not blob.exists():
+        if not await asyncio.to_thread(blob.exists):
             logger.error(f"Media file not found: {blob_path}")
             raise HTTPException(status_code=404, detail="Media file not found")
 
-        logger.info(f"Media file found, attempting to generate signed URL for: {blob_path}")
-
-        signed_url = generate_signed_url_or_none(blob, blob_path)
-        if signed_url:
-            logger.info(f"Redirecting media request to signed URL: {filename}")
-            response = RedirectResponse(url=signed_url, status_code=307)
-            set_media_response_headers(response, request, is_redirect=True)
-            return response
-
-        logger.info(f"Falling back to streaming response for: {filename}")
+        logger.info(f"Streaming media response for: {filename}")
         content_type = blob.content_type or "application/octet-stream"
-        media_data = blob.download_as_bytes()
 
-        response = StreamingResponse(io.BytesIO(media_data), media_type=content_type)
+        def _iter_blob():
+            with blob.open("rb") as reader:
+                while True:
+                    chunk = reader.read(65536)
+                    if not chunk:
+                        break
+                    yield chunk
+
+        response = StreamingResponse(_iter_blob(), media_type=content_type)
         set_media_response_headers(response, request)
         return response
 
