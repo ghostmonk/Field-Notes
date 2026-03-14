@@ -121,7 +121,7 @@ async def get_media(request: Request, filename: str, size: int | None = None):
         logger.info(f"Looking for blob at path: {blob_path}")
         blob = bucket.blob(blob_path)
 
-        if not blob.exists():
+        if not await asyncio.to_thread(blob.exists):
             logger.error(f"Media file not found: {blob_path}")
             raise HTTPException(status_code=404, detail="Media file not found")
 
