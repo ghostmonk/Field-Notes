@@ -24,6 +24,7 @@ export function MasonryGrid({ photos, onPhotoClick }: Props) {
                         type="button"
                         aria-label={photo.caption || `Photo ${index + 1}`}
                     >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={photo.url}
                             srcSet={photo.srcset || undefined}
