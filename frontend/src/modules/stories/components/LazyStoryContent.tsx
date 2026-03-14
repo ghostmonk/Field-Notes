@@ -45,7 +45,7 @@ export const LazyStoryContent: React.FC<LazyStoryContentProps> = ({
 
     images.forEach((img) => {
       img.setAttribute('data-enhanced', 'true');
-      img.setAttribute('data-original-src', img.src);
+      img.setAttribute('data-retry-src', img.src);
 
       img.setAttribute('loading', 'lazy');
       img.setAttribute('decoding', 'async');
@@ -84,7 +84,7 @@ export const LazyStoryContent: React.FC<LazyStoryContentProps> = ({
             if (cancelled) return;
             try {
               const originalSrc =
-                img.getAttribute('data-original-src') || img.src;
+                img.getAttribute('data-retry-src') || img.src;
               const url = new URL(originalSrc, window.location.origin);
               url.searchParams.set('_retry', String(retryCount));
               img.addEventListener('load', onLoad);
@@ -120,7 +120,6 @@ export const LazyStoryContent: React.FC<LazyStoryContentProps> = ({
       ref={containerRef}
       className={className}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-      suppressHydrationWarning={true}
       data-testid={testId}
     />
   );

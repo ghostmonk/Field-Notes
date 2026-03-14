@@ -1,10 +1,10 @@
-import { useRef, useCallback } from 'react';
+import { type SyntheticEvent, useRef, useCallback } from 'react';
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1500;
 
 export function useImageRetry(): {
-    handleError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
+    handleError: (e: SyntheticEvent<HTMLImageElement>) => void;
     cleanup: () => void;
 } {
     const retryCountsRef = useRef<Map<string, number>>(new Map());
@@ -20,11 +20,11 @@ export function useImageRetry(): {
     }, []);
 
     const handleError = useCallback(
-        (e: React.SyntheticEvent<HTMLImageElement>) => {
+        (e: SyntheticEvent<HTMLImageElement>) => {
             const img = e.currentTarget;
             const originalSrc =
-                img.dataset.originalSrc || img.src.replace(/[?&]_retry=\d+/, '');
-            img.dataset.originalSrc = originalSrc;
+                img.dataset.retrySrc || img.src.replace(/[?&]_retry=\d+/, '');
+            img.dataset.retrySrc = originalSrc;
 
             const count = retryCountsRef.current.get(originalSrc) || 0;
 
@@ -35,6 +35,10 @@ export function useImageRetry(): {
 
             const nextCount = count + 1;
             retryCountsRef.current.set(originalSrc, nextCount);
+
+            // Clear any pending timeout for this src before scheduling new one
+            const existing = timeoutIdsRef.current.get(originalSrc);
+            if (existing) clearTimeout(existing);
 
             const delay = BASE_DELAY_MS * nextCount;
             const separator = originalSrc.includes('?') ? '&' : '?';
