@@ -165,6 +165,16 @@ When squash-merging a PR via `gh pr merge --squash`, the `--body` becomes the co
 - Backend: black + isort + flake8
 - Frontend: eslint --fix
 
+### PR Review Bot Rules
+
+When reviewing PRs as the GitHub bot, follow these rules strictly:
+
+- **Verify before reporting.** Read the actual code at the line you're citing. If the code already handles the concern, don't report it.
+- **Do not repeat rejected findings.** If a previous review raised an issue and it was addressed or explicitly rejected, do not raise it again in subsequent reviews. Check the commit history and previous comment threads before reporting.
+- **Understand React's event model.** React attaches `onLoad`/`onError` handlers directly to DOM elements for non-bubbling events. Direct `src` mutation on an `<img>` element still triggers React's synthetic event handlers. Do not claim otherwise without verification.
+- **Understand HTTP caching.** Network errors and timeouts produce no response body — browsers do not cache them. `Cache-Control: immutable` only applies to successful responses. Cache-busting query params (`?_retry=N`) create distinct cache keys by design.
+- **Severity must match impact.** HIGH means "will cause data loss, security vulnerability, or production outage." A theoretical concern about edge-case CDN behavior is not HIGH.
+
 ### Debugging Protocol
 
 - Before proposing any fix: read the actual error message, trace the call path from entry point to failure, identify the root cause. State the root cause explicitly before writing code.
