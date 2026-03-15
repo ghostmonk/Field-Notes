@@ -13,6 +13,8 @@ services:
       - MONGO_DB_NAME=${MONGO_DB_NAME:-ghostmonk}
       - BACKEND_URL=http://backend:5001
       - LOCAL_STORAGE_PATH=/app/local-uploads
+      - GH_TOKEN=${GH_TOKEN:-}
+      - GH_USERNAME=${GH_USERNAME:-}
     volumes:
       - ./backend:/app
       - ./shared/python:/shared/python

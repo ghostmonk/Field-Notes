@@ -11,7 +11,7 @@ import { displayRegistry, useFetchContent } from '@/modules/registry';
 import type { ContentType, DisplayType } from '@/modules/registry';
 import { StoryCard } from '@/modules/stories';
 import { useStoryMutations } from '@/modules/stories';
-import { ProjectCard } from '@/modules/projects';
+import { ContributionGraph, ProjectCard } from '@/modules/projects';
 import { PhotoEssayCard, PhotoEssayPage } from '@/modules/photo-essays';
 import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
@@ -370,6 +370,7 @@ export default function SectionPage({ section, view, initialListData, detailItem
             </Head>
             <div className="page-container">
                 <h1 className="page-title">{section.title}</h1>
+                {section.content_type === 'project' && <ContributionGraph />}
                 <SectionListView section={section} initialListData={initialListData} />
             </div>
         </>

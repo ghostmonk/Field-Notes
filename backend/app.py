@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from glogger import logger
 from handlers.backfill import backfill_published_flag
 from handlers.engagement import router as engagement_router
+from handlers.github import router as github_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
 from handlers.photo_essays import router as photo_essays_router
@@ -233,6 +234,7 @@ app.include_router(video_processing_router)
 app.include_router(engagement_router)
 app.include_router(search_router)
 app.include_router(versions_router)
+app.include_router(github_router)
 
 if __name__ == "__main__":
     import uvicorn

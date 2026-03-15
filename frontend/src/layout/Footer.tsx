@@ -6,6 +6,7 @@ import { useNavSections } from '@/hooks/useNavSections';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { iconMap } from '@/shared/lib/navIcons';
 import { HiPlusSm, HiCog, HiSearch } from 'react-icons/hi';
+import { FaGithub } from 'react-icons/fa';
 
 const config = getSiteConfig();
 
@@ -55,6 +56,14 @@ const Footer: React.FC = () => {
                                     </Link>
                                 </li>
                             ))}
+                            {config.github && (
+                                <li>
+                                    <a href={config.github.url} target="_blank" rel="noopener noreferrer" className="site-footer__link">
+                                        <FaGithub className="site-footer__link-icon" aria-hidden="true" />
+                                        GitHub
+                                    </a>
+                                </li>
+                            )}
                         </ul>
                     </div>
                 )}

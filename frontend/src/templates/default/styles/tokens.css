@@ -79,6 +79,13 @@
 
   --color-surface-draft: rgb(254 252 232);
   --color-border-draft: rgb(254 240 138);
+
+  /* Contribution graph levels */
+  --color-contrib-none: #ebedf0;
+  --color-contrib-first: #bfdbfe;
+  --color-contrib-second: #60a5fa;
+  --color-contrib-third: #2563eb;
+  --color-contrib-fourth: #1d4ed8;
 }
 
 .dark {
@@ -105,4 +112,11 @@
 
   --color-surface-draft: rgb(120 113 108 / 0.2);
   --color-border-draft: rgb(133 77 14);
+
+  /* Contribution graph levels (dark) */
+  --color-contrib-none: #161b22;
+  --color-contrib-first: #1e3a5f;
+  --color-contrib-second: #1d4ed8;
+  --color-contrib-third: #3b82f6;
+  --color-contrib-fourth: #60a5fa;
 }

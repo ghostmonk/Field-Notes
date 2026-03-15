@@ -278,6 +278,11 @@ async def ensure_indexes() -> None:
         name="content_versions_by_type",
     )
 
+    # GitHub cache indexes
+    github_cache = db["github_cache"]
+    if not await safe_create_index(github_cache, "key", unique=True):
+        failed_indexes.append("github_cache.key")
+
     if failed_indexes:
         logger.error(
             f"Database startup completed with {len(failed_indexes)} failed index(es): "
