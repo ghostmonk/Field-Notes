@@ -84,7 +84,7 @@ export function ContributionGraph() {
         >
             <div className="contrib-graph__header">
                 <span className="contrib-graph__total">
-                    {data.totalContributions.toLocaleString()} commits to personal repos this year
+                    {data.totalContributions.toLocaleString()} contributions to personal repos this year
                     <br />
                     <em className="contrib-graph__subtitle">Most of my work lives in org repos I can&#39;t show here</em>
                 </span>
