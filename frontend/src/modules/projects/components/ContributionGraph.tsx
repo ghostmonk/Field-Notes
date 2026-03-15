@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
+import { getSiteConfig } from '@/config';
 
 interface ContributionDay {
     date: string;
@@ -44,6 +45,8 @@ function getMonthLabels(weeks: ContributionWeek[]) {
     return months;
 }
 
+const github = getSiteConfig().github;
+
 export function ContributionGraph() {
     const [data, setData] = useState<ContributionData | null>(null);
     const [error, setError] = useState(false);
@@ -67,13 +70,13 @@ export function ContributionGraph() {
         return () => controller.abort();
     }, []);
 
-    if (error || !data) return null;
+    if (error || !data || !github) return null;
 
     const monthLabels = getMonthLabels(data.weeks);
 
     return (
         <a
-            href="https://github.com/ghostmonk"
+            href={github.url}
             target="_blank"
             rel="noopener noreferrer"
             className="contrib-graph"
@@ -85,7 +88,7 @@ export function ContributionGraph() {
                     <br />
                     <em className="contrib-graph__subtitle">Most of my work lives in org repos I can&#39;t show here</em>
                 </span>
-                <span className="contrib-graph__profile"><FaGithub />ghostmonk</span>
+                <span className="contrib-graph__profile"><FaGithub />{github.username}</span>
             </div>
 
             <div className="contrib-graph__grid-wrapper">

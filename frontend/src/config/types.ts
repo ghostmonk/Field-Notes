@@ -19,6 +19,10 @@ export interface SiteConfig {
     heading: string;
     body: string;
   };
+  github?: {
+    username: string;
+    url: string;
+  };
   footer: {
     links: Array<{ label: string; href: string }>;
   };

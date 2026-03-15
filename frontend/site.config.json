@@ -15,6 +15,10 @@
     "heading": "Roboto Slab",
     "body": "Poppins"
   },
+  "github": {
+    "username": "ghostmonk",
+    "url": "https://github.com/ghostmonk"
+  },
   "footer": {
     "links": [
       { "label": "Privacy", "href": "/privacy" },
