@@ -1799,7 +1799,7 @@ html:not(.dark) .gallery-card__image:not([data-loaded="true"]) {
     margin-bottom: var(--space-2xl);
     text-decoration: none;
     color: inherit;
-    overflow-x: auto;
+    overflow: hidden;
     transition: border-color var(--transition-fast);
 }
 .contrib-graph:hover {
@@ -1817,61 +1817,69 @@ html:not(.dark) .gallery-card__image:not([data-loaded="true"]) {
     font-weight: var(--font-weight-medium);
     color: var(--color-text-primary);
 }
+.contrib-graph__subtitle {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    font-style: italic;
+}
 .contrib-graph__profile {
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.35em;
 }
 
 .contrib-graph__grid-wrapper {
     display: flex;
-    gap: 4px;
+    gap: 3px;
 }
 .contrib-graph__day-labels {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    padding-top: 20px;
+    gap: 2px;
+    padding-top: 18px;
 }
 .contrib-graph__day-label {
     font-size: 10px;
     color: var(--color-text-tertiary);
-    height: 11px;
-    line-height: 11px;
+    height: 10px;
+    line-height: 10px;
     text-align: right;
-    width: 28px;
+    width: 26px;
 }
 
 .contrib-graph__grid-container {
     flex: 1;
     min-width: 0;
-    overflow-x: auto;
 }
 .contrib-graph__month-labels {
     display: grid;
-    grid-template-columns: repeat(53, 11px);
-    gap: 3px;
-    height: 17px;
-    margin-bottom: 3px;
+    grid-template-columns: repeat(53, 1fr);
+    gap: 2px;
+    height: 16px;
+    margin-bottom: 2px;
 }
 .contrib-graph__month-label {
     font-size: 10px;
     color: var(--color-text-tertiary);
-    line-height: 17px;
+    line-height: 16px;
 }
 
 .contrib-graph__grid {
-    display: flex;
-    gap: 3px;
+    display: grid;
+    grid-template-columns: repeat(53, 1fr);
+    gap: 2px;
 }
 .contrib-graph__column {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
 }
 
 .contrib-graph__cell {
-    width: 11px;
-    height: 11px;
+    width: 100%;
+    aspect-ratio: 1;
     border-radius: 2px;
     outline: 1px solid rgba(27, 31, 35, 0.06);
     outline-offset: -1px;
@@ -1901,6 +1909,11 @@ html:not(.dark) .gallery-card__image:not([data-loaded="true"]) {
     display: flex;
     align-items: center;
     gap: 3px;
+}
+.contrib-graph__legend .contrib-graph__cell {
+    width: 10px;
+    height: 10px;
+    aspect-ratio: auto;
 }
 .contrib-graph__legend-label {
     font-size: 10px;

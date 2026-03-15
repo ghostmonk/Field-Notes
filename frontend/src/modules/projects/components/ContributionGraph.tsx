@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { FaGithub } from 'react-icons/fa';
 
 interface ContributionDay {
     date: string;
@@ -76,9 +77,11 @@ export function ContributionGraph() {
         >
             <div className="contrib-graph__header">
                 <span className="contrib-graph__total">
-                    {data.totalContributions.toLocaleString()} contributions in the last year
+                    {data.totalContributions.toLocaleString()} commits to personal repos this year
+                    <br />
+                    <em className="contrib-graph__subtitle">Most of my work lives in org repos I can&#39;t show here</em>
                 </span>
-                <span className="contrib-graph__profile">@ghostmonk</span>
+                <span className="contrib-graph__profile"><FaGithub />ghostmonk</span>
             </div>
 
             <div className="contrib-graph__grid-wrapper">

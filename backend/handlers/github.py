@@ -40,7 +40,8 @@ async def _get_cached(db: AsyncIOMotorDatabase):
     doc = await db["github_cache"].find_one({"key": "contributions"})
     if not doc:
         return None
-    elapsed = (datetime.now(timezone.utc) - doc["fetched_at"]).total_seconds()
+    fetched_at = doc["fetched_at"].replace(tzinfo=timezone.utc)
+    elapsed = (datetime.now(timezone.utc) - fetched_at).total_seconds()
     if elapsed > CACHE_TTL_SECONDS:
         return None
     return doc["data"]
@@ -57,8 +58,8 @@ async def _fetch_from_github(token: str):
             },
             timeout=10.0,
         )
-    response.raise_for_status()
-    result = response.json()
+        response.raise_for_status()
+        result = response.json()
     if "errors" in result:
         raise ValueError(result["errors"])
     calendar = result["data"]["user"]["contributionsCollection"]["contributionCalendar"]
@@ -79,13 +80,13 @@ async def get_contributions():
 
     try:
         data = await _fetch_from_github(token)
-    except Exception as e:
+    except (httpx.HTTPError, ValueError, KeyError) as e:
         logger.error(f"Failed to fetch GitHub contributions: {e}")
         raise HTTPException(status_code=502, detail="Failed to fetch GitHub data")
 
     await db["github_cache"].update_one(
         {"key": "contributions"},
-        {"$set": {"key": "contributions", "data": data, "fetched_at": datetime.now(timezone.utc)}},
+        {"$set": {"data": data, "fetched_at": datetime.now(timezone.utc)}},
         upsert=True,
     )
 
