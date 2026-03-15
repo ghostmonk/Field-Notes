@@ -40,7 +40,9 @@ async def _get_cached(db: AsyncIOMotorDatabase):
     doc = await db["github_cache"].find_one({"key": "contributions"})
     if not doc:
         return None
-    fetched_at = doc["fetched_at"].replace(tzinfo=timezone.utc)
+    fetched_at = doc["fetched_at"]
+    if fetched_at.tzinfo is None:
+        fetched_at = fetched_at.replace(tzinfo=timezone.utc)
     elapsed = (datetime.now(timezone.utc) - fetched_at).total_seconds()
     if elapsed > CACHE_TTL_SECONDS:
         return None
@@ -91,10 +93,13 @@ async def get_contributions():
         logger.error(f"Failed to fetch GitHub contributions: {e}")
         raise HTTPException(status_code=502, detail="Failed to fetch GitHub data")
 
-    await db["github_cache"].update_one(
-        {"key": "contributions"},
-        {"$set": {"data": data, "fetched_at": datetime.now(timezone.utc)}},
-        upsert=True,
-    )
+    try:
+        await db["github_cache"].update_one(
+            {"key": "contributions"},
+            {"$set": {"data": data, "fetched_at": datetime.now(timezone.utc)}},
+            upsert=True,
+        )
+    except Exception:
+        logger.warning("Failed to write GitHub cache, returning data anyway")
 
     return data

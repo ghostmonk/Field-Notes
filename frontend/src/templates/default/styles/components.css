@@ -1881,7 +1881,7 @@ html:not(.dark) .gallery-card__image:not([data-loaded="true"]) {
     width: 100%;
     aspect-ratio: 1;
     border-radius: 2px;
-    outline: 1px solid rgba(27, 31, 35, 0.06);
+    outline: 1px solid var(--color-border-primary);
     outline-offset: -1px;
 }
 .contrib-graph__cell--none {
