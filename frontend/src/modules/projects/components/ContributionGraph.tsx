@@ -52,13 +52,8 @@ export function ContributionGraph() {
     const [error, setError] = useState(false);
 
     useEffect(() => {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        if (!apiUrl) {
-            setError(true);
-            return;
-        }
         const controller = new AbortController();
-        fetch(`${apiUrl}/github/contributions`, { signal: controller.signal })
+        fetch('/api/github/contributions', { signal: controller.signal })
             .then((res) => {
                 if (!res.ok) throw new Error(`${res.status}`);
                 return res.json();
