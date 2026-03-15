@@ -1,0 +1,133 @@
+import { useEffect, useState } from 'react';
+
+interface ContributionDay {
+    date: string;
+    contributionCount: number;
+    contributionLevel: string;
+}
+
+interface ContributionWeek {
+    contributionDays: ContributionDay[];
+}
+
+interface ContributionData {
+    totalContributions: number;
+    weeks: ContributionWeek[];
+}
+
+const LEVEL_CLASS: Record<string, string> = {
+    NONE: 'contrib-graph__cell--none',
+    FIRST_QUARTILE: 'contrib-graph__cell--first',
+    SECOND_QUARTILE: 'contrib-graph__cell--second',
+    THIRD_QUARTILE: 'contrib-graph__cell--third',
+    FOURTH_QUARTILE: 'contrib-graph__cell--fourth',
+};
+
+const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
+
+function getMonthLabels(weeks: ContributionWeek[]) {
+    const months: { label: string; col: number }[] = [];
+    const formatter = new Intl.DateTimeFormat('en-US', { month: 'short' });
+    let lastMonth = -1;
+
+    for (let i = 0; i < weeks.length; i++) {
+        const firstDay = weeks[i].contributionDays[0];
+        if (!firstDay) continue;
+        const d = new Date(firstDay.date + 'T00:00:00');
+        const m = d.getMonth();
+        if (m !== lastMonth) {
+            months.push({ label: formatter.format(d), col: i });
+            lastMonth = m;
+        }
+    }
+    return months;
+}
+
+export function ContributionGraph() {
+    const [data, setData] = useState<ContributionData | null>(null);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!apiUrl) {
+            setError(true);
+            return;
+        }
+        fetch(`${apiUrl}/github/contributions`)
+            .then((res) => {
+                if (!res.ok) throw new Error(`${res.status}`);
+                return res.json();
+            })
+            .then(setData)
+            .catch(() => setError(true));
+    }, []);
+
+    if (error || !data) return null;
+
+    const monthLabels = getMonthLabels(data.weeks);
+
+    return (
+        <a
+            href="https://github.com/ghostmonk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="contrib-graph"
+            data-testid="contribution-graph"
+        >
+            <div className="contrib-graph__header">
+                <span className="contrib-graph__total">
+                    {data.totalContributions.toLocaleString()} contributions in the last year
+                </span>
+                <span className="contrib-graph__profile">@ghostmonk</span>
+            </div>
+
+            <div className="contrib-graph__grid-wrapper">
+                <div className="contrib-graph__day-labels">
+                    {DAY_LABELS.map((label, i) => (
+                        <span key={i} className="contrib-graph__day-label">{label}</span>
+                    ))}
+                </div>
+
+                <div className="contrib-graph__grid-container">
+                    <div className="contrib-graph__month-labels">
+                        {monthLabels.map(({ label, col }) => (
+                            <span
+                                key={`${label}-${col}`}
+                                className="contrib-graph__month-label"
+                                style={{ gridColumnStart: col + 1 }}
+                            >
+                                {label}
+                            </span>
+                        ))}
+                    </div>
+
+                    <div className="contrib-graph__grid">
+                        {data.weeks.map((week, wi) => (
+                            <div key={wi} className="contrib-graph__column">
+                                {week.contributionDays.map((day) => (
+                                    <div
+                                        key={day.date}
+                                        className={`contrib-graph__cell ${LEVEL_CLASS[day.contributionLevel] || LEVEL_CLASS.NONE}`}
+                                        title={`${day.contributionCount} contributions on ${day.date}`}
+                                    />
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="contrib-graph__footer">
+                <div className="contrib-graph__legend">
+                    <span className="contrib-graph__legend-label">Less</span>
+                    <div className="contrib-graph__cell contrib-graph__cell--none" />
+                    <div className="contrib-graph__cell contrib-graph__cell--first" />
+                    <div className="contrib-graph__cell contrib-graph__cell--second" />
+                    <div className="contrib-graph__cell contrib-graph__cell--third" />
+                    <div className="contrib-graph__cell contrib-graph__cell--fourth" />
+                    <span className="contrib-graph__legend-label">More</span>
+                </div>
+            </div>
+        </a>
+    );
+}

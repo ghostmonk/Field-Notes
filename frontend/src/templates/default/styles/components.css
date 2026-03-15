@@ -1785,3 +1785,125 @@ html:not(.dark) .gallery-card__image:not([data-loaded="true"]) {
     transform: translate(-50%, -50%);
     pointer-events: none;
 }
+
+/* ===========================
+   Contribution Graph
+   =========================== */
+
+.contrib-graph {
+    display: block;
+    background-color: var(--color-surface-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-2xl);
+    text-decoration: none;
+    color: inherit;
+    overflow-x: auto;
+    transition: border-color var(--transition-fast);
+}
+.contrib-graph:hover {
+    border-color: var(--color-border-secondary);
+}
+
+.contrib-graph__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+.contrib-graph__total {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+}
+.contrib-graph__profile {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.contrib-graph__grid-wrapper {
+    display: flex;
+    gap: 4px;
+}
+.contrib-graph__day-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 20px;
+}
+.contrib-graph__day-label {
+    font-size: 10px;
+    color: var(--color-text-tertiary);
+    height: 11px;
+    line-height: 11px;
+    text-align: right;
+    width: 28px;
+}
+
+.contrib-graph__grid-container {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+}
+.contrib-graph__month-labels {
+    display: grid;
+    grid-template-columns: repeat(53, 11px);
+    gap: 3px;
+    height: 17px;
+    margin-bottom: 3px;
+}
+.contrib-graph__month-label {
+    font-size: 10px;
+    color: var(--color-text-tertiary);
+    line-height: 17px;
+}
+
+.contrib-graph__grid {
+    display: flex;
+    gap: 3px;
+}
+.contrib-graph__column {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.contrib-graph__cell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    outline: 1px solid rgba(27, 31, 35, 0.06);
+    outline-offset: -1px;
+}
+.contrib-graph__cell--none {
+    background-color: var(--color-contrib-none);
+}
+.contrib-graph__cell--first {
+    background-color: var(--color-contrib-first);
+}
+.contrib-graph__cell--second {
+    background-color: var(--color-contrib-second);
+}
+.contrib-graph__cell--third {
+    background-color: var(--color-contrib-third);
+}
+.contrib-graph__cell--fourth {
+    background-color: var(--color-contrib-fourth);
+}
+
+.contrib-graph__footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-md);
+}
+.contrib-graph__legend {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+.contrib-graph__legend-label {
+    font-size: 10px;
+    color: var(--color-text-tertiary);
+    margin: 0 2px;
+}

@@ -79,6 +79,13 @@
 
   --color-surface-draft: rgb(254 252 232);
   --color-border-draft: rgb(254 240 138);
+
+  /* GitHub contribution graph levels */
+  --color-contrib-none: #ebedf0;
+  --color-contrib-first: #9be9a8;
+  --color-contrib-second: #40c463;
+  --color-contrib-third: #30a14e;
+  --color-contrib-fourth: #216e39;
 }
 
 .dark {
@@ -105,4 +112,11 @@
 
   --color-surface-draft: rgb(120 113 108 / 0.2);
   --color-border-draft: rgb(133 77 14);
+
+  /* GitHub contribution graph levels (dark) */
+  --color-contrib-none: #161b22;
+  --color-contrib-first: #0e4429;
+  --color-contrib-second: #006d32;
+  --color-contrib-third: #26a641;
+  --color-contrib-fourth: #39d353;
 }
