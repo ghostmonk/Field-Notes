@@ -62,7 +62,10 @@ async def _fetch_from_github(token: str):
         result = response.json()
     if "errors" in result:
         raise ValueError(result["errors"])
-    calendar = result["data"]["user"]["contributionsCollection"]["contributionCalendar"]
+    user = result.get("data", {}).get("user")
+    if not user:
+        raise ValueError("GitHub user not found or token lacks read:user scope")
+    calendar = user["contributionsCollection"]["contributionCalendar"]
     return calendar
 
 
@@ -74,13 +77,16 @@ async def get_contributions():
 
     db = await get_db()
 
-    cached = await _get_cached(db)
-    if cached:
-        return cached
+    try:
+        cached = await _get_cached(db)
+        if cached:
+            return cached
+    except Exception:
+        logger.warning("Cache lookup failed, fetching from GitHub")
 
     try:
         data = await _fetch_from_github(token)
-    except (httpx.HTTPError, ValueError, KeyError) as e:
+    except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
         logger.error(f"Failed to fetch GitHub contributions: {e}")
         raise HTTPException(status_code=502, detail="Failed to fetch GitHub data")
 

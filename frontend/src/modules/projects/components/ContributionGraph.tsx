@@ -54,13 +54,17 @@ export function ContributionGraph() {
             setError(true);
             return;
         }
-        fetch(`${apiUrl}/github/contributions`)
+        const controller = new AbortController();
+        fetch(`${apiUrl}/github/contributions`, { signal: controller.signal })
             .then((res) => {
                 if (!res.ok) throw new Error(`${res.status}`);
                 return res.json();
             })
             .then(setData)
-            .catch(() => setError(true));
+            .catch((err) => {
+                if (err.name !== 'AbortError') setError(true);
+            });
+        return () => controller.abort();
     }, []);
 
     if (error || !data) return null;
