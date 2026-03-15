@@ -67,7 +67,7 @@ async def _fetch_from_github(token: str):
 
 @router.get("/github/contributions")
 async def get_contributions():
-    token = os.environ.get("GITHUB_TOKEN")
+    token = os.environ.get("GH_TOKEN")
     if not token:
         raise HTTPException(status_code=503, detail="GitHub integration not configured")
 
