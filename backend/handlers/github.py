@@ -17,8 +17,8 @@ GITHUB_GRAPHQL_URL = "https://api.github.com/graphql"
 CACHE_TTL_SECONDS = 3600
 
 CONTRIBUTIONS_QUERY = """
-query {
-  user(login: "ghostmonk") {
+query($login: String!) {
+  user(login: $login) {
     contributionsCollection {
       contributionCalendar {
         totalContributions
@@ -47,11 +47,11 @@ async def _get_cached(db: AsyncIOMotorDatabase):
     return doc["data"]
 
 
-async def _fetch_from_github(token: str):
+async def _fetch_from_github(token: str, username: str):
     async with httpx.AsyncClient() as client:
         response = await client.post(
             GITHUB_GRAPHQL_URL,
-            json={"query": CONTRIBUTIONS_QUERY},
+            json={"query": CONTRIBUTIONS_QUERY, "variables": {"login": username}},
             headers={
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json",
@@ -72,7 +72,8 @@ async def _fetch_from_github(token: str):
 @router.get("/github/contributions")
 async def get_contributions():
     token = os.environ.get("GH_TOKEN")
-    if not token:
+    username = os.environ.get("GH_USERNAME")
+    if not token or not username:
         raise HTTPException(status_code=503, detail="GitHub integration not configured")
 
     db = await get_db()
@@ -85,7 +86,7 @@ async def get_contributions():
         logger.warning("Cache lookup failed, fetching from GitHub")
 
     try:
-        data = await _fetch_from_github(token)
+        data = await _fetch_from_github(token, username)
     except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
         logger.error(f"Failed to fetch GitHub contributions: {e}")
         raise HTTPException(status_code=502, detail="Failed to fetch GitHub data")
