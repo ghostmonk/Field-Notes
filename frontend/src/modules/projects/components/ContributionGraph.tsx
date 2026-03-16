@@ -93,7 +93,25 @@ export function ContributionGraph() {
 
     const drag = useDragScroll();
 
-    if (error || !data || !github) return null;
+    if (error || !github) return null;
+
+    if (!data) {
+        return (
+            <div className="contrib-graph animate-pulse" data-testid="contribution-graph-skeleton">
+                <div className="contrib-graph__header">
+                    <div>
+                        <div className="h-4 w-48 bg-gray-300 dark:bg-gray-600 rounded mb-2" />
+                        <div className="h-3 w-64 bg-gray-200 dark:bg-gray-700 rounded" />
+                    </div>
+                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+                <div className="h-[86px] w-full bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+                <div className="contrib-graph__footer">
+                    <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+            </div>
+        );
+    }
 
     const monthLabels = getMonthLabels(data.weeks);
 
