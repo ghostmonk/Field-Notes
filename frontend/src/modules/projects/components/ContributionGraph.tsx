@@ -1,6 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { getSiteConfig } from '@/config';
+
+function useDragScroll() {
+    const ref = useRef<HTMLDivElement>(null);
+    const state = useRef({ isDown: false, startX: 0, scrollLeft: 0 });
+
+    const onMouseDown = useCallback((e: React.MouseEvent) => {
+        const el = ref.current;
+        if (!el) return;
+        state.current = { isDown: true, startX: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft };
+        el.style.cursor = 'grabbing';
+    }, []);
+
+    const onMouseUp = useCallback(() => {
+        state.current.isDown = false;
+        if (ref.current) ref.current.style.cursor = 'grab';
+    }, []);
+
+    const onMouseMove = useCallback((e: React.MouseEvent) => {
+        if (!state.current.isDown || !ref.current) return;
+        e.preventDefault();
+        const x = e.pageX - ref.current.offsetLeft;
+        ref.current.scrollLeft = state.current.scrollLeft - (x - state.current.startX);
+    }, []);
+
+    return { ref, onMouseDown, onMouseUp, onMouseLeave: onMouseUp, onMouseMove };
+}
 
 interface ContributionDay {
     date: string;
@@ -65,15 +91,14 @@ export function ContributionGraph() {
         return () => controller.abort();
     }, []);
 
+    const drag = useDragScroll();
+
     if (error || !data || !github) return null;
 
     const monthLabels = getMonthLabels(data.weeks);
 
     return (
-        <a
-            href={github.url}
-            target="_blank"
-            rel="noopener noreferrer"
+        <div
             className="contrib-graph"
             data-testid="contribution-graph"
         >
@@ -83,7 +108,12 @@ export function ContributionGraph() {
                     <br />
                     <em className="contrib-graph__subtitle">Most of my work lives in org repos I can&#39;t show here</em>
                 </span>
-                <span className="contrib-graph__profile"><FaGithub />{github.username}</span>
+                <a
+                    href={github.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="contrib-graph__profile"
+                ><FaGithub />{github.username}</a>
             </div>
 
             <div className="contrib-graph__grid-wrapper">
@@ -93,7 +123,14 @@ export function ContributionGraph() {
                     ))}
                 </div>
 
-                <div className="contrib-graph__grid-container">
+                <div
+                    className="contrib-graph__grid-container"
+                    ref={drag.ref}
+                    onMouseDown={drag.onMouseDown}
+                    onMouseUp={drag.onMouseUp}
+                    onMouseLeave={drag.onMouseLeave}
+                    onMouseMove={drag.onMouseMove}
+                >
                     <div className="contrib-graph__month-labels">
                         {monthLabels.map(({ label, col }) => (
                             <span
@@ -133,6 +170,6 @@ export function ContributionGraph() {
                     <span className="contrib-graph__legend-label">More</span>
                 </div>
             </div>
-        </a>
+        </div>
     );
 }
