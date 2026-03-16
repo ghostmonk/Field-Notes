@@ -2,16 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { ImageFilterPicker } from './ImageFilterPicker';
 
-const mockPreviews = {
-  auto_enhance: '/uploads/preview_auto_enhance.webp',
-  warm: '/uploads/preview_warm.webp',
-  cool: '/uploads/preview_cool.webp',
-  high_contrast: '/uploads/preview_high_contrast.webp',
-  bw: '/uploads/preview_bw.webp',
-  vivid: '/uploads/preview_vivid.webp',
-  vintage: '/uploads/preview_vintage.webp',
-};
-
 beforeEach(() => {
   HTMLDialogElement.prototype.showModal = vi.fn();
   HTMLDialogElement.prototype.close = vi.fn();
@@ -27,8 +17,6 @@ describe('ImageFilterPicker', () => {
     render(
       <ImageFilterPicker
         imageUrl="blob:test"
-        previews={mockPreviews}
-        loading={false}
         onConfirm={vi.fn()}
         onCancel={vi.fn()}
       />
@@ -36,12 +24,10 @@ describe('ImageFilterPicker', () => {
     expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalled();
   });
 
-  it('renders filter options when previews are loaded', () => {
+  it('renders all filter options immediately', () => {
     render(
       <ImageFilterPicker
         imageUrl="blob:test"
-        previews={mockPreviews}
-        loading={false}
         onConfirm={vi.fn()}
         onCancel={vi.fn()}
       />
@@ -52,27 +38,11 @@ describe('ImageFilterPicker', () => {
     expect(screen.getByTestId('filter-option-vintage')).toBeDefined();
   });
 
-  it('shows loading state', () => {
-    render(
-      <ImageFilterPicker
-        imageUrl="blob:test"
-        previews={{}}
-        loading={true}
-        onConfirm={vi.fn()}
-        onCancel={vi.fn()}
-      />
-    );
-    expect(screen.getByTestId('filter-picker-loading')).toBeDefined();
-    expect(screen.queryByTestId('filter-option-none')).toBeNull();
-  });
-
   it('defaults to none filter on apply', () => {
     const onConfirm = vi.fn();
     render(
       <ImageFilterPicker
         imageUrl="blob:test"
-        previews={mockPreviews}
-        loading={false}
         onConfirm={onConfirm}
         onCancel={vi.fn()}
       />
@@ -86,8 +56,6 @@ describe('ImageFilterPicker', () => {
     render(
       <ImageFilterPicker
         imageUrl="blob:test"
-        previews={mockPreviews}
-        loading={false}
         onConfirm={onConfirm}
         onCancel={vi.fn()}
       />
@@ -102,27 +70,11 @@ describe('ImageFilterPicker', () => {
     render(
       <ImageFilterPicker
         imageUrl="blob:test"
-        previews={mockPreviews}
-        loading={false}
         onConfirm={vi.fn()}
         onCancel={onCancel}
       />
     );
     fireEvent.click(screen.getByTestId('filter-picker-cancel'));
     expect(onCancel).toHaveBeenCalled();
-  });
-
-  it('disables apply button while loading', () => {
-    render(
-      <ImageFilterPicker
-        imageUrl="blob:test"
-        previews={{}}
-        loading={true}
-        onConfirm={vi.fn()}
-        onCancel={vi.fn()}
-      />
-    );
-    const applyBtn = screen.getByTestId('filter-picker-apply');
-    expect(applyBtn).toHaveProperty('disabled', true);
   });
 });

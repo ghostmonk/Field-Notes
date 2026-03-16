@@ -1,28 +1,24 @@
 import { useRef, useEffect, useState } from 'react';
 
-const FILTER_LABELS: Record<string, string> = {
-  none: 'None',
-  auto_enhance: 'Auto Enhance',
-  warm: 'Warm',
-  cool: 'Cool',
-  high_contrast: 'High Contrast',
-  bw: 'B&W',
-  vivid: 'Vivid',
-  vintage: 'Vintage',
-};
+const FILTERS: { key: string; label: string; css: string }[] = [
+  { key: 'none', label: 'None', css: 'none' },
+  { key: 'auto_enhance', label: 'Auto Enhance', css: 'contrast(1.15) saturate(1.1) brightness(1.02)' },
+  { key: 'warm', label: 'Warm', css: 'sepia(0.15) saturate(1.15) brightness(1.02)' },
+  { key: 'cool', label: 'Cool', css: 'saturate(0.9) brightness(1.02) hue-rotate(10deg)' },
+  { key: 'high_contrast', label: 'High Contrast', css: 'contrast(1.4) brightness(1.02)' },
+  { key: 'bw', label: 'B&W', css: 'grayscale(1) contrast(1.2)' },
+  { key: 'vivid', label: 'Vivid', css: 'saturate(1.5) contrast(1.15) brightness(1.05)' },
+  { key: 'vintage', label: 'Vintage', css: 'sepia(0.3) saturate(0.7) contrast(0.95) brightness(0.95)' },
+];
 
 interface ImageFilterPickerProps {
   imageUrl: string;
-  previews: Record<string, string>;
-  loading: boolean;
   onConfirm: (filter: string) => void;
   onCancel: () => void;
 }
 
 export function ImageFilterPicker({
   imageUrl,
-  previews,
-  loading,
   onConfirm,
   onCancel,
 }: ImageFilterPickerProps) {
@@ -32,6 +28,8 @@ export function ImageFilterPicker({
   useEffect(() => {
     dialogRef.current?.showModal();
   }, []);
+
+  const selectedCss = FILTERS.find(f => f.key === selectedFilter)?.css ?? 'none';
 
   return (
     <dialog
@@ -56,37 +54,30 @@ export function ImageFilterPicker({
           style={{ height: '300px' }}
         >
           <img
-            src={selectedFilter === 'none' || !previews[selectedFilter] ? imageUrl : previews[selectedFilter]}
+            src={imageUrl}
             alt="Preview"
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'contain',
               borderRadius: '0.5rem',
+              filter: selectedCss,
             }}
           />
         </div>
 
-        {loading ? (
-          <div
-            className="flex items-center justify-center py-8"
-            data-testid="filter-picker-loading"
-          >
-            <span style={{ color: 'var(--color-text-secondary)' }}>
-              Generating previews...
-            </span>
-          </div>
-        ) : (
-          <div
-            className="flex gap-3 overflow-x-auto pb-2"
-            style={{ scrollbarWidth: 'thin' }}
-          >
+        <div
+          className="flex gap-3 overflow-x-auto pb-2"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          {FILTERS.map(({ key, label, css }) => (
             <button
               type="button"
-              onClick={() => setSelectedFilter('none')}
+              key={key}
+              onClick={() => setSelectedFilter(key)}
               className="flex flex-col items-center flex-shrink-0"
               style={{
-                border: selectedFilter === 'none'
+                border: selectedFilter === key
                   ? '2px solid var(--color-accent-primary)'
                   : '2px solid transparent',
                 borderRadius: '0.5rem',
@@ -94,74 +85,23 @@ export function ImageFilterPicker({
                 background: 'none',
                 cursor: 'pointer',
               }}
-              data-testid="filter-option-none"
+              data-testid={`filter-option-${key}`}
             >
               <img
                 src={imageUrl}
-                alt="No filter"
+                alt={label}
                 style={{
                   width: '80px',
                   height: '80px',
                   objectFit: 'cover',
                   borderRadius: '0.375rem',
+                  filter: css,
                 }}
               />
-              <span className="text-xs mt-1">None</span>
+              <span className="text-xs mt-1">{label}</span>
             </button>
-
-            {Object.entries(FILTER_LABELS).map(([key, label]) => {
-              if (key === 'none') return null;
-              const previewUrl = previews[key];
-
-              return (
-                <button
-                  type="button"
-                  key={key}
-                  onClick={() => setSelectedFilter(key)}
-                  className="flex flex-col items-center flex-shrink-0"
-                  style={{
-                    border: selectedFilter === key
-                      ? '2px solid var(--color-accent-primary)'
-                      : '2px solid transparent',
-                    borderRadius: '0.5rem',
-                    padding: '0.25rem',
-                    background: 'none',
-                    cursor: 'pointer',
-                  }}
-                  data-testid={`filter-option-${key}`}
-                >
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt={label}
-                      style={{
-                        width: '80px',
-                        height: '80px',
-                        objectFit: 'cover',
-                        borderRadius: '0.375rem',
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '0.375rem',
-                        backgroundColor: 'var(--color-surface-secondary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>...</span>
-                    </div>
-                  )}
-                  <span className="text-xs mt-1">{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+          ))}
+        </div>
 
         <div className="mt-4 flex justify-end gap-2">
           <button
@@ -177,7 +117,6 @@ export function ImageFilterPicker({
             onClick={() => onConfirm(selectedFilter)}
             className="btn btn--primary btn--sm"
             data-testid="filter-picker-apply"
-            disabled={loading}
           >
             Apply
           </button>

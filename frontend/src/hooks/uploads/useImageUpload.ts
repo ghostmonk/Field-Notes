@@ -18,8 +18,6 @@ export interface UseImageUploadReturn extends UseFileUploadReturn {
   pendingAltText: { resolve: (altText: string) => void } | null;
   pendingFilter: {
     imageUrl: string;
-    previews: Record<string, string>;
-    loading: boolean;
     resolve: (filter: string) => void;
   } | null;
 }
@@ -37,37 +35,17 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
 
   const [pendingFilter, setPendingFilter] = useState<{
     imageUrl: string;
-    previews: Record<string, string>;
-    loading: boolean;
     resolve: (filter: string) => void;
   } | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const showFilterPicker = useCallback(async (resized: File | Blob, fileName: string): Promise<string> => {
+  const showFilterPicker = useCallback(async (resized: File | Blob): Promise<string> => {
     const imageUrl = URL.createObjectURL(resized);
 
     const filterPromise = new Promise<string>((resolve) => {
-      setPendingFilter({ imageUrl, previews: {}, loading: true, resolve });
+      setPendingFilter({ imageUrl, resolve });
     });
-
-    const previewFormData = new FormData();
-    previewFormData.append('file', resized, fileName);
-    try {
-      const previewResponse = await fetch('/api/filter-previews', {
-        method: 'POST',
-        body: previewFormData,
-        credentials: 'include',
-      });
-      if (previewResponse.ok) {
-        const previewData = await previewResponse.json();
-        setPendingFilter((prev) => prev ? { ...prev, previews: previewData.previews || {}, loading: false } : null);
-      } else {
-        setPendingFilter((prev) => prev ? { ...prev, loading: false } : null);
-      }
-    } catch {
-      setPendingFilter((prev) => prev ? { ...prev, loading: false } : null);
-    }
 
     const selectedFilter = await filterPromise;
     setPendingFilter(null);
@@ -86,7 +64,7 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
       baseUpload.setError('Failed to process image. Please try a different file.');
       return;
     }
-    const selectedFilter = await showFilterPicker(resized, file.name);
+    const selectedFilter = await showFilterPicker(resized);
 
     if (selectedFilter === FILTER_CANCEL) {
       if (baseUpload.inputRef.current) {
@@ -153,7 +131,7 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
       baseUpload.setError('Failed to process image for re-filtering.');
       return;
     }
-    const selectedFilter = await showFilterPicker(resized, fileName);
+    const selectedFilter = await showFilterPicker(resized);
 
     if (selectedFilter === FILTER_CANCEL) return;
 
