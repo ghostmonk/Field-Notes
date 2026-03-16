@@ -104,9 +104,9 @@ export function ContributionGraph() {
         >
             <div className="contrib-graph__header">
                 <span className="contrib-graph__total">
-                    {data.totalContributions.toLocaleString()} contributions to personal repos this year
+                    {data.totalContributions.toLocaleString()} contributions this year
                     <br />
-                    <em className="contrib-graph__subtitle">Most of my work lives in org repos I can&#39;t show here</em>
+                    <em className="contrib-graph__subtitle">Some of my contributions are no longer reportable through GitHub</em>
                 </span>
                 <a
                     href={github.url}
