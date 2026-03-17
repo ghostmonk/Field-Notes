@@ -289,8 +289,6 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             {pendingFilter && createPortal(
                 <ImageFilterPicker
                     imageUrl={pendingFilter.imageUrl}
-                    previews={pendingFilter.previews}
-                    loading={pendingFilter.loading}
                     onConfirm={(filter) => pendingFilter?.resolve(filter)}
                     onCancel={() => pendingFilter?.resolve(FILTER_CANCEL)}
                 />,

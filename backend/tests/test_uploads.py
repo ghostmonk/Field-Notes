@@ -2,9 +2,7 @@ import io
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from handlers.image_filters import AVAILABLE_FILTERS
 from handlers.uploads import IMAGE_SIZES, process_image_file
-from httpx import ASGITransport, AsyncClient
 from PIL import Image
 
 
@@ -85,50 +83,3 @@ class TestProcessImageFileWithFilter:
 
         assert result.primary_url is not None
         assert mock_upload.call_count == len(IMAGE_SIZES)
-
-
-class TestFilterPreviewEndpoint:
-    @pytest.mark.asyncio
-    async def test_returns_all_filter_names(self, mock_auth, auth_headers):
-        """Preview endpoint returns a preview URL for each non-none filter."""
-        from tests.conftest import test_app
-
-        contents = _make_test_image(width=400, height=300)
-
-        with (
-            patch("handlers.uploads.upload_file", new_callable=AsyncMock) as mock_upload,
-            patch("handlers.uploads._cleanup_old_previews"),
-            patch("handlers.uploads.LOCAL_STORAGE_PATH", "/tmp/test-uploads"),
-        ):
-            mock_upload.return_value = ("uploads/preview.webp", "/uploads/preview.webp")
-
-            async with AsyncClient(
-                transport=ASGITransport(app=test_app), base_url="http://test"
-            ) as ac:
-                response = await ac.post(
-                    "/uploads/filter-previews",
-                    files={"file": ("test.jpg", io.BytesIO(contents), "image/jpeg")},
-                    headers=auth_headers,
-                )
-
-        assert response.status_code == 200
-        data = response.json()
-        expected_filters = [f for f in AVAILABLE_FILTERS if f != "none"]
-        assert "previews" in data
-        for filter_name in expected_filters:
-            assert filter_name in data["previews"]
-
-    @pytest.mark.asyncio
-    async def test_requires_auth(self):
-        """Preview endpoint requires authentication."""
-        from tests.conftest import test_app
-
-        contents = _make_test_image(width=400, height=300)
-
-        async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
-            response = await ac.post(
-                "/uploads/filter-previews",
-                files={"file": ("test.jpg", io.BytesIO(contents), "image/jpeg")},
-            )
-
-        assert response.status_code == 401
