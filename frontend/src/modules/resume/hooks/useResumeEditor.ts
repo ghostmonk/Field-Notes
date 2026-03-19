@@ -173,6 +173,9 @@ export function useResumeEditor(): UseResumeEditorReturn {
       return;
     }
 
+    if (isSaving) return;
+    setIsSaving(true);
+
     try {
       await apiClient.resume.delete(session.accessToken);
       setResume(EMPTY_RESUME);
@@ -184,8 +187,10 @@ export function useResumeEditor(): UseResumeEditorReturn {
       } else {
         setError('Failed to delete resume');
       }
+    } finally {
+      setIsSaving(false);
     }
-  }, [session, showToast]);
+  }, [session, isSaving, showToast]);
 
   return {
     resume,

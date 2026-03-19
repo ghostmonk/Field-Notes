@@ -122,7 +122,7 @@ function ResumeDocument({ resume }: { resume: Resume }) {
                     {e.field_of_study ? ` - ${e.field_of_study}` : ''}
                   </Text>
                   <Text style={styles.entrySubtitle}>
-                    {e.start_date} - {e.end_date || 'Present'}
+                    {e.start_date}{e.end_date ? ` - ${e.end_date}` : ''}
                   </Text>
                 </View>
                 <Text style={styles.entrySubtitle}>{e.institution}</Text>

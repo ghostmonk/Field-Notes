@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { WorkExperience } from '@/shared/types/api';
 
 interface WorkExperienceFormProps {
@@ -23,11 +23,8 @@ function TechnologiesInput({
   technologies: string[];
   onCommit: (techs: string[]) => void;
 }) {
-  const [text, setText] = useState(technologies.join(', '));
-
-  useEffect(() => {
-    setText(technologies.join(', '));
-  }, [technologies]);
+  const initialRef = useRef(technologies.join(', '));
+  const [text, setText] = useState(initialRef.current);
 
   const handleBlur = () => {
     const techs = text

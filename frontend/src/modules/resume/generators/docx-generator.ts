@@ -126,7 +126,7 @@ export async function generateDocx(resume: Resume): Promise<void> {
               bold: true,
             }),
             new TextRun({
-              text: `    ${e.start_date} - ${e.end_date || 'Present'}`,
+              text: `    ${e.start_date}${e.end_date ? ` - ${e.end_date}` : ''}`,
               color: '555555',
               size: 20,
             }),

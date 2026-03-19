@@ -189,7 +189,7 @@ async def update_resume(
 
         current_time = datetime.now(timezone.utc)
 
-        update_data = {k: v for k, v in resume.model_dump().items() if v is not None}
+        update_data = resume.model_dump(exclude_unset=True)
         update_data["updatedDate"] = current_time
 
         result = await collection.update_one(
