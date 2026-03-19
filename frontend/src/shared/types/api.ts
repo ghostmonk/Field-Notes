@@ -316,4 +316,58 @@ export interface BulkCountsRequest {
 
 export interface BulkCountsResponse {
   counts: Record<string, { reactions: Record<string, number>; comment_count: number }>;
-} 
+}
+
+/**
+ * Resume types
+ */
+export interface ContactInfo {
+  full_name: string;
+  email: string;
+  phone?: string;
+  location?: string;
+  website?: string;
+  linkedin?: string;
+  github?: string;
+}
+
+export interface WorkExperience {
+  company: string;
+  title: string;
+  start_date: string;
+  end_date?: string;
+  current: boolean;
+  description: string;
+  technologies: string[];
+}
+
+export interface Education {
+  institution: string;
+  degree: string;
+  field_of_study?: string;
+  start_date: string;
+  end_date?: string;
+  description?: string;
+}
+
+export interface Resume {
+  id: string;
+  user_id: string;
+  contact: ContactInfo;
+  summary: string;
+  work_experience: WorkExperience[];
+  education: Education[];
+  skills: string[];
+  createdDate: string;
+  updatedDate: string;
+}
+
+export interface CreateResumeRequest {
+  contact: ContactInfo;
+  summary?: string;
+  work_experience?: WorkExperience[];
+  education?: Education[];
+  skills?: string[];
+}
+
+export type UpdateResumeRequest = Partial<CreateResumeRequest>;

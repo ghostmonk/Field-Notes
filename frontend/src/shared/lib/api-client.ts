@@ -28,6 +28,9 @@ import {
   PhotoEssayCard,
   CreatePhotoEssayRequest,
   UpdatePhotoEssayRequest,
+  Resume,
+  CreateResumeRequest,
+  UpdateResumeRequest,
 } from '@/shared/types/api';
 import { ApiRequestError } from '@/shared/types/error';
 
@@ -462,6 +465,34 @@ const apiClient = {
 
     delete: (id: string, token: string) =>
       fetchApi<void>(apiRoutes.photoEssays.delete(id), {
+        method: 'DELETE',
+        token,
+      }),
+  },
+
+  /**
+   * Resume methods
+   */
+  resume: {
+    get: (token: string) =>
+      fetchApi<Resume>('/api/resume', { token }),
+
+    create: (data: CreateResumeRequest, token: string) =>
+      fetchApi<Resume, CreateResumeRequest>('/api/resume', {
+        method: 'POST',
+        body: data,
+        token,
+      }),
+
+    update: (data: UpdateResumeRequest, token: string) =>
+      fetchApi<Resume, UpdateResumeRequest>('/api/resume', {
+        method: 'PUT',
+        body: data,
+        token,
+      }),
+
+    delete: (token: string) =>
+      fetchApi<void>('/api/resume', {
         method: 'DELETE',
         token,
       }),
