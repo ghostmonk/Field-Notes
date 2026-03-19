@@ -16,14 +16,16 @@ interface DownloadButtonsProps {
 
 export function DownloadButtons({ resume }: DownloadButtonsProps) {
   const [generatingDocx, setGeneratingDocx] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDocxDownload = async () => {
     setGeneratingDocx(true);
+    setError(null);
     try {
       const { generateDocx } = await import('../generators/docx-generator');
       await generateDocx(resume as Resume);
-    } catch (err) {
-      console.error('DOCX generation failed:', err);
+    } catch {
+      setError('DOCX generation failed');
     } finally {
       setGeneratingDocx(false);
     }
@@ -32,7 +34,7 @@ export function DownloadButtons({ resume }: DownloadButtonsProps) {
   const hasData = resume.contact?.full_name;
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3 items-center">
       {hasData && <PDFDownload resume={resume as Resume} />}
       <button
         type="button"
@@ -42,6 +44,9 @@ export function DownloadButtons({ resume }: DownloadButtonsProps) {
       >
         {generatingDocx ? 'Generating...' : 'Download DOCX'}
       </button>
+      {error && (
+        <span className="text-sm text-red-500">{error}</span>
+      )}
     </div>
   );
 }

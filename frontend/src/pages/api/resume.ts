@@ -67,7 +67,7 @@ export default async function handler(
     }
 
     const data = await response.json();
-    return res.status(200).json(data);
+    return res.status(response.status).json(data);
   } catch (error) {
     console.error('Fatal error in /api/resume:', error);
     return res.status(500).json({

@@ -153,9 +153,11 @@ function ResumeDocument({ resume }: { resume: Resume }) {
 
 export function PDFDownloadButton({ resume }: { resume: Resume }) {
   const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDownload = async () => {
     setGenerating(true);
+    setError(null);
     try {
       const blob = await pdf(<ResumeDocument resume={resume} />).toBlob();
       const url = URL.createObjectURL(blob);
@@ -166,21 +168,24 @@ export function PDFDownloadButton({ resume }: { resume: Resume }) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('PDF generation failed:', err);
+    } catch {
+      setError('PDF generation failed');
     } finally {
       setGenerating(false);
     }
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleDownload}
-      disabled={generating}
-      className="btn btn-primary text-sm"
-    >
-      {generating ? 'Generating...' : 'Download PDF'}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleDownload}
+        disabled={generating}
+        className="btn btn-primary text-sm"
+      >
+        {generating ? 'Generating...' : 'Download PDF'}
+      </button>
+      {error && <span className="text-sm text-red-500">{error}</span>}
+    </>
   );
 }

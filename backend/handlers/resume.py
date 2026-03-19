@@ -13,6 +13,7 @@ from middleware.rate_limit import limiter
 from models.resume import ResumeCreate, ResumeResponse, ResumeUpdate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
+from pymongo.errors import DuplicateKeyError
 from utils import find_one_and_convert
 
 router = APIRouter()
@@ -136,6 +137,8 @@ async def create_resume(
 
     except HTTPException:
         raise
+    except DuplicateKeyError:
+        raise HTTPException(status_code=409, detail="Resume already exists for this user")
     except Exception as e:
         logger.exception_with_context(
             "Error creating resume",

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { WorkExperience } from '@/shared/types/api';
 
 interface WorkExperienceFormProps {
@@ -14,6 +15,38 @@ const EMPTY_WORK: WorkExperience = {
   description: '',
   technologies: [],
 };
+
+function TechnologiesInput({
+  technologies,
+  onCommit,
+}: {
+  technologies: string[];
+  onCommit: (techs: string[]) => void;
+}) {
+  const [text, setText] = useState(technologies.join(', '));
+
+  useEffect(() => {
+    setText(technologies.join(', '));
+  }, [technologies]);
+
+  const handleBlur = () => {
+    const techs = text
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+    onCommit(techs);
+  };
+
+  return (
+    <input
+      type="text"
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={handleBlur}
+      className="w-full px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)]"
+    />
+  );
+}
 
 export function WorkExperienceForm({
   items,
@@ -35,14 +68,6 @@ export function WorkExperienceForm({
       return { ...item, [field]: value };
     });
     onChange(updated);
-  };
-
-  const updateTechnologies = (index: number, value: string) => {
-    const techs = value
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-    updateItem(index, 'technologies', techs);
   };
 
   return (
@@ -150,11 +175,9 @@ export function WorkExperienceForm({
             <label className="block text-sm font-medium mb-1">
               Technologies (comma-separated)
             </label>
-            <input
-              type="text"
-              value={item.technologies.join(', ')}
-              onChange={(e) => updateTechnologies(index, e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)]"
+            <TechnologiesInput
+              technologies={item.technologies}
+              onCommit={(techs) => updateItem(index, 'technologies', techs)}
             />
           </div>
         </div>
