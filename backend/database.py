@@ -270,7 +270,13 @@ async def ensure_indexes() -> None:
 
     # Resumes indexes
     resumes = db["resumes"]
-    if not await safe_create_index(resumes, "user_id", unique=True):
+    if not await safe_create_index(
+        resumes,
+        "user_id",
+        unique=True,
+        partialFilterExpression={"deleted": {"$ne": True}},
+        name="resumes_user_id_unique_active",
+    ):
         failed_indexes.append("resumes.user_id")
 
     # Content versions indexes

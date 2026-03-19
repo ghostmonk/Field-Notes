@@ -162,7 +162,9 @@ export function PDFDownloadButton({ resume }: { resume: Resume }) {
       const link = document.createElement('a');
       link.href = url;
       link.download = `${resume.contact.full_name.replace(/\s+/g, '_')}_Resume.pdf`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('PDF generation failed:', err);

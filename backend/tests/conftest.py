@@ -47,8 +47,13 @@ from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
 from handlers.video_processing import router as video_processing_router
 from httpx import ASGITransport, AsyncClient
+from middleware.rate_limit import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 test_app = FastAPI()
+test_app.state.limiter = limiter
+test_app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 test_app.include_router(stories_router)
 test_app.include_router(uploads_router)
 test_app.include_router(users_router)
@@ -170,6 +175,13 @@ def mock_logger():
 def setup_test_environment():
     """Test environment is set up at module load time via os.environ.setdefault"""
     pass
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Reset rate limiter state between tests to prevent 429s."""
+    limiter.reset()
+    yield
 
 
 @pytest.fixture

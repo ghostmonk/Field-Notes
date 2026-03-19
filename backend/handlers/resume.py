@@ -9,6 +9,7 @@ from database import get_resumes_collection
 from decorators.auth import requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from glogger import logger
+from middleware.rate_limit import limiter
 from models.resume import ResumeCreate, ResumeResponse, ResumeUpdate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -72,6 +73,7 @@ async def get_resume(
 
 
 @router.post("/resume", response_model=ResumeResponse, status_code=201)
+@limiter.limit("5/minute")
 @requires_auth
 async def create_resume(
     request: Request,
@@ -156,6 +158,7 @@ async def create_resume(
 
 
 @router.put("/resume", response_model=ResumeResponse)
+@limiter.limit("5/minute")
 @requires_auth
 async def update_resume(
     request: Request,
@@ -240,6 +243,7 @@ async def update_resume(
 
 
 @router.delete("/resume", status_code=204)
+@limiter.limit("5/minute")
 @requires_auth
 async def delete_resume(
     request: Request,

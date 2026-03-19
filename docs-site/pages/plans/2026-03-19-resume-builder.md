@@ -1,7 +1,5 @@
 # Resume Builder Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Build a resume builder feature into Field Notes — admin-only form for editing resume data stored in MongoDB, with client-side PDF and DOCX download.
 
 **Architecture:** Single `resumes` MongoDB collection stores one resume document per user (keyed by `user_id`, unique). Backend provides CRUD endpoints following existing handler patterns. Frontend provides an admin page with a multi-section form. PDF generation uses `@react-pdf/renderer` (dynamic import, SSR-disabled). DOCX generation uses `docx` npm package. No new section/routing integration — standalone admin page.
