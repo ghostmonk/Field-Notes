@@ -2,9 +2,55 @@ import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { Resume } from '@/shared/types/api';
 import { DownloadButtons } from '@/modules/resume';
+import {
+  HiOutlineMail,
+  HiOutlinePhone,
+  HiOutlineLocationMarker,
+  HiOutlineCalendar,
+} from 'react-icons/hi';
+import { FaLinkedinIn, FaGithub } from 'react-icons/fa';
 
 interface ResumePageProps {
   resume: Resume | null;
+}
+
+function parseDescription(text: string) {
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let bulletBuffer: string[] = [];
+
+  const flushBullets = () => {
+    if (bulletBuffer.length > 0) {
+      elements.push(
+        <ul
+          key={`ul-${elements.length}`}
+          className="list-disc list-outside ml-4 mt-1 space-y-0.5 text-sm"
+        >
+          {bulletBuffer.map((b, i) => (
+            <li key={i}>{b}</li>
+          ))}
+        </ul>,
+      );
+      bulletBuffer = [];
+    }
+  };
+
+  for (const line of lines) {
+    if (line.startsWith('- ')) {
+      bulletBuffer.push(line.slice(2));
+    } else {
+      flushBullets();
+      if (line.trim()) {
+        elements.push(
+          <p key={`p-${elements.length}`} className="text-sm mt-1">
+            {line}
+          </p>,
+        );
+      }
+    }
+  }
+  flushBullets();
+  return elements;
 }
 
 export const getServerSideProps: GetServerSideProps<ResumePageProps> = async () => {
@@ -31,121 +77,165 @@ export default function ResumePage({ resume }: ResumePageProps) {
   }
 
   const c = resume.contact;
-  const contactParts = [c.email, c.phone, c.location, c.website, c.linkedin, c.github].filter(Boolean);
+  const sectionHeading =
+    'text-base font-bold uppercase tracking-wider border-b-2 border-[var(--color-text-primary)] pb-1 mb-4';
 
   return (
     <>
       <Head>
         <title>{c.full_name ? `${c.full_name} - Resume` : 'Resume'}</title>
       </Head>
-      <div className="max-w-4xl mx-auto py-8">
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            {c.full_name && (
-              <h1 className="text-3xl font-bold">{c.full_name}</h1>
-            )}
-            {contactParts.length > 0 && (
-              <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-                {contactParts.join('  |  ')}
-              </p>
-            )}
+      <div className="max-w-5xl mx-auto">
+        {/* Dark header */}
+        <div className="bg-[#1b2838] text-white px-8 py-6 rounded-t-lg">
+          <div className="flex items-start justify-between">
+            <div>
+              {c.full_name && (
+                <h1 className="text-2xl font-bold tracking-wide">{c.full_name}</h1>
+              )}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-300">
+                {c.phone && (
+                  <span className="flex items-center gap-1">
+                    <HiOutlinePhone className="w-3.5 h-3.5" />
+                    {c.phone}
+                  </span>
+                )}
+                {c.email && (
+                  <span className="flex items-center gap-1">
+                    <HiOutlineMail className="w-3.5 h-3.5" />
+                    {c.email}
+                  </span>
+                )}
+                {c.location && (
+                  <span className="flex items-center gap-1">
+                    <HiOutlineLocationMarker className="w-3.5 h-3.5" />
+                    {c.location}
+                  </span>
+                )}
+                {c.linkedin && (
+                  <span className="flex items-center gap-1">
+                    <FaLinkedinIn className="w-3.5 h-3.5" />
+                    {c.linkedin}
+                  </span>
+                )}
+                {c.github && (
+                  <span className="flex items-center gap-1">
+                    <FaGithub className="w-3.5 h-3.5" />
+                    {c.github}
+                  </span>
+                )}
+              </div>
+            </div>
+            <DownloadButtons resume={resume} />
           </div>
-          <DownloadButtons resume={resume} />
         </div>
 
-        {resume.summary && (
-          <div className="border-t border-[var(--color-border)] pt-6 mt-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-secondary)] mb-3">
-              Summary
-            </h2>
-            <p className="whitespace-pre-line">{resume.summary}</p>
-          </div>
-        )}
-
-        {resume.work_experience.length > 0 && (
-          <div className="border-t border-[var(--color-border)] pt-6 mt-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-secondary)] mb-4">
-              Experience
-            </h2>
-            <div className="space-y-6">
-              {resume.work_experience.map((w, i) => (
-                <div key={i} className="pl-4 border-l-2 border-[var(--color-border)]">
-                  {w.title && <div className="font-semibold">{w.title}</div>}
-                  <div className="flex justify-between text-sm text-[var(--color-text-secondary)]">
-                    <span>{w.company}</span>
-                    <span>
-                      {w.start_date}
-                      {w.current ? ' - Present' : w.end_date ? ` - ${w.end_date}` : ''}
-                    </span>
-                  </div>
-                  {w.description && (
-                    <p className="mt-2 text-sm whitespace-pre-line">{w.description}</p>
-                  )}
-                  {w.technologies.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {w.technologies.map((t, j) => (
-                        <span
-                          key={j}
-                          className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)]"
-                        >
-                          {t}
+        {/* Two-column body */}
+        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 px-8 py-6">
+          {/* Left column: Experience + Education */}
+          <div className="space-y-8">
+            {resume.work_experience.length > 0 && (
+              <section>
+                <h2 className={sectionHeading}>Experience</h2>
+                <div className="space-y-5">
+                  {resume.work_experience.map((w, i) => (
+                    <div key={i}>
+                      {w.title && (
+                        <div className="font-bold text-[var(--color-text-primary)]">
+                          {w.title}
+                        </div>
+                      )}
+                      {w.company && (
+                        <div className="font-bold underline text-[var(--color-text-primary)]">
+                          {w.company}
+                        </div>
+                      )}
+                      <div className="flex flex-wrap items-center gap-x-4 text-xs text-[var(--color-text-secondary)] mt-0.5">
+                        <span className="flex items-center gap-1">
+                          <HiOutlineCalendar className="w-3 h-3" />
+                          {w.start_date}
+                          {w.current ? ' - Present' : w.end_date ? ` - ${w.end_date}` : ''}
                         </span>
-                      ))}
+                      </div>
+                      {w.description && (
+                        <div className="mt-1">{parseDescription(w.description)}</div>
+                      )}
+                      {w.technologies.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {w.technologies.map((t, j) => (
+                            <span
+                              key={j}
+                              className="text-xs px-2 py-0.5 rounded border border-[var(--color-border)] text-[var(--color-text-secondary)]"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </section>
+            )}
 
-        {resume.education.length > 0 && (
-          <div className="border-t border-[var(--color-border)] pt-6 mt-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-secondary)] mb-4">
-              Education
-            </h2>
-            <div className="space-y-4">
-              {resume.education.map((e, i) => (
-                <div key={i} className="pl-4 border-l-2 border-[var(--color-border)]">
-                  {e.degree && (
-                    <div className="font-semibold">
-                      {e.degree}
-                      {e.field_of_study ? ` - ${e.field_of_study}` : ''}
+            {resume.education.length > 0 && (
+              <section>
+                <h2 className={sectionHeading}>Education</h2>
+                <div className="space-y-4">
+                  {resume.education.map((e, i) => (
+                    <div key={i}>
+                      {e.degree && (
+                        <div className="font-bold text-[var(--color-text-primary)]">
+                          {e.degree}
+                          {e.field_of_study ? ` - ${e.field_of_study}` : ''}
+                        </div>
+                      )}
+                      {e.institution && (
+                        <div className="text-sm text-[var(--color-text-secondary)]">
+                          {e.institution}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] mt-0.5">
+                        <HiOutlineCalendar className="w-3 h-3" />
+                        {e.start_date}
+                        {e.end_date ? ` - ${e.end_date}` : ''}
+                      </div>
+                      {e.description && (
+                        <p className="mt-1 text-sm">{e.description}</p>
+                      )}
                     </div>
-                  )}
-                  <div className="flex justify-between text-sm text-[var(--color-text-secondary)]">
-                    <span>{e.institution}</span>
-                    <span>
-                      {e.start_date}
-                      {e.end_date ? ` - ${e.end_date}` : ''}
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Right column: Summary + Skills */}
+          <div className="space-y-8">
+            {resume.summary && (
+              <section>
+                <h2 className={sectionHeading}>Summary</h2>
+                <p className="text-sm whitespace-pre-line">{resume.summary}</p>
+              </section>
+            )}
+
+            {resume.skills.length > 0 && (
+              <section>
+                <h2 className={sectionHeading}>Skills</h2>
+                <div className="flex flex-wrap gap-2">
+                  {resume.skills.map((s, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1 text-sm rounded border border-[var(--color-border)] text-[var(--color-text-primary)]"
+                    >
+                      {s}
                     </span>
-                  </div>
-                  {e.description && (
-                    <p className="mt-1 text-sm">{e.description}</p>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
+              </section>
+            )}
           </div>
-        )}
-
-        {resume.skills.length > 0 && (
-          <div className="border-t border-[var(--color-border)] pt-6 mt-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-secondary)] mb-3">
-              Skills
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {resume.skills.map((s, i) => (
-                <span
-                  key={i}
-                  className="px-3 py-1 rounded-full text-sm bg-[var(--color-surface)] border border-[var(--color-border)]"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </>
   );

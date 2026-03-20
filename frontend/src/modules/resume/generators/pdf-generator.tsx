@@ -10,43 +10,85 @@ import { Resume } from '@/shared/types/api';
 import { useState } from 'react';
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 11, fontFamily: 'Helvetica' },
-  header: { marginBottom: 20 },
-  name: { fontSize: 24, fontWeight: 'bold', marginBottom: 4 },
+  page: { padding: 0, fontSize: 10, fontFamily: 'Helvetica' },
+  header: {
+    backgroundColor: '#1b2838',
+    padding: '30 40',
+    color: 'white',
+  },
+  name: { fontSize: 22, fontWeight: 'bold', color: 'white' },
   contactRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    fontSize: 10,
-    color: '#555',
+    marginTop: 6,
+    fontSize: 9,
+    color: '#b0bec5',
   },
-  section: { marginBottom: 16 },
+  contactSeparator: { marginLeft: 6, marginRight: 6 },
+  body: { flexDirection: 'row', padding: '20 40' },
+  leftCol: { width: '60%', paddingRight: 20 },
+  rightCol: { width: '40%' },
+  section: { marginBottom: 14 },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: 'bold',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    paddingBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#1b2838',
+    paddingBottom: 3,
     marginBottom: 8,
   },
-  entryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  entryTitle: { fontWeight: 'bold' },
-  entrySubtitle: { color: '#555', fontSize: 10 },
-  entryDesc: { marginTop: 4, lineHeight: 1.4 },
-  skillsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  skill: {
-    backgroundColor: '#f0f0f0',
+  jobTitle: { fontSize: 11, fontWeight: 'bold' },
+  company: { fontSize: 10, fontWeight: 'bold', color: '#444' },
+  dateRange: { fontSize: 9, color: '#666', marginBottom: 4 },
+  bullet: { flexDirection: 'row', marginBottom: 2 },
+  bulletDot: { width: 10, fontSize: 9 },
+  bulletText: { flex: 1, fontSize: 9, lineHeight: 1.4 },
+  paragraph: { fontSize: 9, lineHeight: 1.4, marginBottom: 2 },
+  summary: { fontSize: 9, lineHeight: 1.5, color: '#333' },
+  skillsRow: { flexDirection: 'row', flexWrap: 'wrap' },
+  skillTag: {
+    fontSize: 9,
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    fontSize: 10,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    marginRight: 4,
+    marginBottom: 4,
   },
-  summary: { lineHeight: 1.5, color: '#333' },
 });
+
+function parseDescription(description: string) {
+  const lines = description.split('\n').filter((l) => l.trim() !== '');
+  return lines.map((line) => {
+    if (line.trimStart().startsWith('- ')) {
+      return { type: 'bullet' as const, text: line.trimStart().slice(2) };
+    }
+    return { type: 'paragraph' as const, text: line };
+  });
+}
+
+function DescriptionBlock({ description }: { description: string }) {
+  const parts = parseDescription(description);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.type === 'bullet' ? (
+          <View key={i} style={styles.bullet}>
+            <Text style={styles.bulletDot}>{'• '}</Text>
+            <Text style={styles.bulletText}>{part.text}</Text>
+          </View>
+        ) : (
+          <Text key={i} style={styles.paragraph}>
+            {part.text}
+          </Text>
+        ),
+      )}
+    </>
+  );
+}
 
 function ResumeDocument({ resume }: { resume: Resume }) {
   const c = resume.contact;
@@ -66,86 +108,93 @@ function ResumeDocument({ resume }: { resume: Resume }) {
           <Text style={styles.name}>{c.full_name}</Text>
           <View style={styles.contactRow}>
             {contactParts.map((part, i) => (
-              <Text key={i}>
-                {part}
-                {i < contactParts.length - 1 ? '  |' : ''}
-              </Text>
-            ))}
-          </View>
-        </View>
-
-        {resume.summary ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Summary</Text>
-            <Text style={styles.summary}>{resume.summary}</Text>
-          </View>
-        ) : null}
-
-        {resume.work_experience.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Experience</Text>
-            {resume.work_experience.map((w, i) => (
-              <View key={i} style={{ marginBottom: 10 }}>
-                <View style={styles.entryHeader}>
-                  <Text style={styles.entryTitle}>
-                    {w.title} - {w.company}
-                  </Text>
-                  <Text style={styles.entrySubtitle}>
-                    {w.start_date} - {w.current ? 'Present' : w.end_date}
-                  </Text>
-                </View>
-                {w.description ? (
-                  <Text style={styles.entryDesc}>{w.description}</Text>
-                ) : null}
-                {w.technologies.length > 0 && (
-                  <View style={[styles.skillsRow, { marginTop: 4 }]}>
-                    {w.technologies.map((t, j) => (
-                      <Text key={j} style={styles.skill}>
-                        {t}
-                      </Text>
-                    ))}
-                  </View>
+              <View key={i} style={{ flexDirection: 'row' }}>
+                <Text>{part}</Text>
+                {i < contactParts.length - 1 && (
+                  <Text style={styles.contactSeparator}>|</Text>
                 )}
               </View>
             ))}
           </View>
-        )}
+        </View>
 
-        {resume.education.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Education</Text>
-            {resume.education.map((e, i) => (
-              <View key={i} style={{ marginBottom: 8 }}>
-                <View style={styles.entryHeader}>
-                  <Text style={styles.entryTitle}>
-                    {e.degree}
-                    {e.field_of_study ? ` - ${e.field_of_study}` : ''}
-                  </Text>
-                  <Text style={styles.entrySubtitle}>
-                    {e.start_date}{e.end_date ? ` - ${e.end_date}` : ''}
-                  </Text>
-                </View>
-                <Text style={styles.entrySubtitle}>{e.institution}</Text>
-                {e.description ? (
-                  <Text style={styles.entryDesc}>{e.description}</Text>
-                ) : null}
+        <View style={styles.body}>
+          <View style={styles.leftCol}>
+            {resume.work_experience.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Experience</Text>
+                {resume.work_experience.map((w, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      marginBottom:
+                        i < resume.work_experience.length - 1 ? 10 : 0,
+                    }}
+                  >
+                    <Text style={styles.jobTitle}>{w.title}</Text>
+                    <Text style={styles.company}>{w.company}</Text>
+                    <Text style={styles.dateRange}>
+                      {w.start_date} - {w.current ? 'Present' : w.end_date}
+                    </Text>
+                    {w.description ? (
+                      <DescriptionBlock description={w.description} />
+                    ) : null}
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
-        )}
+            )}
 
-        {resume.skills.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Skills</Text>
-            <View style={styles.skillsRow}>
-              {resume.skills.map((s, i) => (
-                <Text key={i} style={styles.skill}>
-                  {s}
-                </Text>
-              ))}
-            </View>
+            {resume.education.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Education</Text>
+                {resume.education.map((e, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      marginBottom:
+                        i < resume.education.length - 1 ? 8 : 0,
+                    }}
+                  >
+                    <Text style={styles.jobTitle}>
+                      {e.degree}
+                      {e.field_of_study ? `, ${e.field_of_study}` : ''}
+                    </Text>
+                    <Text style={styles.company}>{e.institution}</Text>
+                    <Text style={styles.dateRange}>
+                      {e.start_date}
+                      {e.end_date ? ` - ${e.end_date}` : ''}
+                    </Text>
+                    {e.description ? (
+                      <DescriptionBlock description={e.description} />
+                    ) : null}
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
-        )}
+
+          <View style={styles.rightCol}>
+            {resume.summary ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Summary</Text>
+                <Text style={styles.summary}>{resume.summary}</Text>
+              </View>
+            ) : null}
+
+            {resume.skills.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Skills</Text>
+                <View style={styles.skillsRow}>
+                  {resume.skills.map((s, i) => (
+                    <Text key={i} style={styles.skillTag}>
+                      {s}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
       </Page>
     </Document>
   );
