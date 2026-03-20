@@ -183,9 +183,10 @@ export async function generateDocx(resume: Resume): Promise<void> {
   }
 
   // Work Experience
-  if (resume.work_experience.length > 0) {
+  const downloadJobs = resume.work_experience.filter(w => !w.hide_from_downloads);
+  if (downloadJobs.length > 0) {
     children.push(sectionHeader('Experience'));
-    for (const w of resume.work_experience) {
+    for (const w of downloadJobs) {
       // Job Title
       children.push(
         new Paragraph({

@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
 
   // Work experience
-  jobEntry: { marginBottom: 12 },
+  jobEntry: { marginBottom: 16 },
   jobTitle: { fontSize: 9.5, fontWeight: 'bold', marginBottom: 0 },
   company: {
     fontSize: 8.5,
@@ -265,8 +265,9 @@ function JobEntry({ w }: { w: Resume['work_experience'][0] }) {
 
 function ResumeDocument({ resume }: { resume: Resume }) {
   const c = resume.contact;
-  const page1Jobs = resume.work_experience.slice(0, PAGE1_JOB_COUNT);
-  const page2Jobs = resume.work_experience.slice(PAGE1_JOB_COUNT);
+  const downloadJobs = resume.work_experience.filter(w => !w.hide_from_downloads);
+  const page1Jobs = downloadJobs.slice(0, PAGE1_JOB_COUNT);
+  const page2Jobs = downloadJobs.slice(PAGE1_JOB_COUNT);
 
   return (
     <Document>
@@ -275,7 +276,7 @@ function ResumeDocument({ resume }: { resume: Resume }) {
         <View style={styles.header}>
           <Text style={styles.name}>{c.full_name}</Text>
           {c.title && (
-            <Text style={{ fontSize: 11, color: '#d0d8e0', marginBottom: 6 }}>{c.title}</Text>
+            <Text style={{ fontSize: 11, color: '#d0d8e0', marginBottom: 10 }}>{c.title}</Text>
           )}
           <View style={styles.contactRow}>
             {c.phone && <ContactEntry icon={<PhoneIcon />} text={c.phone} />}

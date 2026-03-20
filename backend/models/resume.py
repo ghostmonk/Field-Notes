@@ -21,6 +21,7 @@ class WorkExperience(BaseModel):
     company: str = Field(default="", max_length=200)
     company_url: Optional[str] = None
     title: str = Field(default="", max_length=200)
+    hide_from_downloads: bool = False
     start_date: str = Field(default="")
     end_date: Optional[str] = None
     current: bool = False

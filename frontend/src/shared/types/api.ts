@@ -341,6 +341,7 @@ export interface WorkExperience {
   current: boolean;
   description: string;
   technologies: string[];
+  hide_from_downloads?: boolean;
 }
 
 export interface Education {
