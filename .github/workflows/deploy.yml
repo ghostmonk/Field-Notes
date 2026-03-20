@@ -175,7 +175,10 @@ jobs:
         if: matrix.component == 'frontend' && steps.should-deploy.outputs.deploy == 'true'
         run: |
           echo "🚀 Deploying Frontend (files changed)"
-          gcloud builds submit ./frontend --tag gcr.io/${{ vars.GCP_PROJECT_ID }}/turbulent-frontend --project=${{ vars.GCP_PROJECT_ID }}
+          gcloud builds submit ./frontend \
+            --config frontend/cloudbuild.yaml \
+            --project=${{ vars.GCP_PROJECT_ID }} \
+            --substitutions=_NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},_UNSAFE_EVAL=${{ vars.UNSAFE_EVAL }}
           gcloud run deploy turbulent-frontend \
             --image gcr.io/${{ vars.GCP_PROJECT_ID }}/turbulent-frontend \
             --platform managed \
