@@ -45,9 +45,7 @@ export function DownloadButtons({ resume }: DownloadButtonsProps) {
         title="Download DOCX"
       >
         <HiOutlineDocumentDownload className="w-4 h-4" />
-        <span className="hidden sm:inline">
-          {generatingDocx ? 'Generating...' : 'DOCX'}
-        </span>
+        {generatingDocx ? 'Generating...' : 'DOCX'}
       </button>
       {error && <span className="text-sm text-red-500">{error}</span>}
     </div>

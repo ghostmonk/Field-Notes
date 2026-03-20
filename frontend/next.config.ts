@@ -66,6 +66,7 @@ const nextConfig: NextConfig = {
         const isDev = process.env.NODE_ENV === 'development';
         const isUnsafeEval = process.env.UNSAFE_EVAL === "true";
         const devSources = isDev ? 'http://localhost:5001' : '';
+        // UNSAFE_EVAL=true required in production for @react-pdf/renderer (client-side PDF generation)
         const scriptSrc = `'self' 'unsafe-inline' ${isUnsafeEval ? "'unsafe-eval'" : ''} ${apiUrl}`;
         
         const csp_value = `
