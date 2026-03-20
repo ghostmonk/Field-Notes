@@ -118,6 +118,13 @@ function ResumeDocument({ resume }: { resume: Resume }) {
           </View>
         </View>
 
+        {resume.summary ? (
+          <View style={{ paddingHorizontal: 40, paddingTop: 16, paddingBottom: 4 }}>
+            <Text style={styles.sectionTitle}>Summary</Text>
+            <Text style={styles.summary}>{resume.summary}</Text>
+          </View>
+        ) : null}
+
         <View style={styles.body}>
           <View style={styles.leftCol}>
             {resume.work_experience.length > 0 && (
@@ -174,13 +181,6 @@ function ResumeDocument({ resume }: { resume: Resume }) {
           </View>
 
           <View style={styles.rightCol}>
-            {resume.summary ? (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Summary</Text>
-                <Text style={styles.summary}>{resume.summary}</Text>
-              </View>
-            ) : null}
-
             {resume.skills.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Skills</Text>

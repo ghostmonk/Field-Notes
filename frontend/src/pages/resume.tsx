@@ -130,6 +130,14 @@ export default function ResumePage({ resume }: ResumePageProps) {
           </div>
         </div>
 
+        {/* Summary — full width above columns */}
+        {resume.summary && (
+          <div className="px-8 pt-6">
+            <h2 className={sectionHeading}>Summary</h2>
+            <p className="text-sm whitespace-pre-line">{resume.summary}</p>
+          </div>
+        )}
+
         {/* Two-column body */}
         <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 px-8 py-6">
           {/* Left column: Experience + Education */}
@@ -210,15 +218,8 @@ export default function ResumePage({ resume }: ResumePageProps) {
             )}
           </div>
 
-          {/* Right column: Summary + Skills */}
+          {/* Right column: Skills */}
           <div className="space-y-8">
-            {resume.summary && (
-              <section>
-                <h2 className={sectionHeading}>Summary</h2>
-                <p className="text-sm whitespace-pre-line">{resume.summary}</p>
-              </section>
-            )}
-
             {resume.skills.length > 0 && (
               <section>
                 <h2 className={sectionHeading}>Skills</h2>
