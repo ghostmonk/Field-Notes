@@ -35,12 +35,17 @@ async def get_public_resume(
     try:
         query = {"deleted": {"$ne": True}}
         doc = await collection.find_one(query, sort=[("createdDate", 1)])
-        resume = mongo_to_pydantic(doc, ResumePublicResponse) if doc else None
 
-        if not resume:
+        if not doc:
             raise HTTPException(status_code=404, detail="Resume not found")
 
-        return resume
+        # Filter out work entries marked as hidden from downloads/public
+        if "work_experience" in doc:
+            doc["work_experience"] = [
+                w for w in doc["work_experience"] if not w.get("hide_from_downloads")
+            ]
+
+        return mongo_to_pydantic(doc, ResumePublicResponse)
 
     except HTTPException:
         raise
@@ -130,47 +135,43 @@ async def create_resume(
         )
 
         current_time = datetime.now(timezone.utc)
+        resume_data = resume.model_dump()
 
-        # Single query: find any resume for this user (active or deleted)
-        existing = await collection.find_one({"user_id": user.id})
+        # Attempt 1: atomically reactivate a soft-deleted resume
+        reactivated = await collection.find_one_and_update(
+            {"user_id": user.id, "deleted": True},
+            {
+                "$set": {
+                    **resume_data,
+                    "updatedDate": current_time,
+                    "createdDate": current_time,
+                    "user_id": user.id,
+                    "deleted": False,
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
 
-        if existing and existing.get("deleted") is not True:
-            logger.warning_with_context(
-                "Resume already exists for user",
-                {"user_id": user.id},
-            )
-            raise HTTPException(status_code=409, detail="Resume already exists for this user")
-
-        # Reuse soft-deleted doc if present, otherwise insert new
-        deleted_resume = existing if existing and existing.get("deleted") is True else None
-
-        if deleted_resume:
-            # Atomic: find soft-deleted doc and reactivate it in one operation
-            reactivated = await collection.find_one_and_update(
-                {"user_id": user.id, "deleted": True},
-                {
-                    "$set": {
-                        **resume.model_dump(),
-                        "updatedDate": current_time,
-                        "createdDate": current_time,
-                        "deleted": False,
-                        "user_id": user.id,
-                    }
-                },
-                return_document=ReturnDocument.AFTER,
-            )
+        if reactivated:
             created_resume = mongo_to_pydantic(reactivated, ResumeResponse)
         else:
+            # No soft-deleted doc — check for active resume
+            existing = await collection.find_one(
+                {"user_id": user.id, "deleted": {"$ne": True}}, {"_id": 1}
+            )
+            if existing:
+                raise HTTPException(status_code=409, detail="Resume already exists for this user")
+
+            # Insert new document and construct response directly
             document = {
-                **resume.model_dump(),
+                **resume_data,
                 "createdDate": current_time,
                 "updatedDate": current_time,
                 "user_id": user.id,
             }
             result = await collection.insert_one(document)
-            created_resume = await find_one_and_convert(
-                collection, {"_id": result.inserted_id}, ResumeResponse
-            )
+            document["_id"] = result.inserted_id
+            created_resume = mongo_to_pydantic(document, ResumeResponse)
 
         if not created_resume:
             logger.error_with_context("Failed to retrieve created resume", {"user_id": user.id})

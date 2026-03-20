@@ -96,7 +96,8 @@ class TestResumeEndpoints:
             "_id": resume_id,
         }
 
-        # find_one calls: 1) single existence check (None), 2) retrieve created
+        # Flow: find_one_and_update (None - no soft-deleted), find_one (None - no active), insert, find_one (created)
+        override_resumes_database.find_one_and_update.return_value = None
         override_resumes_database.find_one.side_effect = [None, created_resume]
         override_resumes_database.insert_one.return_value = MagicMock(inserted_id=resume_id)
 
@@ -131,6 +132,8 @@ class TestResumeEndpoints:
     ):
         """Test POST /resume rejects duplicate resume (409)"""
         resume_id = ObjectId()
+        # find_one_and_update returns None (no soft-deleted), find_one returns active doc
+        override_resumes_database.find_one_and_update.return_value = None
         override_resumes_database.find_one.return_value = {
             **sample_resume_data,
             "_id": resume_id,

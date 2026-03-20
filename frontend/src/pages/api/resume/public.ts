@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { apiLogger } from '@/shared/utils/logger';
 
 export default async function handler(
   req: NextApiRequest,
@@ -35,7 +36,7 @@ export default async function handler(
     );
     return res.status(200).json(data);
   } catch (error) {
-    console.error('Fatal error in /api/resume/public:', error);
+    apiLogger.error('Fatal error in /api/resume/public', error instanceof Error ? error : new Error(String(error)));
     return res.status(500).json({
       detail:
         error instanceof Error ? error.message : 'Internal server error',

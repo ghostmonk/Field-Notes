@@ -15,6 +15,7 @@ const EMPTY_WORK: WorkExperience = {
   current: false,
   description: '',
   technologies: [],
+  hide_from_downloads: false,
 };
 
 function TechnologiesInput({
@@ -175,6 +176,17 @@ export function WorkExperienceForm({
             technologies={item.technologies}
             onCommit={(techs) => updateItem(index, 'technologies', techs)}
           />
+          <label className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] mt-1">
+            <input
+              type="checkbox"
+              checked={item.hide_from_downloads}
+              onChange={(e) =>
+                updateItem(index, 'hide_from_downloads', e.target.checked)
+              }
+              className="w-3 h-3"
+            />
+            Hide from PDF/DOCX downloads
+          </label>
         </div>
       ))}
     </div>

@@ -73,7 +73,7 @@ export default async function handler(
     const data = await response.json();
     return res.status(response.status).json(data);
   } catch (error) {
-    console.error('Fatal error in /api/resume:', error);
+    apiLogger.error('Fatal error in /api/resume', error instanceof Error ? error : new Error(String(error)));
     return res.status(500).json({
       detail:
         error instanceof Error ? error.message : 'Internal server error',
