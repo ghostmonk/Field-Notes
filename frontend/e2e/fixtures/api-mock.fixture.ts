@@ -9,6 +9,7 @@ import {
   sampleComments as sharedComments,
   samplePhotoEssayCards as sharedPhotoEssayCards,
   samplePhotoEssayDetail as sharedPhotoEssayDetail,
+  sampleResume as sharedResume,
   FIXED_TIMESTAMP,
   TestStory,
   TestPage,
@@ -774,6 +775,26 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(sharedPhotoEssayDetail),
+    });
+  });
+
+  // Resume public endpoint
+  await page.route('**/api/resume/public', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(sharedResume),
     });
   });
 

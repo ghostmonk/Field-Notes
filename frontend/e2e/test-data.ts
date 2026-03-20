@@ -596,6 +596,52 @@ export const samplePhotoEssayCards: TestPhotoEssayCard[] = [
   },
 ];
 
+// ============================================================================
+// Resume
+// ============================================================================
+
+export const sampleResume = {
+  id: 'resume-1',
+  user_id: 'user-1',
+  contact: {
+    full_name: 'Test User',
+    title: 'Staff Engineer',
+    email: 'test@example.com',
+    phone: '555-0100',
+    location: 'Montreal, QC',
+    linkedin: 'https://linkedin.com/in/testuser',
+    github: 'https://github.com/testuser',
+    website: 'https://testuser.com',
+  },
+  summary: 'Experienced engineer with 10 years of experience.',
+  work_experience: [
+    {
+      company: 'Acme Corp',
+      company_url: 'https://acme.com',
+      title: 'Staff Engineer',
+      start_date: 'Jan 2020',
+      end_date: undefined,
+      current: true,
+      description: '- Built distributed systems.\n- Led team of 5.',
+      technologies: ['TypeScript', 'Python'],
+      hide_from_downloads: false,
+    },
+  ],
+  education: [
+    {
+      institution: 'MIT',
+      degree: 'MSc',
+      field_of_study: 'Computer Science',
+      start_date: '2015',
+      end_date: '2017',
+    },
+  ],
+  skills: ['TypeScript', 'Python', 'React'],
+  achievements: ['Won hackathon', 'Published paper'],
+  createdDate: FIXED_TIMESTAMP,
+  updatedDate: FIXED_TIMESTAMP,
+};
+
 export const samplePhotoEssayDetail: TestPhotoEssay = {
   id: '507f1f77bcf86cd799439020',
   title: 'Trip to Japan',
