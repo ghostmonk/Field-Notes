@@ -315,3 +315,4 @@ playwright-report/
 .worktrees/
 local-uploads/
 *.tsbuildinfo
+seed-resume.py

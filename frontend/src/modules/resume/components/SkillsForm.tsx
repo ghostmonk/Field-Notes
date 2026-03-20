@@ -28,41 +28,35 @@ export function SkillsForm({ skills, onChange }: SkillsFormProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Skills</h3>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Add a skill and press Enter"
-          className="flex-1 px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)]"
-        />
-        <button
-          type="button"
-          onClick={addSkill}
-          className="btn btn-primary text-sm"
-        >
-          Add
-        </button>
-      </div>
+    <div className="space-y-3">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
+        Skills
+      </h2>
       <div className="flex flex-wrap gap-2">
         {skills.map((skill, index) => (
           <span
             key={index}
-            className="badge inline-flex items-center gap-1 px-3 py-1"
+            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)]"
           >
             {skill}
             <button
               type="button"
               onClick={() => removeSkill(index)}
-              className="ml-1 hover:text-red-500"
+              className="ml-1 text-[var(--color-text-secondary)] hover:text-red-500 transition-colors"
             >
               x
             </button>
           </span>
         ))}
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={addSkill}
+          placeholder="Add skill..."
+          className="bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-text-secondary)] focus:outline-none py-1 px-1 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] placeholder:opacity-50 transition-colors w-32"
+        />
       </div>
     </div>
   );

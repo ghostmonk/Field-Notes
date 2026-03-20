@@ -118,16 +118,6 @@ export function useResumeEditor(): UseResumeEditorReturn {
       return;
     }
 
-    if (!resume.contact?.full_name?.trim()) {
-      setError('Full name is required');
-      return;
-    }
-
-    if (!resume.contact?.email?.trim()) {
-      setError('Email is required');
-      return;
-    }
-
     setError(null);
     setIsSaving(true);
 

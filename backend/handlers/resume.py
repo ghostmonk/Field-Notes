@@ -19,6 +19,44 @@ from utils import find_one_and_convert
 router = APIRouter()
 
 
+@router.get("/resume/public", response_model=ResumeResponse)
+async def get_public_resume(
+    request: Request,
+    collection: AsyncIOMotorCollection = Depends(get_resumes_collection),
+):
+    """Get the public resume (first non-deleted resume)."""
+    try:
+        resume = await find_one_and_convert(
+            collection,
+            {"deleted": {"$ne": True}},
+            ResumeResponse,
+        )
+
+        if not resume:
+            raise HTTPException(status_code=404, detail="Resume not found")
+
+        return resume
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception_with_context(
+            "Error fetching public resume",
+            {
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+            },
+        )
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "An error occurred while fetching the resume",
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+            },
+        )
+
+
 @router.get("/resume", response_model=ResumeResponse)
 @requires_auth
 async def get_resume(

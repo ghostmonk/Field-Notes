@@ -16,6 +16,9 @@ const EMPTY_WORK: WorkExperience = {
   technologies: [],
 };
 
+const inlineInput =
+  'w-full bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-text-secondary)] focus:outline-none py-1 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] placeholder:opacity-50 transition-colors';
+
 function TechnologiesInput({
   technologies,
   onCommit,
@@ -40,7 +43,8 @@ function TechnologiesInput({
       value={text}
       onChange={(e) => setText(e.target.value)}
       onBlur={handleBlur}
-      className="w-full px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)]"
+      placeholder="Technologies (comma-separated)"
+      className={`${inlineInput} text-sm text-[var(--color-text-secondary)]`}
     />
   );
 }
@@ -70,113 +74,95 @@ export function WorkExperienceForm({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Work Experience</h3>
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
+          Experience
+        </h2>
         <button
           type="button"
           onClick={addItem}
-          className="btn btn-primary text-sm"
+          className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
         >
-          Add Position
+          + Add
         </button>
       </div>
       {items.map((item, index) => (
-        <div key={index} className="card p-4 space-y-3">
-          <div className="flex justify-between items-start">
-            <span className="text-sm text-[var(--color-text-secondary)]">
-              Position {index + 1}
-            </span>
-            <button
-              type="button"
-              onClick={() => removeItem(index)}
-              className="text-red-500 text-sm hover:underline"
-            >
-              Remove
-            </button>
+        <div
+          key={index}
+          className="group relative pl-4 border-l-2 border-[var(--color-border)] hover:border-[var(--color-text-secondary)] transition-colors space-y-1"
+        >
+          <button
+            type="button"
+            onClick={() => removeItem(index)}
+            className="absolute top-0 right-0 text-xs text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            Remove
+          </button>
+          <div className="flex gap-4 items-baseline">
+            <input
+              type="text"
+              value={item.title}
+              onChange={(e) => updateItem(index, 'title', e.target.value)}
+              placeholder="Job Title"
+              className={`${inlineInput} font-semibold flex-1`}
+            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Company *
-              </label>
-              <input
-                type="text"
-                value={item.company}
-                onChange={(e) => updateItem(index, 'company', e.target.value)}
-                className="w-full px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)]"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Title *</label>
-              <input
-                type="text"
-                value={item.title}
-                onChange={(e) => updateItem(index, 'title', e.target.value)}
-                className="w-full px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)]"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Start Date *
-              </label>
+          <div className="flex gap-4 items-baseline">
+            <input
+              type="text"
+              value={item.company}
+              onChange={(e) => updateItem(index, 'company', e.target.value)}
+              placeholder="Company"
+              className={`${inlineInput} text-sm flex-1`}
+            />
+            <div className="flex gap-1 items-baseline shrink-0">
               <input
                 type="text"
                 value={item.start_date}
                 onChange={(e) =>
                   updateItem(index, 'start_date', e.target.value)
                 }
-                placeholder="e.g. Jan 2020"
-                className="w-full px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)]"
-                required
+                placeholder="Start"
+                className={`${inlineInput} text-xs w-24 text-right`}
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                End Date
-              </label>
+              <span className="text-xs text-[var(--color-text-secondary)]">
+                -
+              </span>
               <input
                 type="text"
                 value={item.current ? 'Present' : item.end_date || ''}
-                onChange={(e) => updateItem(index, 'end_date', e.target.value)}
+                onChange={(e) =>
+                  updateItem(index, 'end_date', e.target.value)
+                }
                 disabled={item.current}
-                placeholder="e.g. Dec 2023"
-                className="w-full px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-50"
+                placeholder="End"
+                className={`${inlineInput} text-xs w-24 disabled:opacity-50`}
               />
-              <label className="flex items-center gap-2 mt-1 text-sm">
+              <label className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] shrink-0 ml-1">
                 <input
                   type="checkbox"
                   checked={item.current}
                   onChange={(e) =>
                     updateItem(index, 'current', e.target.checked)
                   }
+                  className="w-3 h-3"
                 />
-                Current position
+                Current
               </label>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Description
-            </label>
-            <textarea
-              value={item.description}
-              onChange={(e) =>
-                updateItem(index, 'description', e.target.value)
-              }
-              rows={3}
-              className="w-full px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)]"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Technologies (comma-separated)
-            </label>
-            <TechnologiesInput
-              technologies={item.technologies}
-              onCommit={(techs) => updateItem(index, 'technologies', techs)}
-            />
-          </div>
+          <textarea
+            value={item.description}
+            onChange={(e) =>
+              updateItem(index, 'description', e.target.value)
+            }
+            rows={2}
+            placeholder="Description..."
+            className={`${inlineInput} text-sm resize-none`}
+          />
+          <TechnologiesInput
+            technologies={item.technologies}
+            onCommit={(techs) => updateItem(index, 'technologies', techs)}
+          />
         </div>
       ))}
     </div>

@@ -3,7 +3,6 @@ import { ContactForm } from './ContactForm';
 import { WorkExperienceForm } from './WorkExperienceForm';
 import { EducationForm } from './EducationForm';
 import { SkillsForm } from './SkillsForm';
-import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 interface ResumeFormProps {
   editor: UseResumeEditorReturn;
@@ -32,39 +31,60 @@ export function ResumeForm({ editor }: ResumeFormProps) {
     );
   }
 
+  const inlineInput =
+    'w-full bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-text-secondary)] focus:outline-none py-1 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] placeholder:opacity-50 transition-colors';
+
   return (
     <div className="space-y-8">
-      {error && <ErrorDisplay error={error} onDismiss={clearError} />}
+      {error && (
+        <div
+          className="px-4 py-3 rounded-md bg-red-500/10 text-red-400 text-sm flex justify-between items-center"
+          role="alert"
+        >
+          <span>{error}</span>
+          <button onClick={clearError} className="ml-4 hover:text-red-300">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       <ContactForm
         contact={resume.contact || { full_name: '', email: '' }}
         onChange={setContact}
       />
 
-      <div>
-        <h3 className="text-lg font-semibold mb-2">Summary</h3>
+      <div className="border-t border-[var(--color-border)] pt-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-secondary)] mb-3">
+          Summary
+        </h2>
         <textarea
           value={resume.summary || ''}
           onChange={(e) => setSummary(e.target.value)}
-          rows={4}
+          rows={3}
           placeholder="Brief professional summary..."
-          className="w-full px-3 py-2 border rounded-md bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-primary)]"
+          className={`${inlineInput} resize-none`}
         />
       </div>
 
-      <WorkExperienceForm
-        items={resume.work_experience || []}
-        onChange={setWorkExperience}
-      />
+      <div className="border-t border-[var(--color-border)] pt-6">
+        <WorkExperienceForm
+          items={resume.work_experience || []}
+          onChange={setWorkExperience}
+        />
+      </div>
 
-      <EducationForm
-        items={resume.education || []}
-        onChange={setEducation}
-      />
+      <div className="border-t border-[var(--color-border)] pt-6">
+        <EducationForm
+          items={resume.education || []}
+          onChange={setEducation}
+        />
+      </div>
 
-      <SkillsForm skills={resume.skills || []} onChange={setSkills} />
+      <div className="border-t border-[var(--color-border)] pt-6">
+        <SkillsForm skills={resume.skills || []} onChange={setSkills} />
+      </div>
 
-      <div className="flex gap-3 pt-4 border-t border-[var(--color-border)]">
+      <div className="pt-4">
         <button
           type="button"
           onClick={handleSave}

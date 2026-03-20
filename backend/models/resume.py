@@ -7,8 +7,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ContactInfo(BaseModel):
-    full_name: str = Field(..., min_length=1, max_length=200)
-    email: str = Field(..., min_length=1, max_length=200)
+    full_name: str = Field(default="", max_length=200)
+    email: str = Field(default="", max_length=200)
     phone: Optional[str] = None
     location: Optional[str] = None
     website: Optional[str] = None
@@ -17,9 +17,9 @@ class ContactInfo(BaseModel):
 
 
 class WorkExperience(BaseModel):
-    company: str = Field(..., min_length=1, max_length=200)
-    title: str = Field(..., min_length=1, max_length=200)
-    start_date: str = Field(..., min_length=1)
+    company: str = Field(default="", max_length=200)
+    title: str = Field(default="", max_length=200)
+    start_date: str = Field(default="")
     end_date: Optional[str] = None
     current: bool = False
     description: str = Field(default="", max_length=5000)
@@ -27,10 +27,10 @@ class WorkExperience(BaseModel):
 
 
 class Education(BaseModel):
-    institution: str = Field(..., min_length=1, max_length=200)
-    degree: str = Field(..., min_length=1, max_length=200)
+    institution: str = Field(default="", max_length=200)
+    degree: str = Field(default="", max_length=200)
     field_of_study: Optional[str] = None
-    start_date: str = Field(..., min_length=1)
+    start_date: str = Field(default="")
     end_date: Optional[str] = None
     description: Optional[str] = Field(default=None, max_length=2000)
 

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Layout } from '@/layout';
 import { ResumeForm, DownloadButtons } from '@/modules/resume';
 import { useResumeEditor } from '@/modules/resume';
 import { useConfirm } from '@/components/ConfirmDialog';
@@ -37,11 +36,11 @@ export default function AdminResumePage() {
   };
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>Resume Builder</title>
       </Head>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto py-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold">Resume Builder</h1>
           <div className="flex gap-3 items-center">
@@ -50,7 +49,7 @@ export default function AdminResumePage() {
               <button
                 type="button"
                 onClick={handleDelete}
-                className="btn text-sm text-red-500 hover:text-red-700"
+                className="text-sm text-red-500 hover:text-red-700"
               >
                 Delete
               </button>
@@ -59,6 +58,6 @@ export default function AdminResumePage() {
         </div>
         <ResumeForm editor={editor} />
       </div>
-    </Layout>
+    </>
   );
 }
