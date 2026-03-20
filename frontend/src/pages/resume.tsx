@@ -86,16 +86,16 @@ export default function ResumePage({ resume }: ResumePageProps) {
       </Head>
       <div className="max-w-5xl mx-auto">
         {/* Dark header */}
-        <div className="bg-[#1b2838] text-white px-8 py-6 rounded-t-lg">
-          <div className="flex items-start justify-between">
-            <div>
+        <div className="bg-[#1b2838] text-white px-4 sm:px-8 py-6 rounded-t-lg">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="min-w-0">
               {c.full_name && (
-                <h1 className="text-2xl font-bold tracking-wide">{c.full_name}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-wide">{c.full_name}</h1>
               )}
               {c.title && (
-                <p className="text-sm text-gray-400 mt-1">{c.title}</p>
+                <p className="text-xs sm:text-sm text-gray-400 mt-1">{c.title}</p>
               )}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-300">
+              <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 mt-2 text-xs sm:text-sm text-gray-300">
                 {c.phone && (
                   <span className="flex items-center gap-1">
                     <HiOutlinePhone className="w-3.5 h-3.5" />
@@ -139,14 +139,14 @@ export default function ResumePage({ resume }: ResumePageProps) {
 
         {/* Summary — full width above columns */}
         {resume.summary && (
-          <div className="px-8 pt-6">
+          <div className="px-4 sm:px-8 pt-6">
             <h2 className={sectionHeading}>Summary</h2>
             <p className="text-sm whitespace-pre-line">{resume.summary}</p>
           </div>
         )}
 
         {/* Two-column body */}
-        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 px-4 sm:px-8 py-6">
           {/* Left column: Experience + Education */}
           <div className="space-y-8">
             {resume.work_experience.length > 0 && (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Resume } from '@/shared/types/api';
+import { HiOutlineDocumentDownload } from 'react-icons/hi';
 
 const PDFDownload = dynamic(
   () =>
@@ -34,19 +35,21 @@ export function DownloadButtons({ resume }: DownloadButtonsProps) {
   const hasData = resume.contact?.full_name;
 
   return (
-    <div className="flex gap-3 items-center">
+    <div className="flex gap-2 items-center">
       {hasData && <PDFDownload resume={resume as Resume} />}
       <button
         type="button"
         onClick={handleDocxDownload}
         disabled={!hasData || generatingDocx}
-        className="btn text-sm"
+        className="btn text-sm flex items-center gap-1.5"
+        title="Download DOCX"
       >
-        {generatingDocx ? 'Generating...' : 'Download DOCX'}
+        <HiOutlineDocumentDownload className="w-4 h-4" />
+        <span className="hidden sm:inline">
+          {generatingDocx ? 'Generating...' : 'DOCX'}
+        </span>
       </button>
-      {error && (
-        <span className="text-sm text-red-500">{error}</span>
-      )}
+      {error && <span className="text-sm text-red-500">{error}</span>}
     </div>
   );
 }
