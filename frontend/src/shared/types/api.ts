@@ -323,6 +323,7 @@ export interface BulkCountsResponse {
  */
 export interface ContactInfo {
   full_name: string;
+  title?: string;
   email: string;
   phone?: string;
   location?: string;

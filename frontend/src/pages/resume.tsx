@@ -93,6 +93,9 @@ export default function ResumePage({ resume }: ResumePageProps) {
               {c.full_name && (
                 <h1 className="text-2xl font-bold tracking-wide">{c.full_name}</h1>
               )}
+              {c.title && (
+                <p className="text-sm text-gray-400 mt-1">{c.title}</p>
+              )}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-300">
                 {c.phone && (
                   <span className="flex items-center gap-1">

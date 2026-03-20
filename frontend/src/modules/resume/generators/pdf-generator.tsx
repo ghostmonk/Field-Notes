@@ -274,6 +274,9 @@ function ResumeDocument({ resume }: { resume: Resume }) {
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.name}>{c.full_name}</Text>
+          {c.title && (
+            <Text style={{ fontSize: 11, color: '#d0d8e0', marginBottom: 6 }}>{c.title}</Text>
+          )}
           <View style={styles.contactRow}>
             {c.phone && <ContactEntry icon={<PhoneIcon />} text={c.phone} />}
             {c.email && <ContactEntry icon={<EmailIcon />} text={c.email} />}

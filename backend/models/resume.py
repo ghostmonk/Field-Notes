@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class ContactInfo(BaseModel):
     full_name: str = Field(default="", max_length=200)
+    title: Optional[str] = Field(default=None, max_length=200)
     email: str = Field(default="", max_length=200)
     phone: Optional[str] = None
     location: Optional[str] = None

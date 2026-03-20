@@ -24,6 +24,13 @@ export function ContactForm({ contact, onChange }: ContactFormProps) {
       />
       <input
         type="text"
+        value={contact.title || ''}
+        onChange={(e) => update('title', e.target.value)}
+        placeholder="Professional title, e.g. Staff Software Engineer"
+        className={`${inlineInput} text-base text-[var(--color-text-secondary)]`}
+      />
+      <input
+        type="text"
         value={contact.email || ''}
         onChange={(e) => update('email', e.target.value)}
         placeholder="email@example.com"
