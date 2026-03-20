@@ -128,24 +128,20 @@ async def create_resume(
             {"user_id": user.id},
         )
 
-        # Check for active (non-deleted) resume
-        existing = await find_one_and_convert(
-            collection,
-            {"user_id": user.id, "deleted": {"$ne": True}},
-            ResumeResponse,
-        )
+        current_time = datetime.now(timezone.utc)
 
-        if existing:
+        # Single query: find any resume for this user (active or deleted)
+        existing = await collection.find_one({"user_id": user.id})
+
+        if existing and existing.get("deleted") is not True:
             logger.warning_with_context(
                 "Resume already exists for user",
                 {"user_id": user.id},
             )
             raise HTTPException(status_code=409, detail="Resume already exists for this user")
 
-        current_time = datetime.now(timezone.utc)
-
-        # Check for soft-deleted resume — reuse document to avoid unique index conflict
-        deleted_resume = await collection.find_one({"user_id": user.id, "deleted": True})
+        # Reuse soft-deleted doc if present, otherwise insert new
+        deleted_resume = existing if existing and existing.get("deleted") is True else None
 
         if deleted_resume:
             await collection.update_one(
@@ -222,23 +218,9 @@ async def update_resume(
     try:
         user: UserInfo = request.state.user
 
-        logger.info_with_context(
-            "Updating resume",
-            {"user_id": user.id},
-        )
-
-        existing = await find_one_and_convert(
-            collection,
-            {"user_id": user.id, "deleted": {"$ne": True}},
-            ResumeResponse,
-        )
-
-        if not existing:
-            logger.warning_with_context("Resume not found for update", {"user_id": user.id})
-            raise HTTPException(status_code=404, detail="Resume not found")
+        logger.info_with_context("Updating resume", {"user_id": user.id})
 
         current_time = datetime.now(timezone.utc)
-
         update_data = resume.model_dump(exclude_unset=True)
         update_data["updatedDate"] = current_time
 
@@ -247,12 +229,9 @@ async def update_resume(
             {"$set": update_data},
         )
 
-        if result.modified_count == 0 and result.matched_count == 0:
-            logger.error_with_context(
-                "Failed to update resume - no documents modified",
-                {"user_id": user.id},
-            )
-            raise HTTPException(status_code=500, detail="Failed to update resume")
+        if result.matched_count == 0:
+            logger.warning_with_context("Resume not found for update", {"user_id": user.id})
+            raise HTTPException(status_code=404, detail="Resume not found")
 
         updated_resume = await find_one_and_convert(
             collection,
@@ -260,15 +239,7 @@ async def update_resume(
             ResumeResponse,
         )
 
-        if not updated_resume:
-            logger.error_with_context("Failed to retrieve updated resume", {"user_id": user.id})
-            raise HTTPException(status_code=500, detail="Failed to retrieve updated resume")
-
-        logger.info_with_context(
-            "Resume updated successfully",
-            {"user_id": user.id},
-        )
-
+        logger.info_with_context("Resume updated successfully", {"user_id": user.id})
         return updated_resume
 
     except HTTPException:
@@ -308,32 +279,16 @@ async def delete_resume(
 
         logger.info_with_context("Soft deleting resume", {"user_id": user.id})
 
-        existing = await find_one_and_convert(
-            collection,
-            {"user_id": user.id, "deleted": {"$ne": True}},
-            ResumeResponse,
-        )
-
-        if not existing:
-            logger.warning_with_context("Resume not found for delete", {"user_id": user.id})
-            raise HTTPException(status_code=404, detail="Resume not found")
-
         result = await collection.update_one(
             {"user_id": user.id, "deleted": {"$ne": True}},
             {"$set": {"deleted": True}},
         )
 
-        if result.modified_count == 0:
-            logger.error_with_context(
-                "Failed to delete resume",
-                {"user_id": user.id},
-            )
-            raise HTTPException(status_code=500, detail="Failed to delete resume")
+        if result.matched_count == 0:
+            logger.warning_with_context("Resume not found for delete", {"user_id": user.id})
+            raise HTTPException(status_code=404, detail="Resume not found")
 
-        logger.info_with_context(
-            "Resume soft deleted successfully",
-            {"user_id": user.id},
-        )
+        logger.info_with_context("Resume soft deleted successfully", {"user_id": user.id})
 
     except HTTPException:
         raise

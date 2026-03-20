@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { WorkExperience } from '@/shared/types/api';
+import { inlineInput } from '../shared';
 
 interface WorkExperienceFormProps {
   items: WorkExperience[];
@@ -15,9 +16,6 @@ const EMPTY_WORK: WorkExperience = {
   description: '',
   technologies: [],
 };
-
-const inlineInput =
-  'w-full bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-text-secondary)] focus:outline-none py-1 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] placeholder:opacity-50 transition-colors';
 
 function TechnologiesInput({
   technologies,
@@ -97,15 +95,13 @@ export function WorkExperienceForm({
           >
             Remove
           </button>
-          <div className="flex gap-4 items-baseline">
-            <input
-              type="text"
-              value={item.title}
-              onChange={(e) => updateItem(index, 'title', e.target.value)}
-              placeholder="Job Title"
-              className={`${inlineInput} font-semibold flex-1`}
-            />
-          </div>
+          <input
+            type="text"
+            value={item.title}
+            onChange={(e) => updateItem(index, 'title', e.target.value)}
+            placeholder="Job Title"
+            className={`${inlineInput} font-semibold flex-1`}
+          />
           <div className="flex gap-4 items-baseline">
             <input
               type="text"

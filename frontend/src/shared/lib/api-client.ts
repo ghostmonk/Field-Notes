@@ -201,6 +201,10 @@ const apiRoutes = {
     update: (id: string) => `/api/photo-essays/${id}`,
     delete: (id: string) => `/api/photo-essays/${id}`,
   },
+  resume: {
+    base: () => '/api/resume',
+    public: () => '/api/resume/public',
+  },
 };
 
 export interface SearchResult {
@@ -475,24 +479,24 @@ const apiClient = {
    */
   resume: {
     get: (token: string) =>
-      fetchApi<Resume>('/api/resume', { token }),
+      fetchApi<Resume>(apiRoutes.resume.base(), { token }),
 
     create: (data: CreateResumeRequest, token: string) =>
-      fetchApi<Resume, CreateResumeRequest>('/api/resume', {
+      fetchApi<Resume, CreateResumeRequest>(apiRoutes.resume.base(), {
         method: 'POST',
         body: data,
         token,
       }),
 
     update: (data: UpdateResumeRequest, token: string) =>
-      fetchApi<Resume, UpdateResumeRequest>('/api/resume', {
+      fetchApi<Resume, UpdateResumeRequest>(apiRoutes.resume.base(), {
         method: 'PUT',
         body: data,
         token,
       }),
 
     delete: (token: string) =>
-      fetchApi<void>('/api/resume', {
+      fetchApi<void>(apiRoutes.resume.base(), {
         method: 'DELETE',
         token,
       }),

@@ -1,4 +1,5 @@
 import { UseResumeEditorReturn } from '../hooks/useResumeEditor';
+import { inlineInput } from '../shared';
 import { ContactForm } from './ContactForm';
 import { WorkExperienceForm } from './WorkExperienceForm';
 import { EducationForm } from './EducationForm';
@@ -32,9 +33,6 @@ export function ResumeForm({ editor }: ResumeFormProps) {
       </div>
     );
   }
-
-  const inlineInput =
-    'w-full bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-text-secondary)] focus:outline-none py-1 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] placeholder:opacity-50 transition-colors';
 
   return (
     <div className="space-y-8">

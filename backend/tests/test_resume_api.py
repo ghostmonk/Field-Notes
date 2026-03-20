@@ -87,8 +87,8 @@ class TestResumeEndpoints:
             "_id": resume_id,
         }
 
-        # find_one calls: 1) active check (None), 2) soft-deleted check (None), 3) retrieve created
-        override_resumes_database.find_one.side_effect = [None, None, created_resume]
+        # find_one calls: 1) single existence check (None), 2) retrieve created
+        override_resumes_database.find_one.side_effect = [None, created_resume]
         override_resumes_database.insert_one.return_value = MagicMock(inserted_id=resume_id)
 
         response = await resumes_async_client.post(
@@ -163,15 +163,14 @@ class TestResumeEndpoints:
     ):
         """Test PUT /resume updates resume successfully"""
         resume_id = ObjectId()
-        existing = {**sample_resume_data, "_id": resume_id}
         updated = {
             **sample_resume_data,
             "_id": resume_id,
             "summary": "Updated summary",
         }
 
-        # First find_one for existence check, second for returning updated doc
-        override_resumes_database.find_one.side_effect = [existing, updated]
+        # find_one called once: after update to return the updated doc
+        override_resumes_database.find_one.return_value = updated
         override_resumes_database.update_one.return_value = MagicMock(
             modified_count=1, matched_count=1
         )
@@ -191,7 +190,9 @@ class TestResumeEndpoints:
         self, resumes_async_client, override_resumes_database, mock_auth, auth_headers
     ):
         """Test PUT /resume returns 404 when no resume exists"""
-        override_resumes_database.find_one.return_value = None
+        override_resumes_database.update_one.return_value = MagicMock(
+            modified_count=0, matched_count=0
+        )
 
         response = await resumes_async_client.put(
             "/resume",
@@ -214,17 +215,13 @@ class TestResumeEndpoints:
         self,
         resumes_async_client,
         override_resumes_database,
-        sample_resume_data,
         mock_auth,
         auth_headers,
     ):
         """Test DELETE /resume soft deletes successfully"""
-        resume_id = ObjectId()
-        override_resumes_database.find_one.return_value = {
-            **sample_resume_data,
-            "_id": resume_id,
-        }
-        override_resumes_database.update_one.return_value = MagicMock(modified_count=1)
+        override_resumes_database.update_one.return_value = MagicMock(
+            modified_count=1, matched_count=1
+        )
 
         response = await resumes_async_client.delete("/resume", headers=auth_headers)
 
@@ -236,7 +233,9 @@ class TestResumeEndpoints:
         self, resumes_async_client, override_resumes_database, mock_auth, auth_headers
     ):
         """Test DELETE /resume returns 404 when not found"""
-        override_resumes_database.find_one.return_value = None
+        override_resumes_database.update_one.return_value = MagicMock(
+            modified_count=0, matched_count=0
+        )
 
         response = await resumes_async_client.delete("/resume", headers=auth_headers)
 

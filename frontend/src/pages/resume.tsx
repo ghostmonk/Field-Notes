@@ -2,6 +2,7 @@ import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { Resume } from '@/shared/types/api';
 import { DownloadButtons } from '@/modules/resume';
+import { parseDescription } from '@/modules/resume/shared';
 import {
   HiOutlineMail,
   HiOutlinePhone,
@@ -14,8 +15,8 @@ interface ResumePageProps {
   resume: Resume | null;
 }
 
-function parseDescription(text: string) {
-  const lines = text.split('\n');
+function renderDescription(text: string): React.ReactNode[] {
+  const parts = parseDescription(text);
   const elements: React.ReactNode[] = [];
   let bulletBuffer: string[] = [];
 
@@ -35,18 +36,16 @@ function parseDescription(text: string) {
     }
   };
 
-  for (const line of lines) {
-    if (line.startsWith('- ')) {
-      bulletBuffer.push(line.slice(2));
+  for (const part of parts) {
+    if (part.type === 'bullet') {
+      bulletBuffer.push(part.text);
     } else {
       flushBullets();
-      if (line.trim()) {
-        elements.push(
-          <p key={`p-${elements.length}`} className="text-sm mt-1">
-            {line}
-          </p>,
-        );
-      }
+      elements.push(
+        <p key={`p-${elements.length}`} className="text-sm mt-1">
+          {part.text}
+        </p>,
+      );
     }
   }
   flushBullets();
@@ -180,7 +179,7 @@ export default function ResumePage({ resume }: ResumePageProps) {
                         </span>
                       </div>
                       {w.description && (
-                        <div className="mt-1">{parseDescription(w.description)}</div>
+                        <div className="mt-1">{renderDescription(w.description)}</div>
                       )}
                       {w.technologies.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">

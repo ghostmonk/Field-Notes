@@ -1,4 +1,5 @@
 import { Education } from '@/shared/types/api';
+import { inlineInput } from '../shared';
 
 interface EducationFormProps {
   items: Education[];
@@ -13,9 +14,6 @@ const EMPTY_EDUCATION: Education = {
   end_date: undefined,
   description: undefined,
 };
-
-const inlineInput =
-  'w-full bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-text-secondary)] focus:outline-none py-1 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] placeholder:opacity-50 transition-colors';
 
 export function EducationForm({ items, onChange }: EducationFormProps) {
   const addItem = () => onChange([...items, { ...EMPTY_EDUCATION }]);

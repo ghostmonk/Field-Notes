@@ -1,10 +1,9 @@
+import { inlineInput } from '../shared';
+
 interface AchievementsFormProps {
   achievements: string[];
   onChange: (achievements: string[]) => void;
 }
-
-const inlineInput =
-  'w-full bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-text-secondary)] focus:outline-none py-1 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] placeholder:opacity-50 transition-colors';
 
 export function AchievementsForm({
   achievements,

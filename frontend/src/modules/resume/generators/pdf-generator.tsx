@@ -11,6 +11,7 @@ import {
 } from '@react-pdf/renderer';
 import { Resume } from '@/shared/types/api';
 import { useState } from 'react';
+import { parseDescription, RESUME_NAVY, getResumeFilename } from '../shared';
 
 // SVG icon components for PDF (react-icons can't be used in @react-pdf)
 const ICON_SIZE = 8;
@@ -79,8 +80,6 @@ Font.register({
   ],
 });
 
-const NAVY = '#1b2838';
-
 const styles = StyleSheet.create({
   page: {
     paddingTop: 0,
@@ -96,7 +95,7 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    backgroundColor: NAVY,
+    backgroundColor: RESUME_NAVY,
     paddingHorizontal: 36,
     paddingTop: 28,
     paddingBottom: 20,
@@ -148,10 +147,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     borderBottomWidth: 1,
-    borderBottomColor: NAVY,
+    borderBottomColor: RESUME_NAVY,
     paddingBottom: 2,
     marginBottom: 8,
-    color: NAVY,
+    color: RESUME_NAVY,
   },
 
   // Work experience
@@ -203,18 +202,6 @@ const styles = StyleSheet.create({
   eduInstitution: { fontSize: 7.5, color: '#444', marginBottom: 0 },
   eduDate: { fontSize: 7.5, color: '#666' },
 });
-
-function parseDescription(description: string) {
-  return description
-    .split('\n')
-    .filter((l) => l.trim() !== '')
-    .map((line) => {
-      if (line.trimStart().startsWith('- ')) {
-        return { type: 'bullet' as const, text: line.trimStart().slice(2) };
-      }
-      return { type: 'paragraph' as const, text: line };
-    });
-}
 
 function DescriptionBlock({ description }: { description: string }) {
   const parts = parseDescription(description);
@@ -385,7 +372,7 @@ export function PDFDownloadButton({ resume }: { resume: Resume }) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${resume.contact.full_name.replace(/\s+/g, '_')}_Resume.pdf`;
+      link.download = getResumeFilename(resume, 'pdf');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

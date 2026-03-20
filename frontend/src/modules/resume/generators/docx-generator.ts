@@ -9,6 +9,7 @@ import {
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { Resume } from '@/shared/types/api';
+import { parseDescription, getResumeFilename } from '../shared';
 
 const COLORS = {
   navy: '1B2838',
@@ -55,21 +56,19 @@ function sectionHeader(text: string): Paragraph {
   });
 }
 
-function parseDescription(description: string): Paragraph[] {
-  const lines = description.split('\n').filter((l) => l.trim());
-  return lines.map((line) => {
-    const trimmed = line.trim();
-    if (trimmed.startsWith('- ')) {
+function descriptionToParagraphs(description: string): Paragraph[] {
+  return parseDescription(description).map((part) => {
+    if (part.type === 'bullet') {
       return new Paragraph({
         bullet: { level: 0 },
         children: [
-          new TextRun({ text: trimmed.slice(2), size: SIZES.body }),
+          new TextRun({ text: part.text, size: SIZES.body }),
         ],
         spacing: { before: 40, after: 40 },
       });
     }
     return new Paragraph({
-      children: [new TextRun({ text: trimmed, size: SIZES.body })],
+      children: [new TextRun({ text: part.text, size: SIZES.body })],
       spacing: { before: 40, after: 40 },
     });
   });
@@ -233,7 +232,7 @@ export async function generateDocx(resume: Resume): Promise<void> {
 
       // Description
       if (w.description) {
-        children.push(...parseDescription(w.description));
+        children.push(...descriptionToParagraphs(w.description));
       }
 
       // Technologies
@@ -305,7 +304,7 @@ export async function generateDocx(resume: Resume): Promise<void> {
       );
 
       if (e.description) {
-        children.push(...parseDescription(e.description));
+        children.push(...descriptionToParagraphs(e.description));
       }
     }
   }
@@ -361,8 +360,5 @@ export async function generateDocx(resume: Resume): Promise<void> {
   });
 
   const blob = await Packer.toBlob(doc);
-  saveAs(
-    blob,
-    `${resume.contact.full_name.replace(/\s+/g, '_')}_Resume.docx`
-  );
+  saveAs(blob, getResumeFilename(resume, 'docx'));
 }
