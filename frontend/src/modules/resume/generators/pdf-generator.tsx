@@ -98,8 +98,8 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: NAVY,
     paddingHorizontal: 36,
-    paddingTop: 22,
-    paddingBottom: 16,
+    paddingTop: 28,
+    paddingBottom: 20,
   },
   name: {
     fontSize: 20,
@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
   // Summary
   summaryWrap: {
     paddingHorizontal: 36,
-    paddingTop: 10,
-    paddingBottom: 4,
+    paddingTop: 18,
+    paddingBottom: 10,
   },
   summary: {
     fontSize: 8.5,
@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
   body: {
     flexDirection: 'row',
     paddingHorizontal: 36,
-    paddingTop: 6,
+    paddingTop: 12,
   },
   leftCol: { width: '58%', paddingRight: 16 },
   rightCol: { width: '42%' },
 
   // Section
-  section: { marginBottom: 10 },
+  section: { marginBottom: 14 },
   sectionTitle: {
     fontSize: 9.5,
     fontWeight: 'bold',
@@ -150,12 +150,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: NAVY,
     paddingBottom: 2,
-    marginBottom: 6,
+    marginBottom: 8,
     color: NAVY,
   },
 
   // Work experience
-  jobEntry: { marginBottom: 8 },
+  jobEntry: { marginBottom: 12 },
   jobTitle: { fontSize: 9.5, fontWeight: 'bold', marginBottom: 0 },
   company: {
     fontSize: 8.5,
