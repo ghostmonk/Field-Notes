@@ -563,6 +563,16 @@ button.btn--primary:hover:not(:disabled) {
   }
 }
 
+/* Resume header — override typography.css heading color inside the dark banner */
+.resume-header h1,
+.resume-header h2,
+.resume-header h3,
+.resume-header p,
+.resume-header span,
+.resume-header a {
+  color: inherit;
+}
+
 /* Skip-to-content link (accessibility) */
 .skip-to-content {
   position: absolute;

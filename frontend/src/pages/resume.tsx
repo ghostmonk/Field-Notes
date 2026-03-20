@@ -86,7 +86,7 @@ export default function ResumePage({ resume }: ResumePageProps) {
       </Head>
       <div className="max-w-5xl mx-auto">
         {/* Dark header */}
-        <div className="bg-[#1b2838] text-white px-4 sm:px-8 py-6 rounded-t-lg">
+        <div className="resume-header bg-[#1b2838] text-white px-4 sm:px-8 py-6 rounded-t-lg">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="min-w-0">
               {c.full_name && (
