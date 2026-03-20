@@ -84,7 +84,7 @@ const NAVY = '#1b2838';
 const styles = StyleSheet.create({
   page: {
     paddingTop: 0,
-    paddingBottom: 24,
+    paddingBottom: 30,
     paddingHorizontal: 0,
     fontSize: 8.5,
     fontFamily: 'Helvetica',
@@ -245,13 +245,33 @@ function ContactEntry({ icon, text }: { icon: React.ReactNode; text: string }) {
   );
 }
 
+const PAGE1_JOB_COUNT = 3;
+
+function JobEntry({ w }: { w: Resume['work_experience'][0] }) {
+  return (
+    <View wrap={false} style={styles.jobEntry}>
+      <Text style={styles.jobTitle}>{w.title}</Text>
+      <Text style={styles.company}>{w.company}</Text>
+      <Text style={styles.dateRange}>
+        {w.start_date} - {w.current ? 'Present' : w.end_date || ''}
+      </Text>
+      {w.description ? <DescriptionBlock description={w.description} /> : null}
+      {w.technologies.length > 0 && (
+        <Text style={styles.techLine}>{w.technologies.join(', ')}</Text>
+      )}
+    </View>
+  );
+}
+
 function ResumeDocument({ resume }: { resume: Resume }) {
   const c = resume.contact;
+  const page1Jobs = resume.work_experience.slice(0, PAGE1_JOB_COUNT);
+  const page2Jobs = resume.work_experience.slice(PAGE1_JOB_COUNT);
 
   return (
     <Document>
+      {/* Page 1: Header, Summary, first 3 jobs + right column */}
       <Page size="A4" style={styles.page}>
-        {/* Dark header */}
         <View style={styles.header}>
           <Text style={styles.name}>{c.full_name}</Text>
           <View style={styles.contactRow}>
@@ -264,7 +284,6 @@ function ResumeDocument({ resume }: { resume: Resume }) {
           </View>
         </View>
 
-        {/* Summary — full width */}
         {resume.summary ? (
           <View style={styles.summaryWrap}>
             <Text style={styles.sectionTitle}>Summary</Text>
@@ -272,46 +291,25 @@ function ResumeDocument({ resume }: { resume: Resume }) {
           </View>
         ) : null}
 
-        {/* Two-column body */}
         <View style={styles.body}>
-          {/* Left: Experience */}
           <View style={styles.leftCol}>
-            {resume.work_experience.length > 0 && (
+            {page1Jobs.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Experience</Text>
-                {resume.work_experience.map((w, i) => (
-                  <View key={i} wrap={false} style={styles.jobEntry}>
-                    <Text style={styles.jobTitle}>{w.title}</Text>
-                    <Text style={styles.company}>{w.company}</Text>
-                    <Text style={styles.dateRange}>
-                      {w.start_date}
-                      {' - '}
-                      {w.current ? 'Present' : w.end_date || ''}
-                    </Text>
-                    {w.description ? (
-                      <DescriptionBlock description={w.description} />
-                    ) : null}
-                    {w.technologies.length > 0 && (
-                      <Text style={styles.techLine}>
-                        {w.technologies.join(', ')}
-                      </Text>
-                    )}
-                  </View>
+                {page1Jobs.map((w, i) => (
+                  <JobEntry key={i} w={w} />
                 ))}
               </View>
             )}
           </View>
 
-          {/* Right: Skills, Achievements, Education */}
           <View style={styles.rightCol}>
             {resume.skills.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Skills</Text>
                 <View style={styles.skillsRow}>
                   {resume.skills.map((s, i) => (
-                    <Text key={i} style={styles.skillTag}>
-                      {s}
-                    </Text>
+                    <Text key={i} style={styles.skillTag}>{s}</Text>
                   ))}
                 </View>
               </View>
@@ -338,9 +336,7 @@ function ResumeDocument({ resume }: { resume: Resume }) {
                       {e.degree}
                       {e.field_of_study ? `, ${e.field_of_study}` : ''}
                     </Text>
-                    <Text style={styles.eduInstitution}>
-                      {e.institution}
-                    </Text>
+                    <Text style={styles.eduInstitution}>{e.institution}</Text>
                     <Text style={styles.eduDate}>
                       {e.start_date}
                       {e.end_date ? ` - ${e.end_date}` : ''}
@@ -352,6 +348,18 @@ function ResumeDocument({ resume }: { resume: Resume }) {
           </View>
         </View>
       </Page>
+
+      {/* Page 2+: Remaining experience */}
+      {page2Jobs.length > 0 && (
+        <Page size="A4" style={{ ...styles.page, paddingTop: 40 }}>
+          <View style={{ paddingHorizontal: 36 }}>
+            <Text style={styles.sectionTitle}>Experience (continued)</Text>
+            {page2Jobs.map((w, i) => (
+              <JobEntry key={i} w={w} />
+            ))}
+          </View>
+        </Page>
+      )}
     </Document>
   );
 }
