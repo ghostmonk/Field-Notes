@@ -18,6 +18,7 @@ class ContactInfo(BaseModel):
 
 class WorkExperience(BaseModel):
     company: str = Field(default="", max_length=200)
+    company_url: Optional[str] = None
     title: str = Field(default="", max_length=200)
     start_date: str = Field(default="")
     end_date: Optional[str] = None

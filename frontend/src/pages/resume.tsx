@@ -159,8 +159,14 @@ export default function ResumePage({ resume }: ResumePageProps) {
                         </div>
                       )}
                       {w.company && (
-                        <div className="font-bold underline text-[var(--color-text-primary)]">
-                          {w.company}
+                        <div className="font-bold text-[var(--color-text-primary)]">
+                          {w.company_url ? (
+                            <a href={w.company_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--color-text-secondary)] transition-colors">
+                              {w.company}
+                            </a>
+                          ) : (
+                            w.company
+                          )}
                         </div>
                       )}
                       <div className="flex flex-wrap items-center gap-x-4 text-xs text-[var(--color-text-secondary)] mt-0.5">

@@ -333,6 +333,7 @@ export interface ContactInfo {
 
 export interface WorkExperience {
   company: string;
+  company_url?: string;
   title: string;
   start_date: string;
   end_date?: string;
