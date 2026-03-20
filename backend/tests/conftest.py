@@ -177,13 +177,6 @@ def setup_test_environment():
     pass
 
 
-@pytest.fixture(autouse=True)
-def reset_rate_limiter():
-    """Reset rate limiter state between tests to prevent 429s."""
-    limiter.reset()
-    yield
-
-
 @pytest.fixture
 def mock_pages_collection():
     """Mock collection for pages testing"""
@@ -706,6 +699,7 @@ def mock_resumes_collection():
     """Mock collection for resumes testing"""
     mock = MagicMock()
     mock.find_one = AsyncMock()
+    mock.find_one_and_update = AsyncMock()
     mock.count_documents = AsyncMock()
     mock.insert_one = AsyncMock()
     mock.update_one = AsyncMock()

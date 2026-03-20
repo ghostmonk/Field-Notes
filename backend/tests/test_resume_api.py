@@ -8,6 +8,15 @@ import pytest
 from bson import ObjectId
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Reset rate limiter state between resume tests."""
+    from middleware.rate_limit import limiter
+
+    limiter.reset()
+    yield
+
+
 class TestResumeEndpoints:
     """Test resume endpoints"""
 

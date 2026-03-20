@@ -119,6 +119,8 @@ export function useResumeEditor(): UseResumeEditorReturn {
   }, [accessToken]);
 
   const handleSave = useCallback(async () => {
+    if (isSaving) return;
+
     if (!session?.accessToken) {
       setError('You must be logged in to save');
       return;
@@ -162,7 +164,7 @@ export function useResumeEditor(): UseResumeEditorReturn {
     } finally {
       setIsSaving(false);
     }
-  }, [session, resume, isExisting, showToast]);
+  }, [session, resume, isExisting, isSaving, showToast]);
 
   const handleDelete = useCallback(async () => {
     if (!session?.accessToken) {

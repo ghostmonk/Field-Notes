@@ -9,6 +9,10 @@ export default async function handler(
   const API_BASE_URL =
     process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
 
+  if (!['GET', 'POST', 'PUT', 'DELETE'].includes(req.method || '')) {
+    return res.status(405).json({ detail: 'Method not allowed' });
+  }
+
   if (!API_BASE_URL) {
     apiLogger.error(
       'Configuration error',

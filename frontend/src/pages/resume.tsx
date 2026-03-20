@@ -163,7 +163,7 @@ export default function ResumePage({ resume }: ResumePageProps) {
                       {w.company && (
                         <div className="font-bold text-[var(--color-text-primary)]">
                           {w.company_url ? (
-                            <a href={w.company_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--color-text-secondary)] transition-colors">
+                            <a href={w.company_url && w.company_url.startsWith('http') ? w.company_url : `https://${w.company_url}`} target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--color-text-secondary)] transition-colors">
                               {w.company}
                             </a>
                           ) : (

@@ -10,27 +10,32 @@ from decorators.auth import requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from glogger import logger
 from middleware.rate_limit import limiter
-from models.resume import ResumeCreate, ResumeResponse, ResumeUpdate
+from models.resume import (
+    ResumeCreate,
+    ResumePublicResponse,
+    ResumeResponse,
+    ResumeUpdate,
+)
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
+from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
-from utils import find_one_and_convert
+from utils import find_one_and_convert, mongo_to_pydantic
 
 router = APIRouter()
 
 
-@router.get("/resume/public", response_model=ResumeResponse)
+@router.get("/resume/public", response_model=ResumePublicResponse)
+@limiter.limit("30/minute")
 async def get_public_resume(
     request: Request,
     collection: AsyncIOMotorCollection = Depends(get_resumes_collection),
 ):
     """Get the public resume (first non-deleted resume)."""
     try:
-        resume = await find_one_and_convert(
-            collection,
-            {"deleted": {"$ne": True}},
-            ResumeResponse,
-        )
+        query = {"deleted": {"$ne": True}}
+        doc = await collection.find_one(query, sort=[("createdDate", 1)])
+        resume = mongo_to_pydantic(doc, ResumePublicResponse) if doc else None
 
         if not resume:
             raise HTTPException(status_code=404, detail="Resume not found")
@@ -49,11 +54,7 @@ async def get_public_resume(
         )
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while fetching the resume",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while fetching the resume",
         )
 
 
@@ -144,20 +145,21 @@ async def create_resume(
         deleted_resume = existing if existing and existing.get("deleted") is True else None
 
         if deleted_resume:
-            await collection.update_one(
-                {"_id": deleted_resume["_id"]},
+            # Atomic: find soft-deleted doc and reactivate it in one operation
+            reactivated = await collection.find_one_and_update(
+                {"user_id": user.id, "deleted": True},
                 {
                     "$set": {
                         **resume.model_dump(),
                         "updatedDate": current_time,
                         "createdDate": current_time,
                         "deleted": False,
+                        "user_id": user.id,
                     }
                 },
+                return_document=ReturnDocument.AFTER,
             )
-            created_resume = await find_one_and_convert(
-                collection, {"_id": deleted_resume["_id"]}, ResumeResponse
-            )
+            created_resume = mongo_to_pydantic(reactivated, ResumeResponse)
         else:
             document = {
                 **resume.model_dump(),

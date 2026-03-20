@@ -5,7 +5,7 @@ import {
   View,
   StyleSheet,
   pdf,
-  Font,
+
   Svg,
   Path,
 } from '@react-pdf/renderer';
@@ -65,20 +65,6 @@ function GitHubIcon() {
   );
 }
 
-// Register Helvetica variants explicitly for bold/italic to work
-Font.register({
-  family: 'Helvetica',
-  fonts: [
-    { src: 'Helvetica' },
-    { src: 'Helvetica-Bold', fontWeight: 'bold' },
-    { src: 'Helvetica-Oblique', fontStyle: 'italic' },
-    {
-      src: 'Helvetica-BoldOblique',
-      fontWeight: 'bold',
-      fontStyle: 'italic',
-    },
-  ],
-});
 
 const styles = StyleSheet.create({
   page: {
@@ -240,7 +226,7 @@ function JobEntry({ w }: { w: Resume['work_experience'][0] }) {
       <Text style={styles.jobTitle}>{w.title}</Text>
       <Text style={styles.company}>{w.company}</Text>
       <Text style={styles.dateRange}>
-        {w.start_date} - {w.current ? 'Present' : w.end_date || ''}
+        {w.start_date}{w.current ? ' - Present' : w.end_date ? ` - ${w.end_date}` : ''}
       </Text>
       {w.description ? <DescriptionBlock description={w.description} /> : null}
       {w.technologies.length > 0 && (
@@ -370,13 +356,16 @@ export function PDFDownloadButton({ resume }: { resume: Resume }) {
     try {
       const blob = await pdf(<ResumeDocument resume={resume} />).toBlob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = getResumeFilename(resume, 'pdf');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      try {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = getResumeFilename(resume, 'pdf');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
     } catch {
       setError('PDF generation failed');
     } finally {

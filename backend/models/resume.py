@@ -56,6 +56,12 @@ class ResumeUpdate(BaseModel):
     achievements: Optional[List[str]] = None
 
 
+class ResumePublicResponse(ResumeCreate):
+    """Public response model — excludes internal fields."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ResumeResponse(ResumeCreate):
     id: str
     user_id: str

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { WorkExperience } from '@/shared/types/api';
 import { inlineInput } from '../shared';
 
@@ -24,10 +24,18 @@ function TechnologiesInput({
   technologies: string[];
   onCommit: (techs: string[]) => void;
 }) {
-  const initialRef = useRef(technologies.join(', '));
-  const [text, setText] = useState(initialRef.current);
+  const [text, setText] = useState(technologies.join(', '));
+  const [focused, setFocused] = useState(false);
+
+  // Sync from prop when not actively editing
+  useEffect(() => {
+    if (!focused) {
+      setText(technologies.join(', '));
+    }
+  }, [technologies, focused]);
 
   const handleBlur = () => {
+    setFocused(false);
     const techs = text
       .split(',')
       .map((t) => t.trim())
@@ -40,6 +48,7 @@ function TechnologiesInput({
       type="text"
       value={text}
       onChange={(e) => setText(e.target.value)}
+      onFocus={() => setFocused(true)}
       onBlur={handleBlur}
       placeholder="Technologies (comma-separated)"
       className={`${inlineInput} text-sm text-[var(--color-text-secondary)]`}
@@ -109,6 +118,13 @@ export function WorkExperienceForm({
               onChange={(e) => updateItem(index, 'company', e.target.value)}
               placeholder="Company"
               className={`${inlineInput} text-sm flex-1`}
+            />
+            <input
+              type="text"
+              value={item.company_url || ''}
+              onChange={(e) => updateItem(index, 'company_url', e.target.value || undefined)}
+              placeholder="Company website URL"
+              className={`${inlineInput} text-xs text-[var(--color-text-secondary)]`}
             />
             <div className="flex gap-1 items-baseline shrink-0">
               <input
