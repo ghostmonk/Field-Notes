@@ -62,7 +62,7 @@ const nextConfig: NextConfig = {
         ];
     },
     async headers() {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
         const isDev = process.env.NODE_ENV === 'development';
         const isUnsafeEval = process.env.UNSAFE_EVAL === "true";
         const devSources = isDev ? 'http://localhost:5001' : '';
@@ -75,7 +75,7 @@ const nextConfig: NextConfig = {
                             style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
                             img-src 'self' data: blob: ${apiUrl} ${devSources} https://storage.googleapis.com https://authjs.dev;
                             media-src 'self' data: blob: ${apiUrl} ${devSources} https://storage.googleapis.com;
-                            connect-src 'self' ${apiUrl} ${devSources} https://accounts.google.com https://*.googleapis.com https://www.google.com;
+                            connect-src 'self' data: ${apiUrl} ${devSources} https://accounts.google.com https://*.googleapis.com https://www.google.com;
                             font-src 'self' https://fonts.gstatic.com;
                             frame-src 'self' https://accounts.google.com https://*.google.com;
                         `.replace(/\n/g, '').trim();
