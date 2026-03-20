@@ -349,14 +349,19 @@ function ResumeDocument({ resume }: { resume: Resume }) {
         </View>
       </Page>
 
-      {/* Page 2+: Remaining experience */}
+      {/* Page 2+: Remaining experience in same column width */}
       {page2Jobs.length > 0 && (
         <Page size="A4" style={{ ...styles.page, paddingTop: 40 }}>
-          <View style={{ paddingHorizontal: 36 }}>
-            <Text style={styles.sectionTitle}>Experience (continued)</Text>
-            {page2Jobs.map((w, i) => (
-              <JobEntry key={i} w={w} />
-            ))}
+          <View style={styles.body}>
+            <View style={styles.leftCol}>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Experience (continued)</Text>
+                {page2Jobs.map((w, i) => (
+                  <JobEntry key={i} w={w} />
+                ))}
+              </View>
+            </View>
+            <View style={styles.rightCol} />
           </View>
         </Page>
       )}
