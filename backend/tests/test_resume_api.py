@@ -87,8 +87,8 @@ class TestResumeEndpoints:
             "_id": resume_id,
         }
 
-        # First find_one returns None (no existing), second returns the created doc
-        override_resumes_database.find_one.side_effect = [None, created_resume]
+        # find_one calls: 1) active check (None), 2) soft-deleted check (None), 3) retrieve created
+        override_resumes_database.find_one.side_effect = [None, None, created_resume]
         override_resumes_database.insert_one.return_value = MagicMock(inserted_id=resume_id)
 
         response = await resumes_async_client.post(

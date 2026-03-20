@@ -90,6 +90,7 @@ async def create_resume(
             {"user_id": user.id},
         )
 
+        # Check for active (non-deleted) resume
         existing = await find_one_and_convert(
             collection,
             {"user_id": user.id, "deleted": {"$ne": True}},
@@ -105,32 +106,43 @@ async def create_resume(
 
         current_time = datetime.now(timezone.utc)
 
-        document = {
-            **resume.model_dump(),
-            "createdDate": current_time,
-            "updatedDate": current_time,
-            "user_id": user.id,
-        }
+        # Check for soft-deleted resume — reuse document to avoid unique index conflict
+        deleted_resume = await collection.find_one({"user_id": user.id, "deleted": True})
 
-        result = await collection.insert_one(document)
-        resume_id = str(result.inserted_id)
-
-        logger.info_with_context(
-            "Inserted resume document",
-            {"resume_id": resume_id, "user_id": user.id},
-        )
-
-        created_resume = await find_one_and_convert(
-            collection, {"_id": result.inserted_id}, ResumeResponse
-        )
+        if deleted_resume:
+            await collection.update_one(
+                {"_id": deleted_resume["_id"]},
+                {
+                    "$set": {
+                        **resume.model_dump(),
+                        "updatedDate": current_time,
+                        "createdDate": current_time,
+                        "deleted": False,
+                    }
+                },
+            )
+            created_resume = await find_one_and_convert(
+                collection, {"_id": deleted_resume["_id"]}, ResumeResponse
+            )
+        else:
+            document = {
+                **resume.model_dump(),
+                "createdDate": current_time,
+                "updatedDate": current_time,
+                "user_id": user.id,
+            }
+            result = await collection.insert_one(document)
+            created_resume = await find_one_and_convert(
+                collection, {"_id": result.inserted_id}, ResumeResponse
+            )
 
         if not created_resume:
-            logger.error_with_context("Failed to retrieve created resume", {"resume_id": resume_id})
+            logger.error_with_context("Failed to retrieve created resume", {"user_id": user.id})
             raise HTTPException(status_code=500, detail="Failed to retrieve created resume")
 
         logger.info_with_context(
             "Resume created successfully",
-            {"resume_id": resume_id, "user_id": user.id},
+            {"user_id": user.id},
         )
 
         return created_resume
