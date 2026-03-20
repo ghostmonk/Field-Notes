@@ -5,79 +5,150 @@ import {
   View,
   StyleSheet,
   pdf,
+  Font,
 } from '@react-pdf/renderer';
 import { Resume } from '@/shared/types/api';
 import { useState } from 'react';
 
+// Register Helvetica variants explicitly for bold/italic to work
+Font.register({
+  family: 'Helvetica',
+  fonts: [
+    { src: 'Helvetica' },
+    { src: 'Helvetica-Bold', fontWeight: 'bold' },
+    { src: 'Helvetica-Oblique', fontStyle: 'italic' },
+    {
+      src: 'Helvetica-BoldOblique',
+      fontWeight: 'bold',
+      fontStyle: 'italic',
+    },
+  ],
+});
+
+const NAVY = '#1b2838';
+
 const styles = StyleSheet.create({
-  page: { padding: 0, fontSize: 9, fontFamily: 'Helvetica' },
-  header: {
-    backgroundColor: '#1b2838',
-    paddingHorizontal: 36,
-    paddingVertical: 24,
+  page: {
+    paddingTop: 0,
+    paddingBottom: 36,
+    paddingHorizontal: 0,
+    fontSize: 9,
+    fontFamily: 'Helvetica',
+    color: '#222',
   },
-  name: { fontSize: 20, fontWeight: 'bold', color: 'white' },
+  pageInner: {
+    paddingHorizontal: 40,
+  },
+
+  // Header
+  header: {
+    backgroundColor: NAVY,
+    paddingHorizontal: 40,
+    paddingTop: 28,
+    paddingBottom: 22,
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 6,
+  },
   contactRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 5,
-    fontSize: 8,
+    fontSize: 8.5,
     color: '#b0bec5',
   },
-  contactItem: { flexDirection: 'row', marginRight: 12 },
-  contactIcon: { marginRight: 3 },
-  summaryWrap: { paddingHorizontal: 36, paddingTop: 12, paddingBottom: 4 },
-  summary: { fontSize: 8.5, lineHeight: 1.5, color: '#333' },
-  body: { flexDirection: 'row', paddingHorizontal: 36, paddingTop: 12 },
-  leftCol: { width: '58%', paddingRight: 16 },
+  contactItem: {
+    flexDirection: 'row',
+    marginRight: 14,
+    marginBottom: 2,
+  },
+
+  // Summary
+  summaryWrap: {
+    paddingHorizontal: 40,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  summary: {
+    fontSize: 9,
+    lineHeight: 1.6,
+    color: '#333',
+  },
+
+  // Body columns
+  body: {
+    flexDirection: 'row',
+    paddingHorizontal: 40,
+    paddingTop: 8,
+  },
+  leftCol: { width: '58%', paddingRight: 20 },
   rightCol: { width: '42%' },
-  section: { marginBottom: 12 },
+
+  // Section
+  section: { marginBottom: 18 },
   sectionTitle: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: 'bold',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1b2838',
-    paddingBottom: 2,
-    marginBottom: 6,
-    color: '#1b2838',
+    letterSpacing: 1.2,
+    borderBottomWidth: 1.5,
+    borderBottomColor: NAVY,
+    paddingBottom: 3,
+    marginBottom: 10,
+    color: NAVY,
   },
-  jobTitle: { fontSize: 10, fontWeight: 'bold' },
-  company: { fontSize: 9, fontWeight: 'bold', color: '#444' },
-  dateRange: { fontSize: 8, color: '#666', marginBottom: 3 },
-  bullet: { flexDirection: 'row', marginBottom: 2 },
-  bulletDot: { width: 8, fontSize: 8.5 },
-  bulletText: { flex: 1, fontSize: 8.5, lineHeight: 1.4 },
-  paragraph: { fontSize: 8.5, lineHeight: 1.4, marginBottom: 2 },
-  techLine: { fontSize: 8, color: '#666', fontStyle: 'italic', marginTop: 2 },
+
+  // Work experience
+  jobEntry: { marginBottom: 14 },
+  jobTitle: { fontSize: 10.5, fontWeight: 'bold', marginBottom: 1 },
+  company: {
+    fontSize: 9.5,
+    fontWeight: 'bold',
+    color: '#444',
+    marginBottom: 1,
+  },
+  dateRange: { fontSize: 8.5, color: '#666', marginBottom: 4 },
+  bullet: { flexDirection: 'row', marginBottom: 3, paddingLeft: 2 },
+  bulletDot: { width: 8, fontSize: 9, lineHeight: 1.4 },
+  bulletText: { flex: 1, fontSize: 9, lineHeight: 1.5 },
+  paragraph: { fontSize: 9, lineHeight: 1.5, marginBottom: 3 },
+  techLine: {
+    fontSize: 8.5,
+    color: '#555',
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+
+  // Skills
   skillsRow: { flexDirection: 'row', flexWrap: 'wrap' },
   skillTag: {
-    fontSize: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    fontSize: 8.5,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#bbb',
     borderRadius: 8,
-    marginRight: 4,
-    marginBottom: 4,
+    marginRight: 5,
+    marginBottom: 5,
   },
-  achievementRow: { flexDirection: 'row', marginBottom: 3 },
-  achievementStar: { width: 12, fontSize: 9, color: '#1b2838' },
-  achievementText: { flex: 1, fontSize: 8.5, lineHeight: 1.4 },
-  eduDegree: { fontSize: 9, fontWeight: 'bold' },
-  eduInstitution: { fontSize: 8, color: '#444' },
-  eduDate: { fontSize: 8, color: '#666' },
-});
 
-const ICONS = {
-  phone: '\u260E',
-  email: '\u2709',
-  location: '\u25C9',
-  linkedin: 'in',
-  github: '\u2302',
-  calendar: '\u229E',
-} as const;
+  // Achievements
+  achievementRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+    paddingLeft: 2,
+  },
+  achievementDot: { width: 8, fontSize: 9, lineHeight: 1.4 },
+  achievementText: { flex: 1, fontSize: 9, lineHeight: 1.5 },
+
+  // Education
+  eduEntry: { marginBottom: 10 },
+  eduDegree: { fontSize: 9.5, fontWeight: 'bold', marginBottom: 1 },
+  eduInstitution: { fontSize: 8.5, color: '#444', marginBottom: 1 },
+  eduDate: { fontSize: 8.5, color: '#666' },
+});
 
 function parseDescription(description: string) {
   return description
@@ -98,7 +169,7 @@ function DescriptionBlock({ description }: { description: string }) {
       {parts.map((part, i) =>
         part.type === 'bullet' ? (
           <View key={i} style={styles.bullet}>
-            <Text style={styles.bulletDot}>{'\u2022 '}</Text>
+            <Text style={styles.bulletDot}>{'\u2022'}</Text>
             <Text style={styles.bulletText}>{part.text}</Text>
           </View>
         ) : (
@@ -111,39 +182,37 @@ function DescriptionBlock({ description }: { description: string }) {
   );
 }
 
-function ContactItem({ icon, text }: { icon: string; text: string }) {
-  return (
-    <View style={styles.contactItem}>
-      <Text style={styles.contactIcon}>{icon}</Text>
-      <Text>{text}</Text>
-    </View>
-  );
-}
-
 function ResumeDocument({ resume }: { resume: Resume }) {
   const c = resume.contact;
 
-  const contactItems: { icon: string; text: string }[] = [];
-  if (c.phone) contactItems.push({ icon: ICONS.phone, text: c.phone });
-  if (c.email) contactItems.push({ icon: ICONS.email, text: c.email });
-  if (c.location) contactItems.push({ icon: ICONS.location, text: c.location });
-  if (c.linkedin) contactItems.push({ icon: ICONS.linkedin, text: c.linkedin });
-  if (c.github) contactItems.push({ icon: ICONS.github, text: c.github });
+  const contactParts: string[] = [];
+  if (c.phone) contactParts.push(c.phone);
+  if (c.email) contactParts.push(c.email);
+  if (c.location) contactParts.push(c.location);
+  if (c.website)
+    contactParts.push(c.website.replace(/^https?:\/\//, ''));
+  if (c.linkedin) contactParts.push('LinkedIn');
+  if (c.github) contactParts.push('GitHub');
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
+        {/* Dark header */}
+        <View style={styles.header} fixed>
           <Text style={styles.name}>{c.full_name}</Text>
           <View style={styles.contactRow}>
-            {contactItems.map((item, i) => (
-              <ContactItem key={i} icon={item.icon} text={item.text} />
+            {contactParts.map((part, i) => (
+              <View key={i} style={styles.contactItem}>
+                <Text>
+                  {part}
+                  {i < contactParts.length - 1 ? '   |' : ''}
+                </Text>
+              </View>
             ))}
           </View>
         </View>
 
-        {/* Summary */}
+        {/* Summary — full width */}
         {resume.summary ? (
           <View style={styles.summaryWrap}>
             <Text style={styles.sectionTitle}>Summary</Text>
@@ -153,25 +222,19 @@ function ResumeDocument({ resume }: { resume: Resume }) {
 
         {/* Two-column body */}
         <View style={styles.body}>
-          {/* Left column: Experience */}
+          {/* Left: Experience */}
           <View style={styles.leftCol}>
             {resume.work_experience.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Experience</Text>
                 {resume.work_experience.map((w, i) => (
-                  <View
-                    key={i}
-                    wrap={false}
-                    style={{
-                      marginBottom:
-                        i < resume.work_experience.length - 1 ? 8 : 0,
-                    }}
-                  >
+                  <View key={i} wrap={false} style={styles.jobEntry}>
                     <Text style={styles.jobTitle}>{w.title}</Text>
                     <Text style={styles.company}>{w.company}</Text>
                     <Text style={styles.dateRange}>
-                      {ICONS.calendar} {w.start_date} –{' '}
-                      {w.current ? 'Present' : w.end_date}
+                      {w.start_date}
+                      {' - '}
+                      {w.current ? 'Present' : w.end_date || ''}
                     </Text>
                     {w.description ? (
                       <DescriptionBlock description={w.description} />
@@ -187,7 +250,7 @@ function ResumeDocument({ resume }: { resume: Resume }) {
             )}
           </View>
 
-          {/* Right column: Skills, Achievements, Education */}
+          {/* Right: Skills, Achievements, Education */}
           <View style={styles.rightCol}>
             {resume.skills.length > 0 && (
               <View style={styles.section}>
@@ -202,12 +265,12 @@ function ResumeDocument({ resume }: { resume: Resume }) {
               </View>
             )}
 
-            {resume.achievements.length > 0 && (
+            {resume.achievements && resume.achievements.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Achievements</Text>
                 {resume.achievements.map((a, i) => (
                   <View key={i} style={styles.achievementRow}>
-                    <Text style={styles.achievementStar}>{'\u2605'}</Text>
+                    <Text style={styles.achievementDot}>{'\u2022'}</Text>
                     <Text style={styles.achievementText}>{a}</Text>
                   </View>
                 ))}
@@ -218,25 +281,18 @@ function ResumeDocument({ resume }: { resume: Resume }) {
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Education</Text>
                 {resume.education.map((e, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      marginBottom:
-                        i < resume.education.length - 1 ? 6 : 0,
-                    }}
-                  >
+                  <View key={i} style={styles.eduEntry}>
                     <Text style={styles.eduDegree}>
                       {e.degree}
                       {e.field_of_study ? `, ${e.field_of_study}` : ''}
                     </Text>
-                    <Text style={styles.eduInstitution}>{e.institution}</Text>
-                    <Text style={styles.eduDate}>
-                      {ICONS.calendar} {e.start_date}
-                      {e.end_date ? ` – ${e.end_date}` : ''}
+                    <Text style={styles.eduInstitution}>
+                      {e.institution}
                     </Text>
-                    {e.description ? (
-                      <DescriptionBlock description={e.description} />
-                    ) : null}
+                    <Text style={styles.eduDate}>
+                      {e.start_date}
+                      {e.end_date ? ` - ${e.end_date}` : ''}
+                    </Text>
                   </View>
                 ))}
               </View>
