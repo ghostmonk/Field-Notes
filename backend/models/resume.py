@@ -41,6 +41,7 @@ class ResumeCreate(BaseModel):
     work_experience: List[WorkExperience] = Field(default_factory=list)
     education: List[Education] = Field(default_factory=list)
     skills: List[str] = Field(default_factory=list)
+    achievements: List[str] = Field(default_factory=list)
 
 
 class ResumeUpdate(BaseModel):
@@ -49,6 +50,7 @@ class ResumeUpdate(BaseModel):
     work_experience: Optional[List[WorkExperience]] = None
     education: Optional[List[Education]] = None
     skills: Optional[List[str]] = None
+    achievements: Optional[List[str]] = None
 
 
 class ResumeResponse(ResumeCreate):

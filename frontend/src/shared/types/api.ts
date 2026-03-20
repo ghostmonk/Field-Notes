@@ -358,6 +358,7 @@ export interface Resume {
   work_experience: WorkExperience[];
   education: Education[];
   skills: string[];
+  achievements: string[];
   createdDate: string;
   updatedDate: string;
 }
@@ -368,6 +369,7 @@ export interface CreateResumeRequest {
   work_experience?: WorkExperience[];
   education?: Education[];
   skills?: string[];
+  achievements?: string[];
 }
 
 export type UpdateResumeRequest = Partial<CreateResumeRequest>;

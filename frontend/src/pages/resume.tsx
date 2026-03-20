@@ -101,10 +101,10 @@ export default function ResumePage({ resume }: ResumePageProps) {
                   </span>
                 )}
                 {c.email && (
-                  <span className="flex items-center gap-1">
+                  <a href={`mailto:${c.email}`} className="flex items-center gap-1 hover:text-white transition-colors">
                     <HiOutlineMail className="w-3.5 h-3.5" />
                     {c.email}
-                  </span>
+                  </a>
                 )}
                 {c.location && (
                   <span className="flex items-center gap-1">
@@ -113,16 +113,21 @@ export default function ResumePage({ resume }: ResumePageProps) {
                   </span>
                 )}
                 {c.linkedin && (
-                  <span className="flex items-center gap-1">
+                  <a href={c.linkedin.startsWith('http') ? c.linkedin : `https://${c.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
                     <FaLinkedinIn className="w-3.5 h-3.5" />
-                    {c.linkedin}
-                  </span>
+                    LinkedIn
+                  </a>
                 )}
                 {c.github && (
-                  <span className="flex items-center gap-1">
+                  <a href={c.github.startsWith('http') ? c.github : `https://${c.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
                     <FaGithub className="w-3.5 h-3.5" />
-                    {c.github}
-                  </span>
+                    GitHub
+                  </a>
+                )}
+                {c.website && (
+                  <a href={c.website.startsWith('http') ? c.website : `https://${c.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
+                    {c.website.replace(/^https?:\/\//, '')}
+                  </a>
                 )}
               </div>
             </div>
@@ -186,6 +191,40 @@ export default function ResumePage({ resume }: ResumePageProps) {
               </section>
             )}
 
+          </div>
+
+          {/* Right column: Skills + Achievements + Education */}
+          <div className="space-y-8">
+            {resume.skills.length > 0 && (
+              <section>
+                <h2 className={sectionHeading}>Skills</h2>
+                <div className="flex flex-wrap gap-2">
+                  {resume.skills.map((s, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1 text-sm rounded border border-[var(--color-border)] text-[var(--color-text-primary)]"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {resume.achievements && resume.achievements.length > 0 && (
+              <section>
+                <h2 className={sectionHeading}>Achievements</h2>
+                <ul className="space-y-2">
+                  {resume.achievements.map((a, i) => (
+                    <li key={i} className="flex gap-2 text-sm">
+                      <span className="text-[var(--color-text-secondary)] shrink-0">&#9733;</span>
+                      <span>{a}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {resume.education.length > 0 && (
               <section>
                 <h2 className={sectionHeading}>Education</h2>
@@ -212,25 +251,6 @@ export default function ResumePage({ resume }: ResumePageProps) {
                         <p className="mt-1 text-sm">{e.description}</p>
                       )}
                     </div>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
-
-          {/* Right column: Skills */}
-          <div className="space-y-8">
-            {resume.skills.length > 0 && (
-              <section>
-                <h2 className={sectionHeading}>Skills</h2>
-                <div className="flex flex-wrap gap-2">
-                  {resume.skills.map((s, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 text-sm rounded border border-[var(--color-border)] text-[var(--color-text-primary)]"
-                    >
-                      {s}
-                    </span>
                   ))}
                 </div>
               </section>

@@ -28,6 +28,7 @@ const EMPTY_RESUME: Partial<Resume> = {
   work_experience: [],
   education: [],
   skills: [],
+  achievements: [],
 };
 
 export interface UseResumeEditorReturn {
@@ -41,6 +42,7 @@ export interface UseResumeEditorReturn {
   setWorkExperience: (work: WorkExperience[]) => void;
   setEducation: (edu: Education[]) => void;
   setSkills: (skills: string[]) => void;
+  setAchievements: (achievements: string[]) => void;
   handleSave: () => Promise<void>;
   handleDelete: () => Promise<void>;
   clearError: () => void;
@@ -79,6 +81,10 @@ export function useResumeEditor(): UseResumeEditorReturn {
 
   const setSkills = useCallback((skills: string[]) => {
     setResume((prev) => ({ ...prev, skills }));
+  }, []);
+
+  const setAchievements = useCallback((achievements: string[]) => {
+    setResume((prev) => ({ ...prev, achievements }));
   }, []);
 
   // Fetch existing resume on mount
@@ -128,6 +134,7 @@ export function useResumeEditor(): UseResumeEditorReturn {
         work_experience: resume.work_experience || [],
         education: resume.education || [],
         skills: resume.skills || [],
+        achievements: resume.achievements || [],
       };
 
       let result: Resume;
@@ -193,6 +200,7 @@ export function useResumeEditor(): UseResumeEditorReturn {
     setWorkExperience,
     setEducation,
     setSkills,
+    setAchievements,
     handleSave,
     handleDelete,
     clearError,

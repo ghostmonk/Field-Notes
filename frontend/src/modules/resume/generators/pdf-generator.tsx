@@ -10,64 +10,85 @@ import { Resume } from '@/shared/types/api';
 import { useState } from 'react';
 
 const styles = StyleSheet.create({
-  page: { padding: 0, fontSize: 10, fontFamily: 'Helvetica' },
+  page: { padding: 0, fontSize: 9, fontFamily: 'Helvetica' },
   header: {
     backgroundColor: '#1b2838',
-    padding: '30 40',
-    color: 'white',
+    paddingHorizontal: 36,
+    paddingVertical: 24,
   },
-  name: { fontSize: 22, fontWeight: 'bold', color: 'white' },
+  name: { fontSize: 20, fontWeight: 'bold', color: 'white' },
   contactRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 6,
-    fontSize: 9,
+    marginTop: 5,
+    fontSize: 8,
     color: '#b0bec5',
   },
-  contactSeparator: { marginLeft: 6, marginRight: 6 },
-  body: { flexDirection: 'row', padding: '20 40' },
-  leftCol: { width: '60%', paddingRight: 20 },
-  rightCol: { width: '40%' },
-  section: { marginBottom: 14 },
+  contactItem: { flexDirection: 'row', marginRight: 12 },
+  contactIcon: { marginRight: 3 },
+  summaryWrap: { paddingHorizontal: 36, paddingTop: 12, paddingBottom: 4 },
+  summary: { fontSize: 8.5, lineHeight: 1.5, color: '#333' },
+  body: { flexDirection: 'row', paddingHorizontal: 36, paddingTop: 12 },
+  leftCol: { width: '58%', paddingRight: 16 },
+  rightCol: { width: '42%' },
+  section: { marginBottom: 12 },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 1,
-    borderBottomWidth: 1.5,
+    borderBottomWidth: 1,
     borderBottomColor: '#1b2838',
-    paddingBottom: 3,
-    marginBottom: 8,
+    paddingBottom: 2,
+    marginBottom: 6,
+    color: '#1b2838',
   },
-  jobTitle: { fontSize: 11, fontWeight: 'bold' },
-  company: { fontSize: 10, fontWeight: 'bold', color: '#444' },
-  dateRange: { fontSize: 9, color: '#666', marginBottom: 4 },
+  jobTitle: { fontSize: 10, fontWeight: 'bold' },
+  company: { fontSize: 9, fontWeight: 'bold', color: '#444' },
+  dateRange: { fontSize: 8, color: '#666', marginBottom: 3 },
   bullet: { flexDirection: 'row', marginBottom: 2 },
-  bulletDot: { width: 10, fontSize: 9 },
-  bulletText: { flex: 1, fontSize: 9, lineHeight: 1.4 },
-  paragraph: { fontSize: 9, lineHeight: 1.4, marginBottom: 2 },
-  summary: { fontSize: 9, lineHeight: 1.5, color: '#333' },
+  bulletDot: { width: 8, fontSize: 8.5 },
+  bulletText: { flex: 1, fontSize: 8.5, lineHeight: 1.4 },
+  paragraph: { fontSize: 8.5, lineHeight: 1.4, marginBottom: 2 },
+  techLine: { fontSize: 8, color: '#666', fontStyle: 'italic', marginTop: 2 },
   skillsRow: { flexDirection: 'row', flexWrap: 'wrap' },
   skillTag: {
-    fontSize: 9,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    fontSize: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 10,
+    borderRadius: 8,
     marginRight: 4,
     marginBottom: 4,
   },
+  achievementRow: { flexDirection: 'row', marginBottom: 3 },
+  achievementStar: { width: 12, fontSize: 9, color: '#1b2838' },
+  achievementText: { flex: 1, fontSize: 8.5, lineHeight: 1.4 },
+  eduDegree: { fontSize: 9, fontWeight: 'bold' },
+  eduInstitution: { fontSize: 8, color: '#444' },
+  eduDate: { fontSize: 8, color: '#666' },
 });
 
+const ICONS = {
+  phone: '\u260E',
+  email: '\u2709',
+  location: '\u25C9',
+  linkedin: 'in',
+  github: '\u2302',
+  calendar: '\u229E',
+} as const;
+
 function parseDescription(description: string) {
-  const lines = description.split('\n').filter((l) => l.trim() !== '');
-  return lines.map((line) => {
-    if (line.trimStart().startsWith('- ')) {
-      return { type: 'bullet' as const, text: line.trimStart().slice(2) };
-    }
-    return { type: 'paragraph' as const, text: line };
-  });
+  return description
+    .split('\n')
+    .filter((l) => l.trim() !== '')
+    .map((line) => {
+      if (line.trimStart().startsWith('- ')) {
+        return { type: 'bullet' as const, text: line.trimStart().slice(2) };
+      }
+      return { type: 'paragraph' as const, text: line };
+    });
 }
 
 function DescriptionBlock({ description }: { description: string }) {
@@ -77,7 +98,7 @@ function DescriptionBlock({ description }: { description: string }) {
       {parts.map((part, i) =>
         part.type === 'bullet' ? (
           <View key={i} style={styles.bullet}>
-            <Text style={styles.bulletDot}>{'• '}</Text>
+            <Text style={styles.bulletDot}>{'\u2022 '}</Text>
             <Text style={styles.bulletText}>{part.text}</Text>
           </View>
         ) : (
@@ -90,42 +111,49 @@ function DescriptionBlock({ description }: { description: string }) {
   );
 }
 
+function ContactItem({ icon, text }: { icon: string; text: string }) {
+  return (
+    <View style={styles.contactItem}>
+      <Text style={styles.contactIcon}>{icon}</Text>
+      <Text>{text}</Text>
+    </View>
+  );
+}
+
 function ResumeDocument({ resume }: { resume: Resume }) {
   const c = resume.contact;
-  const contactParts = [
-    c.email,
-    c.phone,
-    c.location,
-    c.website,
-    c.linkedin,
-    c.github,
-  ].filter(Boolean);
+
+  const contactItems: { icon: string; text: string }[] = [];
+  if (c.phone) contactItems.push({ icon: ICONS.phone, text: c.phone });
+  if (c.email) contactItems.push({ icon: ICONS.email, text: c.email });
+  if (c.location) contactItems.push({ icon: ICONS.location, text: c.location });
+  if (c.linkedin) contactItems.push({ icon: ICONS.linkedin, text: c.linkedin });
+  if (c.github) contactItems.push({ icon: ICONS.github, text: c.github });
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.name}>{c.full_name}</Text>
           <View style={styles.contactRow}>
-            {contactParts.map((part, i) => (
-              <View key={i} style={{ flexDirection: 'row' }}>
-                <Text>{part}</Text>
-                {i < contactParts.length - 1 && (
-                  <Text style={styles.contactSeparator}>|</Text>
-                )}
-              </View>
+            {contactItems.map((item, i) => (
+              <ContactItem key={i} icon={item.icon} text={item.text} />
             ))}
           </View>
         </View>
 
+        {/* Summary */}
         {resume.summary ? (
-          <View style={{ paddingHorizontal: 40, paddingTop: 16, paddingBottom: 4 }}>
+          <View style={styles.summaryWrap}>
             <Text style={styles.sectionTitle}>Summary</Text>
             <Text style={styles.summary}>{resume.summary}</Text>
           </View>
         ) : null}
 
+        {/* Two-column body */}
         <View style={styles.body}>
+          {/* Left column: Experience */}
           <View style={styles.leftCol}>
             {resume.work_experience.length > 0 && (
               <View style={styles.section}>
@@ -133,19 +161,54 @@ function ResumeDocument({ resume }: { resume: Resume }) {
                 {resume.work_experience.map((w, i) => (
                   <View
                     key={i}
+                    wrap={false}
                     style={{
                       marginBottom:
-                        i < resume.work_experience.length - 1 ? 10 : 0,
+                        i < resume.work_experience.length - 1 ? 8 : 0,
                     }}
                   >
                     <Text style={styles.jobTitle}>{w.title}</Text>
                     <Text style={styles.company}>{w.company}</Text>
                     <Text style={styles.dateRange}>
-                      {w.start_date} - {w.current ? 'Present' : w.end_date}
+                      {ICONS.calendar} {w.start_date} –{' '}
+                      {w.current ? 'Present' : w.end_date}
                     </Text>
                     {w.description ? (
                       <DescriptionBlock description={w.description} />
                     ) : null}
+                    {w.technologies.length > 0 && (
+                      <Text style={styles.techLine}>
+                        {w.technologies.join(', ')}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Right column: Skills, Achievements, Education */}
+          <View style={styles.rightCol}>
+            {resume.skills.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Skills</Text>
+                <View style={styles.skillsRow}>
+                  {resume.skills.map((s, i) => (
+                    <Text key={i} style={styles.skillTag}>
+                      {s}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {resume.achievements.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Achievements</Text>
+                {resume.achievements.map((a, i) => (
+                  <View key={i} style={styles.achievementRow}>
+                    <Text style={styles.achievementStar}>{'\u2605'}</Text>
+                    <Text style={styles.achievementText}>{a}</Text>
                   </View>
                 ))}
               </View>
@@ -159,38 +222,23 @@ function ResumeDocument({ resume }: { resume: Resume }) {
                     key={i}
                     style={{
                       marginBottom:
-                        i < resume.education.length - 1 ? 8 : 0,
+                        i < resume.education.length - 1 ? 6 : 0,
                     }}
                   >
-                    <Text style={styles.jobTitle}>
+                    <Text style={styles.eduDegree}>
                       {e.degree}
                       {e.field_of_study ? `, ${e.field_of_study}` : ''}
                     </Text>
-                    <Text style={styles.company}>{e.institution}</Text>
-                    <Text style={styles.dateRange}>
-                      {e.start_date}
-                      {e.end_date ? ` - ${e.end_date}` : ''}
+                    <Text style={styles.eduInstitution}>{e.institution}</Text>
+                    <Text style={styles.eduDate}>
+                      {ICONS.calendar} {e.start_date}
+                      {e.end_date ? ` – ${e.end_date}` : ''}
                     </Text>
                     {e.description ? (
                       <DescriptionBlock description={e.description} />
                     ) : null}
                   </View>
                 ))}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.rightCol}>
-            {resume.skills.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Skills</Text>
-                <View style={styles.skillsRow}>
-                  {resume.skills.map((s, i) => (
-                    <Text key={i} style={styles.skillTag}>
-                      {s}
-                    </Text>
-                  ))}
-                </View>
               </View>
             )}
           </View>

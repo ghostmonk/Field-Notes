@@ -3,6 +3,7 @@ import { ContactForm } from './ContactForm';
 import { WorkExperienceForm } from './WorkExperienceForm';
 import { EducationForm } from './EducationForm';
 import { SkillsForm } from './SkillsForm';
+import { AchievementsForm } from './AchievementsForm';
 
 interface ResumeFormProps {
   editor: UseResumeEditorReturn;
@@ -19,6 +20,7 @@ export function ResumeForm({ editor }: ResumeFormProps) {
     setWorkExperience,
     setEducation,
     setSkills,
+    setAchievements,
     handleSave,
     clearError,
   } = editor;
@@ -82,6 +84,13 @@ export function ResumeForm({ editor }: ResumeFormProps) {
 
       <div className="border-t border-[var(--color-border)] pt-6">
         <SkillsForm skills={resume.skills || []} onChange={setSkills} />
+      </div>
+
+      <div className="border-t border-[var(--color-border)] pt-6">
+        <AchievementsForm
+          achievements={resume.achievements || []}
+          onChange={setAchievements}
+        />
       </div>
 
       <div className="pt-4">
