@@ -26,6 +26,7 @@ from database import (
     get_photo_essays_collection,
     get_projects_collection,
     get_reactions_collection,
+    get_resumes_collection,
     get_sections_collection,
     get_users_collection,
 )
@@ -39,14 +40,20 @@ from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
 from handlers.photo_essays import router as photo_essays_router
 from handlers.projects import router as projects_router
+from handlers.resume import router as resume_router
 from handlers.sections import router as sections_router
 from handlers.stories import router as stories_router
 from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
 from handlers.video_processing import router as video_processing_router
 from httpx import ASGITransport, AsyncClient
+from middleware.rate_limit import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 test_app = FastAPI()
+test_app.state.limiter = limiter
+test_app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 test_app.include_router(stories_router)
 test_app.include_router(uploads_router)
 test_app.include_router(users_router)
@@ -57,6 +64,7 @@ test_app.include_router(sections_router)
 test_app.include_router(navlinks_router)
 test_app.include_router(engagement_router)
 test_app.include_router(photo_essays_router)
+test_app.include_router(resume_router)
 
 
 @pytest.fixture
@@ -681,6 +689,59 @@ def sample_photo_essay_data():
         "is_published": True,
         "slug": "mountain-landscapes",
         "section_id": str(ObjectId()),
+        "createdDate": fixed_datetime,
+        "updatedDate": fixed_datetime,
+    }
+
+
+@pytest.fixture
+def mock_resumes_collection():
+    """Mock collection for resumes testing"""
+    mock = MagicMock()
+    mock.find_one = AsyncMock()
+    mock.find_one_and_update = AsyncMock()
+    mock.count_documents = AsyncMock()
+    mock.insert_one = AsyncMock()
+    mock.update_one = AsyncMock()
+    mock.delete_one = AsyncMock()
+    return mock
+
+
+@pytest.fixture
+def override_resumes_database(mock_resumes_collection):
+    """Override the resumes collection to use mocks"""
+
+    async def get_mock_resumes_collection():
+        return mock_resumes_collection
+
+    test_app.dependency_overrides[get_resumes_collection] = get_mock_resumes_collection
+    yield mock_resumes_collection
+    test_app.dependency_overrides.pop(get_resumes_collection, None)
+
+
+@pytest_asyncio.fixture
+async def resumes_async_client(override_resumes_database):
+    """Async test client for resumes tests"""
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+        yield ac
+
+
+@pytest.fixture
+def sample_resume_data():
+    """Sample resume data for testing"""
+    fixed_datetime = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    return {
+        "contact": {
+            "full_name": "Nicholas Hillier",
+            "email": "nicholas@ghostmonk.com",
+            "location": "Montreal",
+            "github": "https://github.com/ghostmonk",
+        },
+        "summary": "Full-stack developer with experience in TypeScript, Python, and cloud infrastructure.",
+        "work_experience": [],
+        "education": [],
+        "skills": ["TypeScript", "Python", "React", "FastAPI", "MongoDB"],
+        "user_id": str(ObjectId()),
         "createdDate": fixed_datetime,
         "updatedDate": fixed_datetime,
     }

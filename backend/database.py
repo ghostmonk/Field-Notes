@@ -141,6 +141,11 @@ async def get_photo_essays_collection() -> AsyncIOMotorCollection:
     return db["photo_essays"]
 
 
+async def get_resumes_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["resumes"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
@@ -262,6 +267,11 @@ async def ensure_indexes() -> None:
         name="photo_essays_section_listing",
     )
     await safe_create_index(photo_essays, "user_id")
+
+    # Resumes indexes
+    resumes = db["resumes"]
+    if not await safe_create_index(resumes, "user_id", unique=True):
+        failed_indexes.append("resumes.user_id")
 
     # Content versions indexes
     content_versions = db["content_versions"]

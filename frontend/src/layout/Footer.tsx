@@ -5,7 +5,7 @@ import { getSiteConfig } from '@/config';
 import { useNavSections } from '@/hooks/useNavSections';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { iconMap } from '@/shared/lib/navIcons';
-import { HiPlusSm, HiCog, HiSearch } from 'react-icons/hi';
+import { HiPlusSm, HiCog, HiSearch, HiDocumentText } from 'react-icons/hi';
 import { FaGithub } from 'react-icons/fa';
 
 const config = getSiteConfig();
@@ -56,6 +56,12 @@ const Footer: React.FC = () => {
                                     </Link>
                                 </li>
                             ))}
+                            <li>
+                                <Link href="/resume" className="site-footer__link">
+                                    <HiDocumentText className="site-footer__link-icon" aria-hidden="true" />
+                                    Resume
+                                </Link>
+                            </li>
                             {config.github && (
                                 <li>
                                     <a href={config.github.url} target="_blank" rel="noopener noreferrer" className="site-footer__link">
@@ -87,6 +93,12 @@ const Footer: React.FC = () => {
                                 <Link href="/admin/sections" className="site-footer__link" data-testid="footer-sections-link">
                                     <HiCog className="site-footer__link-icon" aria-hidden="true" />
                                     Sections
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href="/admin/resume" className="site-footer__link" data-testid="footer-resume-builder-link">
+                                    <HiDocumentText className="site-footer__link-icon" aria-hidden="true" />
+                                    Resume Builder
                                 </Link>
                             </li>
                         </ul>
