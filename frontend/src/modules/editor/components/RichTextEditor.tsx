@@ -103,7 +103,8 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             const text = linkText.trim();
             if (text && editor.state.selection.empty) {
                 editor.chain().focus()
-                    .insertContent(`<a href="${url}">${text}</a>`)
+                    .insertContent({ type: 'text', text })
+                    .setLink({ href: url })
                     .run();
             } else {
                 editor.chain().focus().setLink({ href: url }).run();
@@ -342,7 +343,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             {isHtmlMode ? (
                 <textarea
                     value={htmlSource}
-                    onChange={e => setHtmlSource(e.target.value)}
+                    onChange={e => { setHtmlSource(e.target.value); onChange(e.target.value); }}
                     className="html-source-editor"
                     data-testid="html-source-editor"
                     spellCheck={false}
