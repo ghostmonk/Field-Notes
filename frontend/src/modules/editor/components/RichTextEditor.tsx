@@ -103,8 +103,11 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             const text = linkText.trim();
             if (text && editor.state.selection.empty) {
                 editor.chain().focus()
-                    .insertContent({ type: 'text', text })
-                    .setLink({ href: url })
+                    .insertContent({
+                        type: 'text',
+                        text,
+                        marks: [{ type: 'link', attrs: { href: url } }],
+                    })
                     .run();
             } else {
                 editor.chain().focus().setLink({ href: url }).run();
@@ -126,7 +129,6 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
         if (!editor) return;
         if (isHtmlMode) {
             editor.commands.setContent(htmlSource);
-            onChange(htmlSource);
             setIsHtmlMode(false);
         } else {
             setHtmlSource(formatHtml(editor.getHTML()));
@@ -134,12 +136,12 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
         }
     }, [editor, isHtmlMode, htmlSource, onChange]);
 
-    // Sync content from props
+    // Sync content from props (skip in HTML mode to avoid fighting the textarea)
     useEffect(() => {
-        if (editor && content !== editor.getHTML()) {
+        if (!isHtmlMode && editor && content !== editor.getHTML()) {
             editor.commands.setContent(content);
         }
-    }, [editor, content]);
+    }, [editor, content, isHtmlMode]);
 
     if (!editor) {
         return <div>Loading editor...</div>;
