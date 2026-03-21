@@ -1,6 +1,7 @@
 """API handlers for content chunk retrieval."""
 
 import asyncio
+from enum import Enum
 from typing import List, Optional
 
 from decorators.auth import requires_auth
@@ -12,6 +13,22 @@ from services.embedding import embed_query
 from services.vector_store import search
 
 router = APIRouter()
+
+
+class ChunkType(str, Enum):
+    role_summary = "role_summary"
+    achievement = "achievement"
+    skill_context = "skill_context"
+    education = "education"
+    project = "project"
+    meta = "meta"
+
+
+class Source(str, Enum):
+    resume = "resume"
+    blog = "blog"
+    conversation = "conversation"
+    opinion = "opinion"
 
 
 class SearchResult(BaseModel):
@@ -35,8 +52,8 @@ async def search_content(
     request: Request,
     query: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=50),
-    source: Optional[str] = Query(None),
-    chunk_type: Optional[str] = Query(None),
+    source: Optional[Source] = Query(None),
+    chunk_type: Optional[ChunkType] = Query(None),
 ):
     """Search content chunks by semantic similarity."""
     try:
@@ -48,8 +65,8 @@ async def search_content(
             search,
             query_vector=query_embedding,
             limit=limit,
-            source_filter=source,
-            chunk_type_filter=chunk_type,
+            source_filter=source.value if source else None,
+            chunk_type_filter=chunk_type.value if chunk_type else None,
         )
 
         return SearchResponse(
