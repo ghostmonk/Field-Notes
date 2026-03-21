@@ -3,7 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from database import ensure_indexes
+from database import close_db_connection, ensure_indexes, get_database
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -27,6 +27,7 @@ from handlers.versions import router as versions_router
 from handlers.video_processing import router as video_processing_router
 from middleware.logging_middleware import LoggingMiddleware
 from middleware.rate_limit import limiter
+from services.vector_store import ensure_collection
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -69,8 +70,6 @@ async def lifespan(app: FastAPI):
         if not os.getenv("VOYAGE_API_KEY"):
             logger.error("QDRANT_URL is set but VOYAGE_API_KEY is missing — search will fail")
         try:
-            from services.vector_store import ensure_collection
-
             await asyncio.to_thread(ensure_collection)
             logger.info("Qdrant collection verified")
         except Exception as e:
@@ -80,8 +79,6 @@ async def lifespan(app: FastAPI):
 
     # Cleanup database connections
     logger.info("Shutting down application")
-    from database import close_db_connection
-
     await close_db_connection()
 
 
@@ -218,9 +215,6 @@ async def health_check():
 async def warmup():
     """Warm-up endpoint that ensures database connection and caches are ready"""
     try:
-        # Test database connection
-        from database import get_database
-
         db = await get_database()
         # Quick database ping
         await db.command("ping")

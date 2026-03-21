@@ -160,6 +160,10 @@ When squash-merging a PR via `gh pr merge --squash`, the `--body` becomes the co
 - No test plan, no checkboxes, no "Generated with" footers
 - The PR description (visible on GitHub) can be detailed; the commit message must be concise
 
+### Import Rules
+
+All imports must be at the top of the file. No local imports inside functions, methods, or conditional blocks. The only exception is `if __name__ == "__main__"` blocks. This applies to all Python files in the project.
+
 ### Formatting Rules
 
 `make format` is mandatory before every commit — CI rejects unformatted code.
