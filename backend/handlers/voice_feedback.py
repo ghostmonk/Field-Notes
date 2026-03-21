@@ -4,9 +4,11 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Optional
 
+from bson import ObjectId
+from bson.errors import InvalidId
 from database import get_voice_feedback_collection
 from decorators.auth import requires_auth
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
 from middleware.rate_limit import limiter
 from models.user import UserInfo
@@ -103,3 +105,54 @@ async def list_feedback(
     return await find_many_and_convert(
         collection, query, VoiceFeedbackResponse, sort=[("created_at", -1)], limit=100
     )
+
+
+@router.put("/feedback/{feedback_id}", response_model=VoiceFeedbackResponse)
+@limiter.limit("10/minute")
+@requires_auth
+async def reclassify_feedback(
+    request: Request,
+    feedback_id: str,
+    feedback_type: str = Query(..., pattern="^(approved|rejected|edited|flagged)$"),
+    collection: AsyncIOMotorCollection = Depends(get_voice_feedback_collection),
+):
+    """Reclassify a feedback entry's type."""
+    user: UserInfo = request.state.user
+
+    try:
+        oid = ObjectId(feedback_id)
+    except InvalidId:
+        raise HTTPException(status_code=422, detail="Invalid feedback ID")
+
+    result = await collection.find_one_and_update(
+        {"_id": oid, "user_id": user.id},
+        {"$set": {"feedback_type": feedback_type}},
+        return_document=True,
+    )
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+
+    return mongo_to_pydantic(result, VoiceFeedbackResponse)
+
+
+@router.delete("/feedback/{feedback_id}", status_code=204)
+@limiter.limit("5/minute")
+@requires_auth
+async def delete_feedback(
+    request: Request,
+    feedback_id: str,
+    collection: AsyncIOMotorCollection = Depends(get_voice_feedback_collection),
+):
+    """Delete a feedback entry."""
+    user: UserInfo = request.state.user
+
+    try:
+        oid = ObjectId(feedback_id)
+    except InvalidId:
+        raise HTTPException(status_code=422, detail="Invalid feedback ID")
+
+    result = await collection.delete_one({"_id": oid, "user_id": user.id})
+
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Feedback not found")

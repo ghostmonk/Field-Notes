@@ -219,6 +219,7 @@ const apiRoutes = {
   },
   voiceFeedback: {
     base: () => '/api/voice/feedback',
+    byId: (id: string) => `/api/voice/feedback/${id}`,
   },
   applications: {
     base: () => '/api/applications',
@@ -558,6 +559,18 @@ const apiClient = {
       fetchApi<VoiceFeedbackResponse[]>(apiRoutes.voiceFeedback.base(), {
         token,
         params: feedbackType ? { feedback_type: feedbackType } : undefined,
+      }),
+
+    reclassify: (id: string, feedbackType: string, token: string) =>
+      fetchApi<VoiceFeedbackResponse>(
+        `${apiRoutes.voiceFeedback.byId(id)}?feedback_type=${feedbackType}`,
+        { method: 'PUT', token }
+      ),
+
+    delete: (id: string, token: string) =>
+      fetchApi<void>(apiRoutes.voiceFeedback.byId(id), {
+        method: 'DELETE',
+        token,
       }),
   },
 
