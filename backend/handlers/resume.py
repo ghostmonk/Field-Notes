@@ -282,7 +282,7 @@ async def update_resume(
                 for k, v in full_doc.items()
                 if k not in ("_id", "user_id", "createdDate", "updatedDate", "deleted")
             }
-            asyncio.create_task(_index_resume_background(index_data, user.id))
+            _schedule_indexing(index_data, user.id)
 
         return updated_resume
 
