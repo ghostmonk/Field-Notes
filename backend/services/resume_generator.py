@@ -3,7 +3,12 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from services.anthropic_client import get_client, parse_json_response
+from services.anthropic_client import (
+    CHUNK_TYPE_ANTI_PATTERN,
+    CHUNK_TYPE_VOICE_EXAMPLE,
+    get_client,
+    parse_json_response,
+)
 
 STRATEGY_PROMPT = """You are a resume optimization expert. Follow these rules:
 - Mirror keywords from the job description in bullet points (ATS optimization)
@@ -65,8 +70,8 @@ Return a complete Resume JSON with:
 - Same structure, same companies/titles/dates — different framing"""
 
     if voice_examples:
-        approved = [v for v in voice_examples if v.get("chunk_type") == "voice_example"]
-        anti = [v for v in voice_examples if v.get("chunk_type") == "anti_pattern"]
+        approved = [v for v in voice_examples if v.get("chunk_type") == CHUNK_TYPE_VOICE_EXAMPLE]
+        anti = [v for v in voice_examples if v.get("chunk_type") == CHUNK_TYPE_ANTI_PATTERN]
         if approved:
             examples_text = "\n".join(f"- {v['text'][:200]}" for v in approved[:5])
             user_content += f"""

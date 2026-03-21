@@ -4,7 +4,12 @@ import asyncio
 from typing import Any, Dict
 
 from motor.motor_asyncio import AsyncIOMotorCollection
-from services.anthropic_client import ResumeNotFoundError
+from services.anthropic_client import (
+    RESUME_INTERNAL_FIELDS,
+    SOURCE_RESUME,
+    SOURCE_VOICE_FEEDBACK,
+    ResumeNotFoundError,
+)
 from services.embedding import embed_query
 from services.job_analyzer import analyze_job_description
 from services.resume_evaluator import evaluate_resume
@@ -31,41 +36,34 @@ async def run_tailoring_pipeline(
         Dict with keys: analysis, tailored_resume, evaluation, attempts.
 
     Raises:
-        ValueError: If user has no resume.
+        ResumeNotFoundError: If user has no resume.
     """
-    # Fetch current resume
     resume_doc = await resumes_collection.find_one({"user_id": user_id, "deleted": {"$ne": True}})
     if not resume_doc:
         raise ResumeNotFoundError("No resume found for this user")
 
-    # Strip MongoDB internal fields for the LLM
-    resume = {
-        k: v
-        for k, v in resume_doc.items()
-        if k not in ("_id", "user_id", "createdDate", "updatedDate", "deleted")
-    }
+    resume = {k: v for k, v in resume_doc.items() if k not in RESUME_INTERNAL_FIELDS}
 
-    # Step 1 + 2: Analyze and embed concurrently (no data dependency)
     analysis, query_embedding = await asyncio.gather(
         asyncio.to_thread(analyze_job_description, job_description),
         asyncio.to_thread(embed_query, job_description),
     )
 
-    raw_results = await asyncio.to_thread(
-        search,
-        query_vector=query_embedding,
-        limit=25,
-        source_filter="resume",
-        user_id_filter=user_id,
-    )
-
-    # Retrieve voice feedback examples (approved/rejected) for this user
-    voice_results = await asyncio.to_thread(
-        search,
-        query_vector=query_embedding,
-        limit=10,
-        source_filter="voice_feedback",
-        user_id_filter=user_id,
+    raw_results, voice_results = await asyncio.gather(
+        asyncio.to_thread(
+            search,
+            query_vector=query_embedding,
+            limit=25,
+            source_filter=SOURCE_RESUME,
+            user_id_filter=user_id,
+        ),
+        asyncio.to_thread(
+            search,
+            query_vector=query_embedding,
+            limit=10,
+            source_filter=SOURCE_VOICE_FEEDBACK,
+            user_id_filter=user_id,
+        ),
     )
 
     chunks = [
@@ -81,7 +79,6 @@ async def run_tailoring_pipeline(
         for r in voice_results
     ]
 
-    # Step 3 + 4: Generate and Evaluate with retry loop
     evaluator_feedback = None
     best_result = None
     best_score = -1.0

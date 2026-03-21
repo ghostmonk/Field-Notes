@@ -1,9 +1,9 @@
 """Index resume content into Qdrant for vector search."""
 
 import hashlib
-import os
 
 from glogger import logger
+from services.anthropic_client import vector_services_configured
 from services.chunking import chunk_resume
 from services.embedding import embed_texts
 from services.vector_store import ensure_collection, upsert_vector
@@ -25,10 +25,8 @@ def index_resume(resume_data: dict, user_id: str) -> int:
     Returns:
         Number of vectors upserted.
     """
-    if not os.getenv("VOYAGE_API_KEY") or not os.getenv("QDRANT_URL"):
-        logger.warning_with_context(
-            "Skipping resume indexing — VOYAGE_API_KEY or QDRANT_URL not set", {}
-        )
+    if not vector_services_configured():
+        logger.warning_with_context("Skipping resume indexing — vector services not configured", {})
         return 0
 
     chunks = chunk_resume(resume_data)

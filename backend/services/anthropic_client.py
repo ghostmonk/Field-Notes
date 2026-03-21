@@ -1,12 +1,40 @@
 """Shared Anthropic client singleton and utilities."""
 
+import asyncio
 import json
 import os
 import re
 import threading
-from typing import Any, Dict
+from typing import Any, Coroutine, Dict, Set
 
 import anthropic
+
+# Chunk type constants
+CHUNK_TYPE_VOICE_EXAMPLE = "voice_example"
+CHUNK_TYPE_ANTI_PATTERN = "anti_pattern"
+
+# Source constants
+SOURCE_RESUME = "resume"
+SOURCE_VOICE_FEEDBACK = "voice_feedback"
+
+# Fields to strip from MongoDB resume documents before passing to LLM
+RESUME_INTERNAL_FIELDS = ("_id", "user_id", "createdDate", "updatedDate", "deleted")
+
+# Background task management
+_background_tasks: Set[asyncio.Task] = set()
+
+
+def schedule_background(coro: Coroutine) -> None:
+    """Schedule a coroutine as a background task with retained reference."""
+    task = asyncio.create_task(coro)
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+
+
+def vector_services_configured() -> bool:
+    """Check if Voyage AI and Qdrant environment variables are set."""
+    return bool(os.getenv("VOYAGE_API_KEY") and os.getenv("QDRANT_URL"))
+
 
 _client = None
 _client_lock = threading.Lock()

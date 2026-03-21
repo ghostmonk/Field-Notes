@@ -21,10 +21,9 @@ from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
+from services.anthropic_client import RESUME_INTERNAL_FIELDS, schedule_background
 from services.resume_indexer import index_resume
 from utils import find_one_and_convert, mongo_to_pydantic
-
-_background_tasks = set()
 
 
 async def _index_resume_background(resume_data: dict, user_id: str) -> None:
@@ -41,13 +40,6 @@ async def _index_resume_background(resume_data: dict, user_id: str) -> None:
             "Failed to index resume in vector store",
             {"user_id": user_id, "error": str(e)},
         )
-
-
-def _schedule_indexing(resume_data: dict, user_id: str) -> None:
-    """Schedule background indexing with a retained task reference."""
-    task = asyncio.create_task(_index_resume_background(resume_data, user_id))
-    _background_tasks.add(task)
-    task.add_done_callback(_background_tasks.discard)
 
 
 router = APIRouter()
@@ -210,7 +202,7 @@ async def create_resume(
             {"user_id": user.id},
         )
 
-        _schedule_indexing(resume_data, user.id)
+        schedule_background(_index_resume_background(resume_data, user.id))
 
         return created_resume
 
@@ -257,32 +249,22 @@ async def update_resume(
         update_data = resume.model_dump(exclude_unset=True)
         update_data["updatedDate"] = current_time
 
-        result = await collection.update_one(
+        updated_doc = await collection.find_one_and_update(
             {"user_id": user.id, "deleted": {"$ne": True}},
             {"$set": update_data},
+            return_document=ReturnDocument.AFTER,
         )
 
-        if result.matched_count == 0:
+        if not updated_doc:
             logger.warning_with_context("Resume not found for update", {"user_id": user.id})
             raise HTTPException(status_code=404, detail="Resume not found")
 
-        updated_resume = await find_one_and_convert(
-            collection,
-            {"user_id": user.id, "deleted": {"$ne": True}},
-            ResumeResponse,
-        )
+        updated_resume = mongo_to_pydantic(updated_doc, ResumeResponse)
 
         logger.info_with_context("Resume updated successfully", {"user_id": user.id})
 
-        # Re-index with full resume data
-        full_doc = await collection.find_one({"user_id": user.id, "deleted": {"$ne": True}})
-        if full_doc:
-            index_data = {
-                k: v
-                for k, v in full_doc.items()
-                if k not in ("_id", "user_id", "createdDate", "updatedDate", "deleted")
-            }
-            _schedule_indexing(index_data, user.id)
+        index_data = {k: v for k, v in updated_doc.items() if k not in RESUME_INTERNAL_FIELDS}
+        schedule_background(_index_resume_background(index_data, user.id))
 
         return updated_resume
 

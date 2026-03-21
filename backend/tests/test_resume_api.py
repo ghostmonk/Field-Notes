@@ -181,11 +181,7 @@ class TestResumeEndpoints:
             "summary": "Updated summary",
         }
 
-        # find_one called once: after update to return the updated doc
-        override_resumes_database.find_one.return_value = updated
-        override_resumes_database.update_one.return_value = MagicMock(
-            modified_count=1, matched_count=1
-        )
+        override_resumes_database.find_one_and_update.return_value = updated
 
         response = await resumes_async_client.put(
             "/resume",
@@ -202,9 +198,7 @@ class TestResumeEndpoints:
         self, resumes_async_client, override_resumes_database, mock_auth, auth_headers
     ):
         """Test PUT /resume returns 404 when no resume exists"""
-        override_resumes_database.update_one.return_value = MagicMock(
-            modified_count=0, matched_count=0
-        )
+        override_resumes_database.find_one_and_update.return_value = None
 
         response = await resumes_async_client.put(
             "/resume",

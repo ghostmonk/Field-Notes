@@ -36,8 +36,18 @@ def _get_client() -> QdrantClient:
     return _client
 
 
+_collection_ensured = False
+
+
 def ensure_collection() -> None:
-    """Create the content collection and payload indexes if they don't exist."""
+    """Create the content collection and payload indexes if they don't exist.
+
+    Cached per process — only hits Qdrant on the first call.
+    """
+    global _collection_ensured
+    if _collection_ensured:
+        return
+
     client = _get_client()
     collections = [c.name for c in client.get_collections().collections]
     if COLLECTION_NAME not in collections:
@@ -47,18 +57,18 @@ def ensure_collection() -> None:
                 vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
             )
         except Exception as e:
-            # Race condition: another instance may have created the collection
             if "already exists" in str(e).lower():
                 pass
             else:
                 raise
 
-    # Ensure payload indexes exist for filtered search
     for field in ("source", "chunk_type", "user_id"):
         try:
             client.create_payload_index(COLLECTION_NAME, field, PayloadSchemaType.KEYWORD)
         except Exception:
-            pass  # Index already exists
+            pass
+
+    _collection_ensured = True
 
 
 def upsert_vector(
