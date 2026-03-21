@@ -318,25 +318,9 @@ Python script (not committed) that:
 
 ---
 
-## Future: Personality LLM (shared infrastructure)
+## Future: Ghostmonk AI
 
-Same architecture, different filters and prompts:
-
-```
-Qdrant content collection:
-  source: "resume"        → professional history (resume tailoring)
-  source: "blog"          → published writing (both)
-  source: "opinion"       → curated views on topics (personality)
-  source: "conversation"  → approved past exchanges (personality)
-  source: "voice_feedback" → style calibration (both)
-```
-
-The personality LLM adds:
-- An evaluator that checks boundaries (is this something Nicholas would say?)
-- Conversation memory (short-term context within a session)
-- Content ingestion from blog posts and manually curated opinions
-
-The resume tailoring project validates the full pipeline before the personality LLM needs it.
+This resume tailoring system is the first consumer of a larger platform. The full vision — Ghost Engine architecture, memory model, conversational ghost, authenticated agent — is defined in the [Ghostmonk AI design doc](./2026-03-21-ghostmonk-ai-design).
 
 ---
 
