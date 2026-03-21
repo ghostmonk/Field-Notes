@@ -1446,3 +1446,15 @@ The work compounds across three layers:
 **Phase 5: Authenticated Agent** — When the system confirms Nicholas is logged in, the ghost gains elevated capabilities. Site management, content operations, acting on his behalf. The conversational interface becomes an operational tool, not just a visitor-facing feature.
 
 Each phase builds on the previous. No separate streams — one continuous evolution.
+
+### Design Consideration: Multi-dimensional tagging
+
+The current metadata model has `source` (resume, blog) and `chunk_type` (achievement, role_summary, skill_context, meta). This conflates structure with purpose. The system needs a richer taxonomy:
+
+- **source** — where the content came from (resume, blog, conversation)
+- **chunk_type** — structural category (achievement, summary, skill_context)
+- **purpose/lens** — how the content should be used (personality, facts, strategy)
+
+Example: "Built distributed systems at Ro" is a **fact**. ATS keyword density rules are **strategy** (applies to resume generation only, not conversation). The way Nicholas describes his work in a blog post is **personality** (applies to conversation, not resume bullet points).
+
+Same facts, different framing depending on the lens. The visibility UI in Phase 3 needs to support browsing and curating by all three dimensions, because the retrieval pipeline needs to know which lens to apply when assembling context for different use cases.
