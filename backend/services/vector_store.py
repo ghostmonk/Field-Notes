@@ -11,6 +11,7 @@ from qdrant_client.models import (
     FieldCondition,
     Filter,
     MatchValue,
+    PayloadSchemaType,
     PointStruct,
     VectorParams,
 )
@@ -36,7 +37,7 @@ def _get_client() -> QdrantClient:
 
 
 def ensure_collection() -> None:
-    """Create the content collection if it doesn't exist."""
+    """Create the content collection and payload indexes if they don't exist."""
     client = _get_client()
     collections = [c.name for c in client.get_collections().collections]
     if COLLECTION_NAME not in collections:
@@ -51,6 +52,13 @@ def ensure_collection() -> None:
                 pass
             else:
                 raise
+
+    # Ensure payload indexes exist for filtered search
+    for field in ("source", "chunk_type", "user_id"):
+        try:
+            client.create_payload_index(COLLECTION_NAME, field, PayloadSchemaType.KEYWORD)
+        except Exception:
+            pass  # Index already exists
 
 
 def upsert_vector(

@@ -59,12 +59,19 @@ async def tailor_resume(
     except HTTPException:
         raise
     except Exception as e:
+        error_detail = str(e)
+        # Extract response body from HTTP errors (Qdrant, Voyage, Anthropic)
+        if hasattr(e, "response"):
+            try:
+                error_detail += f" | Response: {e.response.text[:500]}"
+            except Exception:
+                pass
         logger.exception_with_context(
             "Error during resume tailoring",
             {
                 "user_id": user.id,
                 "error_type": type(e).__name__,
-                "error_details": str(e),
+                "error_details": error_detail,
             },
         )
         raise HTTPException(status_code=500, detail="Tailoring failed")
