@@ -147,8 +147,9 @@ Assume all work happens in a worktree unless the user explicitly says to work on
   FRONTEND_PORT=3010
   BACKEND_PORT=5011
   MONGO_PORT=27027
+  QDRANT_PORT=6343
   ```
-  The Makefile and `docker-compose.yml` read these variables (defaults: 3000, 5001, 27017). Each worktree's Docker Compose project is already namespaced by directory name, so container names won't conflict — but host ports will unless offset.
+  The Makefile and `docker-compose.yml` read these variables (defaults: 3000, 5001, 27017, 6333). Each worktree's Docker Compose project is already namespaced by directory name, so container names won't conflict — but host ports will unless offset.
 - **Dev testing**: use `make dev-local` or `make dev` to start services — don't run commands manually
 - **Cleanup**: run `make down` in the worktree to stop all Docker containers before removing the worktree with `git worktree remove`
 

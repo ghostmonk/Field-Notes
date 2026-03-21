@@ -4,6 +4,7 @@
 FRONTEND_PORT ?= 3000
 BACKEND_PORT ?= 5001
 MONGO_PORT ?= 27017
+QDRANT_PORT ?= 6333
 
 # Load .env.local overrides if present
 ifneq (,$(wildcard .env.local))
@@ -11,9 +12,10 @@ ifneq (,$(wildcard .env.local))
   FRONTEND_PORT := $(or $(shell grep '^FRONTEND_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(FRONTEND_PORT))
   BACKEND_PORT := $(or $(shell grep '^BACKEND_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(BACKEND_PORT))
   MONGO_PORT := $(or $(shell grep '^MONGO_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(MONGO_PORT))
+  QDRANT_PORT := $(or $(shell grep '^QDRANT_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(QDRANT_PORT))
 endif
 
-export FRONTEND_PORT BACKEND_PORT MONGO_PORT
+export FRONTEND_PORT BACKEND_PORT MONGO_PORT QDRANT_PORT
 
 # Virtual environment configuration
 VENV_DEFAULT := $(HOME)/Documents/venvs/field-notes
