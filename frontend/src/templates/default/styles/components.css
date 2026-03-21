@@ -1346,6 +1346,36 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
 }
 
 
+.site-footer__open-source {
+  max-width: var(--layout-container-max-width);
+  margin: var(--space-2xl) auto 0;
+  padding: var(--space-sm) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.site-footer__open-source-sep {
+  color: var(--color-text-tertiary);
+}
+
+.site-footer__open-source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-link);
+  text-decoration: none;
+  transition: var(--transition-colors);
+}
+
+.site-footer__open-source-link:hover {
+  color: var(--color-brand-primary);
+}
+
 .site-footer__copyright {
   max-width: var(--layout-container-max-width);
   margin: var(--space-2xl) auto 0;

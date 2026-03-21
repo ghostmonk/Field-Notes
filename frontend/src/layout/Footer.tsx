@@ -135,6 +135,21 @@ const Footer: React.FC = () => {
                 )}
             </div>
 
+            {/* Open source CTA */}
+            <div className="site-footer__open-source">
+                <span>Built with Field Notes</span>
+                <span className="site-footer__open-source-sep">&mdash;</span>
+                <a
+                    href="https://github.com/ghostmonk/Field-Notes"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="site-footer__open-source-link"
+                >
+                    <FaGithub aria-hidden="true" />
+                    Fork it on GitHub
+                </a>
+            </div>
+
             {/* Copyright bar */}
             <div className="site-footer__copyright">
                 <span>{copyright}</span>
