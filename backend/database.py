@@ -303,7 +303,7 @@ async def ensure_indexes() -> None:
     await safe_create_index(content_chunks, "chunk_type")
     await safe_create_index(content_chunks, "source")
     await safe_create_index(
-        content_chunks, "qdrant_id", unique=True, name="content_chunks_qdrant_id"
+        content_chunks, "qdrant_id", unique=True, sparse=True, name="content_chunks_qdrant_id"
     )
 
     if failed_indexes:

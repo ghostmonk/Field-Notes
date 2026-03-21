@@ -1,20 +1,24 @@
 """Embedding service using Voyage AI."""
 
 import os
+import threading
 from typing import List
 
 import voyageai
 
 _client = None
+_client_lock = threading.Lock()
 
 
 def _get_client() -> voyageai.Client:
     global _client
     if _client is None:
-        api_key = os.getenv("VOYAGE_API_KEY")
-        if not api_key:
-            raise ValueError("VOYAGE_API_KEY environment variable is required")
-        _client = voyageai.Client(api_key=api_key)
+        with _client_lock:
+            if _client is None:
+                api_key = os.getenv("VOYAGE_API_KEY")
+                if not api_key:
+                    raise ValueError("VOYAGE_API_KEY environment variable is required")
+                _client = voyageai.Client(api_key=api_key)
     return _client
 
 

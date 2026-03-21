@@ -1,6 +1,7 @@
 """Vector store service using Qdrant Cloud."""
 
 import os
+import threading
 import uuid
 from typing import Dict, List, Optional
 
@@ -10,6 +11,7 @@ from qdrant_client.models import (
     FieldCondition,
     Filter,
     MatchValue,
+    PointIdsList,
     PointStruct,
     VectorParams,
 )
@@ -18,16 +20,19 @@ COLLECTION_NAME = "content"
 VECTOR_SIZE = 512  # voyage-3-lite output dimension
 
 _client = None
+_client_lock = threading.Lock()
 
 
 def _get_client() -> QdrantClient:
     global _client
     if _client is None:
-        url = os.getenv("QDRANT_URL")
-        api_key = os.getenv("QDRANT_API_KEY")
-        if not url:
-            raise ValueError("QDRANT_URL environment variable is required")
-        _client = QdrantClient(url=url, api_key=api_key)
+        with _client_lock:
+            if _client is None:
+                url = os.getenv("QDRANT_URL")
+                api_key = os.getenv("QDRANT_API_KEY")
+                if not url:
+                    raise ValueError("QDRANT_URL environment variable is required")
+                _client = QdrantClient(url=url, api_key=api_key)
     return _client
 
 
@@ -112,5 +117,5 @@ def delete_vector(point_id: str) -> None:
     client = _get_client()
     client.delete(
         collection_name=COLLECTION_NAME,
-        points_selector=[point_id],
+        points_selector=PointIdsList(points=[point_id]),
     )

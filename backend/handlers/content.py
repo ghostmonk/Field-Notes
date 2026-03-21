@@ -6,6 +6,7 @@ from typing import List, Optional
 from decorators.auth import requires_auth
 from fastapi import APIRouter, HTTPException, Query, Request
 from glogger import logger
+from middleware.rate_limit import limiter
 from pydantic import BaseModel
 from services.embedding import embed_query
 from services.vector_store import search
@@ -28,10 +29,11 @@ class SearchResponse(BaseModel):
 
 
 @router.post("/content/search", response_model=SearchResponse)
+@limiter.limit("10/minute")
 @requires_auth
 async def search_content(
     request: Request,
-    query: str,
+    query: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=50),
     source: Optional[str] = Query(None),
     chunk_type: Optional[str] = Query(None),
