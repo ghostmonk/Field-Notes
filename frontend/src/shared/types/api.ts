@@ -398,11 +398,18 @@ export interface TailorAnalysis {
   key_requirements: string[];
 }
 
+export interface TailorUsage {
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_cost_usd: number;
+}
+
 export interface TailorResult {
   analysis: TailorAnalysis;
   tailored_resume: Resume;
   evaluation: TailorEvaluation;
   attempts: number;
+  usage?: TailorUsage;
 }
 
 export type FeedbackType = 'approved' | 'rejected' | 'edited' | 'flagged';

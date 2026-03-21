@@ -188,7 +188,7 @@ export default function AdminTailorPage() {
 
         {result && (
           <div className="space-y-6">
-            <ScoreCard evaluation={result.evaluation} attempts={result.attempts} />
+            <ScoreCard evaluation={result.evaluation} attempts={result.attempts} usage={result.usage} />
             <div className="flex gap-3">
               <FeedbackBar
                 result={result}
@@ -270,9 +270,11 @@ export default function AdminTailorPage() {
 function ScoreCard({
   evaluation,
   attempts,
+  usage,
 }: {
   evaluation: TailorResult['evaluation'];
   attempts: number;
+  usage?: TailorResult['usage'];
 }) {
   const scores = [
     { label: 'Overall', value: evaluation.overall },
@@ -296,6 +298,7 @@ function ScoreCard({
           style={{ color: 'var(--color-text-secondary)' }}
         >
           {attempts} attempt{attempts > 1 ? 's' : ''}
+          {usage && ` · $${usage.total_cost_usd.toFixed(4)}`}
         </span>
       </div>
       <div className="grid grid-cols-4 gap-4">
