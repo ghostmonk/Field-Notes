@@ -1,7 +1,5 @@
 # Resume Tailoring Phase 1: Vector Pipeline Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Build the embedding pipeline that chunks resume content, embeds it via Voyage AI, stores vectors in Qdrant Cloud, and retrieves relevant chunks given a job description.
 
 **Architecture:** Python services in the backend handle chunking, embedding, and retrieval. Qdrant Cloud (free tier) stores vectors. Voyage AI generates embeddings. MongoDB stores source content chunks with metadata. A seed script populates the system from existing resume data.

@@ -64,8 +64,10 @@ async def lifespan(app: FastAPI):
     # Ensure database indexes exist
     await ensure_indexes()
 
-    # Ensure Qdrant collection exists — skip if Qdrant is unreachable
+    # Verify vector search dependencies at startup
     if os.getenv("QDRANT_URL"):
+        if not os.getenv("VOYAGE_API_KEY"):
+            logger.error("QDRANT_URL is set but VOYAGE_API_KEY is missing — search will fail")
         try:
             from services.vector_store import ensure_collection
 

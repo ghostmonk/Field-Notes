@@ -88,6 +88,8 @@ async def search_content(
             ],
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception_with_context(
             "Error searching content",
