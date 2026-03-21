@@ -52,7 +52,7 @@ class TestResumeGenerator:
         mock_client.messages.create.return_value = mock_response
 
         with patch("services.resume_generator.get_client", return_value=mock_client):
-            result = generate_tailored_resume(
+            result, usage = generate_tailored_resume(
                 resume=SAMPLE_RESUME,
                 analysis=SAMPLE_ANALYSIS,
                 chunks=SAMPLE_CHUNKS,

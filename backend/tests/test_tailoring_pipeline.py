@@ -6,6 +6,8 @@ import pytest
 from services.anthropic_client import ResumeNotFoundError
 from services.tailoring_pipeline import run_tailoring_pipeline
 
+MOCK_USAGE = {"input_tokens": 100, "output_tokens": 50, "model": "test"}
+
 SAMPLE_RESUME_DOC = {
     "_id": "abc123",
     "contact": {"full_name": "Test User", "email": "test@example.com"},
@@ -77,7 +79,7 @@ class TestTailoringPipeline:
         with (
             patch(
                 "services.tailoring_pipeline.analyze_job_description",
-                return_value=SAMPLE_ANALYSIS,
+                return_value=(SAMPLE_ANALYSIS, MOCK_USAGE),
             ),
             patch(
                 "services.tailoring_pipeline.embed_query",
@@ -89,11 +91,11 @@ class TestTailoringPipeline:
             ),
             patch(
                 "services.tailoring_pipeline.generate_tailored_resume",
-                return_value=SAMPLE_TAILORED,
+                return_value=(SAMPLE_TAILORED, MOCK_USAGE),
             ),
             patch(
                 "services.tailoring_pipeline.evaluate_resume",
-                return_value=GOOD_EVALUATION,
+                return_value=(GOOD_EVALUATION, MOCK_USAGE),
             ),
         ):
             result = await run_tailoring_pipeline(
@@ -120,13 +122,15 @@ class TestTailoringPipeline:
             "issues": ["missing keyword X"],
         }
 
-        generate_mock = MagicMock(return_value=SAMPLE_TAILORED)
-        evaluate_mock = MagicMock(side_effect=[low_eval, GOOD_EVALUATION])
+        generate_mock = MagicMock(return_value=(SAMPLE_TAILORED, MOCK_USAGE))
+        evaluate_mock = MagicMock(
+            side_effect=[(low_eval, MOCK_USAGE), (GOOD_EVALUATION, MOCK_USAGE)]
+        )
 
         with (
             patch(
                 "services.tailoring_pipeline.analyze_job_description",
-                return_value=SAMPLE_ANALYSIS,
+                return_value=(SAMPLE_ANALYSIS, MOCK_USAGE),
             ),
             patch(
                 "services.tailoring_pipeline.embed_query",
@@ -171,13 +175,13 @@ class TestTailoringPipeline:
             "issues": ["everything is wrong"],
         }
 
-        generate_mock = MagicMock(return_value=SAMPLE_TAILORED)
-        evaluate_mock = MagicMock(return_value=low_eval)
+        generate_mock = MagicMock(return_value=(SAMPLE_TAILORED, MOCK_USAGE))
+        evaluate_mock = MagicMock(return_value=(low_eval, MOCK_USAGE))
 
         with (
             patch(
                 "services.tailoring_pipeline.analyze_job_description",
-                return_value=SAMPLE_ANALYSIS,
+                return_value=(SAMPLE_ANALYSIS, MOCK_USAGE),
             ),
             patch(
                 "services.tailoring_pipeline.embed_query",

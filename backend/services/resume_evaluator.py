@@ -1,7 +1,7 @@
 """Resume evaluation using Claude Haiku."""
 
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 from services.anthropic_client import get_client, parse_json_response
 
@@ -23,7 +23,7 @@ No markdown fences, no commentary outside the JSON."""
 def evaluate_resume(
     tailored_resume: Dict[str, Any],
     analysis: Dict[str, Any],
-) -> Dict[str, Any]:
+) -> Tuple[Dict[str, Any], Dict[str, int]]:
     """Evaluate a tailored resume against job requirements.
 
     Args:
@@ -60,4 +60,10 @@ Evaluate this resume against the job requirements."""
     if not response.content:
         raise ValueError("Empty response from evaluation model")
 
-    return parse_json_response(response.content[0].text, "evaluation response")
+    usage = {
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens,
+        "model": "claude-haiku-4-5-20251001",
+    }
+
+    return parse_json_response(response.content[0].text, "evaluation response"), usage
