@@ -83,7 +83,7 @@ const Footer: React.FC = () => {
                 )}
 
                 {/* Socials column */}
-                {config.socials && (
+                {config.socials && Object.values(config.socials).some(Boolean) && (
                     <div className="site-footer__column">
                         <h3 className="site-footer__heading">Social</h3>
                         <ul className="site-footer__list">

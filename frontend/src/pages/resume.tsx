@@ -9,7 +9,7 @@ import {
   HiOutlineLocationMarker,
   HiOutlineCalendar,
 } from 'react-icons/hi';
-import { FaLinkedinIn, FaGithub } from 'react-icons/fa';
+import { FaLinkedinIn, FaGithub } from 'react-icons/fa6';
 
 interface ResumePageProps {
   resume: Resume | null;

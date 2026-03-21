@@ -1345,11 +1345,6 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
   background: var(--color-border-primary);
 }
 
-.site-footer__tagline {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-tertiary);
-  margin: 0;
-}
 
 .site-footer__copyright {
   max-width: var(--layout-container-max-width);
