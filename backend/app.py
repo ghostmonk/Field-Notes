@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from glogger import logger
 from handlers.backfill import backfill_published_flag
+from handlers.content import router as content_router
 from handlers.engagement import router as engagement_router
 from handlers.github import router as github_router
 from handlers.navlinks import router as navlinks_router
@@ -237,6 +238,7 @@ app.include_router(engagement_router)
 app.include_router(search_router)
 app.include_router(versions_router)
 app.include_router(github_router)
+app.include_router(content_router)
 
 if __name__ == "__main__":
     import uvicorn

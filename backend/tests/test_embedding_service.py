@@ -13,9 +13,7 @@ class TestEmbeddingService:
         mod._client = None  # Reset singleton
 
         mock_client = MagicMock()
-        mock_client.embed.return_value = MagicMock(
-            embeddings=[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
-        )
+        mock_client.embed.return_value = MagicMock(embeddings=[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]])
 
         with patch.dict("os.environ", {"VOYAGE_API_KEY": "test-key"}):
             with patch("services.embedding.voyageai.Client", return_value=mock_client):

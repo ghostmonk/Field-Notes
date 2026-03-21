@@ -15,12 +15,14 @@ def chunk_resume(resume: Dict) -> List[Dict]:
     # Summary chunk
     summary = resume.get("summary", "")
     if summary:
-        chunks.append({
-            "text": f"{name}: {summary}",
-            "chunk_type": "meta",
-            "source": "resume",
-            "metadata": {},
-        })
+        chunks.append(
+            {
+                "text": f"{name}: {summary}",
+                "chunk_type": "meta",
+                "source": "resume",
+                "metadata": {},
+            }
+        )
 
     # Work experience chunks
     for job in resume.get("work_experience", []):
@@ -40,33 +42,41 @@ def chunk_resume(resume: Dict) -> List[Dict]:
 
         # Role summary chunk
         desc = job.get("description", "")
-        intro_lines = [l for l in desc.split("\n") if l.strip() and not l.strip().startswith("- ")]
+        intro_lines = [
+            line for line in desc.split("\n") if line.strip() and not line.strip().startswith("- ")
+        ]
         if intro_lines:
-            chunks.append({
-                "text": f"{title} at {company} ({start} - {end}): {' '.join(intro_lines)}",
-                "chunk_type": "role_summary",
-                "source": "resume",
-                "metadata": meta,
-            })
+            chunks.append(
+                {
+                    "text": f"{title} at {company} ({start} - {end}): {' '.join(intro_lines)}",
+                    "chunk_type": "role_summary",
+                    "source": "resume",
+                    "metadata": meta,
+                }
+            )
 
         # Individual achievement chunks (bullet points)
-        bullets = [l.strip()[2:] for l in desc.split("\n") if l.strip().startswith("- ")]
+        bullets = [line.strip()[2:] for line in desc.split("\n") if line.strip().startswith("- ")]
         for bullet in bullets:
-            chunks.append({
-                "text": f"{title} at {company}: {bullet}",
-                "chunk_type": "achievement",
-                "source": "resume",
-                "metadata": meta,
-            })
+            chunks.append(
+                {
+                    "text": f"{title} at {company}: {bullet}",
+                    "chunk_type": "achievement",
+                    "source": "resume",
+                    "metadata": meta,
+                }
+            )
 
         # Skill context chunks
         for tech in techs:
-            chunks.append({
-                "text": f"{tech}: used at {company} as {title} ({start} - {end})",
-                "chunk_type": "skill_context",
-                "source": "resume",
-                "metadata": meta,
-            })
+            chunks.append(
+                {
+                    "text": f"{tech}: used at {company} as {title} ({start} - {end})",
+                    "chunk_type": "skill_context",
+                    "source": "resume",
+                    "metadata": meta,
+                }
+            )
 
     # Education chunks
     for edu in resume.get("education", []):
@@ -81,35 +91,41 @@ def chunk_resume(resume: Dict) -> List[Dict]:
             text += f" in {field}"
         text += f" from {institution} ({start} - {end})"
 
-        chunks.append({
-            "text": text,
-            "chunk_type": "education",
-            "source": "resume",
-            "metadata": {
-                "company": institution,
-                "role": degree,
-                "start_date": start,
-                "end_date": end,
-            },
-        })
+        chunks.append(
+            {
+                "text": text,
+                "chunk_type": "education",
+                "source": "resume",
+                "metadata": {
+                    "company": institution,
+                    "role": degree,
+                    "start_date": start,
+                    "end_date": end,
+                },
+            }
+        )
 
     # Achievement chunks (standalone)
     for achievement in resume.get("achievements", []):
-        chunks.append({
-            "text": achievement,
-            "chunk_type": "achievement",
-            "source": "resume",
-            "metadata": {},
-        })
+        chunks.append(
+            {
+                "text": achievement,
+                "chunk_type": "achievement",
+                "source": "resume",
+                "metadata": {},
+            }
+        )
 
     # Skills as a single meta chunk
     skills = resume.get("skills", [])
     if skills:
-        chunks.append({
-            "text": f"Technical skills: {', '.join(skills)}",
-            "chunk_type": "meta",
-            "source": "resume",
-            "metadata": {},
-        })
+        chunks.append(
+            {
+                "text": f"Technical skills: {', '.join(skills)}",
+                "chunk_type": "meta",
+                "source": "resume",
+                "metadata": {},
+            }
+        )
 
     return chunks

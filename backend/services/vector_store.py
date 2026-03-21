@@ -82,9 +82,7 @@ def search(
 
     conditions = []
     if source_filter:
-        conditions.append(
-            FieldCondition(key="source", match=MatchValue(value=source_filter))
-        )
+        conditions.append(FieldCondition(key="source", match=MatchValue(value=source_filter)))
     if chunk_type_filter:
         conditions.append(
             FieldCondition(key="chunk_type", match=MatchValue(value=chunk_type_filter))
