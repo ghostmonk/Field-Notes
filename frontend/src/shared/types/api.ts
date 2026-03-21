@@ -376,3 +376,31 @@ export interface CreateResumeRequest {
 }
 
 export type UpdateResumeRequest = Partial<CreateResumeRequest>;
+
+export interface TailorRequest {
+  job_description: string;
+}
+
+export interface TailorEvaluation {
+  keyword_coverage: number;
+  relevance_ranking: number;
+  ats_compatibility: number;
+  overall: number;
+  issues: string[];
+}
+
+export interface TailorAnalysis {
+  required_skills: string[];
+  preferred_skills: string[];
+  seniority: string;
+  domain: string;
+  culture_signals: string;
+  key_requirements: string[];
+}
+
+export interface TailorResult {
+  analysis: TailorAnalysis;
+  tailored_resume: Resume;
+  evaluation: TailorEvaluation;
+  attempts: number;
+}

@@ -84,6 +84,7 @@ def search(
     limit: int = 20,
     source_filter: Optional[str] = None,
     chunk_type_filter: Optional[str] = None,
+    user_id_filter: Optional[str] = None,
 ) -> List[Dict]:
     """Search for similar vectors in Qdrant.
 
@@ -98,6 +99,8 @@ def search(
         conditions.append(
             FieldCondition(key="chunk_type", match=MatchValue(value=chunk_type_filter))
         )
+    if user_id_filter:
+        conditions.append(FieldCondition(key="user_id", match=MatchValue(value=user_id_filter)))
 
     query_filter = Filter(must=conditions) if conditions else None
 

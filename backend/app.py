@@ -21,6 +21,7 @@ from handlers.resume import router as resume_router
 from handlers.search import router as search_router
 from handlers.sections import router as sections_router
 from handlers.stories import router as stories_router
+from handlers.tailor import router as tailor_router
 from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
 from handlers.versions import router as versions_router
@@ -246,6 +247,7 @@ app.include_router(search_router)
 app.include_router(versions_router)
 app.include_router(github_router)
 app.include_router(content_router)
+app.include_router(tailor_router)
 
 if __name__ == "__main__":
     import uvicorn

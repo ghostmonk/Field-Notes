@@ -31,6 +31,8 @@ import {
   Resume,
   CreateResumeRequest,
   UpdateResumeRequest,
+  TailorRequest,
+  TailorResult,
 } from '@/shared/types/api';
 import { ApiRequestError } from '@/shared/types/error';
 
@@ -204,6 +206,9 @@ const apiRoutes = {
   resume: {
     base: () => '/api/resume',
     public: () => '/api/resume/public',
+  },
+  tailor: {
+    run: () => '/api/tailor',
   },
 };
 
@@ -498,6 +503,15 @@ const apiClient = {
     delete: (token: string) =>
       fetchApi<void>(apiRoutes.resume.base(), {
         method: 'DELETE',
+        token,
+      }),
+  },
+
+  tailor: {
+    run: (data: TailorRequest, token: string) =>
+      fetchApi<TailorResult, TailorRequest>(apiRoutes.tailor.run(), {
+        method: 'POST',
+        body: data,
         token,
       }),
   },
