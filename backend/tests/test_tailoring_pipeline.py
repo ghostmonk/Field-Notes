@@ -3,9 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from services.tailoring_pipeline import run_tailoring_pipeline
-
 
 SAMPLE_RESUME_DOC = {
     "_id": "abc123",
@@ -146,7 +144,7 @@ class TestTailoringPipeline:
                 evaluate_mock,
             ),
         ):
-            result = await run_tailoring_pipeline(
+            await run_tailoring_pipeline(
                 job_description="job desc",
                 user_id="user-1",
                 resumes_collection=mock_collection,

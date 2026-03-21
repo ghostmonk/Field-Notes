@@ -44,6 +44,7 @@ from handlers.projects import router as projects_router
 from handlers.resume import router as resume_router
 from handlers.sections import router as sections_router
 from handlers.stories import router as stories_router
+from handlers.tailor import router as tailor_router
 from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
 from handlers.video_processing import router as video_processing_router
@@ -67,6 +68,7 @@ test_app.include_router(engagement_router)
 test_app.include_router(photo_essays_router)
 test_app.include_router(resume_router)
 test_app.include_router(content_router)
+test_app.include_router(tailor_router)
 
 
 @pytest.fixture

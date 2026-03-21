@@ -34,9 +34,7 @@ def _get_client() -> anthropic.Anthropic:
             if _client is None:
                 api_key = os.getenv("ANTHROPIC_API_KEY")
                 if not api_key:
-                    raise ValueError(
-                        "ANTHROPIC_API_KEY environment variable is required"
-                    )
+                    raise ValueError("ANTHROPIC_API_KEY environment variable is required")
                 _client = anthropic.Anthropic(api_key=api_key)
     return _client
 
@@ -64,9 +62,7 @@ def generate_tailored_resume(
     client = _get_client()
 
     # Build the user prompt with all context
-    chunks_text = "\n".join(
-        f"- [{c.get('score', 0):.2f}] {c['text']}" for c in chunks
-    )
+    chunks_text = "\n".join(f"- [{c.get('score', 0):.2f}] {c['text']}" for c in chunks)
 
     user_content = f"""Job Description Analysis:
 {json.dumps(analysis, indent=2)}
@@ -108,6 +104,4 @@ IMPORTANT — Previous evaluation found these issues. Fix them:
     try:
         return json.loads(raw_text)
     except json.JSONDecodeError as e:
-        raise ValueError(
-            f"Failed to parse generated resume: {e}\nRaw: {raw_text[:500]}"
-        )
+        raise ValueError(f"Failed to parse generated resume: {e}\nRaw: {raw_text[:500]}")

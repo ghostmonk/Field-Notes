@@ -4,9 +4,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from services.resume_evaluator import evaluate_resume
-
 
 SAMPLE_ANALYSIS = {
     "required_skills": ["Python", "distributed systems"],

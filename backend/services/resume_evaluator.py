@@ -32,9 +32,7 @@ def _get_client() -> anthropic.Anthropic:
             if _client is None:
                 api_key = os.getenv("ANTHROPIC_API_KEY")
                 if not api_key:
-                    raise ValueError(
-                        "ANTHROPIC_API_KEY environment variable is required"
-                    )
+                    raise ValueError("ANTHROPIC_API_KEY environment variable is required")
                 _client = anthropic.Anthropic(api_key=api_key)
     return _client
 
@@ -84,6 +82,4 @@ Evaluate this resume against the job requirements."""
     try:
         return json.loads(raw_text)
     except json.JSONDecodeError as e:
-        raise ValueError(
-            f"Failed to parse evaluation response: {e}\nRaw: {raw_text}"
-        )
+        raise ValueError(f"Failed to parse evaluation response: {e}\nRaw: {raw_text}")

@@ -4,7 +4,6 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from services.job_analyzer import analyze_job_description
 
 

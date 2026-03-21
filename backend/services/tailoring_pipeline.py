@@ -4,7 +4,6 @@ import asyncio
 from typing import Any, Dict
 
 from motor.motor_asyncio import AsyncIOMotorCollection
-
 from services.embedding import embed_query
 from services.job_analyzer import analyze_job_description
 from services.resume_evaluator import evaluate_resume
@@ -34,9 +33,7 @@ async def run_tailoring_pipeline(
         ValueError: If user has no resume.
     """
     # Fetch current resume
-    resume_doc = await resumes_collection.find_one(
-        {"user_id": user_id, "deleted": {"$ne": True}}
-    )
+    resume_doc = await resumes_collection.find_one({"user_id": user_id, "deleted": {"$ne": True}})
     if not resume_doc:
         raise ValueError("No resume found for this user")
 
@@ -59,10 +56,7 @@ async def run_tailoring_pipeline(
         source_filter="resume",
     )
 
-    chunks = [
-        {"text": r["payload"].get("text", ""), "score": r["score"]}
-        for r in raw_results
-    ]
+    chunks = [{"text": r["payload"].get("text", ""), "score": r["score"]} for r in raw_results]
 
     # Step 3 + 4: Generate and Evaluate with retry loop
     evaluator_feedback = None

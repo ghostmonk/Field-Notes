@@ -4,7 +4,6 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from services.resume_generator import generate_tailored_resume
 
 SAMPLE_RESUME = {
