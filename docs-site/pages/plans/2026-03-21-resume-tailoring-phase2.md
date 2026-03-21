@@ -1433,28 +1433,12 @@ git add -A && git commit -m "chore: format"
 
 ---
 
-## Future Direction: Vector Memory and the Ghostmonk AI
+## What's Next
 
-The vector store is not resume-specific. It's the memory layer for a larger system. The `source` field on every chunk already supports multiple content types — resume, blog, conversation, and whatever comes next. The same chunking -> embedding -> Qdrant pipeline serves all of them.
-
-The work compounds across three layers:
-
-**Phase 3: Vector Memory Visibility** — Admin UI to browse, search, and manage what's stored in Qdrant. Chunk inspection (text, type, source, metadata), search preview with scores, stats dashboard, and selective CRUD. Source-agnostic from day one. This is the foundation for everything below — you can't train what you can't see.
-
-**Phase 4: Conversational Ghost** — An LLM avatar on ghostmonk.com that talks to visitors using vector memory as context. RAG pipeline: visitor question -> retrieve relevant chunks -> generate response in Nicholas's voice. Personality calibrated through curated content and tone.
-
-**Phase 5: Authenticated Agent** — When the system confirms Nicholas is logged in, the ghost gains elevated capabilities. Site management, content operations, acting on his behalf. The conversational interface becomes an operational tool, not just a visitor-facing feature.
-
-Each phase builds on the previous. No separate streams — one continuous evolution.
+The full system design — including voice/feedback loop, job application tracker, content management CRUD, frontend admin UI, and personality LLM direction — is defined in [`2026-03-20-resume-tailoring-design`](./2026-03-20-resume-tailoring-design). Phase 2 implements the core pipeline. Remaining work follows that design doc.
 
 ### Design Consideration: Multi-dimensional tagging
 
-The current metadata model has `source` (resume, blog) and `chunk_type` (achievement, role_summary, skill_context, meta). This conflates structure with purpose. The system needs a richer taxonomy:
+The current metadata has `source` (resume, blog) and `chunk_type` (achievement, role_summary, skill_context, meta). A third dimension is needed: **purpose/lens** — how the content should be used (personality, facts, strategy).
 
-- **source** — where the content came from (resume, blog, conversation)
-- **chunk_type** — structural category (achievement, summary, skill_context)
-- **purpose/lens** — how the content should be used (personality, facts, strategy)
-
-Example: "Built distributed systems at Ro" is a **fact**. ATS keyword density rules are **strategy** (applies to resume generation only, not conversation). The way Nicholas describes his work in a blog post is **personality** (applies to conversation, not resume bullet points).
-
-Same facts, different framing depending on the lens. The visibility UI in Phase 3 needs to support browsing and curating by all three dimensions, because the retrieval pipeline needs to know which lens to apply when assembling context for different use cases.
+"Built distributed systems at Ro" is a **fact**. ATS keyword density is **strategy** (resume generation only). How Nicholas describes work in a blog is **personality** (conversation only). Same facts, different framing depending on the lens. The content management UI needs to support browsing and curating by all three dimensions.
