@@ -63,6 +63,16 @@ async def lifespan(app: FastAPI):
     # Ensure database indexes exist
     await ensure_indexes()
 
+    # Ensure Qdrant collection exists (non-blocking — skip if Qdrant is unreachable)
+    if os.getenv("QDRANT_URL"):
+        try:
+            from services.vector_store import ensure_collection
+
+            ensure_collection()
+            logger.info("Qdrant collection verified")
+        except Exception as e:
+            logger.warning(f"Qdrant collection check skipped: {e}")
+
     yield  # This is where the app runs
 
     # Cleanup database connections

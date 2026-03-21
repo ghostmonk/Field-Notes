@@ -40,8 +40,3 @@ def embed_texts(texts: List[str], input_type: str = "document") -> List[List[flo
 def embed_query(text: str) -> List[float]:
     """Embed a single query text."""
     return embed_texts([text], input_type="query")[0]
-
-
-def embed_document(text: str) -> List[float]:
-    """Embed a single document text."""
-    return embed_texts([text], input_type="document")[0]
