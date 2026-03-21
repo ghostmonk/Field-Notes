@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class VoiceFeedbackCreate(BaseModel):
@@ -13,6 +13,12 @@ class VoiceFeedbackCreate(BaseModel):
     job_context: str = Field(..., min_length=1)
     note: Optional[str] = None
     section_type: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_edited_has_final_text(self):
+        if self.feedback_type == "edited" and not self.final_text:
+            raise ValueError("final_text is required when feedback_type is 'edited'")
+        return self
 
 
 class VoiceFeedbackResponse(VoiceFeedbackCreate):

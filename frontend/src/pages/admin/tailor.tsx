@@ -375,13 +375,23 @@ function FeedbackBar({
 
   const jobContext = `${result.analysis.seniority}_${result.analysis.domain}`;
 
+  const resumeToText = (r: TailorResult['tailored_resume']): string => {
+    const parts: string[] = [];
+    if (r.summary) parts.push(r.summary);
+    r.work_experience?.forEach((job) => {
+      parts.push(`${job.title} at ${job.company}`);
+      if (job.description) parts.push(job.description);
+    });
+    if (r.skills?.length) parts.push(`Skills: ${r.skills.join(', ')}`);
+    return parts.join('\n\n');
+  };
+
   const submitFeedback = async (type: FeedbackType, note?: string) => {
     setFeedbackState('submitting');
     try {
-      const resumeText = JSON.stringify(result.tailored_resume);
       await apiClient.voiceFeedback.submit(
         {
-          original_text: resumeText,
+          original_text: resumeToText(result.tailored_resume),
           feedback_type: type,
           job_context: jobContext,
           note: note || undefined,

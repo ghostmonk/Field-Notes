@@ -20,7 +20,12 @@ _background_tasks = set()
 
 
 def _schedule_feedback_indexing(
-    text: str, feedback_type: str, job_context: str, user_id: str
+    text: str,
+    feedback_type: str,
+    job_context: str,
+    user_id: str,
+    doc_id: str,
+    collection: AsyncIOMotorCollection,
 ) -> None:
     """Schedule background Qdrant indexing for feedback."""
 
@@ -30,6 +35,7 @@ def _schedule_feedback_indexing(
                 index_feedback, text, feedback_type, job_context, user_id
             )
             if qdrant_id:
+                await collection.update_one({"_id": doc_id}, {"$set": {"qdrant_id": qdrant_id}})
                 logger.info_with_context(
                     "Feedback indexed in vector store",
                     {"user_id": user_id, "qdrant_id": qdrant_id},
@@ -77,7 +83,14 @@ async def submit_feedback(
 
     # Index in Qdrant — use final_text for edits, original for approve/reject/flag
     text_to_embed = body.final_text if body.feedback_type == "edited" else body.original_text
-    _schedule_feedback_indexing(text_to_embed, body.feedback_type, body.job_context, user.id)
+    _schedule_feedback_indexing(
+        text_to_embed,
+        body.feedback_type,
+        body.job_context,
+        user.id,
+        doc["_id"],
+        collection,
+    )
 
     return VoiceFeedbackResponse(
         id=str(doc["_id"]),
