@@ -61,6 +61,7 @@ async def run_tailoring_pipeline(
     # Step 3 + 4: Generate and Evaluate with retry loop
     evaluator_feedback = None
     best_result = None
+    best_score = -1.0
 
     for attempt in range(1 + MAX_RETRIES):
         tailored = await asyncio.to_thread(
@@ -77,16 +78,30 @@ async def run_tailoring_pipeline(
             analysis=analysis,
         )
 
-        best_result = {
+        try:
+            score = float(evaluation.get("overall", 0))
+        except (TypeError, ValueError):
+            score = 0.0
+
+        current_result = {
             "analysis": analysis,
             "tailored_resume": tailored,
             "evaluation": evaluation,
             "attempts": attempt + 1,
         }
 
-        if evaluation.get("overall", 0) >= SCORE_THRESHOLD:
+        if score > best_score:
+            best_score = score
+            best_result = current_result
+
+        if score >= SCORE_THRESHOLD:
             break
 
         evaluator_feedback = evaluation.get("issues", [])
+        if not evaluator_feedback:
+            evaluator_feedback = [
+                f"Overall score {score:.2f} is below {SCORE_THRESHOLD}. "
+                "Improve keyword coverage and relevance ranking."
+            ]
 
     return best_result

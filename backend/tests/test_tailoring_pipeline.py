@@ -170,6 +170,9 @@ class TestTailoringPipeline:
             "issues": ["everything is wrong"],
         }
 
+        generate_mock = MagicMock(return_value=SAMPLE_TAILORED)
+        evaluate_mock = MagicMock(return_value=low_eval)
+
         with (
             patch(
                 "services.tailoring_pipeline.analyze_job_description",
@@ -185,11 +188,11 @@ class TestTailoringPipeline:
             ),
             patch(
                 "services.tailoring_pipeline.generate_tailored_resume",
-                return_value=SAMPLE_TAILORED,
+                generate_mock,
             ),
             patch(
                 "services.tailoring_pipeline.evaluate_resume",
-                return_value=low_eval,
+                evaluate_mock,
             ),
         ):
             result = await run_tailoring_pipeline(
@@ -200,6 +203,9 @@ class TestTailoringPipeline:
 
         # Returns best attempt even if below threshold
         assert result["evaluation"]["overall"] == 0.50
+        # Verify all retry attempts were made (1 initial + MAX_RETRIES)
+        assert generate_mock.call_count == 3
+        assert evaluate_mock.call_count == 3
 
     @pytest.mark.asyncio
     async def test_raises_when_no_resume_found(self):

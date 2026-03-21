@@ -89,6 +89,7 @@ IMPORTANT — Previous evaluation found these issues. Fix them:
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=4096,
+        timeout=120.0,
         system=STRATEGY_PROMPT,
         messages=[
             {"role": "user", "content": user_content},

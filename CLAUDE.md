@@ -93,6 +93,7 @@ Required environment variables in `.env`:
 - Google OAuth (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
 - NextAuth (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`)
 - Vector search (`VOYAGE_API_KEY`, `QDRANT_URL`, `QDRANT_API_KEY`) — required for resume tailoring; Qdrant runs locally via Docker, Voyage AI requires an API key
+- LLM pipeline (`ANTHROPIC_API_KEY`) — required for resume tailoring `/tailor` endpoint; powers job analysis, resume generation, and evaluation
 
 Place `gcp-credentials.json` in project root (production only). Docker Compose sets `LOCAL_STORAGE_PATH=/app/local-uploads` automatically.
 
