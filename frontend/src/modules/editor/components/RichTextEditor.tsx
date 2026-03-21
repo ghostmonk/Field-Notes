@@ -139,6 +139,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     const toggleHtmlMode = useCallback(() => {
         if (!editor) return;
         if (isHtmlMode) {
+            if (htmlDebounceRef.current) clearTimeout(htmlDebounceRef.current);
             isTransitioningRef.current = true;
             editor.commands.setContent(htmlSource);
             setIsHtmlMode(false);
