@@ -65,16 +65,10 @@ Return a complete Resume JSON with:
 - Same structure, same companies/titles/dates — different framing"""
 
     if voice_examples:
-        approved = [
-            v for v in voice_examples if v.get("chunk_type") == "voice_example"
-        ]
-        anti = [
-            v for v in voice_examples if v.get("chunk_type") == "anti_pattern"
-        ]
+        approved = [v for v in voice_examples if v.get("chunk_type") == "voice_example"]
+        anti = [v for v in voice_examples if v.get("chunk_type") == "anti_pattern"]
         if approved:
-            examples_text = "\n".join(
-                f"- {v['text'][:200]}" for v in approved[:5]
-            )
+            examples_text = "\n".join(f"- {v['text'][:200]}" for v in approved[:5])
             user_content += f"""
 
 Previously approved writing style (match this voice):

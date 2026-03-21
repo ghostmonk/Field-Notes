@@ -1,6 +1,7 @@
 export default {
   index: 'Overview',
   '2026-03-21-ghostmonk-ai-design': 'Ghostmonk AI',
+  '2026-03-21-resume-tailoring-phase3-feedback': 'Resume Tailoring Phase 3',
   '2026-03-21-resume-tailoring-phase2': 'Resume Tailoring Phase 2',
   '2026-03-20-resume-tailoring-phase1': 'Resume Tailoring Phase 1',
   '2026-03-20-resume-tailoring-design': 'AI Resume Tailoring',
