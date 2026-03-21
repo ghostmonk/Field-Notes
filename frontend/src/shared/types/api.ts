@@ -416,6 +416,45 @@ export interface VoiceFeedbackCreate {
   section_type?: string;
 }
 
+export type ApplicationStatus =
+  | 'saved'
+  | 'applied'
+  | 'interviewing'
+  | 'offered'
+  | 'rejected';
+
+export interface JobApplicationCreate {
+  company: string;
+  job_title: string;
+  job_url?: string;
+  job_description: string;
+  tailored_resume: Resume;
+  evaluation_score: TailorEvaluation;
+  status?: ApplicationStatus;
+  notes?: string;
+}
+
+export interface JobApplicationUpdate {
+  status?: ApplicationStatus;
+  notes?: string;
+  job_url?: string;
+}
+
+export interface JobApplicationResponse {
+  id: string;
+  user_id: string;
+  company: string;
+  job_title: string;
+  job_url?: string;
+  job_description: string;
+  tailored_resume: Resume;
+  evaluation_score: TailorEvaluation;
+  status: ApplicationStatus;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface VoiceFeedbackResponse extends VoiceFeedbackCreate {
   id: string;
   user_id: string;

@@ -1,22 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { apiClient } from '@/shared/lib/api-client';
-import { TailorResult, FeedbackType } from '@/shared/types/api';
+import {
+  TailorResult,
+  FeedbackType,
+  JobApplicationResponse,
+  ApplicationStatus,
+} from '@/shared/types/api';
 
 type PipelineStep = 'idle' | 'running' | 'done' | 'error';
 type FeedbackState = 'idle' | 'submitting' | 'submitted' | 'error';
+type Tab = 'tailor' | 'applications';
+type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 export default function AdminTailorPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<Tab>('tailor');
   const [jobDescription, setJobDescription] = useState('');
   const [result, setResult] = useState<TailorResult | null>(null);
   const [step, setStep] = useState<PipelineStep>('idle');
   const [error, setError] = useState<string | null>(null);
   const [feedbackState, setFeedbackState] = useState<FeedbackState>('idle');
   const [flagNote, setFlagNote] = useState('');
+  const [saveState, setSaveState] = useState<SaveState>('idle');
 
   useEffect(() => {
     if (status !== 'loading' && (!session || session.user?.role !== 'admin')) {
@@ -36,6 +45,7 @@ export default function AdminTailorPage() {
     setResult(null);
     setFeedbackState('idle');
     setFlagNote('');
+    setSaveState('idle');
 
     try {
       const data = await apiClient.tailor.run(
@@ -50,6 +60,28 @@ export default function AdminTailorPage() {
     }
   };
 
+  const handleSaveApplication = async () => {
+    if (!result || !session.accessToken || !jobDescription.trim()) return;
+    setSaveState('saving');
+    try {
+      const company =
+        result.analysis.culture_signals?.split(',')[0]?.trim() || 'Unknown';
+      await apiClient.applications.create(
+        {
+          company,
+          job_title: `${result.analysis.seniority} ${result.analysis.domain}`,
+          job_description: jobDescription,
+          tailored_resume: result.tailored_resume,
+          evaluation_score: result.evaluation,
+        },
+        session.accessToken
+      );
+      setSaveState('saved');
+    } catch {
+      setSaveState('error');
+    }
+  };
+
   return (
     <>
       <Head>
@@ -58,6 +90,34 @@ export default function AdminTailorPage() {
       <div className="max-w-5xl mx-auto py-8 px-4">
         <h1 className="text-2xl font-bold mb-6">Resume Tailor</h1>
 
+        <div
+          className="flex gap-1 mb-6 border-b"
+          style={{ borderColor: 'var(--color-border)' }}
+        >
+          {(['tailor', 'applications'] as Tab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className="px-4 py-2 text-sm font-medium capitalize"
+              style={{
+                color:
+                  activeTab === tab
+                    ? 'var(--color-accent)'
+                    : 'var(--color-text-secondary)',
+                borderBottom:
+                  activeTab === tab ? '2px solid var(--color-accent)' : '2px solid transparent',
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'applications' && (
+          <ApplicationsTab token={session.accessToken!} />
+        )}
+
+        {activeTab === 'tailor' && (<>
         <div className="mb-6">
           <label
             htmlFor="job-description"
@@ -127,18 +187,44 @@ export default function AdminTailorPage() {
         {result && (
           <div className="space-y-6">
             <ScoreCard evaluation={result.evaluation} attempts={result.attempts} />
-            <FeedbackBar
-              result={result}
-              token={session.accessToken!}
-              feedbackState={feedbackState}
-              setFeedbackState={setFeedbackState}
-              flagNote={flagNote}
-              setFlagNote={setFlagNote}
-            />
+            <div className="flex gap-3">
+              <FeedbackBar
+                result={result}
+                token={session.accessToken!}
+                feedbackState={feedbackState}
+                setFeedbackState={setFeedbackState}
+                flagNote={flagNote}
+                setFlagNote={setFlagNote}
+              />
+              <button
+                onClick={handleSaveApplication}
+                disabled={saveState === 'saving' || saveState === 'saved'}
+                className="px-4 py-2 rounded text-sm font-medium whitespace-nowrap self-start"
+                style={{
+                  backgroundColor:
+                    saveState === 'saved'
+                      ? 'rgba(34, 197, 94, 0.15)'
+                      : 'var(--color-accent)',
+                  color: saveState === 'saved' ? '#22c55e' : 'var(--color-bg-primary)',
+                  border:
+                    saveState === 'saved'
+                      ? '1px solid rgba(34, 197, 94, 0.3)'
+                      : 'none',
+                  opacity: saveState === 'saving' ? 0.5 : 1,
+                }}
+              >
+                {saveState === 'saved'
+                  ? 'Saved'
+                  : saveState === 'saving'
+                    ? 'Saving...'
+                    : 'Save Application'}
+              </button>
+            </div>
             <AnalysisCard analysis={result.analysis} />
             <ResumePreview resume={result.tailored_resume} />
           </div>
         )}
+        </>)}
       </div>
     </>
   );
@@ -505,6 +591,140 @@ function FeedbackBar({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+const STATUS_COLORS: Record<ApplicationStatus, string> = {
+  saved: '#6b7280',
+  applied: '#3b82f6',
+  interviewing: '#eab308',
+  offered: '#22c55e',
+  rejected: '#ef4444',
+};
+
+function ApplicationsTab({ token }: { token: string }) {
+  const [apps, setApps] = useState<JobApplicationResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadApps = useCallback(async () => {
+    try {
+      const data = await apiClient.applications.list(token);
+      setApps(data);
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    loadApps();
+  }, [loadApps]);
+
+  const handleStatusChange = async (id: string, status: ApplicationStatus) => {
+    try {
+      const updated = await apiClient.applications.update(id, { status }, token);
+      setApps((prev) => prev.map((a) => (a.id === id ? updated : a)));
+    } catch {
+      // silently fail
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await apiClient.applications.delete(id, token);
+      setApps((prev) => prev.filter((a) => a.id !== id));
+    } catch {
+      // silently fail
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+        Loading applications...
+      </div>
+    );
+  }
+
+  if (apps.length === 0) {
+    return (
+      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+        No applications saved yet. Tailor a resume and click "Save Application".
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {apps.map((app) => (
+        <div
+          key={app.id}
+          className="rounded-md p-4"
+          style={{
+            backgroundColor: 'var(--color-bg-secondary)',
+            border: '1px solid var(--color-border)',
+          }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <span className="font-medium">{app.job_title}</span>
+              <span
+                className="mx-2"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                at
+              </span>
+              <span className="font-medium">{app.company}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={app.status}
+                onChange={(e) =>
+                  handleStatusChange(app.id, e.target.value as ApplicationStatus)
+                }
+                className="rounded px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  color: STATUS_COLORS[app.status],
+                  border: '1px solid var(--color-border)',
+                }}
+              >
+                {Object.keys(STATUS_COLORS).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => handleDelete(app.id)}
+                className="text-xs px-2 py-1 rounded"
+                style={{
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+            <span>Score: {Math.round(app.evaluation_score.overall * 100)}</span>
+            <span>{new Date(app.created_at).toLocaleDateString()}</span>
+            {app.job_url && (
+              <a
+                href={app.job_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'var(--color-accent)' }}
+              >
+                Job listing
+              </a>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

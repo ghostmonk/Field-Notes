@@ -13,6 +13,7 @@ from handlers.backfill import backfill_published_flag
 from handlers.content import router as content_router
 from handlers.engagement import router as engagement_router
 from handlers.github import router as github_router
+from handlers.job_applications import router as job_applications_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
 from handlers.photo_essays import router as photo_essays_router
@@ -250,6 +251,7 @@ app.include_router(github_router)
 app.include_router(content_router)
 app.include_router(tailor_router)
 app.include_router(voice_feedback_router)
+app.include_router(job_applications_router)
 
 if __name__ == "__main__":
     import uvicorn
