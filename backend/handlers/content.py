@@ -1,5 +1,6 @@
 """API handlers for content chunk retrieval."""
 
+import asyncio
 from typing import List, Optional
 
 from decorators.auth import requires_auth
@@ -39,9 +40,10 @@ async def search_content(
     try:
         logger.info_with_context("Searching content chunks", {"query": query[:100]})
 
-        query_embedding = embed_query(query)
+        query_embedding = await asyncio.to_thread(embed_query, query)
 
-        results = search(
+        results = await asyncio.to_thread(
+            search,
             query_vector=query_embedding,
             limit=limit,
             source_filter=source,
