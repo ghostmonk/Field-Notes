@@ -1,8 +1,10 @@
 export default {
   index: 'Overview',
+  '2026-03-21-resume-tailoring-phase2': 'Resume Tailoring Phase 2',
   '2026-03-20-resume-tailoring-phase1': 'Resume Tailoring Phase 1',
   '2026-03-20-resume-tailoring-design': 'AI Resume Tailoring',
   '2026-03-19-resume-builder': 'Resume Builder',
+  '2026-03-15-github-contribution-graph': 'GitHub Contribution Graph',
   '2026-03-10-photo-essays': 'Photo Essays',
   '2026-03-07-image-enhancement': 'Image Enhancement',
   '2026-03-07-image-enhancement-implementation': 'Image Enhancement Implementation',
