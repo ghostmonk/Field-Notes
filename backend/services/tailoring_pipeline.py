@@ -69,19 +69,24 @@ async def run_tailoring_pipeline(
     for attempt in range(1 + MAX_RETRIES):
         total_attempts = attempt + 1
 
-        tailored = await asyncio.to_thread(
-            generate_tailored_resume,
-            resume=resume,
-            analysis=analysis,
-            chunks=chunks,
-            evaluator_feedback=evaluator_feedback,
-        )
+        try:
+            tailored = await asyncio.to_thread(
+                generate_tailored_resume,
+                resume=resume,
+                analysis=analysis,
+                chunks=chunks,
+                evaluator_feedback=evaluator_feedback,
+            )
 
-        evaluation = await asyncio.to_thread(
-            evaluate_resume,
-            tailored_resume=tailored,
-            analysis=analysis,
-        )
+            evaluation = await asyncio.to_thread(
+                evaluate_resume,
+                tailored_resume=tailored,
+                analysis=analysis,
+            )
+        except ValueError:
+            if best_result is not None:
+                break
+            raise
 
         try:
             score = float(evaluation.get("overall", 0))
