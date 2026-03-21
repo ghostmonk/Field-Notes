@@ -25,6 +25,9 @@
   --color-status-error: #ef4444;
   --color-status-info: #3b82f6;
 
+  --color-code-bg: #1e293b;
+  --color-code-text: #e2e8f0;
+
   --color-shadow-light: rgba(0, 0, 0, 0.1);
   --color-shadow-medium: rgba(0, 0, 0, 0.15);
   --color-shadow-dark: rgba(0, 0, 0, 0.25);
@@ -105,6 +108,9 @@
   --color-border-primary: #334155;
   --color-border-secondary: #475569;
   --color-border-focus: #3b82f6;
+
+  --color-code-bg: #0f1729;
+  --color-code-text: #e2e8f0;
 
   --color-shadow-light: rgba(0, 0, 0, 0.4);
   --color-shadow-medium: rgba(0, 0, 0, 0.5);
