@@ -1,9 +1,8 @@
 """Job description analysis using Claude Haiku."""
 
-import json
 from typing import Any, Dict
 
-from services.anthropic_client import get_client
+from services.anthropic_client import get_client, parse_json_response
 
 ANALYSIS_SYSTEM_PROMPT = """You are a job description analyst. Extract structured information from the job description.
 
@@ -46,14 +45,4 @@ def analyze_job_description(job_description: str) -> Dict[str, Any]:
     if not response.content:
         raise ValueError("Empty response from job analysis model")
 
-    raw_text = response.content[0].text.strip()
-
-    # Strip markdown fences if present
-    if raw_text.startswith("```"):
-        lines = raw_text.split("\n")
-        raw_text = "\n".join(lines[1:-1])
-
-    try:
-        return json.loads(raw_text)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse job analysis response: {e}\nRaw: {raw_text}")
+    return parse_json_response(response.content[0].text, "job analysis response")

@@ -3,7 +3,7 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from services.anthropic_client import get_client
+from services.anthropic_client import get_client, parse_json_response
 
 STRATEGY_PROMPT = """You are a resume optimization expert. Follow these rules:
 - Mirror keywords from the job description in bullet points (ATS optimization)
@@ -82,13 +82,4 @@ IMPORTANT — Previous evaluation found these issues. Fix them:
     if not response.content:
         raise ValueError("Empty response from resume generation model")
 
-    raw_text = response.content[0].text.strip()
-
-    if raw_text.startswith("```"):
-        lines = raw_text.split("\n")
-        raw_text = "\n".join(lines[1:-1])
-
-    try:
-        return json.loads(raw_text)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse generated resume: {e}\nRaw: {raw_text[:500]}")
+    return parse_json_response(response.content[0].text, "generated resume")

@@ -3,7 +3,7 @@
 import json
 from typing import Any, Dict
 
-from services.anthropic_client import get_client
+from services.anthropic_client import get_client, parse_json_response
 
 EVALUATION_SYSTEM_PROMPT = """You are a resume evaluation expert. Score a tailored resume against the original job requirements.
 
@@ -49,7 +49,7 @@ Evaluate this resume against the job requirements."""
 
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
+        max_tokens=2048,
         timeout=60.0,
         system=EVALUATION_SYSTEM_PROMPT,
         messages=[
@@ -60,13 +60,4 @@ Evaluate this resume against the job requirements."""
     if not response.content:
         raise ValueError("Empty response from evaluation model")
 
-    raw_text = response.content[0].text.strip()
-
-    if raw_text.startswith("```"):
-        lines = raw_text.split("\n")
-        raw_text = "\n".join(lines[1:-1])
-
-    try:
-        return json.loads(raw_text)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse evaluation response: {e}\nRaw: {raw_text}")
+    return parse_json_response(response.content[0].text, "evaluation response")

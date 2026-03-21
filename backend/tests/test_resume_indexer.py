@@ -40,16 +40,20 @@ class TestResumeIndexer:
             patch("services.resume_indexer.ensure_collection"),
             patch("services.resume_indexer.upsert_vector") as mock_upsert,
         ):
-            count = index_resume(SAMPLE_RESUME)
+            count = index_resume(SAMPLE_RESUME, "user-1")
 
         assert count > 0
         mock_embed.assert_called_once()
         assert mock_upsert.call_count == count
+        # Verify user_id in payload and deterministic point_id
+        first_call = mock_upsert.call_args_list[0]
+        assert first_call.kwargs["payload"]["user_id"] == "user-1"
+        assert first_call.kwargs["point_id"] is not None
 
     @patch.dict("os.environ", {"VOYAGE_API_KEY": "", "QDRANT_URL": ""}, clear=False)
     def test_skips_when_env_vars_missing(self):
         """Test that indexing is skipped when API keys are not set."""
-        count = index_resume(SAMPLE_RESUME)
+        count = index_resume(SAMPLE_RESUME, "user-1")
         assert count == 0
 
     @patch.dict(
@@ -58,5 +62,5 @@ class TestResumeIndexer:
     )
     def test_returns_zero_for_empty_resume(self):
         """Test that empty resume produces no vectors."""
-        count = index_resume({})
+        count = index_resume({}, "user-1")
         assert count == 0

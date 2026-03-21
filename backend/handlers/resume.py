@@ -24,11 +24,13 @@ from pymongo.errors import DuplicateKeyError
 from services.resume_indexer import index_resume
 from utils import find_one_and_convert, mongo_to_pydantic
 
+_background_tasks = set()
+
 
 async def _index_resume_background(resume_data: dict, user_id: str) -> None:
     """Index resume in Qdrant as a background task."""
     try:
-        count = await asyncio.to_thread(index_resume, resume_data)
+        count = await asyncio.to_thread(index_resume, resume_data, user_id)
         if count:
             logger.info_with_context(
                 "Resume indexed in vector store",
@@ -39,6 +41,13 @@ async def _index_resume_background(resume_data: dict, user_id: str) -> None:
             "Failed to index resume in vector store",
             {"user_id": user_id, "error": str(e)},
         )
+
+
+def _schedule_indexing(resume_data: dict, user_id: str) -> None:
+    """Schedule background indexing with a retained task reference."""
+    task = asyncio.create_task(_index_resume_background(resume_data, user_id))
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 router = APIRouter()
@@ -201,7 +210,7 @@ async def create_resume(
             {"user_id": user.id},
         )
 
-        asyncio.create_task(_index_resume_background(resume_data, user.id))
+        _schedule_indexing(resume_data, user.id)
 
         return created_resume
 

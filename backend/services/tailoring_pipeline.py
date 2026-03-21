@@ -56,9 +56,12 @@ async def run_tailoring_pipeline(
         query_vector=query_embedding,
         limit=25,
         source_filter="resume",
+        user_id_filter=user_id,
     )
 
-    chunks = [{"text": r["payload"].get("text", ""), "score": r["score"]} for r in raw_results]
+    chunks = [
+        {"text": (r.get("payload") or {}).get("text", ""), "score": r["score"]} for r in raw_results
+    ]
 
     # Step 3 + 4: Generate and Evaluate with retry loop
     evaluator_feedback = None
@@ -83,7 +86,7 @@ async def run_tailoring_pipeline(
                 tailored_resume=tailored,
                 analysis=analysis,
             )
-        except ValueError:
+        except Exception:
             if best_result is not None:
                 break
             raise

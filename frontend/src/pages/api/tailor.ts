@@ -69,8 +69,7 @@ export default async function handler(
       error instanceof Error ? error : new Error(String(error))
     );
     return res.status(500).json({
-      detail:
-        error instanceof Error ? error.message : 'Internal server error',
+      detail: 'Internal server error',
       error: 'Failed to process request',
     });
   }
