@@ -37,7 +37,7 @@ class SearchResult(BaseModel):
     text: str
     chunk_type: str
     source: str
-    company: str
+    company: Optional[str] = None
 
 
 class SearchResponse(BaseModel):
@@ -78,7 +78,7 @@ async def search_content(
                     text=r["payload"].get("text", ""),
                     chunk_type=r["payload"].get("chunk_type", ""),
                     source=r["payload"].get("source", ""),
-                    company=r["payload"].get("company", ""),
+                    company=r["payload"].get("company") or None,
                 )
                 for r in results
             ],

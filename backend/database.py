@@ -293,6 +293,14 @@ async def ensure_indexes() -> None:
     if not await safe_create_index(github_cache, "key", unique=True):
         failed_indexes.append("github_cache.key")
 
+    # Content chunks indexes (collection populated by seed script)
+    content_chunks = db["content_chunks"]
+    await safe_create_index(content_chunks, "chunk_type")
+    await safe_create_index(content_chunks, "source")
+    await safe_create_index(
+        content_chunks, "qdrant_id", unique=True, sparse=True, name="content_chunks_qdrant_id"
+    )
+
     if failed_indexes:
         logger.error(
             f"Database startup completed with {len(failed_indexes)} failed index(es): "

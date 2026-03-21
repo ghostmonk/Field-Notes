@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -66,8 +67,6 @@ async def lifespan(app: FastAPI):
     # Ensure Qdrant collection exists — skip if Qdrant is unreachable
     if os.getenv("QDRANT_URL"):
         try:
-            import asyncio
-
             from services.vector_store import ensure_collection
 
             await asyncio.to_thread(ensure_collection)
