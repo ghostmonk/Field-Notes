@@ -316,3 +316,4 @@ playwright-report/
 local-uploads/
 *.tsbuildinfo
 seed-resume.py
+seed-content.py
