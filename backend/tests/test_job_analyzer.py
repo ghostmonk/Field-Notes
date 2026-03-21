@@ -4,7 +4,8 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-from services import job_analyzer
+from services import anthropic_client
+from services.anthropic_client import ServiceNotConfiguredError
 from services.job_analyzer import analyze_job_description
 
 
@@ -32,7 +33,7 @@ class TestJobAnalyzer:
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch("services.job_analyzer._get_client", return_value=mock_client):
+        with patch("services.job_analyzer.get_client", return_value=mock_client):
             result = analyze_job_description("We need a staff backend engineer...")
 
         assert result["required_skills"] == ["Python", "distributed systems"]
@@ -42,12 +43,12 @@ class TestJobAnalyzer:
         assert call_kwargs["model"] == "claude-haiku-4-5-20251001"
 
     def test_raises_without_api_key(self):
-        """Test that missing ANTHROPIC_API_KEY raises ValueError."""
-        job_analyzer._client = None
+        """Test that missing ANTHROPIC_API_KEY raises ServiceNotConfiguredError."""
+        anthropic_client._client = None
 
         with patch.dict("os.environ", {}, clear=True):
-            with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
-                job_analyzer._get_client()
+            with pytest.raises(ServiceNotConfiguredError, match="ANTHROPIC_API_KEY"):
+                anthropic_client.get_client()
 
     def test_handles_malformed_json_response(self):
         """Test that malformed JSON from LLM raises ValueError."""
@@ -57,6 +58,6 @@ class TestJobAnalyzer:
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch("services.job_analyzer._get_client", return_value=mock_client):
+        with patch("services.job_analyzer.get_client", return_value=mock_client):
             with pytest.raises(ValueError, match="Failed to parse"):
                 analyze_job_description("some job description")

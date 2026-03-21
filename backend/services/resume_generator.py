@@ -1,14 +1,9 @@
 """Resume generation using Claude Sonnet."""
 
 import json
-import os
-import threading
 from typing import Any, Dict, List, Optional
 
-import anthropic
-
-_client = None
-_client_lock = threading.Lock()
+from services.anthropic_client import get_client
 
 STRATEGY_PROMPT = """You are a resume optimization expert. Follow these rules:
 - Mirror keywords from the job description in bullet points (ATS optimization)
@@ -25,18 +20,6 @@ STRATEGY_PROMPT = """You are a resume optimization expert. Follow these rules:
 - Write in direct, active voice
 
 Return ONLY a valid JSON object matching the exact Resume schema provided. No markdown fences, no commentary."""
-
-
-def _get_client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        with _client_lock:
-            if _client is None:
-                api_key = os.getenv("ANTHROPIC_API_KEY")
-                if not api_key:
-                    raise ValueError("ANTHROPIC_API_KEY environment variable is required")
-                _client = anthropic.Anthropic(api_key=api_key)
-    return _client
 
 
 def generate_tailored_resume(
@@ -59,7 +42,7 @@ def generate_tailored_resume(
     Raises:
         ValueError: If LLM response cannot be parsed as JSON.
     """
-    client = _get_client()
+    client = get_client()
 
     # Build the user prompt with all context
     chunks_text = "\n".join(f"- [{c.get('score', 0):.2f}] {c['text']}" for c in chunks)

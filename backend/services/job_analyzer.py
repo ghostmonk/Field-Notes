@@ -1,14 +1,9 @@
 """Job description analysis using Claude Haiku."""
 
 import json
-import os
-import threading
 from typing import Any, Dict
 
-import anthropic
-
-_client = None
-_client_lock = threading.Lock()
+from services.anthropic_client import get_client
 
 ANALYSIS_SYSTEM_PROMPT = """You are a job description analyst. Extract structured information from the job description.
 
@@ -21,18 +16,6 @@ Return ONLY a JSON object with these exact keys:
 - key_requirements: list of strings — the 3-7 most important qualifications, rephrased as what the ideal candidate has done
 
 Do not include any text outside the JSON object. No markdown fences."""
-
-
-def _get_client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        with _client_lock:
-            if _client is None:
-                api_key = os.getenv("ANTHROPIC_API_KEY")
-                if not api_key:
-                    raise ValueError("ANTHROPIC_API_KEY environment variable is required")
-                _client = anthropic.Anthropic(api_key=api_key)
-    return _client
 
 
 def analyze_job_description(job_description: str) -> Dict[str, Any]:
@@ -48,7 +31,7 @@ def analyze_job_description(job_description: str) -> Dict[str, Any]:
     Raises:
         ValueError: If LLM response cannot be parsed as JSON.
     """
-    client = _get_client()
+    client = get_client()
 
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",

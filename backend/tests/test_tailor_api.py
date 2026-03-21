@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from services.anthropic_client import ResumeNotFoundError, ServiceNotConfiguredError
 
 SAMPLE_PIPELINE_RESULT = {
     "analysis": {
@@ -86,7 +87,7 @@ class TestTailorEndpoint:
             with patch(
                 "handlers.tailor.run_tailoring_pipeline",
                 new_callable=AsyncMock,
-                side_effect=ValueError("ANTHROPIC_API_KEY environment variable is required"),
+                side_effect=ServiceNotConfiguredError("ANTHROPIC_API_KEY"),
             ):
                 response = await resumes_async_client.post(
                     "/tailor",
@@ -104,7 +105,7 @@ class TestTailorEndpoint:
         with patch(
             "handlers.tailor.run_tailoring_pipeline",
             new_callable=AsyncMock,
-            side_effect=ValueError("No resume found for this user"),
+            side_effect=ResumeNotFoundError("No resume found"),
         ):
             response = await resumes_async_client.post(
                 "/tailor",

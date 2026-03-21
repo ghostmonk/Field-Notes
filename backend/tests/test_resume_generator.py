@@ -51,7 +51,7 @@ class TestResumeGenerator:
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch("services.resume_generator._get_client", return_value=mock_client):
+        with patch("services.resume_generator.get_client", return_value=mock_client):
             result = generate_tailored_resume(
                 resume=SAMPLE_RESUME,
                 analysis=SAMPLE_ANALYSIS,
@@ -70,7 +70,7 @@ class TestResumeGenerator:
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch("services.resume_generator._get_client", return_value=mock_client):
+        with patch("services.resume_generator.get_client", return_value=mock_client):
             generate_tailored_resume(
                 resume=SAMPLE_RESUME,
                 analysis=SAMPLE_ANALYSIS,
@@ -90,7 +90,7 @@ class TestResumeGenerator:
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch("services.resume_generator._get_client", return_value=mock_client):
+        with patch("services.resume_generator.get_client", return_value=mock_client):
             generate_tailored_resume(
                 resume=SAMPLE_RESUME,
                 analysis=SAMPLE_ANALYSIS,
@@ -111,7 +111,7 @@ class TestResumeGenerator:
         mock_client = MagicMock()
         mock_client.messages.create.return_value = mock_response
 
-        with patch("services.resume_generator._get_client", return_value=mock_client):
+        with patch("services.resume_generator.get_client", return_value=mock_client):
             with pytest.raises(ValueError, match="Failed to parse"):
                 generate_tailored_resume(
                     resume=SAMPLE_RESUME,

@@ -1,14 +1,9 @@
 """Resume evaluation using Claude Haiku."""
 
 import json
-import os
-import threading
 from typing import Any, Dict
 
-import anthropic
-
-_client = None
-_client_lock = threading.Lock()
+from services.anthropic_client import get_client
 
 EVALUATION_SYSTEM_PROMPT = """You are a resume evaluation expert. Score a tailored resume against the original job requirements.
 
@@ -23,18 +18,6 @@ Be strict. A generic summary that doesn't mention the specific role or domain sc
 A resume missing 2+ required skills scores below 0.80 on keyword_coverage.
 
 No markdown fences, no commentary outside the JSON."""
-
-
-def _get_client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        with _client_lock:
-            if _client is None:
-                api_key = os.getenv("ANTHROPIC_API_KEY")
-                if not api_key:
-                    raise ValueError("ANTHROPIC_API_KEY environment variable is required")
-                _client = anthropic.Anthropic(api_key=api_key)
-    return _client
 
 
 def evaluate_resume(
@@ -54,7 +37,7 @@ def evaluate_resume(
     Raises:
         ValueError: If LLM response cannot be parsed as JSON.
     """
-    client = _get_client()
+    client = get_client()
 
     user_content = f"""Job Requirements:
 {json.dumps(analysis, indent=2)}

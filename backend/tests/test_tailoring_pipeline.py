@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from services.anthropic_client import ResumeNotFoundError
 from services.tailoring_pipeline import run_tailoring_pipeline
 
 SAMPLE_RESUME_DOC = {
@@ -213,7 +214,7 @@ class TestTailoringPipeline:
         mock_collection = MagicMock()
         mock_collection.find_one = AsyncMock(return_value=None)
 
-        with pytest.raises(ValueError, match="No resume found"):
+        with pytest.raises(ResumeNotFoundError, match="No resume found"):
             await run_tailoring_pipeline(
                 job_description="job desc",
                 user_id="user-1",

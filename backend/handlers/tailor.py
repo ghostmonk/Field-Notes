@@ -8,6 +8,7 @@ from middleware.rate_limit import limiter
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import BaseModel, Field
+from services.anthropic_client import ResumeNotFoundError, ServiceNotConfiguredError
 from services.tailoring_pipeline import run_tailoring_pipeline
 
 router = APIRouter()
@@ -51,13 +52,10 @@ async def tailor_resume(
 
         return result
 
-    except ValueError as e:
-        error_msg = str(e)
-        if "No resume found" in error_msg:
-            raise HTTPException(status_code=404, detail="No resume found. Create a resume first.")
-        if "environment variable is required" in error_msg:
-            raise HTTPException(status_code=503, detail="Tailoring service is not configured")
-        raise HTTPException(status_code=500, detail="Tailoring failed")
+    except ResumeNotFoundError:
+        raise HTTPException(status_code=404, detail="No resume found. Create a resume first.")
+    except ServiceNotConfiguredError:
+        raise HTTPException(status_code=503, detail="Tailoring service is not configured")
     except HTTPException:
         raise
     except Exception as e:

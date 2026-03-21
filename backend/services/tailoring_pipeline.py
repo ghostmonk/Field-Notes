@@ -4,6 +4,7 @@ import asyncio
 from typing import Any, Dict
 
 from motor.motor_asyncio import AsyncIOMotorCollection
+from services.anthropic_client import ResumeNotFoundError
 from services.embedding import embed_query
 from services.job_analyzer import analyze_job_description
 from services.resume_evaluator import evaluate_resume
@@ -35,7 +36,7 @@ async def run_tailoring_pipeline(
     # Fetch current resume
     resume_doc = await resumes_collection.find_one({"user_id": user_id, "deleted": {"$ne": True}})
     if not resume_doc:
-        raise ValueError("No resume found for this user")
+        raise ResumeNotFoundError("No resume found for this user")
 
     # Strip MongoDB internal fields for the LLM
     resume = {
@@ -44,11 +45,12 @@ async def run_tailoring_pipeline(
         if k not in ("_id", "user_id", "createdDate", "updatedDate", "deleted")
     }
 
-    # Step 1: Analyze job description (sync call, run in thread)
-    analysis = await asyncio.to_thread(analyze_job_description, job_description)
+    # Step 1 + 2: Analyze and embed concurrently (no data dependency)
+    analysis, query_embedding = await asyncio.gather(
+        asyncio.to_thread(analyze_job_description, job_description),
+        asyncio.to_thread(embed_query, job_description),
+    )
 
-    # Step 2: Retrieve relevant chunks
-    query_embedding = await asyncio.to_thread(embed_query, job_description)
     raw_results = await asyncio.to_thread(
         search,
         query_vector=query_embedding,
