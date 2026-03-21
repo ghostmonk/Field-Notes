@@ -79,6 +79,8 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     // HTML source mode state
     const [isHtmlMode, setIsHtmlMode] = useState(false);
     const [htmlSource, setHtmlSource] = useState('');
+    const htmlDebounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+    const isTransitioningRef = useRef(false);
 
     // Link input state
     const [showLinkInput, setShowLinkInput] = useState(false);
@@ -137,7 +139,9 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     const toggleHtmlMode = useCallback(() => {
         if (!editor) return;
         if (isHtmlMode) {
+            isTransitioningRef.current = true;
             editor.commands.setContent(htmlSource);
+            isTransitioningRef.current = false;
             setIsHtmlMode(false);
         } else {
             setHtmlSource(formatHtml(editor.getHTML()));
@@ -145,9 +149,9 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
         }
     }, [editor, isHtmlMode, htmlSource]);
 
-    // Sync content from props (skip in HTML mode to avoid fighting the textarea)
+    // Sync content from props (skip in HTML mode and during transitions)
     useEffect(() => {
-        if (!isHtmlMode && editor && content !== editor.getHTML()) {
+        if (!isHtmlMode && !isTransitioningRef.current && editor && content !== editor.getHTML()) {
             editor.commands.setContent(content);
         }
     }, [editor, content, isHtmlMode]);
@@ -354,7 +358,12 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             {isHtmlMode ? (
                 <textarea
                     value={htmlSource}
-                    onChange={e => { setHtmlSource(e.target.value); onChange(e.target.value); }}
+                    onChange={e => {
+                        const val = e.target.value;
+                        setHtmlSource(val);
+                        if (htmlDebounceRef.current) clearTimeout(htmlDebounceRef.current);
+                        htmlDebounceRef.current = setTimeout(() => onChange(val), 500);
+                    }}
                     className="html-source-editor"
                     data-testid="html-source-editor"
                     spellCheck={false}
