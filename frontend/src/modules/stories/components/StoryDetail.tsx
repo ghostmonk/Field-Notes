@@ -7,14 +7,26 @@ import { ReadingProgressBar } from '@/components/ReadingProgressBar';
 
 interface StoryDetailProps {
     story: Story;
+    onEdit?: () => void;
     children?: React.ReactNode;
 }
 
-export const StoryDetail: React.FC<StoryDetailProps> = ({ story, children }) => {
+export const StoryDetail: React.FC<StoryDetailProps> = ({ story, onEdit, children }) => {
     return (
         <article className="card" data-testid="story-article">
             <ReadingProgressBar />
-            <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
+            <div className="flex items-center justify-between mb-2">
+                <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
+                {onEdit && (
+                    <button
+                        onClick={onEdit}
+                        className="btn btn--secondary btn--sm"
+                        data-testid="story-edit-button"
+                    >
+                        Edit
+                    </button>
+                )}
+            </div>
 
             <div className="flex items-center text-sm mb-8">
                 <span style={{ color: 'var(--color-text-tertiary)' }} title={formatDate(story.createdDate)}>{formatRelativeDate(story.createdDate)}</span>

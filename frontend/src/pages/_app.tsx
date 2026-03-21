@@ -1,4 +1,5 @@
 import '../styles/globals.css';
+import '../styles/editor.css';
 // Template CSS — must match template.active in site.config.json
 // To switch templates: change the import path AND the config value, then rebuild
 import '../templates/default/index.css';

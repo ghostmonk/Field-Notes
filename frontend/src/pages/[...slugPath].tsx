@@ -9,7 +9,7 @@ import { useToast } from '@/components/Toast';
 import { Section, Story, Project, Page, PaginatedResponse, ProjectCard as ProjectCardType, PhotoEssayCard as PhotoEssayCardType, PhotoEssay, BulkCountsResponse } from '@/shared/types/api';
 import { displayRegistry, useFetchContent } from '@/modules/registry';
 import type { ContentType, DisplayType } from '@/modules/registry';
-import { StoryCard } from '@/modules/stories';
+import { StoryCard, canEditStory } from '@/modules/stories';
 import { useStoryMutations } from '@/modules/stories';
 import { ContributionGraph, ProjectCard } from '@/modules/projects';
 import { PhotoEssayCard, PhotoEssayPage } from '@/modules/photo-essays';
@@ -263,9 +263,14 @@ function PhotoEssayDetailView({ section, essay }: { section: Section; essay: Pho
 
 function SectionDetailView({ section, item }: { section: Section; item: Story | Project | PhotoEssay }) {
     const contentType = section.content_type as ContentType;
+    const { data: session } = useSession();
+    const router = useRouter();
 
     if (contentType === 'story') {
         const story = item as Story;
+        const handleEdit = canEditStory(session, story)
+            ? () => router.push({ pathname: '/editor', query: { id: story.id, section_id: section.id } })
+            : undefined;
         return (
             <div className="detail-container">
                 <Breadcrumbs items={[
@@ -273,7 +278,7 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
                     { label: story.title },
                 ]} />
                 <EngagementProvider targetType="story" targetId={story.id}>
-                    <StoryDetail story={story}>
+                    <StoryDetail story={story} onEdit={handleEdit}>
                         <StoryEngagement />
                     </StoryDetail>
                 </EngagementProvider>
