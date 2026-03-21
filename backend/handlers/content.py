@@ -1,6 +1,7 @@
 """API handlers for content chunk retrieval."""
 
 import asyncio
+import os
 from enum import Enum
 from typing import List, Optional
 
@@ -60,6 +61,9 @@ async def search_content(
     body: SearchRequest,
 ):
     """Search content chunks by semantic similarity."""
+    if not os.getenv("QDRANT_URL") or not os.getenv("VOYAGE_API_KEY"):
+        raise HTTPException(status_code=503, detail="Vector search is not configured")
+
     try:
         logger.info_with_context("Searching content chunks", {"query": body.query[:100]})
 

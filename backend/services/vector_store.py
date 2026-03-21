@@ -40,10 +40,17 @@ def ensure_collection() -> None:
     client = _get_client()
     collections = [c.name for c in client.get_collections().collections]
     if COLLECTION_NAME not in collections:
-        client.create_collection(
-            collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
-        )
+        try:
+            client.create_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
+            )
+        except Exception as e:
+            # Race condition: another instance may have created the collection
+            if "already exists" in str(e).lower():
+                pass
+            else:
+                raise
 
 
 def upsert_vector(
