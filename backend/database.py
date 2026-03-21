@@ -146,6 +146,11 @@ async def get_resumes_collection() -> AsyncIOMotorCollection:
     return db["resumes"]
 
 
+async def get_voice_feedback_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["voice_feedback"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
@@ -300,6 +305,12 @@ async def ensure_indexes() -> None:
     await safe_create_index(
         content_chunks, "qdrant_id", unique=True, sparse=True, name="content_chunks_qdrant_id"
     )
+
+    # Voice feedback indexes
+    voice_feedback = db["voice_feedback"]
+    await safe_create_index(voice_feedback, "user_id")
+    await safe_create_index(voice_feedback, "feedback_type")
+    await safe_create_index(voice_feedback, "job_context")
 
     if failed_indexes:
         logger.error(
