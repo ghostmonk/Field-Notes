@@ -26,6 +26,7 @@ from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
 from handlers.versions import router as versions_router
 from handlers.video_processing import router as video_processing_router
+from handlers.voice_feedback import router as voice_feedback_router
 from middleware.logging_middleware import LoggingMiddleware
 from middleware.rate_limit import limiter
 from services.vector_store import ensure_collection
@@ -248,6 +249,7 @@ app.include_router(versions_router)
 app.include_router(github_router)
 app.include_router(content_router)
 app.include_router(tailor_router)
+app.include_router(voice_feedback_router)
 
 if __name__ == "__main__":
     import uvicorn
