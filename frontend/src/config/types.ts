@@ -19,6 +19,10 @@ export interface SiteConfig {
     heading: string;
     body: string;
   };
+  github?: {
+    username: string;
+    url: string;
+  };
   socials?: {
     github?: string;
     linkedin?: string;
