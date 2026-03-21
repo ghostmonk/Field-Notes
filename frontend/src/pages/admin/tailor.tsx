@@ -3,11 +3,13 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { apiClient } from '@/shared/lib/api-client';
+import { DownloadButtons } from '@/modules/resume';
 import {
   TailorResult,
   FeedbackType,
   JobApplicationResponse,
   ApplicationStatus,
+  UpdateResumeRequest,
 } from '@/shared/types/api';
 
 type PipelineStep = 'idle' | 'running' | 'done' | 'error';
@@ -28,6 +30,7 @@ export default function AdminTailorPage() {
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [saveCompany, setSaveCompany] = useState('');
   const [saveTitle, setSaveTitle] = useState('');
+  const [defaultState, setDefaultState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   useEffect(() => {
     if (status !== 'loading' && (!session || session.user?.role !== 'admin')) {
@@ -50,6 +53,7 @@ export default function AdminTailorPage() {
     setSaveState('idle');
     setSaveCompany('');
     setSaveTitle('');
+    setDefaultState('idle');
 
     try {
       const data = await apiClient.tailor.run(
@@ -256,6 +260,54 @@ export default function AdminTailorPage() {
                       : 'Save'}
                 </button>
               </div>
+            </div>
+            <div
+              className="flex items-center gap-3 rounded-md p-3"
+              style={{
+                backgroundColor: 'var(--color-bg-secondary)',
+                border: '1px solid var(--color-border)',
+              }}
+            >
+              <DownloadButtons resume={result.tailored_resume} />
+              <button
+                onClick={async () => {
+                  if (!session?.accessToken) return;
+                  setDefaultState('saving');
+                  try {
+                    const { contact, summary, work_experience, education, skills, achievements } =
+                      result.tailored_resume;
+                    await apiClient.resume.update(
+                      { contact, summary, work_experience, education, skills, achievements } as UpdateResumeRequest,
+                      session.accessToken
+                    );
+                    setDefaultState('saved');
+                  } catch {
+                    setDefaultState('error');
+                  }
+                }}
+                disabled={defaultState === 'saving' || defaultState === 'saved'}
+                className="px-3 py-1 rounded text-sm font-medium"
+                style={{
+                  backgroundColor:
+                    defaultState === 'saved'
+                      ? 'rgba(34, 197, 94, 0.15)'
+                      : 'var(--color-bg-tertiary)',
+                  color: defaultState === 'saved' ? '#22c55e' : 'var(--color-text-primary)',
+                  border: defaultState === 'saved'
+                    ? '1px solid rgba(34, 197, 94, 0.3)'
+                    : '1px solid var(--color-border)',
+                  opacity: defaultState === 'saving' ? 0.5 : 1,
+                }}
+              >
+                {defaultState === 'saved'
+                  ? 'Set as Default'
+                  : defaultState === 'saving'
+                    ? 'Saving...'
+                    : 'Set as Default Resume'}
+              </button>
+              {defaultState === 'error' && (
+                <span className="text-sm" style={{ color: '#ef4444' }}>Failed</span>
+              )}
             </div>
             <AnalysisCard analysis={result.analysis} />
             <ResumePreview resume={result.tailored_resume} />
@@ -646,6 +698,7 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
 function ApplicationsTab({ token }: { token: string }) {
   const [apps, setApps] = useState<JobApplicationResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadApps = useCallback(async () => {
     try {
@@ -762,7 +815,19 @@ function ApplicationsTab({ token }: { token: string }) {
                 Job listing
               </a>
             )}
+            <button
+              onClick={() => setExpandedId(expandedId === app.id ? null : app.id)}
+              style={{ color: 'var(--color-accent)' }}
+            >
+              {expandedId === app.id ? 'Hide' : 'View'}
+            </button>
           </div>
+          {expandedId === app.id && (
+            <div className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+              <DownloadButtons resume={app.tailored_resume} />
+              <ResumePreview resume={app.tailored_resume} />
+            </div>
+          )}
         </div>
       ))}
     </div>
