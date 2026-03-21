@@ -6,7 +6,18 @@ import { useNavSections } from '@/hooks/useNavSections';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { iconMap } from '@/shared/lib/navIcons';
 import { HiPlusSm, HiCog, HiSearch, HiDocumentText } from 'react-icons/hi';
-import { FaGithub } from 'react-icons/fa';
+import { FaGithub, FaLinkedinIn, FaInstagram, FaXTwitter, FaTiktok, FaYoutube, FaSpotify } from 'react-icons/fa6';
+import GhostmonkLogo from '@/components/GhostmonkLogo';
+
+const socialLinks = [
+    { key: 'github', label: 'GitHub', Icon: FaGithub },
+    { key: 'linkedin', label: 'LinkedIn', Icon: FaLinkedinIn },
+    { key: 'instagram', label: 'Instagram', Icon: FaInstagram },
+    { key: 'x', label: 'X', Icon: FaXTwitter },
+    { key: 'tiktok', label: 'TikTok', Icon: FaTiktok },
+    { key: 'youtube', label: 'YouTube', Icon: FaYoutube },
+    { key: 'spotify', label: 'Spotify', Icon: FaSpotify },
+] as const;
 
 const config = getSiteConfig();
 
@@ -19,6 +30,11 @@ const Footer: React.FC = () => {
 
     return (
         <footer className="site-footer" data-testid="site-footer">
+            <div className="site-footer__brand">
+                <div className="site-footer__divider">
+                    <GhostmonkLogo height={40} />
+                </div>
+            </div>
             <div className="site-footer__grid">
                 {/* Sections column */}
                 <div className="site-footer__column">
@@ -62,14 +78,27 @@ const Footer: React.FC = () => {
                                     Resume
                                 </Link>
                             </li>
-                            {config.github && (
-                                <li>
-                                    <a href={config.github.url} target="_blank" rel="noopener noreferrer" className="site-footer__link">
-                                        <FaGithub className="site-footer__link-icon" aria-hidden="true" />
-                                        GitHub
-                                    </a>
-                                </li>
-                            )}
+                        </ul>
+                    </div>
+                )}
+
+                {/* Socials column */}
+                {config.socials && (
+                    <div className="site-footer__column">
+                        <h3 className="site-footer__heading">Social</h3>
+                        <ul className="site-footer__list">
+                            {socialLinks.map(({ key, label, Icon }) => {
+                                const url = config.socials?.[key];
+                                if (!url) return null;
+                                return (
+                                    <li key={key}>
+                                        <a href={url} target="_blank" rel="noopener noreferrer" className="site-footer__link">
+                                            <Icon className="site-footer__link-icon" aria-hidden="true" />
+                                            {label}
+                                        </a>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </div>
                 )}
