@@ -11,7 +11,6 @@ from qdrant_client.models import (
     FieldCondition,
     Filter,
     MatchValue,
-    PointIdsList,
     PointStruct,
     VectorParams,
 )
@@ -110,12 +109,3 @@ def search(
         }
         for point in results.points
     ]
-
-
-def delete_vector(point_id: str) -> None:
-    """Delete a vector from Qdrant by ID."""
-    client = _get_client()
-    client.delete(
-        collection_name=COLLECTION_NAME,
-        points_selector=PointIdsList(points=[point_id]),
-    )

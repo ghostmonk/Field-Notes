@@ -5,10 +5,10 @@ from enum import Enum
 from typing import List, Optional
 
 from decorators.auth import requires_auth
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Request
 from glogger import logger
 from middleware.rate_limit import limiter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from services.embedding import embed_query
 from services.vector_store import search
 
@@ -31,6 +31,13 @@ class Source(str, Enum):
     opinion = "opinion"
 
 
+class SearchRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=2000)
+    limit: int = Field(20, ge=1, le=50)
+    source: Optional[Source] = None
+    chunk_type: Optional[ChunkType] = None
+
+
 class SearchResult(BaseModel):
     id: str
     score: float
@@ -50,27 +57,24 @@ class SearchResponse(BaseModel):
 @requires_auth
 async def search_content(
     request: Request,
-    query: str = Query(..., min_length=1),
-    limit: int = Query(20, ge=1, le=50),
-    source: Optional[Source] = Query(None),
-    chunk_type: Optional[ChunkType] = Query(None),
+    body: SearchRequest,
 ):
     """Search content chunks by semantic similarity."""
     try:
-        logger.info_with_context("Searching content chunks", {"query": query[:100]})
+        logger.info_with_context("Searching content chunks", {"query": body.query[:100]})
 
-        query_embedding = await asyncio.to_thread(embed_query, query)
+        query_embedding = await asyncio.to_thread(embed_query, body.query)
 
         results = await asyncio.to_thread(
             search,
             query_vector=query_embedding,
-            limit=limit,
-            source_filter=source.value if source else None,
-            chunk_type_filter=chunk_type.value if chunk_type else None,
+            limit=body.limit,
+            source_filter=body.source.value if body.source else None,
+            chunk_type_filter=body.chunk_type.value if body.chunk_type else None,
         )
 
         return SearchResponse(
-            query=query,
+            query=body.query,
             results=[
                 SearchResult(
                     id=r["id"],

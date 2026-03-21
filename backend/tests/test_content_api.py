@@ -10,7 +10,7 @@ class TestContentSearch:
     @pytest.mark.asyncio
     async def test_search_requires_auth(self, async_client):
         """Test POST /content/search without auth returns 401."""
-        response = await async_client.post("/content/search", params={"query": "test"})
+        response = await async_client.post("/content/search", json={"query": "test"})
         assert response.status_code == 401
 
     @pytest.mark.integration
@@ -36,7 +36,7 @@ class TestContentSearch:
         ):
             response = await async_client.post(
                 "/content/search",
-                params={"query": "distributed systems"},
+                json={"query": "distributed systems"},
                 headers=auth_headers,
             )
 

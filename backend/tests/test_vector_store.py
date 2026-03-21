@@ -78,14 +78,3 @@ class TestVectorStore:
         with patch.dict("os.environ", {}, clear=True):
             with pytest.raises(ValueError, match="QDRANT_URL"):
                 mod._get_client()
-
-    def test_delete_vector(self):
-        """Test that delete calls client correctly."""
-        import services.vector_store as mod
-
-        mock_client = MagicMock()
-        mod._client = mock_client
-
-        mod.delete_vector("point-1")
-
-        mock_client.delete.assert_called_once()

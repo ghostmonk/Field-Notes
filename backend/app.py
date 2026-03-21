@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
             await asyncio.to_thread(ensure_collection)
             logger.info("Qdrant collection verified")
         except Exception as e:
-            logger.warning(f"Qdrant collection check skipped: {e}")
+            logger.error(f"Qdrant collection check failed: {e}")
 
     yield  # This is where the app runs
 
