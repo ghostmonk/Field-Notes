@@ -169,7 +169,7 @@ jobs:
             --service-account=${{ vars.GCP_SERVICE_ACCOUNT_NAME }} \
             --set-env-vars "MONGO_USER=${{ secrets.MONGO_USER }},MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }},MONGO_CLUSTER=${{ vars.MONGO_CLUSTER }},MONGO_APP_NAME=${{ vars.MONGO_APP_NAME }},MONGO_HOST=${{ vars.MONGO_HOST }},GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }},MONGO_DB_NAME=${{ vars.MONGO_DB_NAME }},GCS_BUCKET_NAME=${{ vars.GCS_BUCKET_NAME }},ADMIN_EMAIL=${{ vars.ADMIN_EMAIL }},GH_TOKEN=${{ secrets.GH_TOKEN }},GH_USERNAME=${{ vars.GH_USERNAME }}" \
             --set-env-vars "GOOGLE_APPLICATION_CREDENTIALS_JSON_B64=${GCP_CREDS_B64}" \
-            --set-env-vars "QDRANT_URL=${{ vars.QDRANT_URL }},QDRANT_API_KEY=${{ secrets.QDRANT_API_KEY }},VOYAGE_API_KEY=${{ secrets.VOYAGE_API_KEY }}" \
+            --set-env-vars "QDRANT_URL=${{ vars.QDRANT_URL }},QDRANT_API_KEY=${{ secrets.QDRANT_API_KEY }},VOYAGE_API_KEY=${{ secrets.VOYAGE_API_KEY }},ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" \
             --timeout=600s
 
       - name: Deploy Frontend
