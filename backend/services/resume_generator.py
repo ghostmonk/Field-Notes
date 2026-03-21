@@ -27,6 +27,7 @@ def generate_tailored_resume(
     analysis: Dict[str, Any],
     chunks: List[Dict[str, Any]],
     evaluator_feedback: Optional[List[str]] = None,
+    voice_examples: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Generate a tailored resume using Claude Sonnet.
 
@@ -35,6 +36,7 @@ def generate_tailored_resume(
         analysis: Structured job analysis from analyze_job_description().
         chunks: Retrieved content chunks from Qdrant with relevance scores.
         evaluator_feedback: Optional list of issues from a previous evaluation (retry loop).
+        voice_examples: Optional approved/rejected examples from feedback loop.
 
     Returns:
         Tailored resume as a dict matching the Resume schema.
@@ -61,6 +63,28 @@ Return a complete Resume JSON with:
 - Rewritten bullet points emphasizing relevant experience
 - Skills reordered by relevance to the job
 - Same structure, same companies/titles/dates — different framing"""
+
+    if voice_examples:
+        approved = [
+            v for v in voice_examples if v.get("chunk_type") == "voice_example"
+        ]
+        anti = [
+            v for v in voice_examples if v.get("chunk_type") == "anti_pattern"
+        ]
+        if approved:
+            examples_text = "\n".join(
+                f"- {v['text'][:200]}" for v in approved[:5]
+            )
+            user_content += f"""
+
+Previously approved writing style (match this voice):
+{examples_text}"""
+        if anti:
+            anti_text = "\n".join(f"- {v['text'][:200]}" for v in anti[:3])
+            user_content += f"""
+
+Do NOT write like this (rejected examples):
+{anti_text}"""
 
     if evaluator_feedback:
         feedback_text = "\n".join(f"- {issue}" for issue in evaluator_feedback)
