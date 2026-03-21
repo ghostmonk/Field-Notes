@@ -120,9 +120,18 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     };
 
     const formatHtml = (html: string): string => {
-        return html
-            .replace(/(>)(<)/g, '$1\n$2')
-            .replace(/\n\n+/g, '\n');
+        const parts: string[] = [];
+        const preRegex = /(<pre[\s>][\s\S]*?<\/pre>)/gi;
+        let lastIndex = 0;
+        let match;
+        while ((match = preRegex.exec(html)) !== null) {
+            const before = html.slice(lastIndex, match.index);
+            parts.push(before.replace(/(>)(<)/g, '$1\n$2'));
+            parts.push(match[1]);
+            lastIndex = match.index + match[0].length;
+        }
+        parts.push(html.slice(lastIndex).replace(/(>)(<)/g, '$1\n$2'));
+        return parts.join('').replace(/\n\n+/g, '\n');
     };
 
     const toggleHtmlMode = useCallback(() => {
@@ -134,7 +143,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
             setHtmlSource(formatHtml(editor.getHTML()));
             setIsHtmlMode(true);
         }
-    }, [editor, isHtmlMode, htmlSource, onChange]);
+    }, [editor, isHtmlMode, htmlSource]);
 
     // Sync content from props (skip in HTML mode to avoid fighting the textarea)
     useEffect(() => {
