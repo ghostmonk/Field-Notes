@@ -4,6 +4,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+from services import job_analyzer
 from services.job_analyzer import analyze_job_description
 
 
@@ -42,8 +43,6 @@ class TestJobAnalyzer:
 
     def test_raises_without_api_key(self):
         """Test that missing ANTHROPIC_API_KEY raises ValueError."""
-        from services import job_analyzer
-
         job_analyzer._client = None
 
         with patch.dict("os.environ", {}, clear=True):

@@ -1,7 +1,5 @@
 # Resume Tailoring Phase 2: LLM Pipeline Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Build the 4-step LLM tailoring pipeline (Analyze → Retrieve → Generate → Evaluate) that takes a job description and produces a tailored resume using Claude API, with a single POST endpoint.
 
 **Architecture:** Three Anthropic API calls (Haiku for analysis + evaluation, Sonnet for generation) orchestrated by a pipeline service. The retrieval step uses the existing Voyage AI embedding + Qdrant vector search from Phase 1. The pipeline reads the user's current resume from MongoDB as structural scaffolding, retrieves relevant content chunks from Qdrant, and assembles a tailored resume JSON. A retry loop re-generates if evaluation score is below threshold.

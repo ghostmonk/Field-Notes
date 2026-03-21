@@ -74,6 +74,9 @@ Evaluate this resume against the job requirements."""
         ],
     )
 
+    if not response.content:
+        raise ValueError("Empty response from evaluation model")
+
     raw_text = response.content[0].text.strip()
 
     if raw_text.startswith("```"):

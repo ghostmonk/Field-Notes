@@ -62,8 +62,11 @@ async def run_tailoring_pipeline(
     evaluator_feedback = None
     best_result = None
     best_score = -1.0
+    total_attempts = 0
 
     for attempt in range(1 + MAX_RETRIES):
+        total_attempts = attempt + 1
+
         tailored = await asyncio.to_thread(
             generate_tailored_resume,
             resume=resume,
@@ -83,16 +86,13 @@ async def run_tailoring_pipeline(
         except (TypeError, ValueError):
             score = 0.0
 
-        current_result = {
-            "analysis": analysis,
-            "tailored_resume": tailored,
-            "evaluation": evaluation,
-            "attempts": attempt + 1,
-        }
-
         if score > best_score:
             best_score = score
-            best_result = current_result
+            best_result = {
+                "analysis": analysis,
+                "tailored_resume": tailored,
+                "evaluation": evaluation,
+            }
 
         if score >= SCORE_THRESHOLD:
             break
@@ -104,4 +104,5 @@ async def run_tailoring_pipeline(
                 "Improve keyword coverage and relevance ranking."
             ]
 
+    best_result["attempts"] = total_attempts
     return best_result

@@ -60,6 +60,9 @@ def analyze_job_description(job_description: str) -> Dict[str, Any]:
         ],
     )
 
+    if not response.content:
+        raise ValueError("Empty response from job analysis model")
+
     raw_text = response.content[0].text.strip()
 
     # Strip markdown fences if present

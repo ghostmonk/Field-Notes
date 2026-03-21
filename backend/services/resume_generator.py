@@ -96,6 +96,9 @@ IMPORTANT — Previous evaluation found these issues. Fix them:
         ],
     )
 
+    if not response.content:
+        raise ValueError("Empty response from resume generation model")
+
     raw_text = response.content[0].text.strip()
 
     if raw_text.startswith("```"):
