@@ -404,3 +404,21 @@ export interface TailorResult {
   evaluation: TailorEvaluation;
   attempts: number;
 }
+
+export type FeedbackType = 'approved' | 'rejected' | 'edited' | 'flagged';
+
+export interface VoiceFeedbackCreate {
+  original_text: string;
+  final_text?: string;
+  feedback_type: FeedbackType;
+  job_context: string;
+  note?: string;
+  section_type?: string;
+}
+
+export interface VoiceFeedbackResponse extends VoiceFeedbackCreate {
+  id: string;
+  user_id: string;
+  qdrant_id?: string;
+  created_at: string;
+}

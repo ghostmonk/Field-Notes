@@ -33,6 +33,8 @@ import {
   UpdateResumeRequest,
   TailorRequest,
   TailorResult,
+  VoiceFeedbackCreate,
+  VoiceFeedbackResponse,
 } from '@/shared/types/api';
 import { ApiRequestError } from '@/shared/types/error';
 
@@ -209,6 +211,9 @@ const apiRoutes = {
   },
   tailor: {
     run: () => '/api/tailor',
+  },
+  voiceFeedback: {
+    base: () => '/api/voice/feedback',
   },
 };
 
@@ -513,6 +518,24 @@ const apiClient = {
         method: 'POST',
         body: data,
         token,
+      }),
+  },
+
+  voiceFeedback: {
+    submit: (data: VoiceFeedbackCreate, token: string) =>
+      fetchApi<VoiceFeedbackResponse, VoiceFeedbackCreate>(
+        apiRoutes.voiceFeedback.base(),
+        {
+          method: 'POST',
+          body: data,
+          token,
+        }
+      ),
+
+    list: (token: string, feedbackType?: string) =>
+      fetchApi<VoiceFeedbackResponse[]>(apiRoutes.voiceFeedback.base(), {
+        token,
+        params: feedbackType ? { feedback_type: feedbackType } : undefined,
       }),
   },
 };
