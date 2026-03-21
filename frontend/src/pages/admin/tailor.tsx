@@ -48,6 +48,8 @@ export default function AdminTailorPage() {
     setFeedbackState('idle');
     setFlagNote('');
     setSaveState('idle');
+    setSaveCompany('');
+    setSaveTitle('');
 
     try {
       const data = await apiClient.tailor.run(

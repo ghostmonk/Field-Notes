@@ -1,7 +1,7 @@
 """API handler for job application tracking."""
 
 from datetime import datetime, timezone
-from typing import Optional
+from typing import List, Literal, Optional
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -68,12 +68,14 @@ async def create_application(
     return _doc_to_response(doc)
 
 
-@router.get("")
+@router.get("", response_model=List[JobApplicationResponse])
 @limiter.limit("30/minute")
 @requires_auth
 async def list_applications(
     request: Request,
-    status: Optional[str] = Query(None),
+    status: Optional[Literal["saved", "applied", "interviewing", "offered", "rejected"]] = Query(
+        None
+    ),
     collection: AsyncIOMotorCollection = Depends(get_job_applications_collection),
 ):
     """List job applications for the authenticated user."""
@@ -108,7 +110,7 @@ async def update_application(
     except InvalidId:
         raise HTTPException(status_code=422, detail="Invalid application ID")
 
-    update_data = {k: v for k, v in body.model_dump().items() if v is not None}
+    update_data = body.model_dump(exclude_unset=True)
     if not update_data:
         raise HTTPException(status_code=422, detail="No fields to update")
 
