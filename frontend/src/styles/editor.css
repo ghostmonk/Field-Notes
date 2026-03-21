@@ -354,8 +354,8 @@
   padding: var(--space-lg);
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-lg);
-  background-color: #1e293b;
-  color: #e2e8f0;
+  background-color: var(--color-code-bg);
+  color: var(--color-code-text);
   resize: vertical;
   tab-size: 2;
   -moz-tab-size: 2;
@@ -373,5 +373,4 @@
 .editor-toolbar__btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-  pointer-events: none;
 }

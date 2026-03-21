@@ -740,7 +740,7 @@ html.dark {
 
 /* Drop cap on first paragraph of story content */
 .prose > p:first-of-type::first-letter,
-.prose--card > p:first-of-type::first-letter {
+.prose--card:not(.story-content--truncated) > p:first-of-type::first-letter {
   float: left;
   font-family: var(--font-family-serif);
   font-size: 3.5em;
