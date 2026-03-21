@@ -141,13 +141,26 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
         if (isHtmlMode) {
             isTransitioningRef.current = true;
             editor.commands.setContent(htmlSource);
-            isTransitioningRef.current = false;
             setIsHtmlMode(false);
         } else {
             setHtmlSource(formatHtml(editor.getHTML()));
             setIsHtmlMode(true);
         }
     }, [editor, isHtmlMode, htmlSource]);
+
+    // Clear transition guard after isHtmlMode state settles
+    useEffect(() => {
+        if (!isHtmlMode && isTransitioningRef.current) {
+            isTransitioningRef.current = false;
+        }
+    }, [isHtmlMode]);
+
+    // Clean up debounce timer on unmount
+    useEffect(() => {
+        return () => {
+            if (htmlDebounceRef.current) clearTimeout(htmlDebounceRef.current);
+        };
+    }, []);
 
     // Sync content from props (skip in HTML mode and during transitions)
     useEffect(() => {
