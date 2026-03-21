@@ -26,6 +26,8 @@ export default function AdminTailorPage() {
   const [feedbackState, setFeedbackState] = useState<FeedbackState>('idle');
   const [flagNote, setFlagNote] = useState('');
   const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [saveCompany, setSaveCompany] = useState('');
+  const [saveTitle, setSaveTitle] = useState('');
 
   useEffect(() => {
     if (status !== 'loading' && (!session || session.user?.role !== 'admin')) {
@@ -61,15 +63,13 @@ export default function AdminTailorPage() {
   };
 
   const handleSaveApplication = async () => {
-    if (!result || !session.accessToken || !jobDescription.trim()) return;
+    if (!result || !session?.accessToken || !saveCompany.trim() || !saveTitle.trim()) return;
     setSaveState('saving');
     try {
-      const company =
-        result.analysis.culture_signals?.split(',')[0]?.trim() || 'Unknown';
       await apiClient.applications.create(
         {
-          company,
-          job_title: `${result.analysis.seniority} ${result.analysis.domain}`,
+          company: saveCompany.trim(),
+          job_title: saveTitle.trim(),
           job_description: jobDescription,
           tailored_resume: result.tailored_resume,
           evaluation_score: result.evaluation,
@@ -114,7 +114,7 @@ export default function AdminTailorPage() {
         </div>
 
         {activeTab === 'applications' && (
-          <ApplicationsTab token={session.accessToken!} />
+          <ApplicationsTab token={session.accessToken || ''} />
         )}
 
         {activeTab === 'tailor' && (<>
@@ -190,35 +190,70 @@ export default function AdminTailorPage() {
             <div className="flex gap-3">
               <FeedbackBar
                 result={result}
-                token={session.accessToken!}
+                token={session.accessToken || ''}
                 feedbackState={feedbackState}
                 setFeedbackState={setFeedbackState}
                 flagNote={flagNote}
                 setFlagNote={setFlagNote}
               />
-              <button
-                onClick={handleSaveApplication}
-                disabled={saveState === 'saving' || saveState === 'saved'}
-                className="px-4 py-2 rounded text-sm font-medium whitespace-nowrap self-start"
-                style={{
-                  backgroundColor:
-                    saveState === 'saved'
-                      ? 'rgba(34, 197, 94, 0.15)'
-                      : 'var(--color-accent)',
-                  color: saveState === 'saved' ? '#22c55e' : 'var(--color-bg-primary)',
-                  border:
-                    saveState === 'saved'
-                      ? '1px solid rgba(34, 197, 94, 0.3)'
-                      : 'none',
-                  opacity: saveState === 'saving' ? 0.5 : 1,
-                }}
-              >
-                {saveState === 'saved'
-                  ? 'Saved'
-                  : saveState === 'saving'
-                    ? 'Saving...'
-                    : 'Save Application'}
-              </button>
+              <div className="flex items-center gap-2 self-start">
+                <input
+                  type="text"
+                  value={saveCompany}
+                  onChange={(e) => setSaveCompany(e.target.value)}
+                  placeholder="Company"
+                  className="rounded px-2 py-1 text-sm w-32"
+                  style={{
+                    backgroundColor: 'var(--color-bg-primary)',
+                    color: 'var(--color-text-primary)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                />
+                <input
+                  type="text"
+                  value={saveTitle}
+                  onChange={(e) => setSaveTitle(e.target.value)}
+                  placeholder="Job title"
+                  className="rounded px-2 py-1 text-sm w-40"
+                  style={{
+                    backgroundColor: 'var(--color-bg-primary)',
+                    color: 'var(--color-text-primary)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                />
+                <button
+                  onClick={handleSaveApplication}
+                  disabled={
+                    saveState === 'saving' ||
+                    saveState === 'saved' ||
+                    !saveCompany.trim() ||
+                    !saveTitle.trim()
+                  }
+                  className="px-3 py-1 rounded text-sm font-medium whitespace-nowrap"
+                  style={{
+                    backgroundColor:
+                      saveState === 'saved'
+                        ? 'rgba(34, 197, 94, 0.15)'
+                        : 'var(--color-accent)',
+                    color:
+                      saveState === 'saved' ? '#22c55e' : 'var(--color-bg-primary)',
+                    border:
+                      saveState === 'saved'
+                        ? '1px solid rgba(34, 197, 94, 0.3)'
+                        : 'none',
+                    opacity:
+                      saveState === 'saving' || !saveCompany.trim() || !saveTitle.trim()
+                        ? 0.5
+                        : 1,
+                  }}
+                >
+                  {saveState === 'saved'
+                    ? 'Saved'
+                    : saveState === 'saving'
+                      ? 'Saving...'
+                      : 'Save'}
+                </button>
+              </div>
             </div>
             <AnalysisCard analysis={result.analysis} />
             <ResumePreview resume={result.tailored_resume} />

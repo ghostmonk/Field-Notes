@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from bson import ObjectId
+from bson.errors import InvalidId
 from database import get_job_applications_collection
 from decorators.auth import requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -102,6 +103,11 @@ async def update_application(
     """Update a job application's status or notes."""
     user: UserInfo = request.state.user
 
+    try:
+        oid = ObjectId(application_id)
+    except InvalidId:
+        raise HTTPException(status_code=422, detail="Invalid application ID")
+
     update_data = {k: v for k, v in body.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=422, detail="No fields to update")
@@ -109,7 +115,7 @@ async def update_application(
     update_data["updated_at"] = datetime.now(timezone.utc)
 
     result = await collection.find_one_and_update(
-        {"_id": ObjectId(application_id), "user_id": user.id},
+        {"_id": oid, "user_id": user.id},
         {"$set": update_data},
         return_document=True,
     )
@@ -131,7 +137,12 @@ async def delete_application(
     """Delete a job application."""
     user: UserInfo = request.state.user
 
-    result = await collection.delete_one({"_id": ObjectId(application_id), "user_id": user.id})
+    try:
+        oid = ObjectId(application_id)
+    except InvalidId:
+        raise HTTPException(status_code=422, detail="Invalid application ID")
+
+    result = await collection.delete_one({"_id": oid, "user_id": user.id})
 
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Application not found")
