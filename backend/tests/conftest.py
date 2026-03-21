@@ -29,6 +29,7 @@ from database import (
     get_resumes_collection,
     get_sections_collection,
     get_users_collection,
+    get_voice_feedback_collection,
 )
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -48,6 +49,7 @@ from handlers.tailor import router as tailor_router
 from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
 from handlers.video_processing import router as video_processing_router
+from handlers.voice_feedback import router as voice_feedback_router
 from httpx import ASGITransport, AsyncClient
 from middleware.rate_limit import limiter
 from slowapi import _rate_limit_exceeded_handler
@@ -69,6 +71,7 @@ test_app.include_router(photo_essays_router)
 test_app.include_router(resume_router)
 test_app.include_router(content_router)
 test_app.include_router(tailor_router)
+test_app.include_router(voice_feedback_router)
 
 
 @pytest.fixture
@@ -713,14 +716,22 @@ def mock_resumes_collection():
 
 @pytest.fixture
 def override_resumes_database(mock_resumes_collection):
-    """Override the resumes collection to use mocks"""
+    """Override the resumes and voice_feedback collections to use mocks"""
+    mock_voice_feedback = mongomock_motor.AsyncMongoMockClient().test_db.voice_feedback
 
     async def get_mock_resumes_collection():
         return mock_resumes_collection
 
+    async def get_mock_voice_feedback_collection():
+        return mock_voice_feedback
+
     test_app.dependency_overrides[get_resumes_collection] = get_mock_resumes_collection
+    test_app.dependency_overrides[get_voice_feedback_collection] = (
+        get_mock_voice_feedback_collection
+    )
     yield mock_resumes_collection
     test_app.dependency_overrides.pop(get_resumes_collection, None)
+    test_app.dependency_overrides.pop(get_voice_feedback_collection, None)
 
 
 @pytest_asyncio.fixture

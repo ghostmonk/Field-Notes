@@ -59,8 +59,26 @@ async def run_tailoring_pipeline(
         user_id_filter=user_id,
     )
 
+    # Retrieve voice feedback examples (approved/rejected) for this user
+    voice_results = await asyncio.to_thread(
+        search,
+        query_vector=query_embedding,
+        limit=10,
+        source_filter="voice_feedback",
+        user_id_filter=user_id,
+    )
+
     chunks = [
         {"text": (r.get("payload") or {}).get("text", ""), "score": r["score"]} for r in raw_results
+    ]
+
+    voice_examples = [
+        {
+            "text": (r.get("payload") or {}).get("text", ""),
+            "chunk_type": (r.get("payload") or {}).get("chunk_type", ""),
+            "score": r["score"],
+        }
+        for r in voice_results
     ]
 
     # Step 3 + 4: Generate and Evaluate with retry loop
@@ -79,6 +97,7 @@ async def run_tailoring_pipeline(
                 analysis=analysis,
                 chunks=chunks,
                 evaluator_feedback=evaluator_feedback,
+                voice_examples=voice_examples if voice_examples else None,
             )
 
             evaluation = await asyncio.to_thread(

@@ -3,9 +3,10 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { apiClient } from '@/shared/lib/api-client';
-import { TailorResult } from '@/shared/types/api';
+import { TailorResult, FeedbackType } from '@/shared/types/api';
 
 type PipelineStep = 'idle' | 'running' | 'done' | 'error';
+type FeedbackState = 'idle' | 'submitting' | 'submitted' | 'error';
 
 export default function AdminTailorPage() {
   const { data: session, status } = useSession();
@@ -14,6 +15,8 @@ export default function AdminTailorPage() {
   const [result, setResult] = useState<TailorResult | null>(null);
   const [step, setStep] = useState<PipelineStep>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [feedbackState, setFeedbackState] = useState<FeedbackState>('idle');
+  const [flagNote, setFlagNote] = useState('');
 
   useEffect(() => {
     if (status !== 'loading' && (!session || session.user?.role !== 'admin')) {
@@ -31,6 +34,8 @@ export default function AdminTailorPage() {
     setStep('running');
     setError(null);
     setResult(null);
+    setFeedbackState('idle');
+    setFlagNote('');
 
     try {
       const data = await apiClient.tailor.run(
@@ -122,6 +127,14 @@ export default function AdminTailorPage() {
         {result && (
           <div className="space-y-6">
             <ScoreCard evaluation={result.evaluation} attempts={result.attempts} />
+            <FeedbackBar
+              result={result}
+              token={session.accessToken!}
+              feedbackState={feedbackState}
+              setFeedbackState={setFeedbackState}
+              flagNote={flagNote}
+              setFlagNote={setFlagNote}
+            />
             <AnalysisCard analysis={result.analysis} />
             <ResumePreview resume={result.tailored_resume} />
           </div>
@@ -337,6 +350,159 @@ function ResumePreview({
               {edu.institution}
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FeedbackBar({
+  result,
+  token,
+  feedbackState,
+  setFeedbackState,
+  flagNote,
+  setFlagNote,
+}: {
+  result: TailorResult;
+  token: string;
+  feedbackState: FeedbackState;
+  setFeedbackState: (s: FeedbackState) => void;
+  flagNote: string;
+  setFlagNote: (s: string) => void;
+}) {
+  const [showFlagInput, setShowFlagInput] = useState(false);
+
+  const jobContext = `${result.analysis.seniority}_${result.analysis.domain}`;
+
+  const resumeToText = (r: TailorResult['tailored_resume']): string => {
+    const parts: string[] = [];
+    if (r.summary) parts.push(r.summary);
+    r.work_experience?.forEach((job) => {
+      parts.push(`${job.title} at ${job.company}`);
+      if (job.description) parts.push(job.description);
+    });
+    if (r.skills?.length) parts.push(`Skills: ${r.skills.join(', ')}`);
+    return parts.join('\n\n');
+  };
+
+  const submitFeedback = async (type: FeedbackType, note?: string) => {
+    setFeedbackState('submitting');
+    try {
+      await apiClient.voiceFeedback.submit(
+        {
+          original_text: resumeToText(result.tailored_resume),
+          feedback_type: type,
+          job_context: jobContext,
+          note: note || undefined,
+        },
+        token
+      );
+      setFeedbackState('submitted');
+      setShowFlagInput(false);
+    } catch {
+      setFeedbackState('error');
+    }
+  };
+
+  if (feedbackState === 'submitted') {
+    return (
+      <div
+        className="rounded-md p-3 text-center text-sm"
+        style={{
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          border: '1px solid rgba(34, 197, 94, 0.3)',
+          color: '#22c55e',
+        }}
+      >
+        Feedback recorded
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="rounded-md p-4"
+      style={{
+        backgroundColor: 'var(--color-bg-secondary)',
+        border: '1px solid var(--color-border)',
+      }}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className="text-sm font-medium"
+          style={{ color: 'var(--color-text-secondary)' }}
+        >
+          Rate this output:
+        </span>
+        <button
+          onClick={() => submitFeedback('approved')}
+          disabled={feedbackState === 'submitting'}
+          className="px-3 py-1 rounded text-sm"
+          style={{
+            backgroundColor: 'rgba(34, 197, 94, 0.15)',
+            color: '#22c55e',
+            border: '1px solid rgba(34, 197, 94, 0.3)',
+          }}
+        >
+          Approve
+        </button>
+        <button
+          onClick={() => submitFeedback('rejected')}
+          disabled={feedbackState === 'submitting'}
+          className="px-3 py-1 rounded text-sm"
+          style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+            color: '#ef4444',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+          }}
+        >
+          Reject
+        </button>
+        <button
+          onClick={() => setShowFlagInput(!showFlagInput)}
+          disabled={feedbackState === 'submitting'}
+          className="px-3 py-1 rounded text-sm"
+          style={{
+            backgroundColor: 'rgba(234, 179, 8, 0.15)',
+            color: '#eab308',
+            border: '1px solid rgba(234, 179, 8, 0.3)',
+          }}
+        >
+          Flag
+        </button>
+        {feedbackState === 'error' && (
+          <span className="text-sm" style={{ color: '#ef4444' }}>
+            Failed to submit
+          </span>
+        )}
+      </div>
+      {showFlagInput && (
+        <div className="mt-3 flex gap-2">
+          <input
+            type="text"
+            value={flagNote}
+            onChange={(e) => setFlagNote(e.target.value)}
+            placeholder="What's wrong with this output?"
+            className="flex-1 rounded px-3 py-1 text-sm"
+            style={{
+              backgroundColor: 'var(--color-bg-primary)',
+              color: 'var(--color-text-primary)',
+              border: '1px solid var(--color-border)',
+            }}
+          />
+          <button
+            onClick={() => submitFeedback('flagged', flagNote)}
+            disabled={!flagNote.trim() || feedbackState === 'submitting'}
+            className="px-3 py-1 rounded text-sm"
+            style={{
+              backgroundColor: 'var(--color-accent)',
+              color: 'var(--color-bg-primary)',
+              opacity: !flagNote.trim() ? 0.5 : 1,
+            }}
+          >
+            Submit
+          </button>
         </div>
       )}
     </div>
