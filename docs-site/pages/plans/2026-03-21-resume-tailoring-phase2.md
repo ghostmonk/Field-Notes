@@ -1430,3 +1430,19 @@ git add -A && git commit -m "chore: format"
 ```
 
 (Skip if format made no changes.)
+
+---
+
+## Future Direction: Vector Memory and the Ghostmonk AI
+
+The vector store is not resume-specific. It's the memory layer for a larger system. The `source` field on every chunk already supports multiple content types — resume, blog, conversation, and whatever comes next. The same chunking -> embedding -> Qdrant pipeline serves all of them.
+
+The work compounds across three layers:
+
+**Phase 3: Vector Memory Visibility** — Admin UI to browse, search, and manage what's stored in Qdrant. Chunk inspection (text, type, source, metadata), search preview with scores, stats dashboard, and selective CRUD. Source-agnostic from day one. This is the foundation for everything below — you can't train what you can't see.
+
+**Phase 4: Conversational Ghost** — An LLM avatar on ghostmonk.com that talks to visitors using vector memory as context. RAG pipeline: visitor question -> retrieve relevant chunks -> generate response in Nicholas's voice. Personality calibrated through curated content and tone.
+
+**Phase 5: Authenticated Agent** — When the system confirms Nicholas is logged in, the ghost gains elevated capabilities. Site management, content operations, acting on his behalf. The conversational interface becomes an operational tool, not just a visitor-facing feature.
+
+Each phase builds on the previous. No separate streams — one continuous evolution.
