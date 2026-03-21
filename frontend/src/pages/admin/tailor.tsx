@@ -269,45 +269,12 @@ export default function AdminTailorPage() {
               }}
             >
               <DownloadButtons resume={result.tailored_resume} />
-              <button
-                onClick={async () => {
-                  if (!session?.accessToken) return;
-                  setDefaultState('saving');
-                  try {
-                    const { contact, summary, work_experience, education, skills, achievements } =
-                      result.tailored_resume;
-                    await apiClient.resume.update(
-                      { contact, summary, work_experience, education, skills, achievements } as UpdateResumeRequest,
-                      session.accessToken
-                    );
-                    setDefaultState('saved');
-                  } catch {
-                    setDefaultState('error');
-                  }
-                }}
-                disabled={defaultState === 'saving' || defaultState === 'saved'}
-                className="px-3 py-1 rounded text-sm font-medium"
-                style={{
-                  backgroundColor:
-                    defaultState === 'saved'
-                      ? 'rgba(34, 197, 94, 0.15)'
-                      : 'var(--color-bg-tertiary)',
-                  color: defaultState === 'saved' ? '#22c55e' : 'var(--color-text-primary)',
-                  border: defaultState === 'saved'
-                    ? '1px solid rgba(34, 197, 94, 0.3)'
-                    : '1px solid var(--color-border)',
-                  opacity: defaultState === 'saving' ? 0.5 : 1,
-                }}
-              >
-                {defaultState === 'saved'
-                  ? 'Set as Default'
-                  : defaultState === 'saving'
-                    ? 'Saving...'
-                    : 'Set as Default Resume'}
-              </button>
-              {defaultState === 'error' && (
-                <span className="text-sm" style={{ color: '#ef4444' }}>Failed</span>
-              )}
+              <SetAsDefaultButton
+                tailoredResume={result.tailored_resume}
+                token={session?.accessToken || ''}
+                state={defaultState}
+                setState={setDefaultState}
+              />
             </div>
             <AnalysisCard analysis={result.analysis} />
             <ResumePreview resume={result.tailored_resume} />
@@ -824,12 +791,110 @@ function ApplicationsTab({ token }: { token: string }) {
           </div>
           {expandedId === app.id && (
             <div className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+              <ScoreCard
+                evaluation={app.evaluation_score}
+                attempts={1}
+              />
               <DownloadButtons resume={app.tailored_resume} />
               <ResumePreview resume={app.tailored_resume} />
             </div>
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+function SetAsDefaultButton({
+  tailoredResume,
+  token,
+  state,
+  setState,
+}: {
+  tailoredResume: TailorResult['tailored_resume'];
+  token: string;
+  state: 'idle' | 'saving' | 'saved' | 'error';
+  setState: (s: 'idle' | 'saving' | 'saved' | 'error') => void;
+}) {
+  const [restoreState, setRestoreState] = useState<'idle' | 'restoring' | 'restored' | 'error'>(
+    'idle'
+  );
+
+  const handleSetDefault = async () => {
+    if (!token) return;
+    setState('saving');
+    try {
+      const { contact, summary, work_experience, education, skills, achievements } =
+        tailoredResume;
+      await apiClient.resume.setDefault(
+        { contact, summary, work_experience, education, skills, achievements } as UpdateResumeRequest,
+        token
+      );
+      setState('saved');
+    } catch {
+      setState('error');
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!token) return;
+    setRestoreState('restoring');
+    try {
+      await apiClient.resume.restoreOriginal(token);
+      setRestoreState('restored');
+      setState('idle');
+    } catch {
+      setRestoreState('error');
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={handleSetDefault}
+        disabled={state === 'saving' || state === 'saved'}
+        className="px-3 py-1 rounded text-sm font-medium"
+        style={{
+          backgroundColor:
+            state === 'saved' ? 'rgba(34, 197, 94, 0.15)' : 'var(--color-bg-tertiary)',
+          color: state === 'saved' ? '#22c55e' : 'var(--color-text-primary)',
+          border:
+            state === 'saved'
+              ? '1px solid rgba(34, 197, 94, 0.3)'
+              : '1px solid var(--color-border)',
+          opacity: state === 'saving' ? 0.5 : 1,
+        }}
+      >
+        {state === 'saved'
+          ? 'Default Updated'
+          : state === 'saving'
+            ? 'Saving...'
+            : 'Set as Default Resume'}
+      </button>
+      {state === 'saved' && restoreState !== 'restored' && (
+        <button
+          onClick={handleRestore}
+          disabled={restoreState === 'restoring'}
+          className="px-3 py-1 rounded text-sm"
+          style={{
+            color: 'var(--color-text-secondary)',
+            border: '1px solid var(--color-border)',
+            opacity: restoreState === 'restoring' ? 0.5 : 1,
+          }}
+        >
+          {restoreState === 'restoring' ? 'Restoring...' : 'Restore Original'}
+        </button>
+      )}
+      {restoreState === 'restored' && (
+        <span className="text-sm" style={{ color: '#22c55e' }}>
+          Original restored
+        </span>
+      )}
+      {(state === 'error' || restoreState === 'error') && (
+        <span className="text-sm" style={{ color: '#ef4444' }}>
+          Failed
+        </span>
+      )}
     </div>
   );
 }

@@ -292,6 +292,76 @@ async def update_resume(
         )
 
 
+@router.post("/resume/set-default", response_model=ResumeResponse)
+@limiter.limit("5/minute")
+@requires_auth
+async def set_default_resume(
+    request: Request,
+    resume: ResumeUpdate,
+    collection: AsyncIOMotorCollection = Depends(get_resumes_collection),
+):
+    """Set a tailored resume as default, preserving the original."""
+    user: UserInfo = request.state.user
+
+    current = await collection.find_one({"user_id": user.id, "deleted": {"$ne": True}})
+    if not current:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    # Save original only on first override — never overwrite a saved original
+    if "original_resume" not in current:
+        original = {k: v for k, v in current.items() if k not in RESUME_INTERNAL_FIELDS}
+        await collection.update_one(
+            {"_id": current["_id"]},
+            {"$set": {"original_resume": original}},
+        )
+
+    update_data = resume.model_dump(exclude_unset=True)
+    update_data["updatedDate"] = datetime.now(timezone.utc)
+
+    updated_doc = await collection.find_one_and_update(
+        {"_id": current["_id"]},
+        {"$set": update_data},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    index_data = {k: v for k, v in updated_doc.items() if k not in RESUME_INTERNAL_FIELDS}
+    schedule_background(_index_resume_background(index_data, user.id))
+
+    return mongo_to_pydantic(updated_doc, ResumeResponse)
+
+
+@router.post("/resume/restore-original", response_model=ResumeResponse)
+@limiter.limit("5/minute")
+@requires_auth
+async def restore_original_resume(
+    request: Request,
+    collection: AsyncIOMotorCollection = Depends(get_resumes_collection),
+):
+    """Restore the original canonical resume."""
+    user: UserInfo = request.state.user
+
+    current = await collection.find_one({"user_id": user.id, "deleted": {"$ne": True}})
+    if not current:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    original = current.get("original_resume")
+    if not original:
+        raise HTTPException(status_code=404, detail="No original resume saved")
+
+    original["updatedDate"] = datetime.now(timezone.utc)
+
+    updated_doc = await collection.find_one_and_update(
+        {"_id": current["_id"]},
+        {"$set": original, "$unset": {"original_resume": ""}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    index_data = {k: v for k, v in updated_doc.items() if k not in RESUME_INTERNAL_FIELDS}
+    schedule_background(_index_resume_background(index_data, user.id))
+
+    return mongo_to_pydantic(updated_doc, ResumeResponse)
+
+
 @router.delete("/resume", status_code=204)
 @limiter.limit("5/minute")
 @requires_auth

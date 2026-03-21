@@ -211,6 +211,8 @@ const apiRoutes = {
   resume: {
     base: () => '/api/resume',
     public: () => '/api/resume/public',
+    setDefault: () => '/api/resume/set-default',
+    restoreOriginal: () => '/api/resume/restore-original',
   },
   tailor: {
     run: () => '/api/tailor',
@@ -515,6 +517,19 @@ const apiClient = {
     delete: (token: string) =>
       fetchApi<void>(apiRoutes.resume.base(), {
         method: 'DELETE',
+        token,
+      }),
+
+    setDefault: (data: UpdateResumeRequest, token: string) =>
+      fetchApi<Resume, UpdateResumeRequest>(apiRoutes.resume.setDefault(), {
+        method: 'POST',
+        body: data,
+        token,
+      }),
+
+    restoreOriginal: (token: string) =>
+      fetchApi<Resume>(apiRoutes.resume.restoreOriginal(), {
+        method: 'POST',
         token,
       }),
   },
