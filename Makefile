@@ -4,6 +4,7 @@
 FRONTEND_PORT ?= 3000
 BACKEND_PORT ?= 5001
 MONGO_PORT ?= 27017
+QDRANT_PORT ?= 6333
 
 # Load .env.local overrides if present
 ifneq (,$(wildcard .env.local))
@@ -11,9 +12,10 @@ ifneq (,$(wildcard .env.local))
   FRONTEND_PORT := $(or $(shell grep '^FRONTEND_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(FRONTEND_PORT))
   BACKEND_PORT := $(or $(shell grep '^BACKEND_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(BACKEND_PORT))
   MONGO_PORT := $(or $(shell grep '^MONGO_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(MONGO_PORT))
+  QDRANT_PORT := $(or $(shell grep '^QDRANT_PORT=' .env.local 2>/dev/null | cut -d= -f2),$(QDRANT_PORT))
 endif
 
-export FRONTEND_PORT BACKEND_PORT MONGO_PORT
+export FRONTEND_PORT BACKEND_PORT MONGO_PORT QDRANT_PORT
 
 # Virtual environment configuration
 VENV_DEFAULT := $(HOME)/Documents/venvs/field-notes
@@ -187,8 +189,8 @@ dev:
 	@echo "Starting development environment..."
 	@echo "Building containers..."
 	docker compose build
-	@echo "Starting MongoDB..."
-	docker compose up mongo -d
+	@echo "Starting MongoDB and Qdrant..."
+	docker compose up mongo qdrant -d
 	@echo "Running migrations..."
 	$(MAKE) migrate
 	@echo "Starting all services..."
@@ -197,13 +199,14 @@ dev:
 	@echo "Frontend: http://localhost:3000"
 	@echo "Backend:  http://localhost:5001"
 	@echo "MongoDB:  localhost:27017"
+	@echo "Qdrant:   localhost:6333"
 	@echo ""
 	@echo "Run 'make logs' to tail output, 'make down' to stop."
 
-# Development: Docker backend/mongo + local frontend (hot reload, no rebuild)
+# Development: Docker backend/mongo/qdrant + local frontend (hot reload, no rebuild)
 dev-local:
-	@echo "Starting backend and MongoDB in Docker..."
-	docker compose up mongo backend -d
+	@echo "Starting backend, MongoDB, and Qdrant in Docker..."
+	docker compose up mongo qdrant backend -d
 	@echo "Running migrations..."
 	$(MAKE) migrate
 	@echo "Starting local frontend with hot reload..."
@@ -211,6 +214,7 @@ dev-local:
 	@echo "Frontend: http://localhost:$(FRONTEND_PORT) (local, hot reload)"
 	@echo "Backend:  http://localhost:$(BACKEND_PORT) (Docker)"
 	@echo "MongoDB:  localhost:$(MONGO_PORT) (Docker)"
+	@echo "Qdrant:   localhost:6333 (Docker)"
 	@echo ""
 	$(MAKE) dev-frontend
 # 

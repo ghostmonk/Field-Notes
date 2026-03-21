@@ -92,6 +92,7 @@ Required environment variables in `.env`:
 - Local uploads (`LOCAL_STORAGE_PATH`) — development only, set instead of GCS vars
 - Google OAuth (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
 - NextAuth (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`)
+- Vector search (`VOYAGE_API_KEY`, `QDRANT_URL`, `QDRANT_API_KEY`) — required for resume tailoring; Qdrant runs locally via Docker, Voyage AI requires an API key
 
 Place `gcp-credentials.json` in project root (production only). Docker Compose sets `LOCAL_STORAGE_PATH=/app/local-uploads` automatically.
 
@@ -146,8 +147,9 @@ Assume all work happens in a worktree unless the user explicitly says to work on
   FRONTEND_PORT=3010
   BACKEND_PORT=5011
   MONGO_PORT=27027
+  QDRANT_PORT=6343
   ```
-  The Makefile and `docker-compose.yml` read these variables (defaults: 3000, 5001, 27017). Each worktree's Docker Compose project is already namespaced by directory name, so container names won't conflict — but host ports will unless offset.
+  The Makefile and `docker-compose.yml` read these variables (defaults: 3000, 5001, 27017, 6333). Each worktree's Docker Compose project is already namespaced by directory name, so container names won't conflict — but host ports will unless offset.
 - **Dev testing**: use `make dev-local` or `make dev` to start services — don't run commands manually
 - **Cleanup**: run `make down` in the worktree to stop all Docker containers before removing the worktree with `git worktree remove`
 
@@ -158,6 +160,10 @@ When squash-merging a PR via `gh pr merge --squash`, the `--body` becomes the co
 - Body: 3-8 bullet points covering what changed and why, no headers/sections/markdown formatting
 - No test plan, no checkboxes, no "Generated with" footers
 - The PR description (visible on GitHub) can be detailed; the commit message must be concise
+
+### Import Rules
+
+All imports must be at the top of the file. No local imports inside functions, methods, or conditional blocks. The only exception is `if __name__ == "__main__"` blocks. This applies to all Python files in the project.
 
 ### Formatting Rules
 

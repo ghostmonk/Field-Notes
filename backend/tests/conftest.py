@@ -35,6 +35,7 @@ from fastapi.testclient import TestClient
 
 # Create a test app without lifespan to avoid DB connections during startup
 # Import routers directly to avoid the lifespan event
+from handlers.content import router as content_router
 from handlers.engagement import router as engagement_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
@@ -65,6 +66,7 @@ test_app.include_router(navlinks_router)
 test_app.include_router(engagement_router)
 test_app.include_router(photo_essays_router)
 test_app.include_router(resume_router)
+test_app.include_router(content_router)
 
 
 @pytest.fixture

@@ -1,14 +1,16 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from database import ensure_indexes
+from database import close_db_connection, ensure_indexes, get_database
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from glogger import logger
 from handlers.backfill import backfill_published_flag
+from handlers.content import router as content_router
 from handlers.engagement import router as engagement_router
 from handlers.github import router as github_router
 from handlers.navlinks import router as navlinks_router
@@ -25,6 +27,7 @@ from handlers.versions import router as versions_router
 from handlers.video_processing import router as video_processing_router
 from middleware.logging_middleware import LoggingMiddleware
 from middleware.rate_limit import limiter
+from services.vector_store import ensure_collection
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -62,12 +65,20 @@ async def lifespan(app: FastAPI):
     # Ensure database indexes exist
     await ensure_indexes()
 
+    # Verify vector search dependencies at startup
+    if os.getenv("QDRANT_URL"):
+        if not os.getenv("VOYAGE_API_KEY"):
+            logger.error("QDRANT_URL is set but VOYAGE_API_KEY is missing — search will fail")
+        try:
+            await asyncio.to_thread(ensure_collection)
+            logger.info("Qdrant collection verified")
+        except Exception as e:
+            logger.error(f"Qdrant collection check failed: {e}")
+
     yield  # This is where the app runs
 
     # Cleanup database connections
     logger.info("Shutting down application")
-    from database import close_db_connection
-
     await close_db_connection()
 
 
@@ -204,9 +215,6 @@ async def health_check():
 async def warmup():
     """Warm-up endpoint that ensures database connection and caches are ready"""
     try:
-        # Test database connection
-        from database import get_database
-
         db = await get_database()
         # Quick database ping
         await db.command("ping")
@@ -237,6 +245,7 @@ app.include_router(engagement_router)
 app.include_router(search_router)
 app.include_router(versions_router)
 app.include_router(github_router)
+app.include_router(content_router)
 
 if __name__ == "__main__":
     import uvicorn

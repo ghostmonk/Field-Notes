@@ -15,12 +15,17 @@ services:
       - LOCAL_STORAGE_PATH=/app/local-uploads
       - GH_TOKEN=${GH_TOKEN:-}
       - GH_USERNAME=${GH_USERNAME:-}
+      - QDRANT_URL=http://qdrant:6333
+      - QDRANT_API_KEY=${QDRANT_API_KEY:-}
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY:-}
     volumes:
       - ./backend:/app
       - ./shared/python:/shared/python
       - ./local-uploads:/app/local-uploads
     depends_on:
       mongo:
+        condition: service_started
+      qdrant:
         condition: service_started
     # Overrides Dockerfile CMD — migrations must be run separately via `make migrate-up`
     command: uvicorn app:app --host 0.0.0.0 --port 5001 --reload
@@ -58,5 +63,13 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  qdrant:
+    image: qdrant/qdrant:v1.13.6
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
 volumes:
   mongo_data:
+  qdrant_data:
