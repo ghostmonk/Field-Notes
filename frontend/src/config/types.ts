@@ -23,6 +23,15 @@ export interface SiteConfig {
     username: string;
     url: string;
   };
+  socials?: {
+    github?: string;
+    linkedin?: string;
+    instagram?: string;
+    x?: string;
+    tiktok?: string;
+    youtube?: string;
+    spotify?: string;
+  };
   footer: {
     links: Array<{ label: string; href: string }>;
   };

@@ -22,7 +22,7 @@ test.describe('Smoke Tests', () => {
     await homePage.goto();
     await homePage.waitForLoad();
     await expect(homePage.nav.homeLink).toBeVisible();
-    await expect(homePage.nav.homeLink).toHaveText('Ghostmonk');
+    await expect(homePage.nav.homeLink.locator('svg')).toBeVisible();
   });
 
   test('home page displays stories list', async ({ mockApiPage }) => {

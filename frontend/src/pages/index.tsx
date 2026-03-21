@@ -29,7 +29,6 @@ const Home: React.FC<HomeProps> = ({ initialStories, storySectionSlug, error }) 
             <div style={{margin: '0 auto', maxWidth: '800px', padding: '0 1rem'}}>
                 {config.hero.showOnHome && (
                     <header className="hero">
-                        <h1 className="hero__title">{config.site.title}</h1>
                         <p className="hero__subtitle">{config.site.tagline}</p>
                     </header>
                 )}

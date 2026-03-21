@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { getSiteConfig } from "@/config";
 import HamburgerMenu from "./HamburgerMenu";
-
-const config = getSiteConfig();
+import GhostmonkLogo from "@/components/GhostmonkLogo";
 
 export default function TopNav() {
     const { data: session } = useSession();
@@ -13,7 +11,7 @@ export default function TopNav() {
             <div className="nav__container">
                 <HamburgerMenu />
                 <Link href="/" data-testid="nav-home-link" className="nav__link--home">
-                    {config.site.title}
+                    <GhostmonkLogo height={42} />
                 </Link>
                 <div className="flex items-center">
                     {session ? (

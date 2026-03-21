@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaSun, FaMoon, FaDesktop } from "react-icons/fa";
+import { FaSun, FaMoon, FaDesktop } from "react-icons/fa6";
 
 type Theme = "light" | "dark" | "system";
 

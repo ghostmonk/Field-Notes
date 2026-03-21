@@ -19,6 +19,15 @@
     "username": "ghostmonk",
     "url": "https://github.com/ghostmonk"
   },
+  "socials": {
+    "github": "https://github.com/ghostmonk",
+    "linkedin": "https://www.linkedin.com/in/nicholas-h-0523292/",
+    "instagram": "https://www.instagram.com/ghostmonk/",
+    "x": "https://x.com/ghostmonk",
+    "tiktok": "https://www.tiktok.com/@ghostmonk",
+    "youtube": "https://www.youtube.com/@nicholashillier2878",
+    "spotify": "https://open.spotify.com/user/monasticphantom"
+  },
   "footer": {
     "links": [
       { "label": "Privacy", "href": "/privacy" },
