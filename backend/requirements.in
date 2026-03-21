@@ -17,3 +17,4 @@ pillow==12.1.1
 pymongo-migrate==1.0.0
 voyageai
 qdrant-client
+anthropic
