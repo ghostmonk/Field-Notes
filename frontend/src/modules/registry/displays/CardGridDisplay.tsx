@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { CardGridDisplayProps } from '../types';
-import { Grid } from '@/components/ui';
+import { Grid, Button } from '@/components/ui';
 
 const PAGE_SIZE = 12;
 
@@ -20,14 +20,14 @@ export function CardGridDisplay<T>({ items, renderItem }: CardGridDisplayProps<T
             </Grid>
             {hasMore && (
                 <div className="text-center py-6">
-                    <button
+                    <Button
                         type="button"
                         onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
-                        className="btn btn--secondary"
+                        variant="secondary"
                         data-testid="show-more-button"
                     >
                         Show More ({items.length - visibleCount} remaining)
-                    </button>
+                    </Button>
                 </div>
             )}
         </>

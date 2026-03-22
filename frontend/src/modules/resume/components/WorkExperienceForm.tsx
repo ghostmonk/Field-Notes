@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { WorkExperience } from '@/shared/types/api';
-import { Input } from '@/components/ui';
+import { Input, Textarea } from '@/components/ui';
 
 interface WorkExperienceFormProps {
   items: WorkExperience[];
@@ -169,7 +169,7 @@ export function WorkExperienceForm({
               </label>
             </div>
           </div>
-          <textarea
+          <Textarea
             value={item.description}
             onChange={(e) =>
               updateItem(index, 'description', e.target.value)

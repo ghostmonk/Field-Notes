@@ -7,7 +7,7 @@ import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 import { VersionHistory } from '@/modules/versions/components/VersionHistory';
-import { Button, Input, Checkbox, Badge, FormField } from '@/components/ui';
+import { Button, Input, Checkbox, Badge, FormField, Textarea } from '@/components/ui';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
 
@@ -98,11 +98,10 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
         </FormField>
 
         <FormField label="Summary">
-          <textarea
+          <Textarea
             id="summary"
             value={project.summary || ''}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setField('summary', e.target.value)}
-            className="textarea"
             placeholder="Brief project description"
             rows={3}
             disabled={isSaving}

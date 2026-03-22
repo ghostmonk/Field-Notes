@@ -1,3 +1,4 @@
+import { Textarea } from '@/components/ui';
 import { UseResumeEditorReturn } from '../hooks/useResumeEditor';
 import { ContactForm } from './ContactForm';
 import { WorkExperienceForm } from './WorkExperienceForm';
@@ -56,7 +57,7 @@ export function ResumeForm({ editor }: ResumeFormProps) {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-secondary)] mb-3">
           Summary
         </h2>
-        <textarea
+        <Textarea
           value={resume.summary || ''}
           onChange={(e) => setSummary(e.target.value)}
           rows={3}

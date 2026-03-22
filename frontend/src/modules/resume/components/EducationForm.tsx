@@ -1,5 +1,5 @@
 import { Education } from '@/shared/types/api';
-import { Input } from '@/components/ui';
+import { Input, Textarea } from '@/components/ui';
 
 interface EducationFormProps {
   items: Education[];
@@ -113,7 +113,7 @@ export function EducationForm({ items, onChange }: EducationFormProps) {
               className="text-xs w-24"
             />
           </div>
-          <textarea
+          <Textarea
             value={item.description || ''}
             onChange={(e) =>
               updateItem(index, 'description', e.target.value)

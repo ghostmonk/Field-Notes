@@ -6,7 +6,7 @@ import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
 import { estimateReadingTime } from '@/shared/utils/readingTime';
 import { Story } from '@/shared/types/api';
 import { engagementConfig } from '@/config/engagement.config';
-import { Card, Badge } from '@/components/ui';
+import { Card, Badge, Button } from '@/components/ui';
 import { LazyStoryContent } from './LazyStoryContent';
 
 // Pre-compiled regexes for splitLeadingImage
@@ -118,22 +118,24 @@ export const StoryCard = React.memo(({
                     )}
                     {canEdit && (
                         <div className="flex gap-2">
-                            <button
+                            <Button
                                 onClick={() => onEdit(story)}
-                                className="btn btn--primary btn--sm"
+                                variant="primary"
+                                size="sm"
                                 data-testid={`story-edit-${story.id}`}
                             >
                                 Edit
-                            </button>
+                            </Button>
                             {isDraft && (
-                                <button
+                                <Button
                                     onClick={() => onDelete(story)}
                                     disabled={deleteLoading}
-                                    className="btn btn--danger btn--sm"
+                                    variant="danger"
+                                    size="sm"
                                     data-testid={`story-delete-${story.id}`}
                                 >
                                     {deleteLoading ? 'Deleting...' : 'Delete'}
-                                </button>
+                                </Button>
                             )}
                         </div>
                     )}
@@ -168,8 +170,8 @@ export const StoryCard = React.memo(({
             {!isDraft ? (
                 <>
                     <StoryMediaPreview leadImage={leadImage} rest={rest} />
-                    <Link href={storyPath} className="block mt-4" data-testid={`story-content-link-${story.id}`}>
-                        <span className="btn btn--secondary btn--sm" data-testid={`story-read-more-${story.id}`}>
+                    <Link href={storyPath} className="btn btn--secondary btn--sm mt-4 inline-block" data-testid={`story-content-link-${story.id}`}>
+                        <span data-testid={`story-read-more-${story.id}`}>
                             Read full story →
                         </span>
                     </Link>

@@ -1,12 +1,6 @@
-import {
-  forwardRef,
-  ComponentPropsWithoutRef,
-  useCallback,
-  useRef,
-  useEffect,
-} from "react";
+import { forwardRef, ComponentPropsWithoutRef, useCallback, useRef, useEffect } from 'react';
 
-interface TextareaProps extends ComponentPropsWithoutRef<"textarea"> {
+interface TextareaProps extends ComponentPropsWithoutRef<'textarea'> {
   error?: boolean;
   autoResize?: boolean;
 }
@@ -15,14 +9,14 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ error, autoResize, className, onChange, ...props }, ref) => {
     const internalRef = useRef<HTMLTextAreaElement | null>(null);
 
-    const classes = ["textarea"];
-    if (error) classes.push("textarea--error");
+    const classes = ['textarea'];
+    if (error) classes.push('textarea--error');
     if (className) classes.push(className);
 
     const resize = useCallback(() => {
       const el = internalRef.current;
       if (el && autoResize) {
-        el.style.height = "auto";
+        el.style.height = 'auto';
         el.style.height = `${el.scrollHeight}px`;
       }
     }, [autoResize]);
@@ -43,10 +37,10 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       <textarea
         ref={(el) => {
           internalRef.current = el;
-          if (typeof ref === "function") ref(el);
+          if (typeof ref === 'function') ref(el);
           else if (ref) ref.current = el;
         }}
-        className={classes.join(" ")}
+        className={classes.join(' ')}
         onChange={handleChange}
         {...props}
       />
@@ -54,4 +48,4 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   }
 );
 
-Textarea.displayName = "Textarea";
+Textarea.displayName = 'Textarea';

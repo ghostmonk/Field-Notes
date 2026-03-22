@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, DragEvent, MouseEvent as Reac
 import { useRouter } from 'next/router';
 import apiClient from '@/shared/lib/api-client';
 import { resizeImageFile } from '@/shared/utils/uploadUtils';
+import { Button } from '@/components/ui';
 
 interface EditorPhoto {
   id: string;
@@ -294,15 +295,15 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
             />
             {' '}Publish
           </label>
-          <button
+          <Button
             type="button"
-            className="btn btn--primary"
+            variant="primary"
             onClick={handleSave}
             disabled={saving || uploading}
             data-testid="photo-essay-save-btn"
           >
             {saving ? 'Saving...' : 'Save'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -407,23 +408,25 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
                 )}
                 <div className="photo-essay-editor__thumbnail-actions">
                   {!photo.uploading && (
-                    <button
+                    <Button
                       type="button"
-                      className="btn btn--sm btn--secondary"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setCoverUrl(photo.url)}
                       data-testid={`photo-essay-set-cover-${index}`}
                     >
                       {isCover ? 'Cover' : 'Set cover'}
-                    </button>
+                    </Button>
                   )}
-                  <button
+                  <Button
                     type="button"
-                    className="btn btn--sm btn--danger"
+                    variant="danger"
+                    size="sm"
                     onClick={() => handleRemovePhoto(index)}
                     data-testid={`photo-essay-remove-${index}`}
                   >
                     Remove
-                  </button>
+                  </Button>
                 </div>
                 <input
                   className="photo-essay-editor__caption-input"
