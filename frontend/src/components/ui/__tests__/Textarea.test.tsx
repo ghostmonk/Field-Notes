@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
-import { Textarea } from "../Textarea";
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Textarea } from '../Textarea';
 
 describe("Textarea", () => {
   it("renders with default class", () => {

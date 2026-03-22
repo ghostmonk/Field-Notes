@@ -1,10 +1,8 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import { Input } from '../Input';
 
 describe('Input', () => {
-  afterEach(cleanup);
-
   it('renders with default class', () => {
     render(<Input data-testid="input" />);
     expect(screen.getByTestId('input').className).toContain('input');
