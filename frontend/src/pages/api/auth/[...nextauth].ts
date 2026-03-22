@@ -84,7 +84,7 @@ if (process.env.NODE_ENV === 'development') {
                 if (!devUser) return null;
 
                 const email = role === 'admin'
-                    ? (process.env.ADMIN_EMAIL || devUser.email)
+                    ? process.env.ADMIN_EMAIL!
                     : devUser.email;
 
                 return {

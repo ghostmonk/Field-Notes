@@ -1,7 +1,5 @@
 # Dev Auth Mock Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Allow local development without Google OAuth credentials by providing mock authentication with role selection (admin/commenter).
 
 **Architecture:** NextAuth Credentials provider (dev-only) presents a role picker on the sign-in page. It issues tokens prefixed `dev-mock-<role>`. The backend auth decorator recognizes this prefix when `ALLOW_DEV_AUTH=true` is set, skips Google API calls, but still runs the full middleware chain (header extraction, cache, user upsert, role assignment). Two layers prevent production execution: the env var gate and the frontend provider only loading in development.
