@@ -47,6 +47,35 @@ def _cache_user(token: str, user_info: UserInfo) -> None:
         _token_cache[token_hash] = user_info
 
 
+# Dev auth constants — only active when ALLOW_DEV_AUTH=true
+DEV_TOKEN_PREFIX = "dev-mock-"
+_DEV_USERS = {
+    "admin": {"email": "dev-admin@dev.example.com", "name": "Dev Admin"},
+    "commenter": {"email": "dev-commenter@dev.example.com", "name": "Dev Commenter"},
+}
+
+
+async def _handle_dev_token(token: str) -> UserInfo | None:
+    """Authenticate using a dev mock token. Returns None if not a dev token."""
+    if not token.startswith(DEV_TOKEN_PREFIX):
+        return None
+
+    if os.environ.get("ALLOW_DEV_AUTH") != "true":
+        raise HTTPException(status_code=401, detail="Dev auth is not enabled.")
+
+    role = token[len(DEV_TOKEN_PREFIX) :]
+    dev_user = _DEV_USERS.get(role)
+    if not dev_user:
+        raise HTTPException(status_code=401, detail=f"Unknown dev role: {role}")
+
+    return await get_or_create_user(
+        email=dev_user["email"],
+        name=dev_user["name"],
+        avatar_url=None,
+        provider_user_id=f"dev-{role}",
+    )
+
+
 async def get_or_create_user(
     email: str, name: str, avatar_url: str | None, provider_user_id: str
 ) -> UserInfo:
@@ -121,6 +150,12 @@ async def verify_auth_and_get_user(request: Request) -> UserInfo:
     cached_user = _get_cached_user(token)
     if cached_user:
         return cached_user
+
+    # Dev token bypass — only when ALLOW_DEV_AUTH=true
+    dev_user = await _handle_dev_token(token)
+    if dev_user:
+        _cache_user(token, dev_user)
+        return dev_user
 
     try:
         async with httpx.AsyncClient() as client:
