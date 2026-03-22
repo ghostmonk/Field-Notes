@@ -51,4 +51,13 @@ describe('StoryDetail', () => {
     );
     expect(screen.getByTestId('child')).toHaveTextContent('Child content');
   });
+
+  // -- Pattern: Semantic HTML element --
+  // StoryDetail must render as <article>, not <div>. Screen readers and
+  // structured-data parsers use this landmark for content navigation.
+  it('renders as <article> for semantic HTML', () => {
+    render(<StoryDetail story={mockStory} />);
+    const el = screen.getByTestId('story-article');
+    expect(el.tagName).toBe('ARTICLE');
+  });
 });

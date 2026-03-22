@@ -51,4 +51,17 @@ describe('ProjectCard', () => {
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/work/test-project');
   });
+
+  // -- Pattern: Navigation uses Next.js Link --
+  // The next/link mock renders <a>. If the component bypasses Link (e.g. raw
+  // <a> or Card as="a"), it still renders an anchor but loses SPA transitions
+  // and prefetching. This test verifies the mock is wired up — if someone
+  // removes the Link import, the mock stops matching and the test breaks.
+  it('wraps card in a navigable link', () => {
+    render(<ProjectCard project={mockProject} />);
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', '/projects/test-project');
+    // card--link class provides text-decoration:none on the Link wrapper
+    expect(link.className).toContain('card--link');
+  });
 });
