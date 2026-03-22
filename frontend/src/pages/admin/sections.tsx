@@ -10,6 +10,7 @@ import { useConfirm } from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
 import IconPicker from '@/components/IconPicker';
 import { SectionIcon, iconMap } from '@/shared/lib/navIcons';
+import { Button, Input, Select } from '@/components/ui';
 
 const CONTENT_TYPE_DISPLAYS: Record<SectionContentType, DisplayType[]> = {
   story: ['feed', 'card-grid'],
@@ -83,14 +84,13 @@ export default function AdminSectionsPage() {
     <div className="container mx-auto px-4 py-8" data-testid="admin-sections-page">
       <div className="flex justify-between items-center mb-6">
         <h1 className="section-title">Manage Sections</h1>
-        <button
-          type="button"
+        <Button
+          variant="primary"
           onClick={() => { setShowCreateForm(!showCreateForm); setEditingId(null); }}
-          className="btn btn--primary"
           data-testid="create-section-button"
         >
           {showCreateForm ? 'Cancel' : 'New Section'}
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -170,12 +170,12 @@ function SectionCreateForm({
     <form onSubmit={handleSubmit} className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-3" data-testid="section-create-form">
       <div>
         <label htmlFor="new-section-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-        <input
+        <Input
           id="new-section-title"
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
+          className="mt-1 w-full"
           required
           disabled={disabled}
           data-testid="section-title-input"
@@ -184,29 +184,29 @@ function SectionCreateForm({
       <div className={`grid grid-cols-1 gap-3 ${validDisplayTypes.length > 1 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         <div>
           <label htmlFor="new-section-content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Content Type</label>
-          <select id="new-section-content" value={contentType} onChange={e => handleContentTypeChange(e.target.value as SectionContentType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled} data-testid="section-content-type-select">
+          <Select id="new-section-content" value={contentType} onChange={e => handleContentTypeChange(e.target.value as SectionContentType)} className="mt-1 w-full" disabled={disabled} data-testid="section-content-type-select">
             {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
+          </Select>
         </div>
         {validDisplayTypes.length > 1 && (
           <div>
             <label htmlFor="new-section-display" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Type</label>
-            <select id="new-section-display" value={displayType} onChange={e => setDisplayType(e.target.value as DisplayType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled} data-testid="section-display-type-select">
+            <Select id="new-section-display" value={displayType} onChange={e => setDisplayType(e.target.value as DisplayType)} className="mt-1 w-full" disabled={disabled} data-testid="section-display-type-select">
               {validDisplayTypes.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+            </Select>
           </div>
         )}
         <div>
           <label htmlFor="new-section-nav" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nav Visibility</label>
-          <select id="new-section-nav" value={navVisibility} onChange={e => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled} data-testid="section-nav-visibility-select">
+          <Select id="new-section-nav" value={navVisibility} onChange={e => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 w-full" disabled={disabled} data-testid="section-nav-visibility-select">
             {NAV_VISIBILITIES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
+          </Select>
         </div>
       </div>
       <IconPicker value={icon} onChange={setIcon} disabled={disabled} />
-      <button type="submit" disabled={disabled} className="btn btn--primary" data-testid="section-create-submit">
+      <Button type="submit" variant="primary" disabled={disabled} data-testid="section-create-submit">
         Create Section
-      </button>
+      </Button>
     </form>
   );
 }
@@ -238,33 +238,33 @@ function SectionRow({
         <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.nav_visibility}</span>
       </div>
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="sm"
           onClick={onAddContent}
-          className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
           disabled={disabled}
           data-testid={`section-add-content-${section.id}`}
         >
           Add Content
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={onEdit}
-          className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
           disabled={disabled}
           data-testid={`section-edit-${section.id}`}
         >
           Edit
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="danger"
+          size="sm"
           onClick={onDelete}
-          className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
           disabled={disabled}
           data-testid={`section-delete-${section.id}`}
         >
           Delete
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -306,12 +306,12 @@ function SectionEditForm({
       <div className={`grid grid-cols-1 gap-3 ${validDisplayTypes.length > 1 ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
         <div>
           <label htmlFor={`edit-title-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-          <input
+          <Input
             id={`edit-title-${section.id}`}
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
+            className="mt-1 w-full"
             required
             disabled={disabled}
             data-testid={`section-edit-title-${section.id}`}
@@ -319,33 +319,33 @@ function SectionEditForm({
         </div>
         <div>
           <label htmlFor={`edit-content-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Content Type</label>
-          <select id={`edit-content-${section.id}`} value={contentType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleContentTypeChange(e.target.value as SectionContentType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
+          <Select id={`edit-content-${section.id}`} value={contentType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleContentTypeChange(e.target.value as SectionContentType)} className="mt-1 w-full" disabled={disabled}>
             {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
+          </Select>
         </div>
         {validDisplayTypes.length > 1 && (
           <div>
             <label htmlFor={`edit-display-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Type</label>
-            <select id={`edit-display-${section.id}`} value={displayType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setDisplayType(e.target.value as DisplayType)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
+            <Select id={`edit-display-${section.id}`} value={displayType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setDisplayType(e.target.value as DisplayType)} className="mt-1 w-full" disabled={disabled}>
               {validDisplayTypes.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+            </Select>
           </div>
         )}
         <div>
           <label htmlFor={`edit-nav-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nav Visibility</label>
-          <select id={`edit-nav-${section.id}`} value={navVisibility} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white" disabled={disabled}>
+          <Select id={`edit-nav-${section.id}`} value={navVisibility} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 w-full" disabled={disabled}>
             {NAV_VISIBILITIES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
+          </Select>
         </div>
       </div>
       <IconPicker value={icon} onChange={setIcon} disabled={disabled} />
       <div className="flex gap-2">
-        <button type="submit" disabled={disabled} className="btn btn--primary" data-testid={`section-edit-submit-${section.id}`}>
+        <Button type="submit" variant="primary" disabled={disabled} data-testid={`section-edit-submit-${section.id}`}>
           Save
-        </button>
-        <button type="button" onClick={onCancel} className="btn btn--secondary" data-testid={`section-edit-cancel-${section.id}`}>
+        </Button>
+        <Button type="button" variant="secondary" onClick={onCancel} data-testid={`section-edit-cancel-${section.id}`}>
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );

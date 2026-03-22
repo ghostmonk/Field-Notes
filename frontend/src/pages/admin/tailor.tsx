@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { apiClient } from '@/shared/lib/api-client';
 import { DownloadButtons } from '@/modules/resume';
 import { useConfirm } from '@/components/ConfirmDialog';
+import { Button, Input, Textarea, Select, Tabs } from '@/components/ui';
 import {
   TailorResult,
   FeedbackType,
@@ -96,193 +97,138 @@ export default function AdminTailorPage() {
       <div className="max-w-5xl mx-auto py-8 px-4">
         <h1 className="text-2xl font-bold mb-6">Resume Tailor</h1>
 
-        <div
-          className="flex gap-1 mb-6 border-b"
-          style={{ borderColor: 'var(--color-border)' }}
-        >
-          {(['tailor', 'applications', 'voice'] as Tab[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className="px-4 py-2 text-sm font-medium capitalize"
-              style={{
-                color:
-                  activeTab === tab
-                    ? 'var(--color-accent)'
-                    : 'var(--color-text-secondary)',
-                borderBottom:
-                  activeTab === tab ? '2px solid var(--color-accent)' : '2px solid transparent',
-              }}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <Tabs activeTab={activeTab} onTabChange={(v) => setActiveTab(v as Tab)} className="mb-6">
+          <Tabs.List>
+            <Tabs.Tab value="tailor">tailor</Tabs.Tab>
+            <Tabs.Tab value="applications">applications</Tabs.Tab>
+            <Tabs.Tab value="voice">voice</Tabs.Tab>
+          </Tabs.List>
 
-        {activeTab === 'applications' && (
-          <ApplicationsTab token={session?.accessToken || ''} />
-        )}
+          <Tabs.Panel value="applications">
+            <ApplicationsTab token={session?.accessToken || ''} />
+          </Tabs.Panel>
 
-        {activeTab === 'voice' && (
-          <VoiceTab token={session?.accessToken || ''} />
-        )}
+          <Tabs.Panel value="voice">
+            <VoiceTab token={session?.accessToken || ''} />
+          </Tabs.Panel>
 
-        {activeTab === 'tailor' && (<>
-        <div className="mb-6">
-          <label
-            htmlFor="job-description"
-            className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--color-text-secondary)' }}
-          >
-            Paste job description
-          </label>
-          <textarea
-            id="job-description"
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            rows={12}
-            className="w-full rounded-md p-3 font-mono text-sm"
-            style={{
-              backgroundColor: 'var(--color-bg-secondary)',
-              color: 'var(--color-text-primary)',
-              border: '1px solid var(--color-border)',
-            }}
-            placeholder="Paste the full job description here..."
-            disabled={step === 'running'}
-          />
-          <div className="flex items-center gap-4 mt-3">
-            <button
-              onClick={handleSubmit}
-              disabled={!jobDescription.trim() || step === 'running'}
-              className="px-4 py-2 rounded-md text-sm font-medium"
-              style={{
-                backgroundColor:
-                  step === 'running'
-                    ? 'var(--color-bg-tertiary)'
-                    : 'var(--color-accent)',
-                color: 'var(--color-bg-primary)',
-                opacity: !jobDescription.trim() || step === 'running' ? 0.5 : 1,
-                cursor:
-                  !jobDescription.trim() || step === 'running'
-                    ? 'not-allowed'
-                    : 'pointer',
-              }}
-            >
-              {step === 'running' ? 'Tailoring...' : 'Tailor Resume'}
-            </button>
-            {step === 'running' && (
-              <span
-                className="text-sm"
+          <Tabs.Panel value="tailor">
+            <div className="mb-6">
+              <label
+                htmlFor="job-description"
+                className="block text-sm font-medium mb-2"
                 style={{ color: 'var(--color-text-secondary)' }}
               >
-                This takes 15-30 seconds
-              </span>
-            )}
-          </div>
-        </div>
-
-        {error && (
-          <div
-            className="rounded-md p-4 mb-6"
-            style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#ef4444',
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        {result && (
-          <div className="space-y-6">
-            <ScoreCard evaluation={result.evaluation} attempts={result.attempts} usage={result.usage} />
-            <div className="flex gap-3">
-              <FeedbackBar
-                result={result}
-                token={session?.accessToken || ''}
-                feedbackState={feedbackState}
-                setFeedbackState={setFeedbackState}
-                flagNote={flagNote}
-                setFlagNote={setFlagNote}
+                Paste job description
+              </label>
+              <Textarea
+                id="job-description"
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                rows={12}
+                className="w-full font-mono text-sm"
+                placeholder="Paste the full job description here..."
+                disabled={step === 'running'}
               />
-              <div className="flex items-center gap-2 self-start">
-                <input
-                  type="text"
-                  value={saveCompany}
-                  onChange={(e) => setSaveCompany(e.target.value)}
-                  placeholder="Company"
-                  className="rounded px-2 py-1 text-sm w-32"
-                  style={{
-                    backgroundColor: 'var(--color-bg-primary)',
-                    color: 'var(--color-text-primary)',
-                    border: '1px solid var(--color-border)',
-                  }}
-                />
-                <input
-                  type="text"
-                  value={saveTitle}
-                  onChange={(e) => setSaveTitle(e.target.value)}
-                  placeholder="Job title"
-                  className="rounded px-2 py-1 text-sm w-40"
-                  style={{
-                    backgroundColor: 'var(--color-bg-primary)',
-                    color: 'var(--color-text-primary)',
-                    border: '1px solid var(--color-border)',
-                  }}
-                />
-                <button
-                  onClick={handleSaveApplication}
-                  disabled={
-                    saveState === 'saving' ||
-                    saveState === 'saved' ||
-                    !saveCompany.trim() ||
-                    !saveTitle.trim()
-                  }
-                  className="px-3 py-1 rounded text-sm font-medium whitespace-nowrap"
-                  style={{
-                    backgroundColor:
-                      saveState === 'saved'
-                        ? 'rgba(34, 197, 94, 0.15)'
-                        : 'var(--color-accent)',
-                    color:
-                      saveState === 'saved' ? '#22c55e' : 'var(--color-bg-primary)',
-                    border:
-                      saveState === 'saved'
-                        ? '1px solid rgba(34, 197, 94, 0.3)'
-                        : 'none',
-                    opacity:
-                      saveState === 'saving' || !saveCompany.trim() || !saveTitle.trim()
-                        ? 0.5
-                        : 1,
-                  }}
+              <div className="flex items-center gap-4 mt-3">
+                <Button
+                  variant="primary"
+                  onClick={handleSubmit}
+                  disabled={!jobDescription.trim() || step === 'running'}
+                  loading={step === 'running'}
                 >
-                  {saveState === 'saved'
-                    ? 'Saved'
-                    : saveState === 'saving'
-                      ? 'Saving...'
-                      : 'Save'}
-                </button>
+                  {step === 'running' ? 'Tailoring...' : 'Tailor Resume'}
+                </Button>
+                {step === 'running' && (
+                  <span
+                    className="text-sm"
+                    style={{ color: 'var(--color-text-secondary)' }}
+                  >
+                    This takes 15-30 seconds
+                  </span>
+                )}
               </div>
             </div>
-            <div
-              className="flex items-center gap-3 rounded-md p-3"
-              style={{
-                backgroundColor: 'var(--color-bg-secondary)',
-                border: '1px solid var(--color-border)',
-              }}
-            >
-              <DownloadButtons resume={result.tailored_resume} />
-              <SetAsDefaultButton
-                tailoredResume={result.tailored_resume}
-                token={session?.accessToken || ''}
-              />
-            </div>
-            <AnalysisCard analysis={result.analysis} />
-            <ResumePreview resume={result.tailored_resume} />
-          </div>
-        )}
-        </>)}
+
+            {error && (
+              <div
+                className="rounded-md p-4 mb-6"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#ef4444',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            {result && (
+              <div className="space-y-6">
+                <ScoreCard evaluation={result.evaluation} attempts={result.attempts} usage={result.usage} />
+                <div className="flex gap-3">
+                  <FeedbackBar
+                    result={result}
+                    token={session?.accessToken || ''}
+                    feedbackState={feedbackState}
+                    setFeedbackState={setFeedbackState}
+                    flagNote={flagNote}
+                    setFlagNote={setFlagNote}
+                  />
+                  <div className="flex items-center gap-2 self-start">
+                    <Input
+                      type="text"
+                      value={saveCompany}
+                      onChange={(e) => setSaveCompany(e.target.value)}
+                      placeholder="Company"
+                      className="text-sm w-32"
+                    />
+                    <Input
+                      type="text"
+                      value={saveTitle}
+                      onChange={(e) => setSaveTitle(e.target.value)}
+                      placeholder="Job title"
+                      className="text-sm w-40"
+                    />
+                    <Button
+                      variant={saveState === 'saved' ? 'ghost' : 'primary'}
+                      size="sm"
+                      onClick={handleSaveApplication}
+                      disabled={
+                        saveState === 'saving' ||
+                        saveState === 'saved' ||
+                        !saveCompany.trim() ||
+                        !saveTitle.trim()
+                      }
+                      loading={saveState === 'saving'}
+                    >
+                      {saveState === 'saved'
+                        ? 'Saved'
+                        : saveState === 'saving'
+                          ? 'Saving...'
+                          : 'Save'}
+                    </Button>
+                  </div>
+                </div>
+                <div
+                  className="flex items-center gap-3 rounded-md p-3"
+                  style={{
+                    backgroundColor: 'var(--color-bg-secondary)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                >
+                  <DownloadButtons resume={result.tailored_resume} />
+                  <SetAsDefaultButton
+                    tailoredResume={result.tailored_resume}
+                    token={session?.accessToken || ''}
+                  />
+                </div>
+                <AnalysisCard analysis={result.analysis} />
+                <ResumePreview resume={result.tailored_resume} />
+              </div>
+            )}
+          </Tabs.Panel>
+        </Tabs>
       </div>
     </>
   );
@@ -582,42 +528,30 @@ function FeedbackBar({
         >
           Rate this output:
         </span>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => submitFeedback('approved')}
           disabled={feedbackState === 'submitting'}
-          className="px-3 py-1 rounded text-sm"
-          style={{
-            backgroundColor: 'rgba(34, 197, 94, 0.15)',
-            color: '#22c55e',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-          }}
         >
           Approve
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="danger"
+          size="sm"
           onClick={() => submitFeedback('rejected')}
           disabled={feedbackState === 'submitting'}
-          className="px-3 py-1 rounded text-sm"
-          style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-            color: '#ef4444',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-          }}
         >
           Reject
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setShowFlagInput(!showFlagInput)}
           disabled={feedbackState === 'submitting'}
-          className="px-3 py-1 rounded text-sm"
-          style={{
-            backgroundColor: 'rgba(234, 179, 8, 0.15)',
-            color: '#eab308',
-            border: '1px solid rgba(234, 179, 8, 0.3)',
-          }}
         >
           Flag
-        </button>
+        </Button>
         {feedbackState === 'error' && (
           <span className="text-sm" style={{ color: '#ef4444' }}>
             Failed to submit
@@ -626,30 +560,21 @@ function FeedbackBar({
       </div>
       {showFlagInput && (
         <div className="mt-3 flex gap-2">
-          <input
+          <Input
             type="text"
             value={flagNote}
             onChange={(e) => setFlagNote(e.target.value)}
             placeholder="What's wrong with this output?"
-            className="flex-1 rounded px-3 py-1 text-sm"
-            style={{
-              backgroundColor: 'var(--color-bg-primary)',
-              color: 'var(--color-text-primary)',
-              border: '1px solid var(--color-border)',
-            }}
+            className="flex-1 text-sm"
           />
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => submitFeedback('flagged', flagNote)}
             disabled={!flagNote.trim() || feedbackState === 'submitting'}
-            className="px-3 py-1 rounded text-sm"
-            style={{
-              backgroundColor: 'var(--color-accent)',
-              color: 'var(--color-bg-primary)',
-              opacity: !flagNote.trim() ? 0.5 : 1,
-            }}
           >
             Submit
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -721,7 +646,7 @@ function ApplicationsTab({ token }: { token: string }) {
   if (apps.length === 0) {
     return (
       <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-        No applications saved yet. Tailor a resume and click "Save Application".
+        No applications saved yet. Tailor a resume and click &quot;Save Application&quot;.
       </div>
     );
   }
@@ -749,16 +674,14 @@ function ApplicationsTab({ token }: { token: string }) {
               <span className="font-medium">{app.company}</span>
             </div>
             <div className="flex items-center gap-2">
-              <select
+              <Select
                 value={app.status}
                 onChange={(e) =>
                   handleStatusChange(app.id, e.target.value as ApplicationStatus)
                 }
-                className="rounded px-2 py-1 text-xs"
+                className="text-xs"
                 style={{
-                  backgroundColor: 'var(--color-bg-primary)',
                   color: STATUS_COLORS[app.status],
-                  border: '1px solid var(--color-border)',
                 }}
               >
                 {Object.keys(STATUS_COLORS).map((s) => (
@@ -766,17 +689,14 @@ function ApplicationsTab({ token }: { token: string }) {
                     {s}
                   </option>
                 ))}
-              </select>
-              <button
+              </Select>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={() => handleDelete(app.id)}
-                className="text-xs px-2 py-1 rounded"
-                style={{
-                  color: '#ef4444',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                }}
               >
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
           <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
@@ -863,27 +783,19 @@ function SetAsDefaultButton({
 
   return (
     <div className="flex items-center gap-2">
-      <button
+      <Button
+        variant={state === 'saved' ? 'ghost' : 'primary'}
+        size="sm"
         onClick={handleSetDefault}
         disabled={state === 'saving' || state === 'saved'}
-        className="px-3 py-1.5 rounded text-sm font-medium"
-        style={{
-          backgroundColor:
-            state === 'saved' ? 'rgba(34, 197, 94, 0.15)' : 'var(--color-accent)',
-          color: state === 'saved' ? '#22c55e' : 'var(--color-bg-primary)',
-          border:
-            state === 'saved'
-              ? '1px solid rgba(34, 197, 94, 0.3)'
-              : 'none',
-          opacity: state === 'saving' ? 0.5 : 1,
-        }}
+        loading={state === 'saving'}
       >
         {state === 'saved'
           ? 'Default Updated'
           : state === 'saving'
             ? 'Saving...'
             : 'Set as Default Resume'}
-      </button>
+      </Button>
       {state === 'error' && (
         <span className="text-sm" style={{ color: '#ef4444' }}>
           Failed
@@ -956,25 +868,20 @@ function VoiceTab({ token }: { token: string }) {
   return (
     <div>
       <div className="flex gap-2 mb-4">
-        <select
+        <Select
           value={filter}
           onChange={(e) => {
             setFilter(e.target.value);
             setLoading(true);
           }}
-          className="rounded px-2 py-1 text-sm"
-          style={{
-            backgroundColor: 'var(--color-bg-secondary)',
-            color: 'var(--color-text-primary)',
-            border: '1px solid var(--color-border)',
-          }}
+          className="text-sm"
         >
           <option value="">All types</option>
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
           <option value="edited">Edited</option>
           <option value="flagged">Flagged</option>
-        </select>
+        </Select>
         <span className="text-sm self-center" style={{ color: 'var(--color-text-secondary)' }}>
           {entries.length} entries
         </span>
@@ -997,16 +904,14 @@ function VoiceTab({ token }: { token: string }) {
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <select
+                  <Select
                     value={entry.feedback_type}
                     onChange={(e) =>
                       handleReclassify(entry.id, e.target.value as FeedbackType)
                     }
-                    className="rounded px-2 py-1 text-xs"
+                    className="text-xs"
                     style={{
-                      backgroundColor: 'var(--color-bg-primary)',
                       color: FEEDBACK_TYPE_COLORS[entry.feedback_type],
-                      border: '1px solid var(--color-border)',
                     }}
                   >
                     {Object.keys(FEEDBACK_TYPE_COLORS)
@@ -1016,7 +921,7 @@ function VoiceTab({ token }: { token: string }) {
                         {t}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                     {entry.job_context}
                   </span>
@@ -1025,16 +930,13 @@ function VoiceTab({ token }: { token: string }) {
                   <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                     {new Date(entry.created_at).toLocaleDateString()}
                   </span>
-                  <button
+                  <Button
+                    variant="danger"
+                    size="sm"
                     onClick={() => handleDelete(entry.id)}
-                    className="text-xs px-2 py-1 rounded"
-                    style={{
-                      color: '#ef4444',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                    }}
                   >
                     Delete
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="text-sm whitespace-pre-line" style={{ color: 'var(--color-text-primary)' }}>
