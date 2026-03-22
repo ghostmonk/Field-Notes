@@ -12,6 +12,7 @@ from qdrant_client.models import (
     Filter,
     MatchValue,
     PayloadSchemaType,
+    PointIdsList,
     PointStruct,
     VectorParams,
 )
@@ -144,7 +145,7 @@ def delete_vector(point_id: str) -> None:
     client = _get_client()
     client.delete(
         collection_name=COLLECTION_NAME,
-        points_selector=[point_id],
+        points_selector=PointIdsList(points=[point_id]),
     )
 
 

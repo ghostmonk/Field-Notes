@@ -183,11 +183,9 @@ async def delete_feedback(
     except InvalidId:
         raise HTTPException(status_code=422, detail="Invalid feedback ID")
 
-    doc = await collection.find_one({"_id": oid, "user_id": user.id})
+    doc = await collection.find_one_and_delete({"_id": oid, "user_id": user.id})
     if not doc:
         raise HTTPException(status_code=404, detail="Feedback not found")
-
-    await collection.delete_one({"_id": oid})
 
     qdrant_id = doc.get("qdrant_id")
     if qdrant_id:
