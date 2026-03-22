@@ -148,6 +148,15 @@ export default function HamburgerMenu() {
                                     <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
                                     <span>Sections</span>
                                 </Link>
+                                <Link
+                                    href="/admin/tailor"
+                                    className="menu-overlay__link"
+                                    data-testid="nav-tailor-link"
+                                    onClick={close}
+                                >
+                                    <HiDocumentText className="menu-overlay__link-icon" aria-hidden="true" />
+                                    <span>Resume Tailor</span>
+                                </Link>
                             </div>
                         </div>
                     )}

@@ -130,6 +130,12 @@ const Footer: React.FC = () => {
                                     Resume Builder
                                 </Link>
                             </li>
+                            <li>
+                                <Link href="/admin/tailor" className="site-footer__link" data-testid="footer-resume-tailor-link">
+                                    <HiDocumentText className="site-footer__link-icon" aria-hidden="true" />
+                                    Resume Tailor
+                                </Link>
+                            </li>
                         </ul>
                     </div>
                 )}
