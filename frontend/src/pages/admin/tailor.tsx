@@ -30,8 +30,6 @@ export default function AdminTailorPage() {
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [saveCompany, setSaveCompany] = useState('');
   const [saveTitle, setSaveTitle] = useState('');
-  const [defaultState, setDefaultState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-
   useEffect(() => {
     if (status !== 'loading' && (!session || session.user?.role !== 'admin')) {
       router.replace('/');
@@ -53,7 +51,6 @@ export default function AdminTailorPage() {
     setSaveState('idle');
     setSaveCompany('');
     setSaveTitle('');
-    setDefaultState('idle');
 
     try {
       const data = await apiClient.tailor.run(
@@ -272,8 +269,6 @@ export default function AdminTailorPage() {
               <SetAsDefaultButton
                 tailoredResume={result.tailored_resume}
                 token={session?.accessToken || ''}
-                state={defaultState}
-                setState={setDefaultState}
               />
             </div>
             <AnalysisCard analysis={result.analysis} />
@@ -805,8 +800,6 @@ function ApplicationDetail({
   app: JobApplicationResponse;
   token: string;
 }) {
-  const [defaultState, setDefaultState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-
   return (
     <div className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--color-border)' }}>
       <ScoreCard evaluation={app.evaluation_score} attempts={1} />
@@ -821,8 +814,6 @@ function ApplicationDetail({
         <SetAsDefaultButton
           tailoredResume={app.tailored_resume}
           token={token}
-          state={defaultState}
-          setState={setDefaultState}
         />
       </div>
       <ResumePreview resume={app.tailored_resume} />
@@ -833,14 +824,12 @@ function ApplicationDetail({
 function SetAsDefaultButton({
   tailoredResume,
   token,
-  state,
-  setState,
 }: {
   tailoredResume: TailorResult['tailored_resume'];
   token: string;
-  state: 'idle' | 'saving' | 'saved' | 'error';
-  setState: (s: 'idle' | 'saving' | 'saved' | 'error') => void;
 }) {
+  const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
   const handleSetDefault = async () => {
     if (!token) return;
     setState('saving');

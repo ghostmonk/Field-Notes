@@ -253,7 +253,9 @@ async def update_resume(
 
         # Keep original_resume in sync with manual edits from resume builder
         original_updates = {
-            f"original_resume.{k}": v for k, v in update_data.items() if k != "updatedDate"
+            f"original_resume.{k}": v
+            for k, v in update_data.items()
+            if k not in ("updatedDate", "original_resume")
         }
 
         updated_doc = await collection.find_one_and_update(

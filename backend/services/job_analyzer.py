@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, Tuple
 
-from services.anthropic_client import get_client, parse_json_response
+from services.anthropic_client import extract_usage, get_client, parse_json_response
 
 ANALYSIS_SYSTEM_PROMPT = """You are a job description analyst. Extract structured information from the job description.
 
@@ -38,10 +38,7 @@ def analyze_job_description(job_description: str) -> Tuple[Dict[str, Any], Dict[
     if not response.content:
         raise ValueError("Empty response from job analysis model")
 
-    usage = {
-        "input_tokens": response.usage.input_tokens,
-        "output_tokens": response.usage.output_tokens,
-        "model": "claude-haiku-4-5-20251001",
-    }
-
-    return parse_json_response(response.content[0].text, "job analysis response"), usage
+    return (
+        parse_json_response(response.content[0].text, "job analysis response"),
+        extract_usage(response, "claude-haiku-4-5-20251001"),
+    )

@@ -17,25 +17,9 @@ from models.job_application import (
 )
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
+from utils import find_many_and_convert, mongo_to_pydantic
 
 router = APIRouter(prefix="/applications")
-
-
-def _doc_to_response(doc: dict) -> JobApplicationResponse:
-    return JobApplicationResponse(
-        id=str(doc["_id"]),
-        user_id=doc["user_id"],
-        company=doc["company"],
-        job_title=doc["job_title"],
-        job_url=doc.get("job_url"),
-        job_description=doc["job_description"],
-        tailored_resume=doc["tailored_resume"],
-        evaluation_score=doc["evaluation_score"],
-        status=doc["status"],
-        notes=doc.get("notes"),
-        created_at=doc["created_at"],
-        updated_at=doc["updated_at"],
-    )
 
 
 @router.post("", response_model=JobApplicationResponse, status_code=201)
@@ -65,7 +49,7 @@ async def create_application(
         {"user_id": user.id, "company": body.company, "job_title": body.job_title},
     )
 
-    return _doc_to_response(doc)
+    return mongo_to_pydantic(doc, JobApplicationResponse)
 
 
 @router.get("", response_model=List[JobApplicationResponse])
@@ -85,12 +69,9 @@ async def list_applications(
     if status:
         query["status"] = status
 
-    cursor = collection.find(query).sort("created_at", -1).limit(100)
-    results = []
-    async for doc in cursor:
-        results.append(_doc_to_response(doc))
-
-    return results
+    return await find_many_and_convert(
+        collection, query, JobApplicationResponse, sort=[("created_at", -1)], limit=100
+    )
 
 
 @router.put("/{application_id}", response_model=JobApplicationResponse)
@@ -125,7 +106,7 @@ async def update_application(
     if not result:
         raise HTTPException(status_code=404, detail="Application not found")
 
-    return _doc_to_response(result)
+    return mongo_to_pydantic(result, JobApplicationResponse)
 
 
 @router.delete("/{application_id}", status_code=204)

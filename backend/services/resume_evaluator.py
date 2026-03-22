@@ -3,7 +3,7 @@
 import json
 from typing import Any, Dict, Tuple
 
-from services.anthropic_client import get_client, parse_json_response
+from services.anthropic_client import extract_usage, get_client, parse_json_response
 
 EVALUATION_SYSTEM_PROMPT = """You are a resume evaluation expert. Score a tailored resume against the original job requirements.
 
@@ -60,10 +60,7 @@ Evaluate this resume against the job requirements."""
     if not response.content:
         raise ValueError("Empty response from evaluation model")
 
-    usage = {
-        "input_tokens": response.usage.input_tokens,
-        "output_tokens": response.usage.output_tokens,
-        "model": "claude-haiku-4-5-20251001",
-    }
-
-    return parse_json_response(response.content[0].text, "evaluation response"), usage
+    return (
+        parse_json_response(response.content[0].text, "evaluation response"),
+        extract_usage(response, "claude-haiku-4-5-20251001"),
+    )

@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from services.anthropic_client import (
     CHUNK_TYPE_ANTI_PATTERN,
     CHUNK_TYPE_VOICE_EXAMPLE,
+    extract_usage,
     get_client,
     parse_json_response,
 )
@@ -105,10 +106,7 @@ IMPORTANT — Previous evaluation found these issues. Fix them:
     if not response.content:
         raise ValueError("Empty response from resume generation model")
 
-    usage = {
-        "input_tokens": response.usage.input_tokens,
-        "output_tokens": response.usage.output_tokens,
-        "model": "claude-sonnet-4-6",
-    }
-
-    return parse_json_response(response.content[0].text, "generated resume"), usage
+    return (
+        parse_json_response(response.content[0].text, "generated resume"),
+        extract_usage(response, "claude-sonnet-4-6"),
+    )
