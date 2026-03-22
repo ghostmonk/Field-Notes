@@ -1,6 +1,6 @@
 import { forwardRef, ComponentPropsWithoutRef } from 'react';
 
-type GridVariant = 'responsive' | '1-col' | '2-col' | '3-col';
+type GridVariant = 'responsive' | '1-col' | '2-col' | '3-cols';
 
 interface GridProps extends ComponentPropsWithoutRef<'div'> {
   variant?: GridVariant;

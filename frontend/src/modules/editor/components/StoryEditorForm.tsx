@@ -120,7 +120,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
       )}
 
       <form onSubmit={(e) => e.preventDefault()} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
-        <FormField label="Title">
+        <FormField label="Title" htmlFor="title">
           <Input
             type="text"
             id="title"

@@ -84,7 +84,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
       )}
 
       <form onSubmit={(e) => e.preventDefault()} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
-        <FormField label="Title">
+        <FormField label="Title" htmlFor="title">
           <Input
             type="text"
             id="title"
@@ -97,7 +97,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
           />
         </FormField>
 
-        <FormField label="Summary">
+        <FormField label="Summary" htmlFor="summary">
           <Textarea
             id="summary"
             value={project.summary || ''}
@@ -183,7 +183,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField label="Technologies (comma-separated)">
+          <FormField label="Technologies (comma-separated)" htmlFor="technologies">
             <Input
               type="text"
               id="technologies"
@@ -195,7 +195,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
               data-testid="editor-technologies-input"
             />
           </FormField>
-          <FormField label="Sort Order">
+          <FormField label="Sort Order" htmlFor="sort_order">
             <Input
               type="number"
               id="sort_order"
@@ -208,7 +208,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <FormField label="GitHub URL">
+          <FormField label="GitHub URL" htmlFor="github_url">
             <Input
               type="url"
               id="github_url"
@@ -219,7 +219,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
               data-testid="editor-github-url-input"
             />
           </FormField>
-          <FormField label="Live URL">
+          <FormField label="Live URL" htmlFor="live_url">
             <Input
               type="url"
               id="live_url"
@@ -230,7 +230,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
               data-testid="editor-live-url-input"
             />
           </FormField>
-          <FormField label="Image URL">
+          <FormField label="Image URL" htmlFor="image_url">
             <Input
               type="url"
               id="image_url"

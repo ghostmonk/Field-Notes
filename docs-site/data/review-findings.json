@@ -12,10 +12,10 @@
       "pr": 168,
       "date": "2026-03-22",
       "title": "UI component library with full codebase migration",
-      "rounds": 9,
+      "rounds": 10,
       "totals": {
-        "findings": 46,
-        "valid": 35,
+        "findings": 48,
+        "valid": 37,
         "false_positive": 9,
         "skipped": 2
       },
@@ -48,7 +48,7 @@
         "frontend/src/modules/editor/components/ProjectEditorForm.tsx": 1,
         "frontend/src/components/ui/Grid.tsx": 1
       },
-      "notes": "Migration PR. Hit rate declined: R1-7 95%, R8 57%, R9 50%. Bot repeatedly flags already-fixed focus ring tokens (3x). Diminishing returns reached."
+      "notes": "Migration PR. Hit rate: R1-7 95%, R8 57%, R9 50%, R10 100% (2 findings). Volume dropped to 2 per round. Bot catching polish issues now, not structural bugs."
     }
   ]
 }

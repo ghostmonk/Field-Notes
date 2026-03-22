@@ -19,11 +19,11 @@ describe('Grid', () => {
 
   it('applies column variants', () => {
     render(
-      <Grid variant="3-col" data-testid="grid">
+      <Grid variant="3-cols" data-testid="grid">
         Items
       </Grid>
     );
-    expect(screen.getByTestId('grid').className).toContain('grid--3-col');
+    expect(screen.getByTestId('grid').className).toContain('grid--3-cols');
   });
 
   it('merges custom className', () => {
