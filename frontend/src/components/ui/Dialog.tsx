@@ -60,11 +60,14 @@ const DialogRoot = forwardRef<HTMLDialogElement, DialogProps>(
       }
     }, [open]);
 
-    // Restore focus on unmount when dialog is still open (e.g., ConfirmDialog
-    // which mounts with open=true and is removed from tree on close)
+    // Restore focus on unmount only if dialog is still open (e.g., ConfirmDialog
+    // which mounts with open=true and is removed from tree on close).
+    // Skips if dialog already closed via the open->false transition above.
     useEffect(() => {
       return () => {
-        (previousFocusRef.current as HTMLElement)?.focus?.();
+        if (internalRef.current?.open) {
+          (previousFocusRef.current as HTMLElement)?.focus?.();
+        }
       };
     }, []);
 

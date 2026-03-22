@@ -151,14 +151,7 @@ export default function AdminTailorPage() {
             </div>
 
             {error && (
-              <div
-                className="rounded-md p-4 mb-6"
-                style={{
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#ef4444',
-                }}
-              >
+              <div className="error-state rounded-md p-4 mb-6">
                 {error}
               </div>
             )}

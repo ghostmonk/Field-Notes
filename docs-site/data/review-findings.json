@@ -12,11 +12,11 @@
       "pr": 168,
       "date": "2026-03-22",
       "title": "UI component library with full codebase migration",
-      "rounds": 8,
+      "rounds": 9,
       "totals": {
-        "findings": 42,
-        "valid": 33,
-        "false_positive": 7,
+        "findings": 46,
+        "valid": 35,
+        "false_positive": 9,
         "skipped": 2
       },
       "by_category": {
@@ -34,7 +34,8 @@
         "frontend/src/templates/default/styles/components.css": 8,
         "frontend/src/components/ui/Tabs.tsx": 6,
         "frontend/src/modules/projects/components/ProjectCard.tsx": 5,
-        "frontend/src/components/ui/Dialog.tsx": 3,
+        "frontend/src/components/ui/Dialog.tsx": 4,
+        "frontend/src/pages/admin/tailor.tsx": 1,
         "frontend/src/components/ConfirmDialog.tsx": 3,
         "frontend/src/components/ui/Button.tsx": 3,
         "frontend/src/components/ui/Textarea.tsx": 2,
@@ -47,7 +48,7 @@
         "frontend/src/modules/editor/components/ProjectEditorForm.tsx": 1,
         "frontend/src/components/ui/Grid.tsx": 1
       },
-      "notes": "Migration PR. Round 8 hit rate dropped to 57% (8/14 valid) — 4 findings on already-fixed code (stale reads), 2 design limitations. Signal that bot is reaching diminishing returns."
+      "notes": "Migration PR. Hit rate declined: R1-7 95%, R8 57%, R9 50%. Bot repeatedly flags already-fixed focus ring tokens (3x). Diminishing returns reached."
     }
   ]
 }
