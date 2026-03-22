@@ -251,9 +251,16 @@ async def update_resume(
         update_data = resume.model_dump(exclude_unset=True)
         update_data["updatedDate"] = current_time
 
+        # Manual edits through resume builder update both active and original
+        original_updates = {
+            f"original_resume.{k}": v
+            for k, v in update_data.items()
+            if k not in RESUME_INTERNAL_FIELDS
+        }
+
         updated_doc = await collection.find_one_and_update(
             {"user_id": user.id, "deleted": {"$ne": True}},
-            {"$set": update_data},
+            {"$set": {**update_data, **original_updates}},
             return_document=ReturnDocument.AFTER,
         )
 
