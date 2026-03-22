@@ -12,11 +12,11 @@
       "pr": 168,
       "date": "2026-03-22",
       "title": "UI component library with full codebase migration",
-      "rounds": 10,
+      "rounds": 12,
       "totals": {
-        "findings": 48,
-        "valid": 37,
-        "false_positive": 9,
+        "findings": 56,
+        "valid": 40,
+        "false_positive": 14,
         "skipped": 2
       },
       "by_category": {
@@ -48,7 +48,7 @@
         "frontend/src/modules/editor/components/ProjectEditorForm.tsx": 1,
         "frontend/src/components/ui/Grid.tsx": 1
       },
-      "notes": "Migration PR. Hit rate: R1-7 95%, R8 57%, R9 50%, R10 100% (2 findings). Volume dropped to 2 per round. Bot catching polish issues now, not structural bugs."
+      "notes": "Migration PR. 12 rounds. Hit rate: R1-7 95%, R8 57%, R9 50%, R10 100% (2), R11 25% (1/4), R12 25% (1/4). Converged — bot now flags pre-existing code and repeats fixed findings."
     }
   ]
 }

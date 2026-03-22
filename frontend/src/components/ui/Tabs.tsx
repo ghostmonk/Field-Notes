@@ -114,6 +114,9 @@ function TabsPanel({ value, className, children }: TabsPanelProps) {
   const classes = ['tabs__panel'];
   if (className) classes.push(className);
 
+  // Panel DOM node always exists for ARIA id/aria-labelledby linkage.
+  // Children only render when active to preserve lazy-mount behavior
+  // (prevents useEffect side effects in inactive tab content).
   return (
     <div
       role="tabpanel"
@@ -122,7 +125,7 @@ function TabsPanel({ value, className, children }: TabsPanelProps) {
       hidden={!isActive}
       className={classes.join(' ')}
     >
-      {children}
+      {isActive && children}
     </div>
   );
 }
