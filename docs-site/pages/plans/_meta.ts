@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-03-22-dev-auth-mock': 'Dev Auth Mock',
   '2026-03-21-ghostmonk-ai-design': 'Ghostmonk AI',
   '2026-03-21-resume-tailoring-phase3-feedback': 'Resume Tailoring Phase 3',
   '2026-03-21-resume-tailoring-phase2': 'Resume Tailoring Phase 2',
