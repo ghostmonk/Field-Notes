@@ -1325,6 +1325,22 @@ html:not(.dark) .prose--card img:not([data-loaded="true"]) {
   flex-shrink: 0;
 }
 
+.site-footer__socials {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.site-footer__social-icon {
+  color: var(--color-text-secondary);
+  font-size: 1.25rem;
+  transition: color var(--transition-fast);
+}
+
+.site-footer__social-icon:hover {
+  color: var(--color-text-link);
+}
+
 .site-footer__brand {
   text-align: center;
   margin-bottom: var(--space-2xl);

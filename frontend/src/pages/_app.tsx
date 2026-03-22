@@ -6,7 +6,7 @@ import '../templates/default/index.css';
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
 import { Layout } from "@/layout";
-import { ToastProvider } from "@/components/Toast";
+import { ToastProvider, useToast } from "@/components/Toast";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { NetworkStatus } from "@/components/NetworkStatus";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
@@ -22,14 +22,16 @@ import { BackendWarmupBanner } from '@/components/LoadingSkeletons';
 
 function SessionGuard({ children }: { children: ReactNode }) {
     const { data: session } = useSession();
+    const { showToast } = useToast();
     const signingOut = useRef(false);
 
     useEffect(() => {
         if (session?.error === REFRESH_TOKEN_ERROR && !signingOut.current) {
             signingOut.current = true;
-            signOut();
+            showToast('Session expired. Signing out.');
+            signOut({ callbackUrl: '/' });
         }
-    }, [session?.error]);
+    }, [session?.error, showToast]);
 
     return <>{children}</>;
 }
@@ -98,8 +100,8 @@ function MyApp({ Component, pageProps }: AppProps) {
 
     return (
         <SessionProvider session={pageProps.session} refetchInterval={4 * 60}>
-            <SessionGuard>
-                <ToastProvider>
+            <ToastProvider>
+                <SessionGuard>
                     <ConfirmProvider>
                         <Head>
                             <meta
@@ -121,8 +123,8 @@ function MyApp({ Component, pageProps }: AppProps) {
                             </div>
                         </Layout>
                     </ConfirmProvider>
-                </ToastProvider>
-            </SessionGuard>
+                </SessionGuard>
+            </ToastProvider>
         </SessionProvider>
     );
 };

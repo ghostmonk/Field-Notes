@@ -4,9 +4,13 @@ import GoogleProvider from "next-auth/providers/google";
 import { JWT } from "next-auth/jwt";
 import { DEV_TOKEN_PREFIX, DEV_USERS, type DevRole, REFRESH_TOKEN_ERROR } from "@/shared/lib/auth";
 
+// Google error codes that indicate the refresh token is permanently invalid
+const FATAL_REFRESH_ERRORS = new Set(["invalid_grant", "unauthorized_client", "invalid_client"]);
+
 async function refreshAccessToken(token: JWT): Promise<JWT> {
+    let response: Response;
     try {
-        const response = await fetch("https://oauth2.googleapis.com/token", {
+        response = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
@@ -16,25 +20,39 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
                 refresh_token: token.refreshToken!,
             }),
         });
-
-        const refreshed = await response.json();
-
-        if (!response.ok) {
-            throw new Error(refreshed.error || "Token refresh failed");
-        }
-
-        return {
-            ...token,
-            accessToken: refreshed.access_token,
-            accessTokenExpires: Date.now() + refreshed.expires_in * 1000,
-            // Google may return a new refresh token; keep the old one if not
-            refreshToken: refreshed.refresh_token ?? token.refreshToken,
-            error: undefined,
-        };
     } catch (error) {
-        console.error("Error refreshing access token:", error);
-        return { ...token, error: REFRESH_TOKEN_ERROR };
+        // Network error (DNS, timeout, etc.) — keep existing token, retry next poll
+        console.warn("Network error refreshing access token:", error);
+        return token;
     }
+
+    let refreshed: Record<string, unknown>;
+    try {
+        refreshed = await response.json();
+    } catch {
+        console.warn("Non-JSON response from token endpoint, status:", response.status);
+        return token;
+    }
+
+    if (!response.ok) {
+        const errorCode = (refreshed.error as string) || "unknown";
+        if (FATAL_REFRESH_ERRORS.has(errorCode)) {
+            console.error("Refresh token revoked:", errorCode);
+            return { ...token, error: REFRESH_TOKEN_ERROR };
+        }
+        // Non-fatal API error — keep existing token, retry next poll
+        console.warn("Transient refresh error:", errorCode);
+        return token;
+    }
+
+    return {
+        ...token,
+        accessToken: refreshed.access_token as string,
+        accessTokenExpires: Date.now() + ((refreshed.expires_in as number) ?? 3600) * 1000,
+        // Google may return a new refresh token; keep the old one if not
+        refreshToken: (refreshed.refresh_token as string) ?? token.refreshToken,
+        error: undefined,
+    };
 }
 
 const providers: NextAuthOptions["providers"] = [
@@ -45,6 +63,7 @@ const providers: NextAuthOptions["providers"] = [
             params: {
                 scope: "openid email profile",
                 access_type: "offline",
+                // Required: Google only issues refresh_token with explicit consent
                 prompt: "consent",
             },
         },
@@ -97,6 +116,10 @@ export const authOptions: NextAuthOptions = {
                     token.accessTokenExpires = account.expires_at
                         ? account.expires_at * 1000
                         : Date.now() + 3600 * 1000;
+
+                    if (!account.refresh_token) {
+                        console.warn("No refresh_token received from Google — token rotation will fail at expiry");
+                    }
                 }
 
                 // Fetch user info from backend to get role and ID
@@ -131,8 +154,20 @@ export const authOptions: NextAuthOptions = {
                 return token;
             }
 
-            // Subsequent requests: check if access token needs refresh
-            if (token.accessTokenExpires && Date.now() < token.accessTokenExpires) {
+            // Already failed — don't retry a revoked refresh token every poll cycle
+            if (token.error === REFRESH_TOKEN_ERROR) {
+                return token;
+            }
+
+            // Pre-existing sessions (before token rotation) lack these fields —
+            // let them ride until the access token naturally fails a backend call,
+            // at which point the user re-authenticates and gets a full token set.
+            if (!token.accessTokenExpires) {
+                return token;
+            }
+
+            // Refresh 60s early to avoid in-flight expiry
+            if (Date.now() < token.accessTokenExpires - 60_000) {
                 return token;
             }
 
