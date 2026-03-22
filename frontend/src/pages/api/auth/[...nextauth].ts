@@ -1,7 +1,8 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { JWT } from "next-auth/jwt";
-import { REFRESH_TOKEN_ERROR } from "@/shared/lib/auth";
+import { DEV_TOKEN_PREFIX, DEV_USERS, type DevRole, REFRESH_TOKEN_ERROR } from "@/shared/lib/auth";
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
     try {
@@ -36,29 +37,67 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
     }
 }
 
-export const authOptions: NextAuthOptions = {
-    providers: [
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            authorization: {
-                params: {
-                    scope: "openid email profile",
-                    access_type: "offline",
-                    prompt: "consent",
-                },
+const providers: NextAuthOptions["providers"] = [
+    GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        authorization: {
+            params: {
+                scope: "openid email profile",
+                access_type: "offline",
+                prompt: "consent",
+            },
+        },
+    }),
+];
+
+if (process.env.NODE_ENV === 'development') {
+    providers.push(
+        CredentialsProvider({
+            id: "dev-credentials",
+            name: "Dev Login",
+            credentials: {
+                role: { label: "Role", type: "text" },
+            },
+            async authorize(credentials) {
+                const role = credentials?.role as DevRole;
+                const devUser = DEV_USERS[role];
+                if (!devUser) return null;
+
+                return {
+                    id: `dev-${role}`,
+                    name: devUser.name,
+                    email: devUser.email,
+                    image: null,
+                };
             },
         }),
-    ],
+    );
+}
+
+export const authOptions: NextAuthOptions = {
+    session: {
+        strategy: "jwt",
+    },
+    providers,
     callbacks: {
-        async jwt({ token, account }) {
+        async jwt({ token, account, user }) {
             // Initial sign-in: store tokens and expiry
             if (account) {
-                token.accessToken = account.access_token;
-                token.refreshToken = account.refresh_token;
-                token.accessTokenExpires = account.expires_at
-                    ? account.expires_at * 1000
-                    : Date.now() + 3600 * 1000;
+                if (account.provider === 'dev-credentials') {
+                    // Dev login — use mock token, skip Google token flow
+                    const role = user?.id?.replace('dev-', '') || 'commenter';
+                    const devToken = `${DEV_TOKEN_PREFIX}${role}`;
+                    token.accessToken = devToken;
+                    token.accessTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
+                } else {
+                    // Google sign-in — existing flow
+                    token.accessToken = account.access_token;
+                    token.refreshToken = account.refresh_token;
+                    token.accessTokenExpires = account.expires_at
+                        ? account.expires_at * 1000
+                        : Date.now() + 3600 * 1000;
+                }
 
                 // Fetch user info from backend to get role and ID
                 try {
@@ -68,7 +107,7 @@ export const authOptions: NextAuthOptions = {
 
                     const response = await fetch(`${backendUrl}/me`, {
                         headers: {
-                            'Authorization': `Bearer ${account.access_token}`,
+                            'Authorization': `Bearer ${token.accessToken}`,
                         },
                         signal: controller.signal,
                     });
