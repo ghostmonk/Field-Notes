@@ -340,6 +340,20 @@ button.btn--primary:hover:not(:disabled) {
   color: var(--color-text-primary);
 }
 
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn__spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-full);
+  animation: btn-spin 0.6s linear infinite;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -408,7 +422,7 @@ button.btn--primary:hover:not(:disabled) {
 .input:focus {
   outline: none;
   border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 .input:disabled {
@@ -443,7 +457,7 @@ button.btn--primary:hover:not(:disabled) {
 
 .input--error:focus {
   border-color: var(--color-status-error);
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 0 2px var(--color-focus-ring-error);
 }
 
 /* Textarea */
@@ -464,7 +478,7 @@ button.btn--primary:hover:not(:disabled) {
 .textarea:focus {
   outline: none;
   border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 .textarea:disabled {
@@ -500,10 +514,14 @@ button.btn--primary:hover:not(:disabled) {
   padding-right: var(--space-2xl);
 }
 
+.dark .select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23cbd5e1' d='M3 5l3 3 3-3'/%3E%3C/svg%3E");
+}
+
 .select:focus {
   outline: none;
   border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 .select:disabled {

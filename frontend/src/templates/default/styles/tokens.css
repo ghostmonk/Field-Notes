@@ -80,6 +80,9 @@
   --transition-slow: 500ms ease;
   --transition-colors: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
 
+  --color-focus-ring: rgba(79, 70, 229, 0.15);
+  --color-focus-ring-error: rgba(239, 68, 68, 0.15);
+
   --color-surface-draft: rgb(254 252 232);
   --color-border-draft: rgb(254 240 138);
 
