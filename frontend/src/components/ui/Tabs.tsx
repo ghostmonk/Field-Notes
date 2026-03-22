@@ -61,6 +61,7 @@ function TabsList({ className, children }: TabsListProps) {
 function TabsTab({ value, className, children }: TabsTabProps) {
   const { activeTab, onTabChange } = useTabsContext();
   const isActive = activeTab === value;
+  const tabId = `tab-${value}`;
   const panelId = `tabpanel-${value}`;
 
   const classes = ['tabs__tab'];
@@ -71,6 +72,7 @@ function TabsTab({ value, className, children }: TabsTabProps) {
     <button
       type="button"
       role="tab"
+      id={tabId}
       aria-selected={isActive}
       aria-controls={panelId}
       className={classes.join(' ')}
@@ -83,14 +85,21 @@ function TabsTab({ value, className, children }: TabsTabProps) {
 
 function TabsPanel({ value, className, children }: TabsPanelProps) {
   const { activeTab } = useTabsContext();
-  if (activeTab !== value) return null;
-
+  const isActive = activeTab === value;
+  const tabId = `tab-${value}`;
   const panelId = `tabpanel-${value}`;
+
   const classes = ['tabs__panel'];
   if (className) classes.push(className);
 
   return (
-    <div role="tabpanel" id={panelId} className={classes.join(' ')}>
+    <div
+      role="tabpanel"
+      id={panelId}
+      aria-labelledby={tabId}
+      hidden={!isActive}
+      className={classes.join(' ')}
+    >
       {children}
     </div>
   );

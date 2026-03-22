@@ -6,7 +6,7 @@ interface TextareaProps extends ComponentPropsWithoutRef<'textarea'> {
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ error, autoResize, className, onChange, ...props }, ref) => {
+  ({ error, autoResize, className, onChange, value, ...props }, ref) => {
     const internalRef = useRef<HTMLTextAreaElement | null>(null);
 
     const classes = ['textarea'];
@@ -23,7 +23,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     useEffect(() => {
       resize();
-    }, [resize]);
+    }, [resize, value]);
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -42,6 +42,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         }}
         className={classes.join(' ')}
         onChange={handleChange}
+        value={value}
         {...props}
       />
     );
