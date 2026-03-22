@@ -25,7 +25,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         return {
             ...token,
             accessToken: refreshed.access_token,
-            accessTokenExpires: Date.now() + refreshed.expires_in * 1000,
+            accessTokenExpires: Date.now() + (refreshed.expires_in ?? 3600) * 1000,
             // Google may return a new refresh token; keep the old one if not
             refreshToken: refreshed.refresh_token ?? token.refreshToken,
             error: undefined,
