@@ -47,7 +47,12 @@ export default async function handler(
       return res.status(204).end();
     }
 
-    const data = await response.json();
+    let data: Record<string, unknown>;
+    try {
+      data = await response.json();
+    } catch {
+      data = { detail: `Error: ${response.statusText}` };
+    }
     return res.status(response.status).json(data);
   } catch (error) {
     apiLogger.error(

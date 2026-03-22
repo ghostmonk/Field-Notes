@@ -562,10 +562,11 @@ const apiClient = {
       }),
 
     reclassify: (id: string, feedbackType: string, token: string) =>
-      fetchApi<VoiceFeedbackResponse>(
-        `${apiRoutes.voiceFeedback.byId(id)}?feedback_type=${feedbackType}`,
-        { method: 'PUT', token }
-      ),
+      fetchApi<VoiceFeedbackResponse>(apiRoutes.voiceFeedback.byId(id), {
+        method: 'PUT',
+        token,
+        params: { feedback_type: feedbackType },
+      }),
 
     delete: (id: string, token: string) =>
       fetchApi<void>(apiRoutes.voiceFeedback.byId(id), {

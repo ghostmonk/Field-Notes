@@ -1001,7 +1001,7 @@ function VoiceTab({ token }: { token: string }) {
                     className="rounded px-2 py-1 text-xs"
                     style={{
                       backgroundColor: 'var(--color-bg-primary)',
-                      color: FEEDBACK_TYPE_COLORS[entry.feedback_type as FeedbackType],
+                      color: FEEDBACK_TYPE_COLORS[entry.feedback_type],
                       border: '1px solid var(--color-border)',
                     }}
                   >
