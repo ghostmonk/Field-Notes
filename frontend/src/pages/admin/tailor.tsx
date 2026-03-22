@@ -78,6 +78,7 @@ export default function AdminTailorPage() {
           job_description: jobDescription,
           tailored_resume: result.tailored_resume,
           evaluation_score: result.evaluation,
+          usage: result.usage,
         },
         session.accessToken
       );
@@ -816,7 +817,7 @@ function ApplicationDetail({
 }) {
   return (
     <div className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <ScoreCard evaluation={app.evaluation_score} attempts={1} />
+      <ScoreCard evaluation={app.evaluation_score} attempts={1} usage={app.usage} />
       <div
         className="flex items-center gap-3 rounded-md p-3"
         style={{
