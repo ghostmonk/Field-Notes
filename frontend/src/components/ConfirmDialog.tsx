@@ -80,7 +80,11 @@ function ConfirmDialogInner({
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    cancelRef.current?.focus();
+    // Defer focus until after Dialog's showModal() effect runs
+    const raf = requestAnimationFrame(() => {
+      cancelRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   return (

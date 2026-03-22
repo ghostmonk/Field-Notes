@@ -44,13 +44,13 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
       );
     }
 
-    const buttonProps = rest as ComponentPropsWithoutRef<'button'>;
+    const { disabled, ...buttonProps } = rest as ComponentPropsWithoutRef<'button'>;
     return (
       <button
         ref={ref as React.Ref<HTMLButtonElement>}
         className={cls}
-        disabled={loading || buttonProps.disabled}
         {...buttonProps}
+        disabled={loading || disabled}
       >
         {loading && <span className="btn__spinner" aria-hidden="true" />}
         {children}

@@ -107,6 +107,7 @@ export const StoryCard = React.memo(({
     return (
         <Card
             variant={isDraft ? 'draft' : featured ? 'featured' : undefined}
+            className={isDraft && featured ? 'card--featured' : undefined}
             data-testid={`story-card-${story.id}`}
         >
             <div className="story-header">
