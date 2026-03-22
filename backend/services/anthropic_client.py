@@ -18,7 +18,14 @@ SOURCE_RESUME = "resume"
 SOURCE_VOICE_FEEDBACK = "voice_feedback"
 
 # Fields to strip from MongoDB resume documents before passing to LLM
-RESUME_INTERNAL_FIELDS = ("_id", "user_id", "createdDate", "updatedDate", "deleted")
+RESUME_INTERNAL_FIELDS = (
+    "_id",
+    "user_id",
+    "createdDate",
+    "updatedDate",
+    "deleted",
+    "original_resume",
+)
 
 # Background task management
 _background_tasks: Set[asyncio.Task] = set()
@@ -64,6 +71,15 @@ def get_client() -> anthropic.Anthropic:
                     )
                 _client = anthropic.Anthropic(api_key=api_key)
     return _client
+
+
+def extract_usage(response, model: str) -> Dict[str, Any]:
+    """Extract token usage from an Anthropic API response."""
+    return {
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens,
+        "model": model,
+    }
 
 
 def parse_json_response(raw_text: str, context: str) -> Dict[str, Any]:

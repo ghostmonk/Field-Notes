@@ -151,6 +151,11 @@ async def get_voice_feedback_collection() -> AsyncIOMotorCollection:
     return db["voice_feedback"]
 
 
+async def get_job_applications_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["job_applications"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
@@ -304,6 +309,16 @@ async def ensure_indexes() -> None:
     await safe_create_index(content_chunks, "source")
     await safe_create_index(
         content_chunks, "qdrant_id", unique=True, sparse=True, name="content_chunks_qdrant_id"
+    )
+
+    # Job applications indexes
+    job_applications = db["job_applications"]
+    await safe_create_index(job_applications, "user_id")
+    await safe_create_index(job_applications, "status")
+    await safe_create_index(
+        job_applications,
+        [("user_id", 1), ("created_at", -1)],
+        name="user_id_created_at",
     )
 
     # Voice feedback indexes

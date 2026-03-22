@@ -45,7 +45,7 @@ class TestResumeEvaluator:
         mock_client.messages.create.return_value = mock_response
 
         with patch("services.resume_evaluator.get_client", return_value=mock_client):
-            result = evaluate_resume(
+            result, usage = evaluate_resume(
                 tailored_resume=SAMPLE_RESUME,
                 analysis=SAMPLE_ANALYSIS,
             )
@@ -80,7 +80,7 @@ class TestResumeEvaluator:
         mock_client.messages.create.return_value = mock_response
 
         with patch("services.resume_evaluator.get_client", return_value=mock_client):
-            result = evaluate_resume(
+            result, _ = evaluate_resume(
                 tailored_resume=SAMPLE_RESUME,
                 analysis=SAMPLE_ANALYSIS,
             )

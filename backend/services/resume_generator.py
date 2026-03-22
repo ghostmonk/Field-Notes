@@ -1,11 +1,12 @@
 """Resume generation using Claude Sonnet."""
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from services.anthropic_client import (
     CHUNK_TYPE_ANTI_PATTERN,
     CHUNK_TYPE_VOICE_EXAMPLE,
+    extract_usage,
     get_client,
     parse_json_response,
 )
@@ -33,7 +34,7 @@ def generate_tailored_resume(
     chunks: List[Dict[str, Any]],
     evaluator_feedback: Optional[List[str]] = None,
     voice_examples: Optional[List[Dict[str, Any]]] = None,
-) -> Dict[str, Any]:
+) -> Tuple[Dict[str, Any], Dict[str, int]]:
     """Generate a tailored resume using Claude Sonnet.
 
     Args:
@@ -105,4 +106,7 @@ IMPORTANT — Previous evaluation found these issues. Fix them:
     if not response.content:
         raise ValueError("Empty response from resume generation model")
 
-    return parse_json_response(response.content[0].text, "generated resume")
+    return (
+        parse_json_response(response.content[0].text, "generated resume"),
+        extract_usage(response, "claude-sonnet-4-6"),
+    )

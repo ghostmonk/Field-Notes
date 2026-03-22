@@ -398,11 +398,18 @@ export interface TailorAnalysis {
   key_requirements: string[];
 }
 
+export interface TailorUsage {
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_cost_usd: number;
+}
+
 export interface TailorResult {
   analysis: TailorAnalysis;
   tailored_resume: Resume;
   evaluation: TailorEvaluation;
   attempts: number;
+  usage?: TailorUsage;
 }
 
 export type FeedbackType = 'approved' | 'rejected' | 'edited' | 'flagged';
@@ -414,6 +421,45 @@ export interface VoiceFeedbackCreate {
   job_context: string;
   note?: string;
   section_type?: string;
+}
+
+export type ApplicationStatus =
+  | 'saved'
+  | 'applied'
+  | 'interviewing'
+  | 'offered'
+  | 'rejected';
+
+export interface JobApplicationCreate {
+  company: string;
+  job_title: string;
+  job_url?: string;
+  job_description: string;
+  tailored_resume: Resume;
+  evaluation_score: TailorEvaluation;
+  status?: ApplicationStatus;
+  notes?: string;
+}
+
+export interface JobApplicationUpdate {
+  status?: ApplicationStatus;
+  notes?: string;
+  job_url?: string;
+}
+
+export interface JobApplicationResponse {
+  id: string;
+  user_id: string;
+  company: string;
+  job_title: string;
+  job_url?: string;
+  job_description: string;
+  tailored_resume: Resume;
+  evaluation_score: TailorEvaluation;
+  status: ApplicationStatus;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface VoiceFeedbackResponse extends VoiceFeedbackCreate {

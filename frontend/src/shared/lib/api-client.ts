@@ -35,6 +35,9 @@ import {
   TailorResult,
   VoiceFeedbackCreate,
   VoiceFeedbackResponse,
+  JobApplicationCreate,
+  JobApplicationResponse,
+  JobApplicationUpdate,
 } from '@/shared/types/api';
 import { ApiRequestError } from '@/shared/types/error';
 
@@ -208,12 +211,18 @@ const apiRoutes = {
   resume: {
     base: () => '/api/resume',
     public: () => '/api/resume/public',
+    setDefault: () => '/api/resume/set-default',
+    restoreOriginal: () => '/api/resume/restore-original',
   },
   tailor: {
     run: () => '/api/tailor',
   },
   voiceFeedback: {
     base: () => '/api/voice/feedback',
+  },
+  applications: {
+    base: () => '/api/applications',
+    byId: (id: string) => `/api/applications/${id}`,
   },
 };
 
@@ -510,6 +519,19 @@ const apiClient = {
         method: 'DELETE',
         token,
       }),
+
+    setDefault: (data: UpdateResumeRequest, token: string) =>
+      fetchApi<Resume, UpdateResumeRequest>(apiRoutes.resume.setDefault(), {
+        method: 'POST',
+        body: data,
+        token,
+      }),
+
+    restoreOriginal: (token: string) =>
+      fetchApi<Resume>(apiRoutes.resume.restoreOriginal(), {
+        method: 'POST',
+        token,
+      }),
   },
 
   tailor: {
@@ -536,6 +558,32 @@ const apiClient = {
       fetchApi<VoiceFeedbackResponse[]>(apiRoutes.voiceFeedback.base(), {
         token,
         params: feedbackType ? { feedback_type: feedbackType } : undefined,
+      }),
+  },
+
+  applications: {
+    create: (data: JobApplicationCreate, token: string) =>
+      fetchApi<JobApplicationResponse, JobApplicationCreate>(
+        apiRoutes.applications.base(),
+        { method: 'POST', body: data, token }
+      ),
+
+    list: (token: string, status?: string) =>
+      fetchApi<JobApplicationResponse[]>(apiRoutes.applications.base(), {
+        token,
+        params: status ? { status } : undefined,
+      }),
+
+    update: (id: string, data: JobApplicationUpdate, token: string) =>
+      fetchApi<JobApplicationResponse, JobApplicationUpdate>(
+        apiRoutes.applications.byId(id),
+        { method: 'PUT', body: data, token }
+      ),
+
+    delete: (id: string, token: string) =>
+      fetchApi<void>(apiRoutes.applications.byId(id), {
+        method: 'DELETE',
+        token,
       }),
   },
 };

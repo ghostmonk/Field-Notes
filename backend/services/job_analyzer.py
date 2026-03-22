@@ -1,8 +1,8 @@
 """Job description analysis using Claude Haiku."""
 
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
-from services.anthropic_client import get_client, parse_json_response
+from services.anthropic_client import extract_usage, get_client, parse_json_response
 
 ANALYSIS_SYSTEM_PROMPT = """You are a job description analyst. Extract structured information from the job description.
 
@@ -17,18 +17,11 @@ Return ONLY a JSON object with these exact keys:
 Do not include any text outside the JSON object. No markdown fences."""
 
 
-def analyze_job_description(job_description: str) -> Dict[str, Any]:
+def analyze_job_description(job_description: str) -> Tuple[Dict[str, Any], Dict[str, int]]:
     """Analyze a job description and extract structured requirements.
 
-    Args:
-        job_description: Raw job description text.
-
     Returns:
-        Dict with required_skills, preferred_skills, seniority, domain,
-        culture_signals, and key_requirements.
-
-    Raises:
-        ValueError: If LLM response cannot be parsed as JSON.
+        Tuple of (analysis dict, usage dict with input_tokens and output_tokens).
     """
     client = get_client()
 
@@ -45,4 +38,7 @@ def analyze_job_description(job_description: str) -> Dict[str, Any]:
     if not response.content:
         raise ValueError("Empty response from job analysis model")
 
-    return parse_json_response(response.content[0].text, "job analysis response")
+    return (
+        parse_json_response(response.content[0].text, "job analysis response"),
+        extract_usage(response, "claude-haiku-4-5-20251001"),
+    )

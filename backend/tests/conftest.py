@@ -21,6 +21,7 @@ os.environ.setdefault("ADMIN_EMAIL", "admin@test.com")
 from database import (
     get_collection,
     get_comments_collection,
+    get_job_applications_collection,
     get_navlinks_collection,
     get_pages_collection,
     get_photo_essays_collection,
@@ -38,6 +39,7 @@ from fastapi.testclient import TestClient
 # Import routers directly to avoid the lifespan event
 from handlers.content import router as content_router
 from handlers.engagement import router as engagement_router
+from handlers.job_applications import router as job_applications_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
 from handlers.photo_essays import router as photo_essays_router
@@ -72,6 +74,7 @@ test_app.include_router(resume_router)
 test_app.include_router(content_router)
 test_app.include_router(tailor_router)
 test_app.include_router(voice_feedback_router)
+test_app.include_router(job_applications_router)
 
 
 @pytest.fixture
@@ -717,7 +720,9 @@ def mock_resumes_collection():
 @pytest.fixture
 def override_resumes_database(mock_resumes_collection):
     """Override the resumes and voice_feedback collections to use mocks"""
-    mock_voice_feedback = mongomock_motor.AsyncMongoMockClient().test_db.voice_feedback
+    mock_db = mongomock_motor.AsyncMongoMockClient().test_db
+    mock_voice_feedback = mock_db.voice_feedback
+    mock_job_applications = mock_db.job_applications
 
     async def get_mock_resumes_collection():
         return mock_resumes_collection
@@ -725,13 +730,20 @@ def override_resumes_database(mock_resumes_collection):
     async def get_mock_voice_feedback_collection():
         return mock_voice_feedback
 
+    async def get_mock_job_applications_collection():
+        return mock_job_applications
+
     test_app.dependency_overrides[get_resumes_collection] = get_mock_resumes_collection
     test_app.dependency_overrides[get_voice_feedback_collection] = (
         get_mock_voice_feedback_collection
     )
+    test_app.dependency_overrides[get_job_applications_collection] = (
+        get_mock_job_applications_collection
+    )
     yield mock_resumes_collection
     test_app.dependency_overrides.pop(get_resumes_collection, None)
     test_app.dependency_overrides.pop(get_voice_feedback_collection, None)
+    test_app.dependency_overrides.pop(get_job_applications_collection, None)
 
 
 @pytest_asyncio.fixture

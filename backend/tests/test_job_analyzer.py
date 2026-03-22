@@ -34,10 +34,11 @@ class TestJobAnalyzer:
         mock_client.messages.create.return_value = mock_response
 
         with patch("services.job_analyzer.get_client", return_value=mock_client):
-            result = analyze_job_description("We need a staff backend engineer...")
+            result, usage = analyze_job_description("We need a staff backend engineer...")
 
         assert result["required_skills"] == ["Python", "distributed systems"]
         assert result["seniority"] == "staff"
+        assert "input_tokens" in usage
         mock_client.messages.create.assert_called_once()
         call_kwargs = mock_client.messages.create.call_args.kwargs
         assert call_kwargs["model"] == "claude-haiku-4-5-20251001"
