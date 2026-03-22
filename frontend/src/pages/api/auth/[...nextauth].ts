@@ -83,10 +83,14 @@ if (process.env.NODE_ENV === 'development') {
                 const devUser = DEV_USERS[role];
                 if (!devUser) return null;
 
+                const email = role === 'admin'
+                    ? (process.env.ADMIN_EMAIL || devUser.email)
+                    : devUser.email;
+
                 return {
                     id: `dev-${role}`,
                     name: devUser.name,
-                    email: devUser.email,
+                    email,
                     image: null,
                 };
             },
