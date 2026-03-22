@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { CardGridDisplayProps } from '../types';
+import { Grid } from '@/components/ui';
 
 const PAGE_SIZE = 12;
 
@@ -10,13 +11,13 @@ export function CardGridDisplay<T>({ items, renderItem }: CardGridDisplayProps<T
 
     return (
         <>
-            <div className="grid grid--responsive">
+            <Grid variant="responsive">
                 {visibleItems.map((item, index) => (
                     <React.Fragment key={index}>
                         {renderItem(item)}
                     </React.Fragment>
                 ))}
-            </div>
+            </Grid>
             {hasMore && (
                 <div className="text-center py-6">
                     <button

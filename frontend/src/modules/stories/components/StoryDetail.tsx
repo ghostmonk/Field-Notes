@@ -2,6 +2,7 @@ import React from 'react';
 import { formatDate, formatRelativeDate } from '@/shared/utils/formatDate';
 import { estimateReadingTime } from '@/shared/utils/readingTime';
 import { Story } from '@/shared/types/api';
+import { Card } from '@/components/ui';
 import { LazyStoryContent } from './LazyStoryContent';
 import { ReadingProgressBar } from '@/components/ReadingProgressBar';
 
@@ -13,7 +14,7 @@ interface StoryDetailProps {
 
 export const StoryDetail: React.FC<StoryDetailProps> = ({ story, onEdit, children }) => {
     return (
-        <article className="card" data-testid="story-article">
+        <Card data-testid="story-article">
             <ReadingProgressBar />
             <div className="flex items-center justify-between mb-2">
                 <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
@@ -46,6 +47,6 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({ story, onEdit, childre
             />
 
             {children}
-        </article>
+        </Card>
     );
 };

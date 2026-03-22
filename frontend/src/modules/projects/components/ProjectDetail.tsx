@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import DOMPurify from 'isomorphic-dompurify';
 import { Project } from '@/shared/types/api';
+import { Card, Badge } from '@/components/ui';
 
 interface ProjectDetailProps {
     project: Project;
@@ -23,9 +24,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
             <h1 className="page-title mb-sm">
                 {project.title}
                 {project.is_featured && (
-                    <span className="badge--featured">
+                    <Badge variant="featured">
                         Featured
-                    </span>
+                    </Badge>
                 )}
             </h1>
 
@@ -66,11 +67,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
                 )}
             </div>
 
-            <div className="card">
+            <Card>
                 <div className="prose prose--card">
                     <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.content) }} />
                 </div>
-            </div>
+            </Card>
         </>
     );
 };

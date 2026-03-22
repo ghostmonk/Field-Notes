@@ -1,5 +1,6 @@
 import React from 'react';
 import { LoadingAnimation, LoadingAnimationShowcase } from './LoadingAnimations';
+import { Card } from '@/components/ui';
 
 /**
  * Skeleton loading components for better perceived performance
@@ -7,7 +8,7 @@ import { LoadingAnimation, LoadingAnimationShowcase } from './LoadingAnimations'
  */
 
 export const StoryItemSkeleton: React.FC = () => (
-  <div className="card animate-pulse" data-testid="story-skeleton">
+  <Card className="animate-pulse" data-testid="story-skeleton">
     {/* Lead media placeholder */}
     <div className="h-48 w-full bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
 
@@ -37,7 +38,7 @@ export const StoryItemSkeleton: React.FC = () => (
 
     {/* Read more */}
     <div className="h-8 w-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
-  </div>
+  </Card>
 );
 
 export const StoriesListSkeleton: React.FC<{ count?: number }> = ({ count = 3 }) => (

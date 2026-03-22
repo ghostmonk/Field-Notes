@@ -6,6 +6,7 @@ import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
 import { estimateReadingTime } from '@/shared/utils/readingTime';
 import { Story } from '@/shared/types/api';
 import { engagementConfig } from '@/config/engagement.config';
+import { Card, Badge } from '@/components/ui';
 import { LazyStoryContent } from './LazyStoryContent';
 
 // Pre-compiled regexes for splitLeadingImage
@@ -104,17 +105,16 @@ export const StoryCard = React.memo(({
     const { leadImage, rest } = useMemo(() => splitLeadingImage(story.content || ''), [story.content]);
 
     return (
-        <div
-            key={story.id}
-            className={`card ${isDraft ? 'card--draft' : ''} ${featured ? 'card--featured' : ''}`}
+        <Card
+            variant={isDraft ? 'draft' : featured ? 'featured' : undefined}
             data-testid={`story-card-${story.id}`}
         >
             <div className="story-header">
                 <div className="story-header__actions">
                     {isDraft && (
-                        <span className="badge badge--draft" data-testid={`story-draft-badge-${story.id}`}>
+                        <Badge variant="draft" data-testid={`story-draft-badge-${story.id}`}>
                             DRAFT
-                        </span>
+                        </Badge>
                     )}
                     {canEdit && (
                         <div className="flex gap-2">
@@ -193,7 +193,7 @@ export const StoryCard = React.memo(({
             ) : (
                 <StoryMediaPreview leadImage={leadImage} rest={rest} />
             )}
-        </div>
+        </Card>
     );
 });
 
