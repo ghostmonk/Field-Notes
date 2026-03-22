@@ -61,8 +61,7 @@ describe('ProjectCard', () => {
     render(<ProjectCard project={mockProject} />);
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/projects/test-project');
-    // card--link class belongs on the Card element inside the Link
-    const card = link.querySelector('.card');
-    expect(card?.className).toContain('card--link');
+    // card--link on the anchor prevents default link styling (underline, blue text)
+    expect(link.className).toContain('card--link');
   });
 });
