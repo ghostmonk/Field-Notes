@@ -11,11 +11,12 @@ import {
   JobApplicationResponse,
   ApplicationStatus,
   UpdateResumeRequest,
+  VoiceFeedbackResponse,
 } from '@/shared/types/api';
 
 type PipelineStep = 'idle' | 'running' | 'done' | 'error';
 type FeedbackState = 'idle' | 'submitting' | 'submitted' | 'error';
-type Tab = 'tailor' | 'applications';
+type Tab = 'tailor' | 'applications' | 'voice';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 export default function AdminTailorPage() {
@@ -77,6 +78,7 @@ export default function AdminTailorPage() {
           job_description: jobDescription,
           tailored_resume: result.tailored_resume,
           evaluation_score: result.evaluation,
+          usage: result.usage,
         },
         session.accessToken
       );
@@ -98,7 +100,7 @@ export default function AdminTailorPage() {
           className="flex gap-1 mb-6 border-b"
           style={{ borderColor: 'var(--color-border)' }}
         >
-          {(['tailor', 'applications'] as Tab[]).map((tab) => (
+          {(['tailor', 'applications', 'voice'] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -119,6 +121,10 @@ export default function AdminTailorPage() {
 
         {activeTab === 'applications' && (
           <ApplicationsTab token={session?.accessToken || ''} />
+        )}
+
+        {activeTab === 'voice' && (
+          <VoiceTab token={session?.accessToken || ''} />
         )}
 
         {activeTab === 'tailor' && (<>
@@ -721,7 +727,7 @@ function ApplicationsTab({ token }: { token: string }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid="applications-list">
       {apps.map((app) => (
         <div
           key={app.id}
@@ -811,7 +817,7 @@ function ApplicationDetail({
 }) {
   return (
     <div className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <ScoreCard evaluation={app.evaluation_score} attempts={1} />
+      <ScoreCard evaluation={app.evaluation_score} attempts={1} usage={app.usage} />
       <div
         className="flex items-center gap-3 rounded-md p-3"
         style={{
@@ -882,6 +888,180 @@ function SetAsDefaultButton({
         <span className="text-sm" style={{ color: '#ef4444' }}>
           Failed
         </span>
+      )}
+    </div>
+  );
+}
+
+const FEEDBACK_TYPE_COLORS: Record<FeedbackType, string> = {
+  approved: '#22c55e',
+  rejected: '#ef4444',
+  edited: '#3b82f6',
+  flagged: '#eab308',
+};
+
+function VoiceTab({ token }: { token: string }) {
+  const [entries, setEntries] = useState<VoiceFeedbackResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>('');
+
+  const loadEntries = useCallback(async () => {
+    try {
+      const data = await apiClient.voiceFeedback.list(
+        token,
+        filter || undefined
+      );
+      setEntries(data);
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  }, [token, filter]);
+
+  useEffect(() => {
+    loadEntries();
+  }, [loadEntries]);
+
+  const handleReclassify = async (id: string, newType: FeedbackType) => {
+    try {
+      const updated = await apiClient.voiceFeedback.reclassify(id, newType, token);
+      setEntries((prev) =>
+        prev
+          .map((e) => (e.id === id ? updated : e))
+          .filter((e) => !filter || e.feedback_type === filter)
+      );
+    } catch {
+      // silently fail
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await apiClient.voiceFeedback.delete(id, token);
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+    } catch {
+      // silently fail
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+        Loading voice feedback...
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex gap-2 mb-4">
+        <select
+          value={filter}
+          onChange={(e) => {
+            setFilter(e.target.value);
+            setLoading(true);
+          }}
+          className="rounded px-2 py-1 text-sm"
+          style={{
+            backgroundColor: 'var(--color-bg-secondary)',
+            color: 'var(--color-text-primary)',
+            border: '1px solid var(--color-border)',
+          }}
+        >
+          <option value="">All types</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="edited">Edited</option>
+          <option value="flagged">Flagged</option>
+        </select>
+        <span className="text-sm self-center" style={{ color: 'var(--color-text-secondary)' }}>
+          {entries.length} entries
+        </span>
+      </div>
+
+      {entries.length === 0 ? (
+        <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+          No feedback entries{filter ? ` with type "${filter}"` : ''}.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {entries.map((entry) => (
+            <div
+              key={entry.id}
+              className="rounded-md p-4"
+              style={{
+                backgroundColor: 'var(--color-bg-secondary)',
+                border: '1px solid var(--color-border)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <select
+                    value={entry.feedback_type}
+                    onChange={(e) =>
+                      handleReclassify(entry.id, e.target.value as FeedbackType)
+                    }
+                    className="rounded px-2 py-1 text-xs"
+                    style={{
+                      backgroundColor: 'var(--color-bg-primary)',
+                      color: FEEDBACK_TYPE_COLORS[entry.feedback_type],
+                      border: '1px solid var(--color-border)',
+                    }}
+                  >
+                    {Object.keys(FEEDBACK_TYPE_COLORS)
+                      .filter((t) => t !== 'edited' || entry.feedback_type === 'edited')
+                      .map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                    {entry.job_context}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                    {new Date(entry.created_at).toLocaleDateString()}
+                  </span>
+                  <button
+                    onClick={() => handleDelete(entry.id)}
+                    className="text-xs px-2 py-1 rounded"
+                    style={{
+                      color: '#ef4444',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+              <div className="text-sm whitespace-pre-line" style={{ color: 'var(--color-text-primary)' }}>
+                {entry.original_text.length > 300
+                  ? `${entry.original_text.slice(0, 300)}...`
+                  : entry.original_text}
+              </div>
+              {entry.note && (
+                <div className="mt-2 text-xs italic" style={{ color: 'var(--color-text-secondary)' }}>
+                  Note: {entry.note}
+                </div>
+              )}
+              {entry.final_text && (
+                <div className="mt-2">
+                  <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                    Edited to:
+                  </span>
+                  <div className="text-sm mt-1" style={{ color: '#3b82f6' }}>
+                    {entry.final_text.length > 300
+                      ? `${entry.final_text.slice(0, 300)}...`
+                      : entry.final_text}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

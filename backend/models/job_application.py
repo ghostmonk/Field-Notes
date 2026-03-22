@@ -21,6 +21,7 @@ class JobApplicationCreate(BaseModel):
     job_description: str = Field(..., min_length=1)
     tailored_resume: Dict[str, Any] = Field(...)
     evaluation_score: Dict[str, Any] = Field(...)
+    usage: Optional[Dict[str, Any]] = None
     status: str = Field(default="saved", pattern="^(saved|applied|interviewing|offered|rejected)$")
     notes: Optional[str] = None
 
@@ -42,6 +43,7 @@ class JobApplicationResponse(BaseModel):
     job_description: str
     tailored_resume: Dict[str, Any]
     evaluation_score: Dict[str, Any]
+    usage: Optional[Dict[str, Any]] = None
     status: str
     notes: Optional[str] = None
     created_at: datetime

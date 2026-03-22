@@ -437,6 +437,7 @@ export interface JobApplicationCreate {
   job_description: string;
   tailored_resume: Resume;
   evaluation_score: TailorEvaluation;
+  usage?: TailorUsage;
   status?: ApplicationStatus;
   notes?: string;
 }
@@ -456,6 +457,7 @@ export interface JobApplicationResponse {
   job_description: string;
   tailored_resume: Resume;
   evaluation_score: TailorEvaluation;
+  usage?: TailorUsage;
   status: ApplicationStatus;
   notes?: string;
   created_at: string;

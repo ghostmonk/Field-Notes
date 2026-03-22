@@ -12,6 +12,7 @@ from qdrant_client.models import (
     Filter,
     MatchValue,
     PayloadSchemaType,
+    PointIdsList,
     PointStruct,
     VectorParams,
 )
@@ -137,3 +138,22 @@ def search(
         }
         for point in results.points
     ]
+
+
+def delete_vector(point_id: str) -> None:
+    """Delete a vector from Qdrant by point ID."""
+    client = _get_client()
+    client.delete(
+        collection_name=COLLECTION_NAME,
+        points_selector=PointIdsList(points=[point_id]),
+    )
+
+
+def update_payload(point_id: str, payload: Dict) -> None:
+    """Update payload fields on an existing Qdrant point."""
+    client = _get_client()
+    client.set_payload(
+        collection_name=COLLECTION_NAME,
+        payload=payload,
+        points=[point_id],
+    )
