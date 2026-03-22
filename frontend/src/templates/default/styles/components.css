@@ -348,6 +348,7 @@ button.btn--primary:hover:not(:disabled) {
   display: inline-block;
   width: 1em;
   height: 1em;
+  margin-right: var(--space-xs);
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: var(--radius-full);
@@ -376,22 +377,22 @@ button.btn--primary:hover:not(:disabled) {
 
 .badge--success {
   background-color: var(--color-status-success);
-  color: var(--color-text-inverse);
+  color: var(--color-text-on-status);
 }
 
 .badge--warning {
   background-color: var(--color-status-warning);
-  color: var(--color-text-inverse);
+  color: var(--color-text-on-status);
 }
 
 .badge--error {
   background-color: var(--color-status-error);
-  color: var(--color-text-inverse);
+  color: var(--color-text-on-status);
 }
 
 .badge--info {
   background-color: var(--color-status-info);
-  color: var(--color-text-inverse);
+  color: var(--color-text-on-status);
 }
 
 .badge--sm {
@@ -507,6 +508,7 @@ button.btn--primary:hover:not(:disabled) {
 }
 
 .textarea--inline:focus {
+  outline: none;
   border-bottom-color: var(--color-border-focus);
   box-shadow: none;
 }
@@ -550,13 +552,10 @@ button.btn--primary:hover:not(:disabled) {
   border-color: var(--color-status-error);
 }
 
-/* Checkbox */
+/* Checkbox — uses accent-color with native rendering for cross-browser consistency */
 .checkbox {
   width: 1rem;
   height: 1rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-secondary);
-  background-color: var(--color-surface-secondary);
   accent-color: var(--color-brand-primary);
   cursor: pointer;
 }
@@ -695,6 +694,10 @@ button.btn--primary:hover:not(:disabled) {
 
 .grid--responsive {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid--2-col {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .grid--3-cols {

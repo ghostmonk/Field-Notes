@@ -94,6 +94,7 @@ function TabsTab({ value, className, children }: TabsTabProps) {
       type="button"
       role="tab"
       id={tabId}
+      tabIndex={isActive ? 0 : -1}
       aria-selected={isActive}
       aria-controls={panelId}
       className={classes.join(' ')}

@@ -110,7 +110,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
         </FormField>
 
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Content</label>
+          <label htmlFor="content" className="form-field__label">Content</label>
           <div className="mt-1">
             <RichTextEditor
               content={project.content || ''}

@@ -83,6 +83,8 @@
   --color-focus-ring: rgba(79, 70, 229, 0.15);
   --color-focus-ring-error: rgba(239, 68, 68, 0.15);
 
+  --color-text-on-status: #ffffff;
+
   --color-surface-draft: rgb(254 252 232);
   --color-border-draft: rgb(254 240 138);
 

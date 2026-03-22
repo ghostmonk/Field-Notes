@@ -12,39 +12,42 @@
       "pr": 168,
       "date": "2026-03-22",
       "title": "UI component library with full codebase migration",
-      "rounds": 7,
+      "rounds": 8,
       "totals": {
-        "findings": 28,
-        "valid": 25,
-        "false_positive": 3
+        "findings": 42,
+        "valid": 33,
+        "false_positive": 7,
+        "skipped": 2
       },
       "by_category": {
-        "behavioral_regression": 11,
-        "accessibility": 8,
-        "token_violation": 5,
-        "missing_implementation": 4
+        "behavioral_regression": 13,
+        "accessibility": 10,
+        "token_violation": 7,
+        "missing_implementation": 5
       },
       "by_severity": {
         "high": 3,
-        "medium": 21,
-        "low": 4
+        "medium": 28,
+        "low": 6
       },
       "flagged_files": {
-        "frontend/src/components/ui/Tabs.tsx": 4,
-        "frontend/src/templates/default/styles/components.css": 4,
+        "frontend/src/templates/default/styles/components.css": 8,
+        "frontend/src/components/ui/Tabs.tsx": 6,
+        "frontend/src/modules/projects/components/ProjectCard.tsx": 5,
         "frontend/src/components/ui/Dialog.tsx": 3,
         "frontend/src/components/ConfirmDialog.tsx": 3,
-        "frontend/src/modules/projects/components/ProjectCard.tsx": 3,
-        "frontend/src/components/ui/Button.tsx": 2,
+        "frontend/src/components/ui/Button.tsx": 3,
         "frontend/src/components/ui/Textarea.tsx": 2,
         "frontend/src/modules/resume/components/ResumeForm.tsx": 2,
-        "frontend/src/components/ui/FormField.tsx": 1,
-        "frontend/src/modules/stories/components/StoryCard.tsx": 1,
+        "frontend/src/templates/default/styles/tokens.css": 2,
+        "frontend/src/components/ui/FormField.tsx": 2,
+        "frontend/src/modules/stories/components/StoryCard.tsx": 2,
         "frontend/src/modules/stories/components/StoryDetail.tsx": 1,
         "frontend/src/modules/editor/components/AltTextDialog.tsx": 1,
-        "frontend/src/templates/default/styles/tokens.css": 1
+        "frontend/src/modules/editor/components/ProjectEditorForm.tsx": 1,
+        "frontend/src/components/ui/Grid.tsx": 1
       },
-      "notes": "Migration PR — subagents replaced markup without verifying behavioral contracts. Accessibility and behavioral regressions dominated. Rounds 6-7 caught CSS specificity issues, missing keyboard nav, and repeat findings on ProjectCard and Dialog."
+      "notes": "Migration PR. Round 8 hit rate dropped to 57% (8/14 valid) — 4 findings on already-fixed code (stale reads), 2 design limitations. Signal that bot is reaching diminishing returns."
     }
   ]
 }
