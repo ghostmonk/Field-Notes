@@ -63,7 +63,8 @@ export const authOptions: NextAuthOptions = {
                 params: {
                     scope: "openid email profile",
                     access_type: "offline",
-                    prompt: "select_account",
+                    // Required: Google only issues refresh_token with explicit consent
+                    prompt: "consent",
                 },
             },
         }),
@@ -111,6 +112,11 @@ export const authOptions: NextAuthOptions = {
                     }
                 }
 
+                return token;
+            }
+
+            // Already failed — don't retry a revoked refresh token every poll cycle
+            if (token.error === REFRESH_TOKEN_ERROR) {
                 return token;
             }
 
