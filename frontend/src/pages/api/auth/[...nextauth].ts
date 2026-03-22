@@ -45,6 +45,7 @@ export const authOptions: NextAuthOptions = {
                 params: {
                     scope: "openid email profile",
                     access_type: "offline",
+                    // "consent" required — Google only guarantees refresh_token with it
                     prompt: "consent",
                 },
             },

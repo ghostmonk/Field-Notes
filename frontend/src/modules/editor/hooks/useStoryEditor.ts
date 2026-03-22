@@ -259,9 +259,8 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
         current.content || '',
         current.is_published || false,
       );
-      showToast('Session expired. Your draft has been saved locally.');
     }
-  }, [session?.error, saveDraft, showToast]);
+  }, [session?.error, saveDraft]);
 
   // Redirect unauthenticated users
   useEffect(() => {
