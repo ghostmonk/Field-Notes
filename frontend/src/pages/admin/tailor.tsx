@@ -118,7 +118,7 @@ export default function AdminTailorPage() {
         </div>
 
         {activeTab === 'applications' && (
-          <ApplicationsTab token={session.accessToken || ''} />
+          <ApplicationsTab token={session?.accessToken || ''} />
         )}
 
         {activeTab === 'tailor' && (<>
@@ -194,7 +194,7 @@ export default function AdminTailorPage() {
             <div className="flex gap-3">
               <FeedbackBar
                 result={result}
-                token={session.accessToken || ''}
+                token={session?.accessToken || ''}
                 feedbackState={feedbackState}
                 setFeedbackState={setFeedbackState}
                 flagNote={flagNote}

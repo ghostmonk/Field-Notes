@@ -312,17 +312,24 @@ async def set_default_resume(
     """Set a tailored resume as the active default. Original is preserved in original_resume."""
     user: UserInfo = request.state.user
 
+    current = await collection.find_one({"user_id": user.id, "deleted": {"$ne": True}})
+    if not current:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
     update_data = resume.model_dump(exclude_unset=True)
     update_data["updatedDate"] = datetime.now(timezone.utc)
 
+    # Snapshot original before first override
+    if "original_resume" not in current:
+        update_data["original_resume"] = {
+            k: v for k, v in current.items() if k not in RESUME_INTERNAL_FIELDS
+        }
+
     updated_doc = await collection.find_one_and_update(
-        {"user_id": user.id, "deleted": {"$ne": True}},
+        {"_id": current["_id"]},
         {"$set": update_data},
         return_document=ReturnDocument.AFTER,
     )
-
-    if not updated_doc:
-        raise HTTPException(status_code=404, detail="Resume not found")
 
     index_data = {k: v for k, v in updated_doc.items() if k not in RESUME_INTERNAL_FIELDS}
     schedule_background(_index_resume_background(index_data, user.id))
@@ -360,6 +367,9 @@ async def restore_original_resume(
         {"$set": update_data},
         return_document=ReturnDocument.AFTER,
     )
+
+    if not updated_doc:
+        raise HTTPException(status_code=404, detail="Resume not found")
 
     index_data = {k: v for k, v in updated_doc.items() if k not in RESUME_INTERNAL_FIELDS}
     schedule_background(_index_resume_background(index_data, user.id))
