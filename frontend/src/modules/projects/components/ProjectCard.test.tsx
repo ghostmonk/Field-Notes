@@ -57,11 +57,12 @@ describe('ProjectCard', () => {
   // <a> or Card as="a"), it still renders an anchor but loses SPA transitions
   // and prefetching. This test verifies the mock is wired up — if someone
   // removes the Link import, the mock stops matching and the test breaks.
-  it('wraps card in a navigable link', () => {
+  it('wraps card in a navigable link with card--link styling', () => {
     render(<ProjectCard project={mockProject} />);
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/projects/test-project');
-    // card--link class provides text-decoration:none on the Link wrapper
-    expect(link.className).toContain('card--link');
+    // card--link class belongs on the Card element inside the Link
+    const card = link.querySelector('.card');
+    expect(card?.className).toContain('card--link');
   });
 });

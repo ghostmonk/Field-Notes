@@ -58,14 +58,15 @@ const DialogRoot = forwardRef<HTMLDialogElement, DialogProps>(
         dialog.close();
         (previousFocusRef.current as HTMLElement)?.focus?.();
       }
-
-      return () => {
-        // Restore focus when Dialog unmounts while open (e.g., ConfirmDialog)
-        if (open) {
-          (previousFocusRef.current as HTMLElement)?.focus?.();
-        }
-      };
     }, [open]);
+
+    // Restore focus on unmount when dialog is still open (e.g., ConfirmDialog
+    // which mounts with open=true and is removed from tree on close)
+    useEffect(() => {
+      return () => {
+        (previousFocusRef.current as HTMLElement)?.focus?.();
+      };
+    }, []);
 
     const classes = ['dialog'];
     if (className) classes.push(className);

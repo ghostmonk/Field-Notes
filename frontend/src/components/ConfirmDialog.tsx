@@ -89,9 +89,9 @@ function ConfirmDialogInner({
 
   return (
     <Dialog open={true} onClose={onCancel} data-testid="confirm-dialog">
+      <Dialog.Header title={title} />
       <Dialog.Body>
-        <h3 className="dialog__title">{title}</h3>
-        <p className="text-sm" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xl)' }}>
+        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
           {message}
         </p>
       </Dialog.Body>

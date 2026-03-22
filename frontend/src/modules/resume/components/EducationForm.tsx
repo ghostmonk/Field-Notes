@@ -120,7 +120,8 @@ export function EducationForm({ items, onChange }: EducationFormProps) {
             }
             rows={2}
             placeholder="Description..."
-            className="input--inline text-sm resize-none"
+            variant="inline"
+            className="text-sm resize-none"
           />
         </div>
       ))}

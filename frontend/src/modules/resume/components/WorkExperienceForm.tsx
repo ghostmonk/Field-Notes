@@ -176,7 +176,8 @@ export function WorkExperienceForm({
             }
             rows={2}
             placeholder="Description..."
-            className="input--inline text-sm resize-none"
+            variant="inline"
+            className="text-sm resize-none"
           />
           <TechnologiesInput
             technologies={item.technologies}

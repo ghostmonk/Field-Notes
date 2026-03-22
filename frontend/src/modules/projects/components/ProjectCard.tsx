@@ -11,8 +11,8 @@ interface ProjectCardProps {
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project, basePath }) => {
     return (
-        <Link href={`${basePath || '/projects'}/${project.slug}`} className="card--link">
-            <Card hoverable>
+        <Link href={`${basePath || '/projects'}/${project.slug}`}>
+            <Card hoverable className="card--link">
                 {project.image_url && (
                     <Image
                         src={project.image_url}

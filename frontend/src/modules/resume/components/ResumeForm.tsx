@@ -1,4 +1,4 @@
-import { Textarea } from '@/components/ui';
+import { Textarea, Button } from '@/components/ui';
 import { UseResumeEditorReturn } from '../hooks/useResumeEditor';
 import { ContactForm } from './ContactForm';
 import { WorkExperienceForm } from './WorkExperienceForm';
@@ -62,7 +62,8 @@ export function ResumeForm({ editor }: ResumeFormProps) {
           onChange={(e) => setSummary(e.target.value)}
           rows={3}
           placeholder="Brief professional summary..."
-          className="input--inline resize-none"
+          variant="inline"
+          className="resize-none"
         />
       </div>
 
@@ -92,14 +93,13 @@ export function ResumeForm({ editor }: ResumeFormProps) {
       </div>
 
       <div className="pt-4">
-        <button
-          type="button"
+        <Button
+          variant="primary"
           onClick={handleSave}
-          disabled={isSaving}
-          className="btn btn-primary"
+          loading={isSaving}
         >
           {isSaving ? 'Saving...' : 'Save Resume'}
-        </button>
+        </Button>
       </div>
     </div>
   );

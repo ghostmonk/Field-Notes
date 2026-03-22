@@ -1,15 +1,19 @@
 import { forwardRef, ComponentPropsWithoutRef, useCallback, useRef, useEffect } from 'react';
 
+type TextareaVariant = 'default' | 'inline';
+
 interface TextareaProps extends ComponentPropsWithoutRef<'textarea'> {
+  variant?: TextareaVariant;
   error?: boolean;
   autoResize?: boolean;
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ error, autoResize, className, onChange, value, ...props }, ref) => {
+  ({ variant = 'default', error, autoResize, className, onChange, value, ...props }, ref) => {
     const internalRef = useRef<HTMLTextAreaElement | null>(null);
 
     const classes = ['textarea'];
+    if (variant === 'inline') classes.push('textarea--inline');
     if (error) classes.push('textarea--error');
     if (className) classes.push(className);
 

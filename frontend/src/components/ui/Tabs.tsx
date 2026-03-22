@@ -51,8 +51,29 @@ function TabsRoot({ activeTab, onTabChange, className, children }: TabsProps) {
 function TabsList({ className, children }: TabsListProps) {
   const classes = ['tabs__list'];
   if (className) classes.push(className);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const tabs = Array.from(
+      e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+    );
+    const current = tabs.indexOf(e.target as HTMLButtonElement);
+    if (current === -1) return;
+
+    let next = -1;
+    if (e.key === 'ArrowRight') next = (current + 1) % tabs.length;
+    if (e.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
+    if (e.key === 'Home') next = 0;
+    if (e.key === 'End') next = tabs.length - 1;
+
+    if (next !== -1) {
+      e.preventDefault();
+      tabs[next].focus();
+      tabs[next].click();
+    }
+  };
+
   return (
-    <div className={classes.join(' ')} role="tablist">
+    <div className={classes.join(' ')} role="tablist" onKeyDown={handleKeyDown}>
       {children}
     </div>
   );

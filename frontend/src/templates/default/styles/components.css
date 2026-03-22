@@ -494,6 +494,23 @@ button.btn--primary:hover:not(:disabled) {
   border-color: var(--color-status-error);
 }
 
+.textarea--inline {
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  padding: var(--space-xs) 0;
+}
+
+.textarea--inline:hover {
+  border-bottom-color: var(--color-border-primary);
+}
+
+.textarea--inline:focus {
+  border-bottom-color: var(--color-border-focus);
+  box-shadow: none;
+}
+
 /* Select */
 .select {
   display: block;
