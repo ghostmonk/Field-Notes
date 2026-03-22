@@ -926,7 +926,11 @@ function VoiceTab({ token }: { token: string }) {
   const handleReclassify = async (id: string, newType: FeedbackType) => {
     try {
       const updated = await apiClient.voiceFeedback.reclassify(id, newType, token);
-      setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
+      setEntries((prev) =>
+        prev
+          .map((e) => (e.id === id ? updated : e))
+          .filter((e) => !filter || e.feedback_type === filter)
+      );
     } catch {
       // silently fail
     }
@@ -1005,7 +1009,9 @@ function VoiceTab({ token }: { token: string }) {
                       border: '1px solid var(--color-border)',
                     }}
                   >
-                    {Object.keys(FEEDBACK_TYPE_COLORS).map((t) => (
+                    {Object.keys(FEEDBACK_TYPE_COLORS)
+                      .filter((t) => t !== 'edited' || entry.feedback_type === 'edited')
+                      .map((t) => (
                       <option key={t} value={t}>
                         {t}
                       </option>
