@@ -2,10 +2,9 @@ import os
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from decorators.auth import _token_cache, requires_auth
 from fastapi import FastAPI, Request
 from httpx import ASGITransport, AsyncClient
-
-from decorators.auth import _token_cache, requires_auth
 
 app = FastAPI()
 
