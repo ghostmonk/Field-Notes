@@ -25,10 +25,16 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         return token;
     }
 
-    const refreshed = await response.json();
+    let refreshed: Record<string, unknown>;
+    try {
+        refreshed = await response.json();
+    } catch {
+        console.warn("Non-JSON response from token endpoint, status:", response.status);
+        return token;
+    }
 
     if (!response.ok) {
-        const errorCode = refreshed.error || "unknown";
+        const errorCode = (refreshed.error as string) || "unknown";
         if (FATAL_REFRESH_ERRORS.has(errorCode)) {
             console.error("Refresh token revoked:", errorCode);
             return { ...token, error: REFRESH_TOKEN_ERROR };
@@ -40,10 +46,10 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
 
     return {
         ...token,
-        accessToken: refreshed.access_token,
-        accessTokenExpires: Date.now() + (refreshed.expires_in ?? 3600) * 1000,
+        accessToken: refreshed.access_token as string,
+        accessTokenExpires: Date.now() + ((refreshed.expires_in as number) ?? 3600) * 1000,
         // Google may return a new refresh token; keep the old one if not
-        refreshToken: refreshed.refresh_token ?? token.refreshToken,
+        refreshToken: (refreshed.refresh_token as string) ?? token.refreshToken,
         error: undefined,
     };
 }
@@ -105,8 +111,8 @@ export const authOptions: NextAuthOptions = {
                 return token;
             }
 
-            // Subsequent requests: check if access token needs refresh
-            if (token.accessTokenExpires && Date.now() < token.accessTokenExpires) {
+            // Subsequent requests: refresh 60s early to avoid in-flight expiry
+            if (token.accessTokenExpires && Date.now() < token.accessTokenExpires - 60_000) {
                 return token;
             }
 
