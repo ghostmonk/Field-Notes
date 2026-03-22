@@ -18,6 +18,7 @@ services:
       - QDRANT_URL=http://qdrant:6333
       - QDRANT_API_KEY=${QDRANT_API_KEY:-}
       - VOYAGE_API_KEY=${VOYAGE_API_KEY:-}
+      - ALLOW_DEV_AUTH=true
     volumes:
       - ./backend:/app
       - ./shared/python:/shared/python
