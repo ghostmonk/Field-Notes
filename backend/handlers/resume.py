@@ -163,6 +163,7 @@ async def create_resume(
             {
                 "$set": {
                     **resume_data,
+                    "original_resume": resume_data,
                     "updatedDate": current_time,
                     "createdDate": current_time,
                     "user_id": user.id,
@@ -182,9 +183,10 @@ async def create_resume(
             if existing:
                 raise HTTPException(status_code=409, detail="Resume already exists for this user")
 
-            # Insert new document and construct response directly
+            # Insert new document with original_resume snapshot
             document = {
                 **resume_data,
+                "original_resume": resume_data,
                 "createdDate": current_time,
                 "updatedDate": current_time,
                 "user_id": user.id,
@@ -249,9 +251,14 @@ async def update_resume(
         update_data = resume.model_dump(exclude_unset=True)
         update_data["updatedDate"] = current_time
 
+        # Keep original_resume in sync with manual edits from resume builder
+        original_updates = {
+            f"original_resume.{k}": v for k, v in update_data.items() if k != "updatedDate"
+        }
+
         updated_doc = await collection.find_one_and_update(
             {"user_id": user.id, "deleted": {"$ne": True}},
-            {"$set": update_data},
+            {"$set": {**update_data, **original_updates}},
             return_document=ReturnDocument.AFTER,
         )
 
@@ -300,29 +307,20 @@ async def set_default_resume(
     resume: ResumeUpdate,
     collection: AsyncIOMotorCollection = Depends(get_resumes_collection),
 ):
-    """Set a tailored resume as default, preserving the original."""
+    """Set a tailored resume as the active default. Original is preserved in original_resume."""
     user: UserInfo = request.state.user
-
-    current = await collection.find_one({"user_id": user.id, "deleted": {"$ne": True}})
-    if not current:
-        raise HTTPException(status_code=404, detail="Resume not found")
-
-    # Save original only on first override — never overwrite a saved original
-    if "original_resume" not in current:
-        original = {k: v for k, v in current.items() if k not in RESUME_INTERNAL_FIELDS}
-        await collection.update_one(
-            {"_id": current["_id"]},
-            {"$set": {"original_resume": original}},
-        )
 
     update_data = resume.model_dump(exclude_unset=True)
     update_data["updatedDate"] = datetime.now(timezone.utc)
 
     updated_doc = await collection.find_one_and_update(
-        {"_id": current["_id"]},
+        {"user_id": user.id, "deleted": {"$ne": True}},
         {"$set": update_data},
         return_document=ReturnDocument.AFTER,
     )
+
+    if not updated_doc:
+        raise HTTPException(status_code=404, detail="Resume not found")
 
     index_data = {k: v for k, v in updated_doc.items() if k not in RESUME_INTERNAL_FIELDS}
     schedule_background(_index_resume_background(index_data, user.id))
@@ -337,7 +335,7 @@ async def restore_original_resume(
     request: Request,
     collection: AsyncIOMotorCollection = Depends(get_resumes_collection),
 ):
-    """Restore the original canonical resume."""
+    """Restore the original canonical resume as the active default."""
     user: UserInfo = request.state.user
 
     current = await collection.find_one({"user_id": user.id, "deleted": {"$ne": True}})
@@ -348,11 +346,11 @@ async def restore_original_resume(
     if not original:
         raise HTTPException(status_code=404, detail="No original resume saved")
 
-    original["updatedDate"] = datetime.now(timezone.utc)
+    update_data = {**original, "updatedDate": datetime.now(timezone.utc)}
 
     updated_doc = await collection.find_one_and_update(
         {"_id": current["_id"]},
-        {"$set": original, "$unset": {"original_resume": ""}},
+        {"$set": update_data},
         return_document=ReturnDocument.AFTER,
     )
 
