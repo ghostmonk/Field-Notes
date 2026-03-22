@@ -5,6 +5,7 @@ interface DialogProps {
   onClose: () => void;
   className?: string;
   children: ReactNode;
+  'data-testid'?: string;
 }
 
 interface DialogHeaderProps {
@@ -42,7 +43,7 @@ function DialogFooter({ children, className }: DialogFooterProps) {
 }
 
 const DialogRoot = forwardRef<HTMLDialogElement, DialogProps>(
-  ({ open, onClose, className, children }, ref) => {
+  ({ open, onClose, className, children, 'data-testid': dataTestId }, ref) => {
     const internalRef = useRef<HTMLDialogElement | null>(null);
     const previousFocusRef = useRef<Element | null>(null);
 
@@ -77,6 +78,7 @@ const DialogRoot = forwardRef<HTMLDialogElement, DialogProps>(
           e.preventDefault();
           onClose();
         }}
+        data-testid={dataTestId}
       >
         {children}
       </dialog>
