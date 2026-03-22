@@ -81,7 +81,15 @@ export class ErrorService {
     if (typeof error === 'string') {
       return error;
     }
-    
+
+    if (isObject(error)) {
+      try {
+        return JSON.stringify(error);
+      } catch {
+        // fall through
+      }
+    }
+
     return 'An unexpected error occurred';
   }
 

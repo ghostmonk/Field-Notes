@@ -113,8 +113,20 @@ async function fetchApi<T, B = unknown>(
     const data = await response.json();
 
     if (!response.ok) {
+      const fallbackMessage = `HTTP ${response.status}: ${response.statusText}`;
+      let errorMessage = fallbackMessage;
+      if (data && typeof data === 'object') {
+        if ('user_message' in data && typeof data.user_message === 'string') {
+          errorMessage = data.user_message;
+        } else if ('detail' in data && typeof data.detail === 'string') {
+          errorMessage = data.detail;
+        } else if ('detail' in data && Array.isArray(data.detail)) {
+          const details = data.detail as Array<{ msg?: string }>;
+          errorMessage = details.map(d => d.msg || String(d)).join('; ') || fallbackMessage;
+        }
+      }
       const apiError = new ApiRequestError(
-        data?.user_message || data?.detail || `HTTP ${response.status}: ${response.statusText}`,
+        errorMessage,
         response.status,
         data,
         requestDetails
