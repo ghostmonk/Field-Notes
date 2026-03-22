@@ -63,8 +63,7 @@ export const authOptions: NextAuthOptions = {
                 params: {
                     scope: "openid email profile",
                     access_type: "offline",
-                    // "consent" required — Google only guarantees refresh_token with it
-                    prompt: "consent",
+                    prompt: "select_account",
                 },
             },
         }),
@@ -78,6 +77,10 @@ export const authOptions: NextAuthOptions = {
                 token.accessTokenExpires = account.expires_at
                     ? account.expires_at * 1000
                     : Date.now() + 3600 * 1000;
+
+                if (!account.refresh_token) {
+                    console.warn("No refresh_token received from Google — token rotation will fail at expiry");
+                }
 
                 // Fetch user info from backend to get role and ID
                 try {
@@ -111,8 +114,15 @@ export const authOptions: NextAuthOptions = {
                 return token;
             }
 
-            // Subsequent requests: refresh 60s early to avoid in-flight expiry
-            if (token.accessTokenExpires && Date.now() < token.accessTokenExpires - 60_000) {
+            // Pre-existing sessions (before token rotation) lack these fields —
+            // let them ride until the access token naturally fails a backend call,
+            // at which point the user re-authenticates and gets a full token set.
+            if (!token.accessTokenExpires) {
+                return token;
+            }
+
+            // Refresh 60s early to avoid in-flight expiry
+            if (Date.now() < token.accessTokenExpires - 60_000) {
                 return token;
             }
 
