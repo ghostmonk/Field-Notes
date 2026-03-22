@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { iconMap } from "@/shared/lib/navIcons";
-import { HiPlusSm, HiCog, HiSearch } from "react-icons/hi";
+import { HiPlusSm, HiCog, HiSearch, HiDocumentText } from "react-icons/hi";
 import { getSiteConfig } from "@/config";
 import ThemeToggle from "@/components/ThemeToggle";
 
