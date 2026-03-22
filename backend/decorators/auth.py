@@ -50,7 +50,7 @@ def _cache_user(token: str, user_info: UserInfo) -> None:
 # Dev auth constants — only active when ALLOW_DEV_AUTH=true
 DEV_TOKEN_PREFIX = "dev-mock-"
 _DEV_USERS = {
-    "admin": {"email": "dev-admin@dev.example.com", "name": "Dev Admin"},
+    "admin": {"email": ADMIN_EMAIL, "name": "Dev Admin"},
     "commenter": {"email": "dev-commenter@dev.example.com", "name": "Dev Commenter"},
 }
 

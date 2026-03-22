@@ -21,9 +21,11 @@ async def protected_endpoint(request: Request):
 
 DEV_TOKEN_PREFIX = "dev-mock-"
 
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@test.com")
+
 DEV_USERS = {
     "admin": {
-        "email": "dev-admin@dev.example.com",
+        "email": ADMIN_EMAIL,
         "name": "Dev Admin",
         "role": "admin",
     },
@@ -62,7 +64,7 @@ def mock_users_for_dev():
         collection = AsyncMock()
         collection.find_one_and_update.return_value = {
             "_id": ObjectId(),
-            "email": "dev-admin@dev.example.com",
+            "email": ADMIN_EMAIL,
             "name": "Dev Admin",
             "role": "admin",
             "auth_providers": [],
@@ -83,7 +85,7 @@ async def test_dev_token_admin_accepted_when_enabled(enable_dev_auth, mock_users
         )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "dev-admin@dev.example.com"
+    assert data["email"] == ADMIN_EMAIL
     assert data["role"] == "admin"
 
 
