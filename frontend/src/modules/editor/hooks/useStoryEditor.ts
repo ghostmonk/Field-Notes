@@ -5,7 +5,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import { Story } from '@/shared/types/api';
-import { isTokenExpired } from '@/shared/lib/auth';
 import { useFetchStory, useStoryMutations } from '@/modules/stories/hooks';
 import { logger } from '@/shared/utils/logger';
 import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
@@ -18,8 +17,6 @@ const EMPTY_STORY: Partial<Story> = {
   content: '',
   is_published: true,
 };
-
-const TOKEN_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export interface UseStoryEditorReturn {
   story: Partial<Story>;
@@ -251,21 +248,20 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }
   }, [router.query, storyId]);
 
-  // Auto-save on token expiry — reads from refs to avoid interval churn
+  // Handle session refresh failure — save draft locally and sign out
   useEffect(() => {
-    const interval = setInterval(() => {
-      const token = session?.accessToken;
-      const current = storyRef.current;
-      if (token && isTokenExpired(token) && (current.title || current.content)) {
-        handleSubmit(new Event('submit') as unknown as React.FormEvent, false).then(() => {
-          alert('Session expired. Your story has been saved as a draft. Logging out.');
-          signOut();
-        });
-      }
-    }, TOKEN_CHECK_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [session?.accessToken, handleSubmit]);
+    if (session?.error !== 'RefreshTokenError') return;
+    const current = storyRef.current;
+    if (current.title || current.content) {
+      saveDraft(
+        current.title || '',
+        current.content || '',
+        current.is_published || false,
+      );
+      showToast('Session expired. Your draft has been saved locally.');
+    }
+    signOut();
+  }, [session?.error, saveDraft, showToast]);
 
   // Redirect unauthenticated users
   useEffect(() => {

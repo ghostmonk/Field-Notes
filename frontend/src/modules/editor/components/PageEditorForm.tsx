@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { Section, Page, UpdatePageRequest } from '@/shared/types/api';
 import apiClient from '@/shared/lib/api-client';
 import { ApiRequestError } from '@/shared/types/error';
@@ -77,6 +77,13 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
       setIsSaving(false);
     }
   }, [session, page, pageType, section.slug, router]);
+
+  // Handle session refresh failure
+  useEffect(() => {
+    if (session?.error === 'RefreshTokenError') {
+      signOut();
+    }
+  }, [session?.error]);
 
   // Redirect unauthenticated users
   useEffect(() => {

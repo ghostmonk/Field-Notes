@@ -81,7 +81,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     }, [doWarmup, isSkeletonTest]);
 
     return (
-        <SessionProvider session={pageProps.session}>
+        <SessionProvider session={pageProps.session} refetchInterval={4 * 60}>
             <ToastProvider>
                 <ConfirmProvider>
                     <Head>
