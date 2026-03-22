@@ -3,9 +3,13 @@ import GoogleProvider from "next-auth/providers/google";
 import { JWT } from "next-auth/jwt";
 import { REFRESH_TOKEN_ERROR } from "@/shared/lib/auth";
 
+// Google error codes that indicate the refresh token is permanently invalid
+const FATAL_REFRESH_ERRORS = new Set(["invalid_grant", "unauthorized_client", "invalid_client"]);
+
 async function refreshAccessToken(token: JWT): Promise<JWT> {
+    let response: Response;
     try {
-        const response = await fetch("https://oauth2.googleapis.com/token", {
+        response = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
@@ -15,25 +19,33 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
                 refresh_token: token.refreshToken!,
             }),
         });
-
-        const refreshed = await response.json();
-
-        if (!response.ok) {
-            throw new Error(refreshed.error || "Token refresh failed");
-        }
-
-        return {
-            ...token,
-            accessToken: refreshed.access_token,
-            accessTokenExpires: Date.now() + (refreshed.expires_in ?? 3600) * 1000,
-            // Google may return a new refresh token; keep the old one if not
-            refreshToken: refreshed.refresh_token ?? token.refreshToken,
-            error: undefined,
-        };
     } catch (error) {
-        console.error("Error refreshing access token:", error);
-        return { ...token, error: REFRESH_TOKEN_ERROR };
+        // Network error (DNS, timeout, etc.) — keep existing token, retry next poll
+        console.warn("Network error refreshing access token:", error);
+        return token;
     }
+
+    const refreshed = await response.json();
+
+    if (!response.ok) {
+        const errorCode = refreshed.error || "unknown";
+        if (FATAL_REFRESH_ERRORS.has(errorCode)) {
+            console.error("Refresh token revoked:", errorCode);
+            return { ...token, error: REFRESH_TOKEN_ERROR };
+        }
+        // Non-fatal API error — keep existing token, retry next poll
+        console.warn("Transient refresh error:", errorCode);
+        return token;
+    }
+
+    return {
+        ...token,
+        accessToken: refreshed.access_token,
+        accessTokenExpires: Date.now() + (refreshed.expires_in ?? 3600) * 1000,
+        // Google may return a new refresh token; keep the old one if not
+        refreshToken: refreshed.refresh_token ?? token.refreshToken,
+        error: undefined,
+    };
 }
 
 export const authOptions: NextAuthOptions = {
