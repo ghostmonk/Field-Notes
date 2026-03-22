@@ -97,6 +97,14 @@ Required environment variables in `.env`:
 
 Place `gcp-credentials.json` in project root (production only). Docker Compose sets `LOCAL_STORAGE_PATH=/app/local-uploads` automatically.
 
+### Dev Authentication
+
+Local development supports mock authentication without Google OAuth credentials. Docker Compose sets `ALLOW_DEV_AUTH=true` on the backend automatically. The frontend shows role-picker buttons (Admin/Commenter) instead of Google Sign-In when `NODE_ENV=development`. Dev tokens use the `dev-mock-<role>` prefix and `@dev.example.com` emails.
+
+**Safety:** Two layers prevent production execution:
+1. Backend rejects dev tokens unless `ALLOW_DEV_AUTH=true` (never set in deploy.yml)
+2. Frontend Credentials provider only loads when `NODE_ENV=development`
+
 ## Key Implementation Details
 
 **Dynamic Routing**: Single catch-all route `frontend/src/pages/[...slugPath].tsx` resolves all section URLs. `getServerSideProps` fetches the section config from `/sections/slug/<path>`, then fetches content based on `content_type` and `display_type`.
