@@ -86,20 +86,17 @@ const Footer: React.FC = () => {
                 {config.socials && Object.values(config.socials).some(Boolean) && (
                     <div className="site-footer__column">
                         <h3 className="site-footer__heading">Social</h3>
-                        <ul className="site-footer__list">
+                        <div className="site-footer__socials">
                             {socialLinks.map(({ key, label, Icon }) => {
                                 const url = config.socials?.[key];
                                 if (!url) return null;
                                 return (
-                                    <li key={key}>
-                                        <a href={url} target="_blank" rel="noopener noreferrer" className="site-footer__link">
-                                            <Icon className="site-footer__link-icon" aria-hidden="true" />
-                                            {label}
-                                        </a>
-                                    </li>
+                                    <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="site-footer__social-icon" aria-label={label}>
+                                        <Icon />
+                                    </a>
                                 );
                             })}
-                        </ul>
+                        </div>
                     </div>
                 )}
 
