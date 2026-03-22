@@ -99,7 +99,7 @@ Place `gcp-credentials.json` in project root (production only). Docker Compose s
 
 ### Dev Authentication
 
-Local development supports mock authentication without Google OAuth credentials. Docker Compose sets `ALLOW_DEV_AUTH=true` on the backend automatically. The frontend shows role-picker buttons (Admin/Commenter) instead of Google Sign-In when `NODE_ENV=development`. Dev tokens use the `dev-mock-<role>` prefix and `@dev.example.com` emails.
+Local development supports mock authentication without Google OAuth credentials. Docker Compose sets `ALLOW_DEV_AUTH=true` on the backend automatically. The frontend shows role-picker buttons (Admin/Commenter) instead of Google Sign-In when `NODE_ENV=development`. Dev tokens use the `dev-mock-<role>` prefix. The dev admin authenticates as `ADMIN_EMAIL` (the real admin account); the dev commenter uses `dev-commenter@dev.example.com`.
 
 **Safety:** Two layers prevent production execution:
 1. Backend rejects dev tokens unless `ALLOW_DEV_AUTH=true` (never set in deploy.yml)

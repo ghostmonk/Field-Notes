@@ -2,7 +2,8 @@ import os
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from decorators.auth import _token_cache, requires_auth
+from bson import ObjectId
+from decorators.auth import _DEV_USERS, DEV_TOKEN_PREFIX, _token_cache, requires_auth
 from fastapi import FastAPI, Request
 from httpx import ASGITransport, AsyncClient
 
@@ -17,24 +18,6 @@ async def protected_endpoint(request: Request):
         "email": request.state.user.email,
         "role": request.state.user.role,
     }
-
-
-DEV_TOKEN_PREFIX = "dev-mock-"
-
-ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@test.com")
-
-DEV_USERS = {
-    "admin": {
-        "email": ADMIN_EMAIL,
-        "name": "Dev Admin",
-        "role": "admin",
-    },
-    "commenter": {
-        "email": "dev-commenter@dev.example.com",
-        "name": "Dev Commenter",
-        "role": "commenter",
-    },
-}
 
 
 @pytest.fixture(autouse=True)
@@ -58,14 +41,14 @@ def disable_dev_auth():
 
 @pytest.fixture
 def mock_users_for_dev():
-    from bson import ObjectId
+    admin = _DEV_USERS["admin"]
 
     async def mock_get_collection():
         collection = AsyncMock()
         collection.find_one_and_update.return_value = {
             "_id": ObjectId(),
-            "email": ADMIN_EMAIL,
-            "name": "Dev Admin",
+            "email": admin["email"],
+            "name": admin["name"],
             "role": "admin",
             "auth_providers": [],
         }
@@ -77,28 +60,29 @@ def mock_users_for_dev():
 
 @pytest.mark.asyncio
 async def test_dev_token_admin_accepted_when_enabled(enable_dev_auth, mock_users_for_dev):
+    admin = _DEV_USERS["admin"]
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get(
             "/protected",
-            headers={"Authorization": "Bearer dev-mock-admin"},
+            headers={"Authorization": f"Bearer {DEV_TOKEN_PREFIX}admin"},
         )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == ADMIN_EMAIL
+    assert data["email"] == admin["email"]
     assert data["role"] == "admin"
 
 
 @pytest.mark.asyncio
 async def test_dev_token_commenter_accepted_when_enabled(enable_dev_auth, mock_users_for_dev):
-    from bson import ObjectId
+    commenter = _DEV_USERS["commenter"]
 
     async def mock_get_collection():
         collection = AsyncMock()
         collection.find_one_and_update.return_value = {
             "_id": ObjectId(),
-            "email": "dev-commenter@dev.example.com",
-            "name": "Dev Commenter",
+            "email": commenter["email"],
+            "name": commenter["name"],
             "role": "commenter",
             "auth_providers": [],
         }
@@ -109,11 +93,11 @@ async def test_dev_token_commenter_accepted_when_enabled(enable_dev_auth, mock_u
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.get(
                 "/protected",
-                headers={"Authorization": "Bearer dev-mock-commenter"},
+                headers={"Authorization": f"Bearer {DEV_TOKEN_PREFIX}commenter"},
             )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "dev-commenter@dev.example.com"
+    assert data["email"] == commenter["email"]
     assert data["role"] == "commenter"
 
 
@@ -124,7 +108,7 @@ async def test_dev_token_rejected_when_disabled(disable_dev_auth):
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get(
             "/protected",
-            headers={"Authorization": "Bearer dev-mock-admin"},
+            headers={"Authorization": f"Bearer {DEV_TOKEN_PREFIX}admin"},
         )
     assert response.status_code == 401
 
@@ -136,6 +120,6 @@ async def test_dev_token_invalid_role_rejected(enable_dev_auth):
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get(
             "/protected",
-            headers={"Authorization": "Bearer dev-mock-superadmin"},
+            headers={"Authorization": f"Bearer {DEV_TOKEN_PREFIX}superadmin"},
         )
     assert response.status_code == 401

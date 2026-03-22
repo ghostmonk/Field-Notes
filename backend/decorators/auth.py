@@ -73,11 +73,16 @@ async def _handle_dev_token(token: str) -> UserInfo | None:
         name=dev_user["name"],
         avatar_url=None,
         provider_user_id=f"dev-{role}",
+        provider="dev",
     )
 
 
 async def get_or_create_user(
-    email: str, name: str, avatar_url: str | None, provider_user_id: str
+    email: str,
+    name: str,
+    avatar_url: str | None,
+    provider_user_id: str,
+    provider: str = "google",
 ) -> UserInfo:
     """Get existing user or create new one from OAuth info.
 
@@ -88,7 +93,7 @@ async def get_or_create_user(
     role: UserRole = "admin" if email == ADMIN_EMAIL else "commenter"
 
     auth_provider = {
-        "provider": "google",
+        "provider": provider,
         "provider_user_id": provider_user_id,
         "email": email,
     }
