@@ -29,7 +29,7 @@ function SessionGuard({ children }: { children: ReactNode }) {
         if (session?.error === REFRESH_TOKEN_ERROR && !signingOut.current) {
             signingOut.current = true;
             showToast('Session expired. Signing out.');
-            signOut();
+            signOut({ callbackUrl: '/' });
         }
     }, [session?.error, showToast]);
 
