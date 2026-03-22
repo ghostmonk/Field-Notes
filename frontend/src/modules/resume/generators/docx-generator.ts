@@ -31,12 +31,16 @@ const ICONS = {
   phone: '\u260E', // ☎
   email: '\u2709', // ✉
   location: '\u25C9', // ◉
-  date: '\u229E', // ⊞
 };
+
+function stripHttps(url: string): string {
+  return url.replace(/^https?:\/\//, '');
+}
 
 function sectionHeader(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
+    keepNext: true,
     children: [
       new TextRun({
         text: text.toUpperCase(),
@@ -45,7 +49,7 @@ function sectionHeader(text: string): Paragraph {
         color: COLORS.navy,
       }),
     ],
-    spacing: { before: 400, after: 120 },
+    spacing: { before: 300, after: 80 },
     border: {
       bottom: {
         style: BorderStyle.SINGLE,
@@ -101,35 +105,30 @@ function contactRuns(contact: Resume['contact']): TextRun[] {
     );
   });
 
-  // Append plain-text links (website, linkedin, github) without icons
+  // Line break before links
   const links = [contact.website, contact.linkedin, contact.github].filter(
     Boolean
   );
-  if (links.length > 0 && parts.length > 0) {
-    runs.push(
-      new TextRun({
-        text: '    ',
-        size: SIZES.contact,
-      })
-    );
-  }
-  links.forEach((link, i) => {
-    if (i > 0) {
+  if (links.length > 0) {
+    runs.push(new TextRun({ break: 1 }));
+    links.forEach((link, i) => {
+      if (i > 0) {
+        runs.push(
+          new TextRun({
+            text: '    ',
+            size: SIZES.contact,
+          })
+        );
+      }
       runs.push(
         new TextRun({
-          text: '    ',
+          text: stripHttps(link!),
           size: SIZES.contact,
+          color: COLORS.gray,
         })
       );
-    }
-    runs.push(
-      new TextRun({
-        text: link!,
-        size: SIZES.contact,
-        color: COLORS.gray,
-      })
-    );
-  });
+    });
+  }
 
   return runs;
 }
@@ -144,29 +143,15 @@ export async function generateDocx(resume: Resume): Promise<void> {
       children: [
         new TextRun({ text: resume.contact.full_name, bold: true, size: SIZES.name }),
       ],
-      spacing: { after: 100 },
+      spacing: { after: 40 },
     })
   );
 
-  // Contact info with icons
+  // Contact info with icons + links on second line
   children.push(
     new Paragraph({
       children: contactRuns(resume.contact),
-      spacing: { after: 200 },
-    })
-  );
-
-  // Horizontal rule separator
-  children.push(
-    new Paragraph({
-      spacing: { after: 200 },
-      border: {
-        bottom: {
-          style: BorderStyle.SINGLE,
-          size: 1,
-          color: COLORS.border,
-        },
-      },
+      spacing: { after: 100 },
     })
   );
 
@@ -176,7 +161,7 @@ export async function generateDocx(resume: Resume): Promise<void> {
     children.push(
       new Paragraph({
         children: [new TextRun({ text: resume.summary, size: SIZES.body })],
-        spacing: { after: 200 },
+        spacing: { after: 100 },
       })
     );
   }
@@ -185,10 +170,14 @@ export async function generateDocx(resume: Resume): Promise<void> {
   const downloadJobs = resume.work_experience.filter(w => !w.hide_from_downloads);
   if (downloadJobs.length > 0) {
     children.push(sectionHeader('Experience'));
-    for (const w of downloadJobs) {
+    for (let i = 0; i < downloadJobs.length; i++) {
+      const w = downloadJobs[i];
+      const dateText = `${w.start_date} - ${w.current ? 'Present' : w.end_date || ''}`;
+
       // Job Title
       children.push(
         new Paragraph({
+          keepNext: true,
           children: [
             new TextRun({
               text: w.title,
@@ -196,13 +185,14 @@ export async function generateDocx(resume: Resume): Promise<void> {
               size: SIZES.jobTitle,
             }),
           ],
-          spacing: { before: 200, after: 40 },
+          spacing: { before: i === 0 ? 0 : 200, after: 0 },
         })
       );
 
-      // Company + Date on same conceptual block
+      // Company + date on same line
       children.push(
         new Paragraph({
+          keepNext: true,
           children: [
             new TextRun({
               text: w.company,
@@ -210,23 +200,16 @@ export async function generateDocx(resume: Resume): Promise<void> {
               size: SIZES.company,
               color: COLORS.gray,
             }),
-          ],
-          spacing: { after: 20 },
-        })
-      );
-
-      // Date range with calendar icon
-      const dateText = `${w.start_date} - ${w.current ? 'Present' : w.end_date || ''}`;
-      children.push(
-        new Paragraph({
-          children: [
             new TextRun({
-              text: `${ICONS.date} ${dateText}`,
+              text: ' - ',
+            }),
+            new TextRun({
+              text: dateText,
               size: SIZES.date,
               color: COLORS.gray,
             }),
           ],
-          spacing: { after: 80 },
+          spacing: { after: 60 },
         })
       );
 
@@ -247,66 +230,61 @@ export async function generateDocx(resume: Resume): Promise<void> {
                 color: COLORS.gray,
               }),
             ],
-            spacing: { before: 40, after: 200 },
+            spacing: { before: 20, after: 40 },
           })
         );
       }
     }
   }
 
-  // Education
+  // Education — compact: all entries in one paragraph with line breaks
   if (resume.education.length > 0) {
     children.push(sectionHeader('Education'));
-    for (const e of resume.education) {
+    const eduRuns: TextRun[] = [];
+    for (let i = 0; i < resume.education.length; i++) {
+      const e = resume.education[i];
       const degreeLine = e.field_of_study
         ? `${e.degree}, ${e.field_of_study}`
         : e.degree;
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: degreeLine,
-              bold: true,
-              size: SIZES.jobTitle,
-            }),
-          ],
-          spacing: { before: 200, after: 40 },
-        })
-      );
-
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: e.institution,
-              size: SIZES.company,
-              color: COLORS.gray,
-            }),
-          ],
-          spacing: { after: 20 },
-        })
-      );
-
       const eduDate = e.end_date
         ? `${e.start_date} - ${e.end_date}`
         : e.start_date;
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `${ICONS.date} ${eduDate}`,
-              size: SIZES.date,
-              color: COLORS.gray,
-            }),
-          ],
-          spacing: { after: 80 },
+
+      if (i > 0) {
+        eduRuns.push(new TextRun({ break: 1 }));
+      }
+      eduRuns.push(
+        new TextRun({
+          text: degreeLine,
+          bold: true,
+          size: SIZES.jobTitle,
         })
       );
-
-      if (e.description) {
-        children.push(...descriptionToParagraphs(e.description));
-      }
+      eduRuns.push(
+        new TextRun({
+          text: `  —  ${e.institution}`,
+          size: SIZES.company,
+          color: COLORS.gray,
+        })
+      );
+      eduRuns.push(
+        new TextRun({ text: ' - ' })
+      );
+      eduRuns.push(
+        new TextRun({
+          text: eduDate,
+          size: SIZES.date,
+          color: COLORS.gray,
+        })
+      );
     }
+    children.push(
+      new Paragraph({
+        keepNext: true,
+        children: eduRuns,
+        spacing: { after: 40 },
+      })
+    );
   }
 
   // Skills
@@ -320,7 +298,7 @@ export async function generateDocx(resume: Resume): Promise<void> {
             size: SIZES.body,
           }),
         ],
-        spacing: { after: 200 },
+        spacing: { after: 100 },
       })
     );
   }
