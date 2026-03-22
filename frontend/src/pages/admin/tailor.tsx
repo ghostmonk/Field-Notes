@@ -841,10 +841,6 @@ function SetAsDefaultButton({
   state: 'idle' | 'saving' | 'saved' | 'error';
   setState: (s: 'idle' | 'saving' | 'saved' | 'error') => void;
 }) {
-  const [restoreState, setRestoreState] = useState<'idle' | 'restoring' | 'restored' | 'error'>(
-    'idle'
-  );
-
   const handleSetDefault = async () => {
     if (!token) return;
     setState('saving');
@@ -858,18 +854,6 @@ function SetAsDefaultButton({
       setState('saved');
     } catch {
       setState('error');
-    }
-  };
-
-  const handleRestore = async () => {
-    if (!token) return;
-    setRestoreState('restoring');
-    try {
-      await apiClient.resume.restoreOriginal(token);
-      setRestoreState('restored');
-      setState('idle');
-    } catch {
-      setRestoreState('error');
     }
   };
 
@@ -896,26 +880,7 @@ function SetAsDefaultButton({
             ? 'Saving...'
             : 'Set as Default Resume'}
       </button>
-      {state === 'saved' && restoreState !== 'restored' && (
-        <button
-          onClick={handleRestore}
-          disabled={restoreState === 'restoring'}
-          className="px-3 py-1 rounded text-sm"
-          style={{
-            color: 'var(--color-text-secondary)',
-            border: '1px solid var(--color-border)',
-            opacity: restoreState === 'restoring' ? 0.5 : 1,
-          }}
-        >
-          {restoreState === 'restoring' ? 'Restoring...' : 'Restore Original'}
-        </button>
-      )}
-      {restoreState === 'restored' && (
-        <span className="text-sm" style={{ color: '#22c55e' }}>
-          Original restored
-        </span>
-      )}
-      {(state === 'error' || restoreState === 'error') && (
+      {state === 'error' && (
         <span className="text-sm" style={{ color: '#ef4444' }}>
           Failed
         </span>
