@@ -9,7 +9,15 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class JobApplicationCreate(BaseModel):
     company: str = Field(..., min_length=1)
     job_title: str = Field(..., min_length=1)
-    job_url: Optional[str] = None
+    job_url: Optional[str] = Field(None, pattern=r"^https?://")
+
+    @field_validator("job_url", mode="before")
+    @classmethod
+    def validate_url_scheme(cls, v):
+        if v is not None and not v.startswith(("http://", "https://")):
+            raise ValueError("job_url must start with http:// or https://")
+        return v
+
     job_description: str = Field(..., min_length=1)
     tailored_resume: Dict[str, Any] = Field(...)
     evaluation_score: Dict[str, Any] = Field(...)
@@ -20,7 +28,7 @@ class JobApplicationCreate(BaseModel):
 class JobApplicationUpdate(BaseModel):
     status: Optional[str] = Field(None, pattern="^(saved|applied|interviewing|offered|rejected)$")
     notes: Optional[str] = None
-    job_url: Optional[str] = None
+    job_url: Optional[str] = Field(None, pattern=r"^https?://")
 
 
 class JobApplicationResponse(BaseModel):

@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { apiClient } from '@/shared/lib/api-client';
 import { DownloadButtons } from '@/modules/resume';
+import { useConfirm } from '@/components/ConfirmDialog';
 import {
   TailorResult,
   FeedbackType,
@@ -661,6 +662,7 @@ function ApplicationsTab({ token }: { token: string }) {
   const [apps, setApps] = useState<JobApplicationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   const loadApps = useCallback(async () => {
     try {
@@ -687,6 +689,13 @@ function ApplicationsTab({ token }: { token: string }) {
   };
 
   const handleDelete = async (id: string) => {
+    const confirmed = await confirm({
+      title: 'Delete Application',
+      message: 'Delete this saved application? This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!confirmed) return;
     try {
       await apiClient.applications.delete(id, token);
       setApps((prev) => prev.filter((a) => a.id !== id));

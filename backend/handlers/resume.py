@@ -251,16 +251,9 @@ async def update_resume(
         update_data = resume.model_dump(exclude_unset=True)
         update_data["updatedDate"] = current_time
 
-        # Keep original_resume in sync with manual edits from resume builder
-        original_updates = {
-            f"original_resume.{k}": v
-            for k, v in update_data.items()
-            if k not in ("updatedDate", "original_resume")
-        }
-
         updated_doc = await collection.find_one_and_update(
             {"user_id": user.id, "deleted": {"$ne": True}},
-            {"$set": {**update_data, **original_updates}},
+            {"$set": update_data},
             return_document=ReturnDocument.AFTER,
         )
 
@@ -346,7 +339,12 @@ async def restore_original_resume(
 
     original = current.get("original_resume")
     if not original:
-        raise HTTPException(status_code=404, detail="No original resume saved")
+        # Backfill: no original saved yet, snapshot current state as the original
+        original = {k: v for k, v in current.items() if k not in RESUME_INTERNAL_FIELDS}
+        await collection.update_one(
+            {"_id": current["_id"]}, {"$set": {"original_resume": original}}
+        )
+        return mongo_to_pydantic(current, ResumeResponse)
 
     update_data = {**original, "updatedDate": datetime.now(timezone.utc)}
 
