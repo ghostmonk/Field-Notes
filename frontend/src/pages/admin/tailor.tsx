@@ -790,17 +790,42 @@ function ApplicationsTab({ token }: { token: string }) {
             </button>
           </div>
           {expandedId === app.id && (
-            <div className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--color-border)' }}>
-              <ScoreCard
-                evaluation={app.evaluation_score}
-                attempts={1}
-              />
-              <DownloadButtons resume={app.tailored_resume} />
-              <ResumePreview resume={app.tailored_resume} />
-            </div>
+            <ApplicationDetail app={app} token={token} />
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+function ApplicationDetail({
+  app,
+  token,
+}: {
+  app: JobApplicationResponse;
+  token: string;
+}) {
+  const [defaultState, setDefaultState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  return (
+    <div className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <ScoreCard evaluation={app.evaluation_score} attempts={1} />
+      <div
+        className="flex items-center gap-3 rounded-md p-3"
+        style={{
+          backgroundColor: 'var(--color-bg-secondary)',
+          border: '1px solid var(--color-border)',
+        }}
+      >
+        <DownloadButtons resume={app.tailored_resume} />
+        <SetAsDefaultButton
+          tailoredResume={app.tailored_resume}
+          token={token}
+          state={defaultState}
+          setState={setDefaultState}
+        />
+      </div>
+      <ResumePreview resume={app.tailored_resume} />
     </div>
   );
 }
@@ -853,15 +878,15 @@ function SetAsDefaultButton({
       <button
         onClick={handleSetDefault}
         disabled={state === 'saving' || state === 'saved'}
-        className="px-3 py-1 rounded text-sm font-medium"
+        className="px-3 py-1.5 rounded text-sm font-medium"
         style={{
           backgroundColor:
-            state === 'saved' ? 'rgba(34, 197, 94, 0.15)' : 'var(--color-bg-tertiary)',
-          color: state === 'saved' ? '#22c55e' : 'var(--color-text-primary)',
+            state === 'saved' ? 'rgba(34, 197, 94, 0.15)' : 'var(--color-accent)',
+          color: state === 'saved' ? '#22c55e' : 'var(--color-bg-primary)',
           border:
             state === 'saved'
               ? '1px solid rgba(34, 197, 94, 0.3)'
-              : '1px solid var(--color-border)',
+              : 'none',
           opacity: state === 'saving' ? 0.5 : 1,
         }}
       >
