@@ -1,5 +1,5 @@
 import { Education } from '@/shared/types/api';
-import { inlineInput } from '../shared';
+import { Input, Textarea } from '@/components/ui';
 
 interface EducationFormProps {
   items: Education[];
@@ -60,62 +60,68 @@ export function EducationForm({ items, onChange }: EducationFormProps) {
           >
             Remove
           </button>
-          <input
+          <Input
+            variant="inline"
             type="text"
             value={item.degree}
             onChange={(e) => updateItem(index, 'degree', e.target.value)}
             placeholder="Degree"
-            className={`${inlineInput} font-semibold`}
+            className="font-semibold"
           />
           <div className="flex gap-4 items-baseline">
-            <input
+            <Input
+              variant="inline"
               type="text"
               value={item.institution}
               onChange={(e) =>
                 updateItem(index, 'institution', e.target.value)
               }
               placeholder="Institution"
-              className={`${inlineInput} text-sm flex-1`}
+              className="text-sm flex-1"
             />
-            <input
+            <Input
+              variant="inline"
               type="text"
               value={item.field_of_study || ''}
               onChange={(e) =>
                 updateItem(index, 'field_of_study', e.target.value)
               }
               placeholder="Field of Study"
-              className={`${inlineInput} text-sm flex-1`}
+              className="text-sm flex-1"
             />
           </div>
           <div className="flex gap-1 items-baseline">
-            <input
+            <Input
+              variant="inline"
               type="text"
               value={item.start_date}
               onChange={(e) =>
                 updateItem(index, 'start_date', e.target.value)
               }
               placeholder="Start"
-              className={`${inlineInput} text-xs w-24`}
+              className="text-xs w-24"
             />
             <span className="text-xs text-[var(--color-text-secondary)]">
               -
             </span>
-            <input
+            <Input
+              variant="inline"
               type="text"
               value={item.end_date || ''}
               onChange={(e) => updateItem(index, 'end_date', e.target.value)}
               placeholder="End"
-              className={`${inlineInput} text-xs w-24`}
+              className="text-xs w-24"
             />
           </div>
-          <textarea
+          <Textarea
             value={item.description || ''}
             onChange={(e) =>
               updateItem(index, 'description', e.target.value)
             }
             rows={2}
             placeholder="Description..."
-            className={`${inlineInput} text-sm resize-none`}
+            variant="inline"
+            className="text-sm resize-none"
           />
         </div>
       ))}

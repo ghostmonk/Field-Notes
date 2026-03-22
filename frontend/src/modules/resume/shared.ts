@@ -1,8 +1,5 @@
 import { Resume } from '@/shared/types/api';
 
-export const inlineInput =
-  'w-full bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-text-secondary)] focus:outline-none py-1 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] placeholder:opacity-50 transition-colors';
-
 export const RESUME_NAVY = '#1b2838';
 
 export type DescriptionPart = {

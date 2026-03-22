@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import DOMPurify from 'isomorphic-dompurify';
 import { Project } from '@/shared/types/api';
+import { Card, Badge, Button } from '@/components/ui';
 
 interface ProjectDetailProps {
     project: Project;
@@ -23,9 +24,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
             <h1 className="page-title mb-sm">
                 {project.title}
                 {project.is_featured && (
-                    <span className="badge--featured">
+                    <Badge variant="featured">
                         Featured
-                    </span>
+                    </Badge>
                 )}
             </h1>
 
@@ -45,32 +46,34 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
 
             <div className="project-actions">
                 {project.github_url && (
-                    <a
+                    <Button
+                        as="a"
                         href={project.github_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn btn--secondary"
+                        variant="secondary"
                     >
                         View on GitHub
-                    </a>
+                    </Button>
                 )}
                 {project.live_url && (
-                    <a
+                    <Button
+                        as="a"
                         href={project.live_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn btn--primary"
+                        variant="primary"
                     >
                         Live Demo
-                    </a>
+                    </Button>
                 )}
             </div>
 
-            <div className="card">
+            <Card>
                 <div className="prose prose--card">
                     <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.content) }} />
                 </div>
-            </div>
+            </Card>
         </>
     );
 };

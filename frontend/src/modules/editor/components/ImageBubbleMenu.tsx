@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import type { Editor } from '@tiptap/react';
+import { Input, Button } from '@/components/ui';
 
 interface ImageBubbleMenuProps {
   editor: Editor | null;
@@ -57,19 +58,13 @@ export function ImageBubbleMenu({ editor, onChangeFilter }: ImageBubbleMenuProps
           <span className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
             Alt text
           </span>
-          <input
+          <Input
             type="text"
             value={altText}
             onChange={(e) => setAltText(e.target.value)}
             onBlur={handleAltBlur}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAltBlur(); } }}
             placeholder="Describe this image..."
-            className="rounded border px-2 py-1 text-sm"
-            style={{
-              borderColor: 'var(--color-border-primary)',
-              backgroundColor: 'var(--color-surface-secondary)',
-              color: 'var(--color-text-primary)',
-            }}
             data-testid="image-bubble-alt"
           />
         </label>
@@ -81,39 +76,33 @@ export function ImageBubbleMenu({ editor, onChangeFilter }: ImageBubbleMenuProps
             const current = editor.getAttributes('image').width;
             const isActive = current === value;
             return (
-              <button
+              <Button
                 key={value}
                 type="button"
+                variant={isActive ? 'primary' : 'ghost'}
+                size="sm"
                 onClick={() => updateAttribute('width', isActive ? null : value)}
-                className="px-2 py-0.5 rounded text-xs"
-                style={{
-                  backgroundColor: isActive ? 'var(--color-accent-primary)' : 'var(--color-surface-secondary)',
-                  color: isActive ? '#fff' : 'var(--color-text-primary)',
-                }}
                 data-testid={`image-bubble-width-${label}`}
               >
                 {label}
-              </button>
+              </Button>
             );
           })}
         </div>
         {onChangeFilter && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => {
               const attrs = editor.getAttributes('image');
               const src = attrs['data-original-src'] || attrs.src;
               if (src) onChangeFilter(src);
             }}
-            className="px-2 py-1 rounded text-xs"
-            style={{
-              backgroundColor: 'var(--color-surface-secondary)',
-              color: 'var(--color-text-primary)',
-            }}
             data-testid="image-bubble-change-filter"
           >
             Change Filter
-          </button>
+          </Button>
         )}
       </div>
     </BubbleMenu>

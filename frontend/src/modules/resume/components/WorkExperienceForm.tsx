@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { WorkExperience } from '@/shared/types/api';
-import { inlineInput } from '../shared';
+import { Input, Textarea } from '@/components/ui';
 
 interface WorkExperienceFormProps {
   items: WorkExperience[];
@@ -45,14 +45,15 @@ function TechnologiesInput({
   };
 
   return (
-    <input
+    <Input
+      variant="inline"
       type="text"
       value={text}
       onChange={(e) => setText(e.target.value)}
       onFocus={() => setFocused(true)}
       onBlur={handleBlur}
       placeholder="Technologies (comma-separated)"
-      className={`${inlineInput} text-sm text-[var(--color-text-secondary)]`}
+      className="text-sm text-[var(--color-text-secondary)]"
     />
   );
 }
@@ -105,42 +106,47 @@ export function WorkExperienceForm({
           >
             Remove
           </button>
-          <input
+          <Input
+            variant="inline"
             type="text"
             value={item.title}
             onChange={(e) => updateItem(index, 'title', e.target.value)}
             placeholder="Job Title"
-            className={`${inlineInput} font-semibold flex-1`}
+            className="font-semibold flex-1"
           />
           <div className="flex gap-4 items-baseline">
-            <input
+            <Input
+              variant="inline"
               type="text"
               value={item.company}
               onChange={(e) => updateItem(index, 'company', e.target.value)}
               placeholder="Company"
-              className={`${inlineInput} text-sm flex-1`}
+              className="text-sm flex-1"
             />
-            <input
+            <Input
+              variant="inline"
               type="text"
               value={item.company_url || ''}
               onChange={(e) => updateItem(index, 'company_url', e.target.value || undefined)}
               placeholder="Company website URL"
-              className={`${inlineInput} text-xs text-[var(--color-text-secondary)]`}
+              className="text-xs text-[var(--color-text-secondary)]"
             />
             <div className="flex gap-1 items-baseline shrink-0">
-              <input
+              <Input
+                variant="inline"
                 type="text"
                 value={item.start_date}
                 onChange={(e) =>
                   updateItem(index, 'start_date', e.target.value)
                 }
                 placeholder="Start"
-                className={`${inlineInput} text-xs w-24 text-right`}
+                className="text-xs w-24 text-right"
               />
               <span className="text-xs text-[var(--color-text-secondary)]">
                 -
               </span>
-              <input
+              <Input
+                variant="inline"
                 type="text"
                 value={item.current ? 'Present' : item.end_date || ''}
                 onChange={(e) =>
@@ -148,7 +154,7 @@ export function WorkExperienceForm({
                 }
                 disabled={item.current}
                 placeholder="End"
-                className={`${inlineInput} text-xs w-24 disabled:opacity-50`}
+                className="text-xs w-24 disabled:opacity-50"
               />
               <label className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)] shrink-0 ml-1">
                 <input
@@ -163,14 +169,15 @@ export function WorkExperienceForm({
               </label>
             </div>
           </div>
-          <textarea
+          <Textarea
             value={item.description}
             onChange={(e) =>
               updateItem(index, 'description', e.target.value)
             }
             rows={2}
             placeholder="Description..."
-            className={`${inlineInput} text-sm resize-none`}
+            variant="inline"
+            className="text-sm resize-none"
           />
           <TechnologiesInput
             technologies={item.technologies}

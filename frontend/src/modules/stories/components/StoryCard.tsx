@@ -6,6 +6,7 @@ import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
 import { estimateReadingTime } from '@/shared/utils/readingTime';
 import { Story } from '@/shared/types/api';
 import { engagementConfig } from '@/config/engagement.config';
+import { Card, Badge, Button } from '@/components/ui';
 import { LazyStoryContent } from './LazyStoryContent';
 
 // Pre-compiled regexes for splitLeadingImage
@@ -104,36 +105,40 @@ export const StoryCard = React.memo(({
     const { leadImage, rest } = useMemo(() => splitLeadingImage(story.content || ''), [story.content]);
 
     return (
-        <div
-            key={story.id}
-            className={`card ${isDraft ? 'card--draft' : ''} ${featured ? 'card--featured' : ''}`}
+        <Card
+            variant={isDraft ? 'draft' : featured ? 'featured' : undefined}
+            // Card supports one variant; when both draft AND featured, draft takes
+            // precedence as the status indicator and featured is added via className
+            className={isDraft && featured ? 'card--featured' : undefined}
             data-testid={`story-card-${story.id}`}
         >
             <div className="story-header">
                 <div className="story-header__actions">
                     {isDraft && (
-                        <span className="badge badge--draft" data-testid={`story-draft-badge-${story.id}`}>
+                        <Badge variant="draft" data-testid={`story-draft-badge-${story.id}`}>
                             DRAFT
-                        </span>
+                        </Badge>
                     )}
                     {canEdit && (
                         <div className="flex gap-2">
-                            <button
+                            <Button
                                 onClick={() => onEdit(story)}
-                                className="btn btn--primary btn--sm"
+                                variant="primary"
+                                size="sm"
                                 data-testid={`story-edit-${story.id}`}
                             >
                                 Edit
-                            </button>
+                            </Button>
                             {isDraft && (
-                                <button
+                                <Button
                                     onClick={() => onDelete(story)}
                                     disabled={deleteLoading}
-                                    className="btn btn--danger btn--sm"
+                                    variant="danger"
+                                    size="sm"
                                     data-testid={`story-delete-${story.id}`}
                                 >
                                     {deleteLoading ? 'Deleting...' : 'Delete'}
-                                </button>
+                                </Button>
                             )}
                         </div>
                     )}
@@ -168,8 +173,8 @@ export const StoryCard = React.memo(({
             {!isDraft ? (
                 <>
                     <StoryMediaPreview leadImage={leadImage} rest={rest} />
-                    <Link href={storyPath} className="block mt-4" data-testid={`story-content-link-${story.id}`}>
-                        <span className="btn btn--secondary btn--sm" data-testid={`story-read-more-${story.id}`}>
+                    <Link href={storyPath} className="btn btn--secondary btn--sm mt-4 inline-block" data-testid={`story-content-link-${story.id}`}>
+                        <span data-testid={`story-read-more-${story.id}`}>
                             Read full story →
                         </span>
                     </Link>
@@ -193,7 +198,7 @@ export const StoryCard = React.memo(({
             ) : (
                 <StoryMediaPreview leadImage={leadImage} rest={rest} />
             )}
-        </div>
+        </Card>
     );
 });
 

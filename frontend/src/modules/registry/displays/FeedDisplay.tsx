@@ -2,6 +2,7 @@ import React, { useCallback, useId, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import ClipLoader from 'react-spinners/ClipLoader';
 import type { FeedDisplayProps } from '../types';
+import { Button } from '@/components/ui';
 
 export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtractor = (_item: T, index: number) => String(index) }: FeedDisplayProps<T>) {
     const skipTargetId = useId();
@@ -47,21 +48,22 @@ export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtr
             {loadError && (
                 <div className="feed-load-error" role="alert">
                     <p>Failed to load more content.</p>
-                    <button className="btn btn--secondary btn--sm" onClick={handleLoadMore}>
+                    <Button variant="secondary" size="sm" onClick={handleLoadMore}>
                         Retry
-                    </button>
+                    </Button>
                 </div>
             )}
             {items.length > 5 && (
                 <div className="text-center py-4">
-                    <button
+                    <Button
                         type="button"
                         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                        className="btn btn--secondary btn--sm"
+                        variant="secondary"
+                        size="sm"
                         data-testid="back-to-top"
                     >
                         Back to top
-                    </button>
+                    </Button>
                 </div>
             )}
             <div id={skipTargetId} tabIndex={-1} />

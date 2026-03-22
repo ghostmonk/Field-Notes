@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
+import { Dialog, Button } from '@/components/ui';
 
 interface ConfirmOptions {
   title: string;
@@ -76,58 +77,43 @@ function ConfirmDialogInner({
   onConfirm,
   onCancel,
 }: ConfirmDialogInnerProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
-  const previousFocusRef = useRef<Element | null>(null);
 
   useEffect(() => {
-    previousFocusRef.current = document.activeElement;
-    dialogRef.current?.showModal();
-    cancelRef.current?.focus();
-    return () => {
-      (previousFocusRef.current as HTMLElement)?.focus?.();
-    };
+    // Defer focus until after Dialog's showModal() effect runs
+    const raf = requestAnimationFrame(() => {
+      cancelRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="rounded-lg p-0 backdrop:bg-black/50"
-      style={{
-        backgroundColor: 'var(--color-surface-primary)',
-        color: 'var(--color-text-primary)',
-        border: '1px solid var(--color-border-primary)',
-        maxWidth: '24rem',
-        width: '100%',
-      }}
-      onCancel={onCancel}
-      data-testid="confirm-dialog"
-    >
-      <div className="p-6">
-        <h3 className="text-lg font-medium mb-2">{title}</h3>
-        <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+    <Dialog open={true} onClose={onCancel} data-testid="confirm-dialog">
+      <Dialog.Header title={title} />
+      <Dialog.Body>
+        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
           {message}
         </p>
-        <div className="flex justify-end gap-3">
-          <button
-            ref={cancelRef}
-            type="button"
-            onClick={onCancel}
-            className="btn btn--secondary btn--sm"
-            data-testid="confirm-cancel"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className={`btn btn--sm ${destructive ? 'btn--danger' : 'btn--primary'}`}
-            data-testid="confirm-ok"
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </dialog>
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Button
+          ref={cancelRef}
+          variant="secondary"
+          size="sm"
+          onClick={onCancel}
+          data-testid="confirm-cancel"
+        >
+          {cancelLabel}
+        </Button>
+        <Button
+          variant={destructive ? 'danger' : 'primary'}
+          size="sm"
+          onClick={onConfirm}
+          data-testid="confirm-ok"
+        >
+          {confirmLabel}
+        </Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }

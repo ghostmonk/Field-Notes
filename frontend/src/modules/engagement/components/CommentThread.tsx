@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { Comment } from '@/shared/types/api';
 import { useConfirm } from '@/components/ConfirmDialog';
+import { Button, Textarea } from '@/components/ui';
 
 interface CommentThreadProps {
   comment: Comment;
@@ -97,34 +98,28 @@ export function CommentThread({ comment, onReply, onDelete }: CommentThreadProps
 
           {showReplyInput && (
             <div className="mt-3">
-              <textarea
+              <Textarea
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder="Write a reply..."
-                className="w-full p-2 rounded-lg resize-none"
-                style={{
-                  backgroundColor: 'var(--color-surface-secondary)',
-                  borderColor: 'var(--color-border-primary)',
-                  color: 'var(--color-text-primary)',
-                  borderWidth: '1px',
-                  borderStyle: 'solid'
-                }}
                 rows={2}
               />
               <div className="mt-2 flex gap-2">
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={handleReply}
                   disabled={isSubmitting || !replyContent.trim()}
-                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                 >
                   {isSubmitting ? 'Posting...' : 'Reply'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowReplyInput(false)}
-                  className="px-3 py-1 text-gray-600 hover:text-gray-800"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}

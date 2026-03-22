@@ -7,6 +7,7 @@ import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 import { VersionHistory } from '@/modules/versions/components/VersionHistory';
+import { Button, Input, Checkbox, Badge, FormField, Textarea } from '@/components/ui';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
 
@@ -49,23 +50,25 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
         </h1>
         {isEditing && (
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               onClick={resetForm}
-              className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
               data-testid="editor-new-button"
             >
               New Project
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="danger"
+              size="sm"
               onClick={handleDelete}
               disabled={isSaving}
-              className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
               data-testid="editor-delete-button"
             >
               Delete
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -81,37 +84,33 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
       )}
 
       <form onSubmit={(e) => e.preventDefault()} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-          <input
+        <FormField label="Title" htmlFor="title">
+          <Input
             type="text"
             id="title"
             value={project.title || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('title', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
             placeholder="Project title"
             required
             disabled={isSaving}
             data-testid="editor-title-input"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Summary</label>
-          <textarea
+        <FormField label="Summary" htmlFor="summary">
+          <Textarea
             id="summary"
             value={project.summary || ''}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setField('summary', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
             placeholder="Brief project description"
             rows={3}
             disabled={isSaving}
             data-testid="editor-summary-input"
           />
-        </div>
+        </FormField>
 
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Content</label>
+          <label htmlFor="content" className="form-field__label">Content</label>
           <div className="mt-1">
             <RichTextEditor
               content={project.content || ''}
@@ -120,17 +119,13 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
                 <>
                   <div className="flex items-center gap-4">
                     {project.is_published && (
-                      <span className="text-xs font-medium px-2 py-1 rounded" style={{ backgroundColor: 'var(--color-status-success)', color: 'white' }}>
-                        Published
-                      </span>
+                      <Badge variant="success">Published</Badge>
                     )}
                     <div className="flex items-center">
-                      <input
+                      <Checkbox
                         id="is_featured"
-                        type="checkbox"
                         checked={project.is_featured || false}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('is_featured', e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
                         disabled={isSaving}
                         data-testid="editor-featured-toggle"
                       />
@@ -138,19 +133,22 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => {
                         handleSubmit(new Event('submit') as unknown as React.FormEvent, false);
                       }}
-                      className="btn btn--secondary btn--sm"
                       disabled={isLoading || isSaving}
                       data-testid="editor-save-draft"
                     >
                       {isSaving && !project.is_published ? 'Saving...' : 'Save as Draft'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="primary"
+                      size="sm"
                       onClick={async () => {
                         if (!project.is_published) {
                           const confirmed = await confirm({
@@ -162,21 +160,21 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
                         }
                         handleSubmit(new Event('submit') as unknown as React.FormEvent, true);
                       }}
-                      className="btn btn--primary btn--sm"
                       disabled={isLoading || isSaving}
                       data-testid="editor-publish-button"
                     >
                       {isSaving && project.is_published ? 'Publishing...' : 'Publish'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => router.push(`/${section.slug}`)}
-                      className="btn btn--secondary btn--sm"
                       disabled={isSaving}
                       data-testid="editor-cancel-button"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </>
               }
@@ -185,74 +183,64 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="technologies" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Technologies (comma-separated)</label>
-            <input
+          <FormField label="Technologies (comma-separated)" htmlFor="technologies">
+            <Input
               type="text"
               id="technologies"
               value={techText}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTechText(e.target.value)}
               onBlur={() => setField('technologies', techText.split(',').map((s: string) => s.trim()).filter(Boolean))}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               placeholder="React, TypeScript, Node.js"
               disabled={isSaving}
               data-testid="editor-technologies-input"
             />
-          </div>
-          <div>
-            <label htmlFor="sort_order" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Sort Order</label>
-            <input
+          </FormField>
+          <FormField label="Sort Order" htmlFor="sort_order">
+            <Input
               type="number"
               id="sort_order"
               value={project.sort_order ?? 0}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('sort_order', parseInt(e.target.value, 10) || 0)}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               disabled={isSaving}
               data-testid="editor-sort-order-input"
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label htmlFor="github_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">GitHub URL</label>
-            <input
+          <FormField label="GitHub URL" htmlFor="github_url">
+            <Input
               type="url"
               id="github_url"
               value={project.github_url || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('github_url', e.target.value || null)}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               placeholder="https://github.com/..."
               disabled={isSaving}
               data-testid="editor-github-url-input"
             />
-          </div>
-          <div>
-            <label htmlFor="live_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Live URL</label>
-            <input
+          </FormField>
+          <FormField label="Live URL" htmlFor="live_url">
+            <Input
               type="url"
               id="live_url"
               value={project.live_url || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('live_url', e.target.value || null)}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               placeholder="https://..."
               disabled={isSaving}
               data-testid="editor-live-url-input"
             />
-          </div>
-          <div>
-            <label htmlFor="image_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Image URL</label>
-            <input
+          </FormField>
+          <FormField label="Image URL" htmlFor="image_url">
+            <Input
               type="url"
               id="image_url"
               value={project.image_url || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('image_url', e.target.value || null)}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
               placeholder="https://..."
               disabled={isSaving}
               data-testid="editor-image-url-input"
             />
-          </div>
+          </FormField>
         </div>
       </form>
 

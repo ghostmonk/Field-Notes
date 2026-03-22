@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import { Button } from '@/components/ui';
 
 const FILTERS: { key: string; label: string; css: string }[] = [
   { key: 'none', label: 'None', css: 'none' },
@@ -104,22 +105,24 @@ export function ImageFilterPicker({
         </div>
 
         <div className="mt-4 flex justify-end gap-2">
-          <button
+          <Button
             type="button"
             onClick={onCancel}
-            className="btn btn--secondary btn--sm"
+            variant="secondary"
+            size="sm"
             data-testid="filter-picker-cancel"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => onConfirm(selectedFilter)}
-            className="btn btn--primary btn--sm"
+            variant="primary"
+            size="sm"
             data-testid="filter-picker-apply"
           >
             Apply
-          </button>
+          </Button>
         </div>
       </div>
     </dialog>

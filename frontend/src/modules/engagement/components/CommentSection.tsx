@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Comment } from '@/shared/types/api';
 import { CommentThread } from './CommentThread';
+import { Button, Textarea } from '@/components/ui';
 
 interface CommentSectionProps {
   comments: Comment[];
@@ -54,27 +55,20 @@ export function CommentSection({
       {/* New comment input */}
       {session ? (
         <div className="space-y-2">
-          <textarea
+          <Textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Write a comment..."
-            className="w-full p-3 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            style={{
-              backgroundColor: 'var(--color-surface-secondary)',
-              borderColor: 'var(--color-border-primary)',
-              color: 'var(--color-text-primary)',
-              borderWidth: '1px',
-              borderStyle: 'solid'
-            }}
             rows={3}
           />
-          <button
+          <Button
+            variant="primary"
+            size="md"
             onClick={handleSubmit}
             disabled={isSubmitting || !newComment.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
             {isSubmitting ? 'Posting...' : 'Post Comment'}
-          </button>
+          </Button>
         </div>
       ) : (
         <p className="text-gray-500">Sign in to leave a comment</p>

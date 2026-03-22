@@ -1,5 +1,5 @@
 import { ContactInfo } from '@/shared/types/api';
-import { inlineInput } from '../shared';
+import { Input } from '@/components/ui';
 
 interface ContactFormProps {
   contact: ContactInfo;
@@ -13,62 +13,70 @@ export function ContactForm({ contact, onChange }: ContactFormProps) {
 
   return (
     <div className="space-y-3">
-      <input
+      <Input
+        variant="inline"
         type="text"
         value={contact.full_name || ''}
         onChange={(e) => update('full_name', e.target.value)}
         placeholder="Your Name"
-        className={`${inlineInput} text-3xl font-bold`}
+        className="text-3xl font-bold"
       />
-      <input
+      <Input
+        variant="inline"
         type="text"
         value={contact.title || ''}
         onChange={(e) => update('title', e.target.value)}
         placeholder="Professional title, e.g. Staff Software Engineer"
-        className={`${inlineInput} text-base text-[var(--color-text-secondary)]`}
+        className="text-base text-[var(--color-text-secondary)]"
       />
-      <input
+      <Input
+        variant="inline"
         type="text"
         value={contact.email || ''}
         onChange={(e) => update('email', e.target.value)}
         placeholder="email@example.com"
-        className={`${inlineInput} text-sm`}
+        className="text-sm"
       />
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-1">
-        <input
+        <Input
+          variant="inline"
           type="text"
           value={contact.phone || ''}
           onChange={(e) => update('phone', e.target.value)}
           placeholder="Phone"
-          className={`${inlineInput} text-sm`}
+          className="text-sm"
         />
-        <input
+        <Input
+          variant="inline"
           type="text"
           value={contact.location || ''}
           onChange={(e) => update('location', e.target.value)}
           placeholder="Location"
-          className={`${inlineInput} text-sm`}
+          className="text-sm"
         />
-        <input
+        <Input
+          variant="inline"
           type="text"
           value={contact.website || ''}
           onChange={(e) => update('website', e.target.value)}
           placeholder="Website"
-          className={`${inlineInput} text-sm`}
+          className="text-sm"
         />
-        <input
+        <Input
+          variant="inline"
           type="text"
           value={contact.linkedin || ''}
           onChange={(e) => update('linkedin', e.target.value)}
           placeholder="LinkedIn URL"
-          className={`${inlineInput} text-sm`}
+          className="text-sm"
         />
-        <input
+        <Input
+          variant="inline"
           type="text"
           value={contact.github || ''}
           onChange={(e) => update('github', e.target.value)}
           placeholder="GitHub URL"
-          className={`${inlineInput} text-sm`}
+          className="text-sm"
         />
       </div>
     </div>

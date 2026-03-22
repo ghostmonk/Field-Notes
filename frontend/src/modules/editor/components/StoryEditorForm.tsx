@@ -6,6 +6,7 @@ import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 import { VersionHistory } from '@/modules/versions/components/VersionHistory';
+import { Button, Input, Badge, FormField } from '@/components/ui';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
 
@@ -46,23 +47,25 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
         </h1>
         {isEditing && (
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               onClick={resetForm}
-              className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
               data-testid="editor-new-button"
             >
               New Story
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="danger"
+              size="sm"
               onClick={handleDelete}
               disabled={isSaving}
-              className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
               data-testid="editor-delete-button"
             >
               Delete
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -94,43 +97,41 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
             {recoveredDraft.title ? `: "${recoveredDraft.title}"` : ''}.
           </p>
           <div className="mt-2 flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               onClick={acceptDraft}
-              className="btn btn--primary btn--sm"
               data-testid="draft-recovery-accept"
             >
               Restore Draft
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={dismissDraft}
-              className="btn btn--secondary btn--sm"
               data-testid="draft-recovery-dismiss"
             >
               Discard
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       <form onSubmit={(e) => e.preventDefault()} className="space-y-4 max-w-4xl mx-auto pb-24 md:pb-16">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Title
-          </label>
-          <input
+        <FormField label="Title" htmlFor="title">
+          <Input
             type="text"
             id="title"
             value={story.title || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
             placeholder="Story title"
             required
             disabled={isSaving}
             data-testid="editor-title-input"
           />
-        </div>
+        </FormField>
 
         <div>
           <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -143,24 +144,25 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
               actionSlot={
                 <>
                   {story.is_published && (
-                    <span className="text-xs font-medium px-2 py-1 rounded" style={{ backgroundColor: 'var(--color-status-success)', color: 'white' }}>
-                      Published
-                    </span>
+                    <Badge variant="success">Published</Badge>
                   )}
                   <div className="flex gap-2">
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => {
                         handleSubmit(new Event('submit') as unknown as React.FormEvent, false);
                       }}
-                      className="btn btn--secondary btn--sm"
                       disabled={isLoading || isSaving}
                       data-testid="editor-save-draft"
                     >
                       {isSaving && !story.is_published ? 'Saving...' : 'Save as Draft'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="primary"
+                      size="sm"
                       onClick={async () => {
                         if (!story.is_published) {
                           const confirmed = await confirm({
@@ -172,21 +174,21 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
                         }
                         handleSubmit(new Event('submit') as unknown as React.FormEvent, true);
                       }}
-                      className="btn btn--primary btn--sm"
                       disabled={isLoading || isSaving}
                       data-testid="editor-publish-button"
                     >
                       {isSaving && story.is_published ? 'Publishing...' : 'Publish'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => router.push(`/${section.slug}`)}
-                      className="btn btn--secondary btn--sm"
                       disabled={isSaving}
                       data-testid="editor-cancel-button"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </>
               }

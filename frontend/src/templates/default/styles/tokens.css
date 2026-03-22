@@ -80,6 +80,11 @@
   --transition-slow: 500ms ease;
   --transition-colors: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
 
+  --color-focus-ring: rgba(79, 70, 229, 0.15);
+  --color-focus-ring-error: rgba(239, 68, 68, 0.15);
+
+  --color-text-on-status: #ffffff;
+
   --color-surface-draft: rgb(254 252 232);
   --color-border-draft: rgb(254 240 138);
 
@@ -115,6 +120,9 @@
   --color-shadow-light: rgba(0, 0, 0, 0.4);
   --color-shadow-medium: rgba(0, 0, 0, 0.5);
   --color-shadow-dark: rgba(0, 0, 0, 0.7);
+
+  --color-focus-ring: rgba(59, 130, 246, 0.25);
+  --color-focus-ring-error: rgba(239, 68, 68, 0.25);
 
   --color-surface-draft: rgb(120 113 108 / 0.2);
   --color-border-draft: rgb(133 77 14);

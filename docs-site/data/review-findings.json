@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "description": "Claude bot PR review findings — per-PR summaries. Append one entry per merged PR.",
+  "queries": {
+    "category_trend": "jq '[.reviews[] | .by_category | to_entries[]] | group_by(.key) | map({category: .[0].key, total: (map(.value) | add)})'",
+    "hit_rate_over_time": "jq '.reviews[] | {pr, date, hit_rate: ((.totals.valid / .totals.findings) * 100 | round)}'",
+    "most_flagged_files": "jq '[.reviews[] | .flagged_files | to_entries[]] | group_by(.key) | map({file: .[0].key, total: (map(.value) | add)}) | sort_by(-.total)'",
+    "severity_distribution": "jq '[.reviews[] | .by_severity | to_entries[]] | group_by(.key) | map({severity: .[0].key, total: (map(.value) | add)})'"
+  },
+  "reviews": [
+    {
+      "pr": 168,
+      "date": "2026-03-22",
+      "title": "UI component library with full codebase migration",
+      "rounds": 12,
+      "totals": {
+        "findings": 56,
+        "valid": 40,
+        "false_positive": 14,
+        "skipped": 2
+      },
+      "by_category": {
+        "behavioral_regression": 13,
+        "accessibility": 10,
+        "token_violation": 7,
+        "missing_implementation": 5
+      },
+      "by_severity": {
+        "high": 3,
+        "medium": 28,
+        "low": 6
+      },
+      "flagged_files": {
+        "frontend/src/templates/default/styles/components.css": 8,
+        "frontend/src/components/ui/Tabs.tsx": 6,
+        "frontend/src/modules/projects/components/ProjectCard.tsx": 5,
+        "frontend/src/components/ui/Dialog.tsx": 4,
+        "frontend/src/pages/admin/tailor.tsx": 1,
+        "frontend/src/components/ConfirmDialog.tsx": 3,
+        "frontend/src/components/ui/Button.tsx": 3,
+        "frontend/src/components/ui/Textarea.tsx": 2,
+        "frontend/src/modules/resume/components/ResumeForm.tsx": 2,
+        "frontend/src/templates/default/styles/tokens.css": 2,
+        "frontend/src/components/ui/FormField.tsx": 2,
+        "frontend/src/modules/stories/components/StoryCard.tsx": 2,
+        "frontend/src/modules/stories/components/StoryDetail.tsx": 1,
+        "frontend/src/modules/editor/components/AltTextDialog.tsx": 1,
+        "frontend/src/modules/editor/components/ProjectEditorForm.tsx": 1,
+        "frontend/src/components/ui/Grid.tsx": 1
+      },
+      "notes": "Migration PR. 12 rounds. Hit rate: R1-7 95%, R8 57%, R9 50%, R10 100% (2), R11 25% (1/4), R12 25% (1/4). Converged — bot now flags pre-existing code and repeats fixed findings."
+    }
+  ]
+}
