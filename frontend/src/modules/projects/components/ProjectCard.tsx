@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ProjectCard as ProjectCardType } from '@/shared/types/api';
 import { Card, Badge } from '@/components/ui';
 
@@ -10,7 +11,8 @@ interface ProjectCardProps {
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project, basePath }) => {
     return (
-        <Card as="a" href={`${basePath || '/projects'}/${project.slug}`} hoverable>
+        <Link href={`${basePath || '/projects'}/${project.slug}`} className="card--link">
+            <Card hoverable>
                 {project.image_url && (
                     <Image
                         src={project.image_url}
@@ -57,5 +59,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, basePath }) =
                     )}
                 </div>
             </Card>
+        </Link>
     );
 };

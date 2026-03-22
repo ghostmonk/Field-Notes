@@ -107,6 +107,8 @@ export const StoryCard = React.memo(({
     return (
         <Card
             variant={isDraft ? 'draft' : featured ? 'featured' : undefined}
+            // Card supports one variant; when both draft AND featured, draft takes
+            // precedence as the status indicator and featured is added via className
             className={isDraft && featured ? 'card--featured' : undefined}
             data-testid={`story-card-${story.id}`}
         >
