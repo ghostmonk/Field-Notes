@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { Story } from '@/shared/types/api';
+import { REFRESH_TOKEN_ERROR } from '@/shared/lib/auth';
 import { useFetchStory, useStoryMutations } from '@/modules/stories/hooks';
 import { logger } from '@/shared/utils/logger';
 import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
@@ -41,7 +42,7 @@ export interface UseStoryEditorReturn {
  * Manages story editor state including:
  * - Form state (title, content, is_published)
  * - Loading and saving states
- * - Auto-save on session expiry
+ * - Draft recovery on session expiry
  * - Fetching existing stories for editing
  */
 export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseStoryEditorReturn {
@@ -250,7 +251,7 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
 
   // Save draft locally when session refresh fails (signOut handled globally by SessionGuard)
   useEffect(() => {
-    if (session?.error !== 'RefreshTokenError') return;
+    if (session?.error !== REFRESH_TOKEN_ERROR) return;
     const current = storyRef.current;
     if (current.title || current.content) {
       saveDraft(

@@ -9,8 +9,9 @@ import { Layout } from "@/layout";
 import { ToastProvider } from "@/components/Toast";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { NetworkStatus } from "@/components/NetworkStatus";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { REFRESH_TOKEN_ERROR } from "@/shared/lib/auth";
 import { useImageZoom } from "@/hooks/useImageZoom";
 import { useRouter } from 'next/router';
 import Head from "next/head";
@@ -19,11 +20,13 @@ import { configureDOMPurify } from '@/shared/utils/sanitizer';
 import keepAliveService from '@/shared/lib/keep-alive';
 import { BackendWarmupBanner } from '@/components/LoadingSkeletons';
 
-function SessionGuard({ children }: { children: React.ReactNode }) {
+function SessionGuard({ children }: { children: ReactNode }) {
     const { data: session } = useSession();
+    const signingOut = useRef(false);
 
     useEffect(() => {
-        if (session?.error === 'RefreshTokenError') {
+        if (session?.error === REFRESH_TOKEN_ERROR && !signingOut.current) {
+            signingOut.current = true;
             signOut();
         }
     }, [session?.error]);

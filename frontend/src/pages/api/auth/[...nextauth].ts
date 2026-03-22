@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { JWT } from "next-auth/jwt";
+import { REFRESH_TOKEN_ERROR } from "@/shared/lib/auth";
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
     try {
@@ -31,7 +32,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         };
     } catch (error) {
         console.error("Error refreshing access token:", error);
-        return { ...token, error: "RefreshTokenError" };
+        return { ...token, error: REFRESH_TOKEN_ERROR };
     }
 }
 
@@ -102,7 +103,7 @@ export const authOptions: NextAuthOptions = {
             }
 
             // No refresh token available
-            return { ...token, error: "RefreshTokenError" };
+            return { ...token, error: REFRESH_TOKEN_ERROR };
         },
         async session({ session, token }) {
             session.accessToken = token.accessToken as string;
