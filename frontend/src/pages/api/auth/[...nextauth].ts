@@ -154,6 +154,9 @@ export const authOptions: NextAuthOptions = {
             return session;
         },
     },
+    pages: {
+        signIn: '/auth/signin',
+    },
     cookies: {
         state: {
             name: "next-auth.state",

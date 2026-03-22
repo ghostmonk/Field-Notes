@@ -22,26 +22,9 @@ export default function TopNav() {
                         >
                             Logout
                         </button>
-                    ) : process.env.NODE_ENV === 'development' ? (
-                        <>
-                            <button
-                                onClick={() => signIn("dev-credentials", { role: "admin", callbackUrl: "/" })}
-                                className="btn btn--primary"
-                                data-testid="signin-dev-admin"
-                            >
-                                Dev Admin
-                            </button>
-                            <button
-                                onClick={() => signIn("dev-credentials", { role: "commenter", callbackUrl: "/" })}
-                                className="btn btn--secondary"
-                                data-testid="signin-dev-commenter"
-                            >
-                                Dev Commenter
-                            </button>
-                        </>
                     ) : (
                         <button
-                            onClick={() => signIn("google")}
+                            onClick={() => signIn()}
                             className="btn btn--primary"
                             data-testid="signin-button"
                         >
