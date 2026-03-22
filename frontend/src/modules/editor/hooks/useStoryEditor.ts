@@ -3,7 +3,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { Story } from '@/shared/types/api';
 import { useFetchStory, useStoryMutations } from '@/modules/stories/hooks';
 import { logger } from '@/shared/utils/logger';
@@ -248,7 +248,7 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     }
   }, [router.query, storyId]);
 
-  // Handle session refresh failure — save draft locally and sign out
+  // Save draft locally when session refresh fails (signOut handled globally by SessionGuard)
   useEffect(() => {
     if (session?.error !== 'RefreshTokenError') return;
     const current = storyRef.current;
@@ -260,7 +260,6 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
       );
       showToast('Session expired. Your draft has been saved locally.');
     }
-    signOut();
   }, [session?.error, saveDraft, showToast]);
 
   // Redirect unauthenticated users

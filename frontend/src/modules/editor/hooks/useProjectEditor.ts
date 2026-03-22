@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { Project, CreateProjectRequest } from '@/shared/types/api';
 import apiClient from '@/shared/lib/api-client';
 import { ApiRequestError } from '@/shared/types/error';
@@ -158,14 +158,6 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
       }
     }
   }, [project.id, project.title, session, sectionSlug, router, confirm, showToast]);
-
-  // Handle session refresh failure
-  useEffect(() => {
-    if (session?.error === 'RefreshTokenError') {
-      showToast('Session expired. Please sign in again.');
-      signOut();
-    }
-  }, [session?.error, showToast]);
 
   // Redirect unauthenticated users
   useEffect(() => {

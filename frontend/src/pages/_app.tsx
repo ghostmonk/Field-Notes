@@ -10,6 +10,7 @@ import { ToastProvider } from "@/components/Toast";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { NetworkStatus } from "@/components/NetworkStatus";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { useImageZoom } from "@/hooks/useImageZoom";
 import { useRouter } from 'next/router';
 import Head from "next/head";
@@ -17,6 +18,18 @@ import { getSiteConfig } from '@/config';
 import { configureDOMPurify } from '@/shared/utils/sanitizer';
 import keepAliveService from '@/shared/lib/keep-alive';
 import { BackendWarmupBanner } from '@/components/LoadingSkeletons';
+
+function SessionGuard({ children }: { children: React.ReactNode }) {
+    const { data: session } = useSession();
+
+    useEffect(() => {
+        if (session?.error === 'RefreshTokenError') {
+            signOut();
+        }
+    }, [session?.error]);
+
+    return <>{children}</>;
+}
 
 function MyApp({ Component, pageProps }: AppProps) {
     const mainRef = useRef<HTMLDivElement>(null);
@@ -82,29 +95,31 @@ function MyApp({ Component, pageProps }: AppProps) {
 
     return (
         <SessionProvider session={pageProps.session} refetchInterval={4 * 60}>
-            <ToastProvider>
-                <ConfirmProvider>
-                    <Head>
-                        <meta
-                            name="viewport"
-                            content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes"
-                        />
-                        <meta name="author" content={getSiteConfig().site.author}/>
-                        <link rel="canonical" href="https://ghostmonk.com/"/>
-                    </Head>
-                    <NetworkStatus />
-                    <Layout>
-                        <BackendWarmupBanner
-                            isWarming={isWarming}
-                            warmupFailed={warmupFailed}
-                            onRetry={handleWarmupRetry}
-                        />
-                        <div ref={mainRef}>
-                            <Component {...pageProps} />
-                        </div>
-                    </Layout>
-                </ConfirmProvider>
-            </ToastProvider>
+            <SessionGuard>
+                <ToastProvider>
+                    <ConfirmProvider>
+                        <Head>
+                            <meta
+                                name="viewport"
+                                content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+                            />
+                            <meta name="author" content={getSiteConfig().site.author}/>
+                            <link rel="canonical" href="https://ghostmonk.com/"/>
+                        </Head>
+                        <NetworkStatus />
+                        <Layout>
+                            <BackendWarmupBanner
+                                isWarming={isWarming}
+                                warmupFailed={warmupFailed}
+                                onRetry={handleWarmupRetry}
+                            />
+                            <div ref={mainRef}>
+                                <Component {...pageProps} />
+                            </div>
+                        </Layout>
+                    </ConfirmProvider>
+                </ToastProvider>
+            </SessionGuard>
         </SessionProvider>
     );
 };
