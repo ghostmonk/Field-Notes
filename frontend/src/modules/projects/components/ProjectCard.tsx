@@ -13,10 +13,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, basePath }) =
     return (
         <Link
             href={`${basePath || '/projects'}/${project.slug}`}
-            legacyBehavior
-            passHref
+            style={{ textDecoration: 'none' }}
         >
-            <Card as="a" hoverable>
+            <Card hoverable>
                 {project.image_url && (
                     <Image
                         src={project.image_url}
