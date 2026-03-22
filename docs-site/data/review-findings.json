@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "description": "Claude bot PR review findings — per-PR summaries. Append one entry per merged PR.",
+  "queries": {
+    "category_trend": "jq '[.reviews[] | .by_category | to_entries[]] | group_by(.key) | map({category: .[0].key, total: (map(.value) | add)})'",
+    "hit_rate_over_time": "jq '.reviews[] | {pr, date, hit_rate: ((.totals.valid / .totals.findings) * 100 | round)}'",
+    "most_flagged_files": "jq '[.reviews[] | .flagged_files | to_entries[]] | group_by(.key) | map({file: .[0].key, total: (map(.value) | add)}) | sort_by(-.total)'",
+    "severity_distribution": "jq '[.reviews[] | .by_severity | to_entries[]] | group_by(.key) | map({severity: .[0].key, total: (map(.value) | add)})'"
+  },
+  "reviews": [
+    {
+      "pr": 168,
+      "date": "2026-03-22",
+      "title": "UI component library with full codebase migration",
+      "rounds": 5,
+      "totals": {
+        "findings": 20,
+        "valid": 19,
+        "false_positive": 1
+      },
+      "by_category": {
+        "behavioral_regression": 9,
+        "accessibility": 5,
+        "token_violation": 4,
+        "missing_implementation": 2
+      },
+      "by_severity": {
+        "high": 2,
+        "medium": 15,
+        "low": 3
+      },
+      "flagged_files": {
+        "frontend/src/components/ui/Tabs.tsx": 3,
+        "frontend/src/templates/default/styles/components.css": 3,
+        "frontend/src/components/ConfirmDialog.tsx": 2,
+        "frontend/src/components/ui/Button.tsx": 2,
+        "frontend/src/components/ui/Dialog.tsx": 2,
+        "frontend/src/modules/projects/components/ProjectCard.tsx": 2,
+        "frontend/src/components/ui/FormField.tsx": 1,
+        "frontend/src/modules/stories/components/StoryCard.tsx": 1,
+        "frontend/src/modules/stories/components/StoryDetail.tsx": 1,
+        "frontend/src/modules/editor/components/AltTextDialog.tsx": 1,
+        "frontend/src/templates/default/styles/tokens.css": 1,
+        "frontend/src/components/ui/Textarea.tsx": 1
+      },
+      "notes": "Migration PR — subagents replaced markup without verifying behavioral contracts. Accessibility and behavioral regressions dominated."
+    }
+  ]
+}
