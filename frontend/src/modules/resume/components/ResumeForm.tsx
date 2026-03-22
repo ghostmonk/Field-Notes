@@ -1,5 +1,4 @@
 import { UseResumeEditorReturn } from '../hooks/useResumeEditor';
-import { inlineInput } from '../shared';
 import { ContactForm } from './ContactForm';
 import { WorkExperienceForm } from './WorkExperienceForm';
 import { EducationForm } from './EducationForm';
@@ -62,7 +61,7 @@ export function ResumeForm({ editor }: ResumeFormProps) {
           onChange={(e) => setSummary(e.target.value)}
           rows={3}
           placeholder="Brief professional summary..."
-          className={`${inlineInput} resize-none`}
+          className="input--inline resize-none"
         />
       </div>
 

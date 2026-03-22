@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Input, Badge } from '@/components/ui';
 
 interface SkillsFormProps {
   skills: string[];
@@ -34,10 +35,7 @@ export function SkillsForm({ skills, onChange }: SkillsFormProps) {
       </h2>
       <div className="flex flex-wrap gap-2">
         {skills.map((skill, index) => (
-          <span
-            key={index}
-            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)]"
-          >
+          <Badge key={index} variant="outline">
             {skill}
             <button
               type="button"
@@ -46,16 +44,17 @@ export function SkillsForm({ skills, onChange }: SkillsFormProps) {
             >
               x
             </button>
-          </span>
+          </Badge>
         ))}
-        <input
+        <Input
+          variant="inline"
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={addSkill}
           placeholder="Add skill..."
-          className="bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-text-secondary)] focus:outline-none py-1 px-1 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] placeholder:opacity-50 transition-colors w-32"
+          className="px-1 text-sm w-32"
         />
       </div>
     </div>

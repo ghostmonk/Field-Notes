@@ -1,4 +1,4 @@
-import { inlineInput } from '../shared';
+import { Input } from '@/components/ui';
 
 interface AchievementsFormProps {
   achievements: string[];
@@ -34,12 +34,13 @@ export function AchievementsForm({
       </div>
       {achievements.map((item, index) => (
         <div key={index} className="group flex gap-2 items-start">
-          <input
+          <Input
+            variant="inline"
             type="text"
             value={item}
             onChange={(e) => updateItem(index, e.target.value)}
             placeholder="Achievement..."
-            className={`${inlineInput} text-sm flex-1`}
+            className="text-sm flex-1"
           />
           <button
             type="button"
