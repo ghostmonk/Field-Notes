@@ -56,11 +56,8 @@ const DialogRoot = forwardRef<HTMLDialogElement, DialogProps>(
         dialog.showModal();
       } else {
         dialog.close();
-      }
-
-      return () => {
         (previousFocusRef.current as HTMLElement)?.focus?.();
-      };
+      }
     }, [open]);
 
     const classes = ['dialog'];
