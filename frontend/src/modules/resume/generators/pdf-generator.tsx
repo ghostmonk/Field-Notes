@@ -1,8 +1,6 @@
-import { pdf } from '@react-pdf/renderer';
-import { Resume } from '@/shared/types/api';
 import { useState } from 'react';
+import { Resume } from '@/shared/types/api';
 import { getResumeFilename } from '../shared';
-import { ResumeDocument } from './pdf-document';
 
 export function PDFDownloadButton({ resume }: { resume: Resume }) {
   const [generating, setGenerating] = useState(false);
@@ -12,7 +10,11 @@ export function PDFDownloadButton({ resume }: { resume: Resume }) {
     setGenerating(true);
     setError(null);
     try {
-      const blob = await pdf(<ResumeDocument resume={resume} />).toBlob();
+      const response = await fetch('/api/resume/download-pdf');
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       try {
         const link = document.createElement('a');
