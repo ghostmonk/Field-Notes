@@ -12,9 +12,7 @@ COPY . .
 
 # Build args needed at build time for next.config.ts headers() and NEXT_PUBLIC_ inlining
 ARG NEXT_PUBLIC_API_URL
-ARG UNSAFE_EVAL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-ENV UNSAFE_EVAL=${UNSAFE_EVAL}
 
 # Build the Next.js application
 RUN npm run build

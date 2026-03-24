@@ -149,7 +149,6 @@ The application requires the following environment variables:
 - `NEXTAUTH_SECRET`: NextAuth secret key
 - `NEXTAUTH_URL`: NextAuth URL
 - `NEXTAUTH_DEBUG`: Enable NextAuth debug mode (true/false)
-- `UNSAFE_EVAL`: Enable unsafe-eval in CSP (true/false)
 - `ENABLE_PROXY_UPLOADS`: Enable image proxy through Next.js (true/false)
 
 ## Getting Started

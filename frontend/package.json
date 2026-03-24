@@ -18,7 +18,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
-    "dev:test": "NODE_NO_WARNINGS=1 BACKEND_URL=http://localhost:5555 NEXT_PUBLIC_API_URL=http://localhost:5555 NEXTAUTH_URL=http://localhost:3000 NEXTAUTH_SECRET=test-secret-for-e2e-tests UNSAFE_EVAL=true next dev",
+    "dev:test": "NODE_NO_WARNINGS=1 BACKEND_URL=http://localhost:5555 NEXT_PUBLIC_API_URL=http://localhost:5555 NEXTAUTH_URL=http://localhost:3000 NEXTAUTH_SECRET=test-secret-for-e2e-tests next dev",
     "test:unit": "vitest run"
   },
   "dependencies": {
