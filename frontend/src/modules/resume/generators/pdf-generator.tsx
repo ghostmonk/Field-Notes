@@ -14,18 +14,18 @@ export function PDFDownloadButton({ resume }: { resume: Resume }) {
       if (!response.ok) {
         throw new Error('Download failed');
       }
+      const contentDisposition = response.headers.get('Content-Disposition');
+      const filenameMatch = contentDisposition?.match(/filename="(.+?)"/);
+      const filename = filenameMatch?.[1] ?? getResumeFilename(resume, 'pdf');
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      try {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = getResumeFilename(resume, 'pdf');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } finally {
-        URL.revokeObjectURL(url);
-      }
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
       setError('PDF generation failed');
     } finally {

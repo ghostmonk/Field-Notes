@@ -45,7 +45,7 @@ export default async function handler(
     );
 
     const filename = getResumeFilename(resume, 'pdf').replace(
-      /["\r\n\\]/g,
+      /[^A-Za-z0-9._\-]/g,
       '_',
     );
 
@@ -57,7 +57,7 @@ export default async function handler(
     res.setHeader('Content-Length', buffer.length);
     res.setHeader(
       'Cache-Control',
-      'public, max-age=300, stale-while-revalidate=600',
+      'private, max-age=300, stale-while-revalidate=600',
     );
     return res.send(buffer);
   } catch (error) {
