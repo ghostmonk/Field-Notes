@@ -55,10 +55,7 @@ export default async function handler(
       `attachment; filename="${filename}"`,
     );
     res.setHeader('Content-Length', buffer.length);
-    res.setHeader(
-      'Cache-Control',
-      'private, max-age=300, stale-while-revalidate=600',
-    );
+    res.setHeader('Cache-Control', 'private, no-store');
     return res.send(buffer);
   } catch (error) {
     apiLogger.error(
