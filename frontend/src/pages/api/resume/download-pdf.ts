@@ -32,8 +32,13 @@ export default async function handler(
 
     const resume: Resume = await response.json();
 
+    // ResumeDocument renders a <Document> internally — the type mismatch
+    // is because renderToBuffer expects ReactElement<DocumentProps> but
+    // receives a wrapper component. Runtime behavior is correct.
     const element = React.createElement(ResumeDocument, { resume });
-    const buffer = await renderToBuffer(element as any);
+    const buffer = await renderToBuffer(
+      element as unknown as Parameters<typeof renderToBuffer>[0]
+    );
 
     const filename = getResumeFilename(resume, 'pdf');
 
