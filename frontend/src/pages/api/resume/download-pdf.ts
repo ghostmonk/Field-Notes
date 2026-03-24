@@ -32,22 +32,33 @@ export default async function handler(
 
     const resume: Resume = await response.json();
 
-    // ResumeDocument renders a <Document> internally — the type mismatch
-    // is because renderToBuffer expects ReactElement<DocumentProps> but
-    // receives a wrapper component. Runtime behavior is correct.
+    // renderToBuffer expects ReactElement<DocumentProps> but ResumeDocument
+    // is a wrapper whose props are {resume: Resume}, not DocumentProps.
+    // All react-pdf render functions (renderToBuffer, renderToStream, pdf())
+    // share this constraint. The cast is unavoidable without making
+    // ResumeDocument extend DocumentProps, which would leak PDF internals
+    // into the component's public API. Runtime behavior is correct because
+    // react-pdf traverses the rendered tree to find the <Document> child.
     const element = React.createElement(ResumeDocument, { resume });
     const buffer = await renderToBuffer(
       element as unknown as Parameters<typeof renderToBuffer>[0]
     );
 
-    const filename = getResumeFilename(resume, 'pdf');
+    const filename = getResumeFilename(resume, 'pdf').replace(
+      /["\r\n\\]/g,
+      '_',
+    );
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="${filename}"`
+      `attachment; filename="${filename}"`,
     );
     res.setHeader('Content-Length', buffer.length);
+    res.setHeader(
+      'Cache-Control',
+      'public, max-age=300, stale-while-revalidate=600',
+    );
     return res.send(buffer);
   } catch (error) {
     apiLogger.error(

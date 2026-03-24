@@ -71,10 +71,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     color: '#222',
   },
-  pageInner: {
-    paddingHorizontal: 40,
-  },
-
   // Header
   header: {
     backgroundColor: RESUME_NAVY,
