@@ -227,6 +227,32 @@ Before declaring work done:
 - Run `make format` and `make test`
 - If the change affects deployment (new env vars, new dependencies, Dockerfile changes): update `deploy.yml` and document the new vars
 
+### Release Process
+
+When told to "release", "ship", or "merge" a PR, execute this sequence:
+
+1. **Run all tests**:
+   - `make test` (backend pytest)
+   - `make test-frontend-unit` (vitest)
+   - `make test-frontend` (Playwright e2e — stop Docker frontend first: `docker compose stop frontend`)
+   - `make format`
+   - Fix any failures before proceeding.
+
+2. **PR review loop** — follow the PR Review Loop procedure above until converged.
+
+3. **Check CI** — `gh pr checks <PR#>`. All checks must pass. If CI fails, investigate and fix.
+
+4. **Update review findings** — add/update the entry in `docs-site/data/review-findings.json` with final round counts, categories, and notes. Commit to main.
+
+5. **Write release notes** — add `docs-site/pages/releases/YYYY-MM-DD--<topic>.md` with: what changed, why, migration steps. Update `_meta.ts`. Commit to the PR branch.
+
+6. **Squash merge** — `gh pr merge --squash --subject "<summary> (#N)" --body "<3-8 bullets>"`. Follow squash merge commit message rules in this file.
+
+7. **Post-merge cleanup**:
+   - Close related issues
+   - Delete any GitHub variables/secrets that are no longer needed
+   - `make down` in the worktree, then `git worktree remove`
+
 ## Deployment Architecture
 
 Three Cloud Run services deployed via GitHub Actions (`.github/workflows/deploy.yml`):
