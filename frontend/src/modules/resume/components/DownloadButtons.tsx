@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Resume } from '@/shared/types/api';
 import { HiOutlineDocumentDownload } from 'react-icons/hi';
 import { PDFDownloadButton } from '../generators/pdf-generator';
+import { getResumeFilename } from '../shared';
 
 interface DownloadButtonsProps {
   resume: Partial<Resume>;
@@ -28,7 +29,7 @@ export function DownloadButtons({ resume }: DownloadButtonsProps) {
 
   return (
     <div className="flex gap-2 items-center">
-      {hasData && <PDFDownloadButton resume={resume as Resume} />}
+      {hasData && <PDFDownloadButton fallbackFilename={getResumeFilename(resume as Resume, 'pdf')} />}
       <button
         type="button"
         onClick={handleDocxDownload}

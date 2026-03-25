@@ -32,13 +32,7 @@ export default async function handler(
 
     const resume: Resume = await response.json();
 
-    // renderToBuffer expects ReactElement<DocumentProps> but ResumeDocument
-    // is a wrapper whose props are {resume: Resume}, not DocumentProps.
-    // All react-pdf render functions (renderToBuffer, renderToStream, pdf())
-    // share this constraint. The cast is unavoidable without making
-    // ResumeDocument extend DocumentProps, which would leak PDF internals
-    // into the component's public API. Runtime behavior is correct because
-    // react-pdf traverses the rendered tree to find the <Document> child.
+    // react-pdf types require ReactElement<DocumentProps>; wrapper components need a cast
     const element = React.createElement(ResumeDocument, { resume });
     const buffer = await renderToBuffer(
       element as unknown as Parameters<typeof renderToBuffer>[0]
