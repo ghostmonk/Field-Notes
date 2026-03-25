@@ -236,5 +236,6 @@ def upgrade(db: "pymongo.database.Database"):
 
 
 def downgrade(db: "pymongo.database.Database"):
-    # No-op: we don't want to remove posters
+    # Irreversible: poster attributes and rewritten src values remain in content.
+    logger.warning("Migration 0013 downgrade is a no-op — poster attributes are not removed")
     pass
