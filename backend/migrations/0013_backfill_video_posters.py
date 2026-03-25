@@ -95,10 +95,10 @@ def _extract_poster_ffmpeg(video_path, output_path):
         result = subprocess.run(
             [
                 "ffmpeg",
-                "-i",
-                video_path,
                 "-ss",
                 "1",
+                "-i",
+                video_path,
                 "-frames:v",
                 "1",
                 "-q:v",
@@ -234,9 +234,7 @@ def upgrade(db: "pymongo.database.Database"):
             )
 
             if updated_content != content:
-                collection.update_one(
-                    {"_id": doc_id}, {"$set": {"content": updated_content}}
-                )
+                collection.update_one({"_id": doc_id}, {"$set": {"content": updated_content}})
                 logger.info(f"Updated video posters in {coll_name} document {doc_id}")
                 print(f"Updated video posters in {coll_name} document {doc_id}")
 
