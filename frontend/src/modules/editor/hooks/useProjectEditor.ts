@@ -100,10 +100,11 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
 
   // Fetch existing project for editing
   useEffect(() => {
-    if (!projectId || !accessToken) {
+    if (!projectId) {
       fetchDoneRef.current = true;
       return;
     }
+    if (!accessToken) return;
     let cancelled = false;
 
     async function fetchProject() {

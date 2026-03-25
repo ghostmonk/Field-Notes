@@ -282,6 +282,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
     const xPct = Math.round(((e.clientX - rect.left) / rect.width) * 100);
     const yPct = Math.round(((e.clientY - rect.top) / rect.height) * 100);
     setCoverPosition(`${xPct}% ${yPct}%`);
+    isDirtyRef.current = true;
   }, []);
 
   const handleSave = useCallback(async () => {

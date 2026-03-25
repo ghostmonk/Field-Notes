@@ -20,6 +20,16 @@ function getDraftKey(
   return `${DRAFT_KEY_PREFIX}-${contentType}-new`;
 }
 
+// Old key format (pre-generic) for migration
+function getLegacyDraftKey(
+  entityId?: string,
+  sectionId?: string
+): string {
+  if (entityId) return `${DRAFT_KEY_PREFIX}-edit-${entityId}`;
+  if (sectionId) return `${DRAFT_KEY_PREFIX}-new-${sectionId}`;
+  return `${DRAFT_KEY_PREFIX}-new`;
+}
+
 interface UseDraftRecoveryOptions<T> {
   contentType: string;
   entityId?: string;
@@ -52,17 +62,39 @@ export function useDraftRecovery<T>({
   const loadDraft = useCallback((): T | null => {
     try {
       const raw = localStorage.getItem(key);
-      if (!raw) return null;
-      const envelope: DraftEnvelope<T> = JSON.parse(raw);
-      if (Date.now() - envelope.savedAt > DRAFT_MAX_AGE) {
-        localStorage.removeItem(key);
-        return null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        // New envelope format: { data: T, savedAt }
+        const envelope: DraftEnvelope<T> = parsed.data !== undefined ? parsed : { data: parsed, savedAt: parsed.savedAt || 0 };
+        if (Date.now() - envelope.savedAt > DRAFT_MAX_AGE) {
+          localStorage.removeItem(key);
+          return null;
+        }
+        return envelope.data;
       }
-      return envelope.data;
+      // Migrate from legacy key format (pre-generic: field-notes-draft-edit-{id})
+      const legacyKey = getLegacyDraftKey(entityId, sectionId);
+      if (legacyKey !== key) {
+        const legacyRaw = localStorage.getItem(legacyKey);
+        if (legacyRaw) {
+          const legacyData = JSON.parse(legacyRaw);
+          const savedAt = legacyData.savedAt || 0;
+          if (Date.now() - savedAt > DRAFT_MAX_AGE) {
+            localStorage.removeItem(legacyKey);
+            return null;
+          }
+          // Migrate: save under new key, remove old
+          const data = legacyData.data !== undefined ? legacyData.data : legacyData;
+          localStorage.setItem(key, JSON.stringify({ data, savedAt }));
+          localStorage.removeItem(legacyKey);
+          return data as T;
+        }
+      }
+      return null;
     } catch {
       return null;
     }
-  }, [key]);
+  }, [key, entityId, sectionId]);
 
   const clearDraft = useCallback(() => {
     try {
