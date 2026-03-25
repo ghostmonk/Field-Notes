@@ -29,9 +29,12 @@ describe('Tabs', () => {
   it('shows active panel and hides inactive', () => {
     renderTabs('one');
     const activePanel = screen.getByText('Panel One').closest('[role="tabpanel"]') as HTMLElement;
-    const inactivePanel = screen.getByText('Panel Two').closest('[role="tabpanel"]') as HTMLElement;
     expect(activePanel.hidden).toBe(false);
+    // Inactive panel exists in DOM (for ARIA linkage) but children are not rendered
+    const inactivePanel = document.getElementById('tabpanel-two') as HTMLElement;
+    expect(inactivePanel).toBeDefined();
     expect(inactivePanel.hidden).toBe(true);
+    expect(inactivePanel.textContent).toBe('');
   });
 
   it('applies active class to active tab', () => {
