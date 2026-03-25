@@ -50,6 +50,7 @@ export function extractVideoPoster(
 
     const captureFrame = () => {
       if (settled) return;
+      settled = true;
 
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
@@ -73,8 +74,6 @@ export function extractVideoPoster(
 
       canvas.toBlob(
         (blob) => {
-          if (settled) return;
-          settled = true;
           clearTimeout(timeout);
           cleanup();
           if (!blob) {

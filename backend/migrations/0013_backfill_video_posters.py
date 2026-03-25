@@ -220,13 +220,7 @@ def upgrade(db: "pymongo.database.Database"):
 
     for coll_name in COLLECTIONS:
         collection = db[coll_name]
-        query = {"content": {"$regex": "<video"}}
-        doc_ids = [doc["_id"] for doc in collection.find(query, {"_id": 1})]
-
-        for doc_id in doc_ids:
-            doc = collection.find_one({"_id": doc_id})
-            if not doc:
-                continue
+        for doc in collection.find({"content": {"$regex": "<video"}}):
             content = doc.get("content", "")
             if not content:
                 continue
@@ -236,9 +230,9 @@ def upgrade(db: "pymongo.database.Database"):
             )
 
             if updated_content != content:
-                collection.update_one({"_id": doc_id}, {"$set": {"content": updated_content}})
-                logger.info(f"Updated video posters in {coll_name} document {doc_id}")
-                print(f"Updated video posters in {coll_name} document {doc_id}")
+                collection.update_one({"_id": doc["_id"]}, {"$set": {"content": updated_content}})
+                logger.info(f"Updated video posters in {coll_name} document {doc['_id']}")
+                print(f"Updated video posters in {coll_name} document {doc['_id']}")
 
 
 def downgrade(db: "pymongo.database.Database"):
