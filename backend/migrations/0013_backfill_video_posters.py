@@ -23,6 +23,7 @@ dependencies = ["0012_seed_resume_data"]
 COLLECTIONS = ["stories", "projects", "pages"]
 VIDEO_TAG_RE = re.compile(r"<video\b[^>]*>", re.IGNORECASE)
 ATTR_RE = re.compile(r'(\w+)\s*=\s*"([^"]*)"')
+BOOL_ATTR_RE = re.compile(r"\b(controls|muted|autoplay|loop|playsinline)\b(?!=)")
 
 
 def _parse_attrs(tag_str):
@@ -31,10 +32,13 @@ def _parse_attrs(tag_str):
 
 
 def _rebuild_tag(tag_str, attrs_update):
-    """Rebuild a <video> tag with updated/added attributes."""
+    """Rebuild a <video> tag with updated/added attributes, preserving boolean attrs."""
     existing = dict(ATTR_RE.findall(tag_str))
     existing.update(attrs_update)
+    bool_attrs = set(BOOL_ATTR_RE.findall(tag_str))
     attr_str = " ".join(f'{k}="{v}"' for k, v in existing.items())
+    if bool_attrs:
+        attr_str += " " + " ".join(sorted(bool_attrs))
     return f"<video {attr_str}>"
 
 
@@ -45,14 +49,6 @@ def _src_to_blob_path(src):
     """
     path = src.lstrip("/")
     return path
-
-
-def _get_local_file_path(blob_path):
-    """Get the local filesystem path for a blob."""
-    local_storage = os.environ.get("LOCAL_STORAGE_PATH", "")
-    if not local_storage:
-        return None
-    return os.path.join(local_storage, blob_path)
 
 
 def _download_gcs_blob(blob_path, dest_path):
@@ -183,8 +179,8 @@ def _process_video_tag(match, jobs_collection):
         processed = job.get("processed_formats", [])
         if not src.lower().endswith(".mp4"):
             for fmt in processed:
-                if "mp4_720p" in fmt.lower() or "720p" in fmt.lower():
-                    updates["src"] = fmt
+                if isinstance(fmt, dict) and fmt.get("format") == "mp4_720p":
+                    updates["src"] = fmt["url"]
                     break
 
         metadata = job.get("metadata", {})
