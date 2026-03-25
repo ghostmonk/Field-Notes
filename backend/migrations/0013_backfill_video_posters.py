@@ -15,6 +15,11 @@ import tempfile
 
 import pymongo
 
+try:
+    from google.cloud import storage as gcs_storage
+except ImportError:
+    gcs_storage = None
+
 logger = logging.getLogger(__name__)
 
 name = "0013_backfill_video_posters"
@@ -46,15 +51,19 @@ def _src_to_blob_path(src):
     """Convert a video src URL path to a storage blob path.
 
     e.g. /uploads/timestamp_uuid.mp4 -> uploads/timestamp_uuid.mp4
+    Full URLs like https://storage.googleapis.com/bucket/uploads/file.mp4 -> uploads/file.mp4
     """
-    path = src.lstrip("/")
-    return path
+    if src.startswith("https://"):
+        # Extract path after bucket name: https://storage.googleapis.com/bucket/uploads/file.mp4 -> uploads/file.mp4
+        parts = src.split("/", 4)  # ['https:', '', 'host', 'bucket', 'path']
+        if len(parts) > 4:
+            return parts[4]
+        return src
+    return src.lstrip("/")
 
 
 def _download_gcs_blob(blob_path, dest_path):
     """Download a blob from GCS to a local path."""
-    from google.cloud import storage as gcs_storage
-
     bucket_name = os.environ.get("GCS_BUCKET_NAME", "")
     if not bucket_name:
         return False
@@ -70,8 +79,6 @@ def _download_gcs_blob(blob_path, dest_path):
 
 def _upload_gcs_blob(local_path, blob_path):
     """Upload a local file to GCS."""
-    from google.cloud import storage as gcs_storage
-
     bucket_name = os.environ.get("GCS_BUCKET_NAME", "")
     if not bucket_name:
         return None
@@ -203,7 +210,7 @@ def upgrade(db: "pymongo.database.Database"):
 
     for coll_name in COLLECTIONS:
         collection = db[coll_name]
-        docs = collection.find({"content": {"$regex": "<video"}})
+        docs = collection.find({"content": {"$regex": "<video"}}, no_cursor_timeout=True)
 
         for doc in docs:
             content = doc.get("content", "")

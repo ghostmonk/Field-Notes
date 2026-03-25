@@ -11,7 +11,7 @@ interface VideoPosterResult {
 
 const CAPTURE_TIME_SECONDS = 1;
 const POSTER_QUALITY = 0.85;
-const EXTRACTION_TIMEOUT_MS = 15_000;
+const EXTRACTION_TIMEOUT_MS = 5_000;
 
 export function extractVideoPoster(
   file: File
@@ -45,12 +45,14 @@ export function extractVideoPoster(
     video.addEventListener('error', () => {
       clearTimeout(timeout);
       fail('Failed to load video for poster extraction');
-    });
+    }, { once: true });
 
     video.addEventListener('loadedmetadata', () => {
-      const seekTime = Math.min(CAPTURE_TIME_SECONDS, video.duration * 0.1);
+      const seekTime = isFinite(video.duration)
+        ? Math.min(CAPTURE_TIME_SECONDS, video.duration * 0.1)
+        : CAPTURE_TIME_SECONDS;
       video.currentTime = seekTime;
-    });
+    }, { once: true });
 
     video.addEventListener('seeked', () => {
       if (settled) return;
@@ -63,8 +65,16 @@ export function extractVideoPoster(
       const ctx = canvas.getContext('2d');
 
       if (!ctx) {
+        clearTimeout(timeout);
         cleanup();
         reject(new Error('Canvas 2D context not available'));
+        return;
+      }
+
+      if (!canvas.width || !canvas.height) {
+        clearTimeout(timeout);
+        cleanup();
+        reject(new Error('Video has zero dimensions'));
         return;
       }
 
