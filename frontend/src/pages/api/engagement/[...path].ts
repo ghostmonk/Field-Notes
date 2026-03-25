@@ -1,21 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
 import { apiLogger } from '@/shared/utils/logger';
+import { getBackendUrl } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-    if (!API_BASE_URL) {
-        const error = new Error('Backend URL not configured');
-        apiLogger.error('Configuration error', error, {
-            detail: 'Set BACKEND_URL or NEXT_PUBLIC_API_URL'
-        });
-        return res.status(500).json({
-            detail: 'Backend URL not configured. Set BACKEND_URL or NEXT_PUBLIC_API_URL',
-            error: 'Configuration error'
-        });
-    }
-
     const { path } = req.query;
     const pathArray = Array.isArray(path) ? path : [path];
     const backendPath = `/api/engagement/${pathArray.join('/')}`;
@@ -45,7 +33,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${token.accessToken}`;
         }
 
-        const apiUrl = `${API_BASE_URL}${backendPath}`;
+        const backendUrl = getBackendUrl();
+        const apiUrl = `${backendUrl}${backendPath}`;
 
         // Forward query parameters for GET requests
         let finalUrl = apiUrl;
@@ -60,6 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const response = await fetch(finalUrl, {
             method: req.method,
             headers,
+            signal: AbortSignal.timeout(10000),
             ...(req.method !== 'GET' && req.method !== 'DELETE' && req.body && {
                 body: JSON.stringify(req.body)
             }),

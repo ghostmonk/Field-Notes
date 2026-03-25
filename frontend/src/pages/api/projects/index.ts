@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
+import { getBackendUrl } from '@/shared/utils/backend-fetch';
 
 // Simple in-memory cache for projects
 const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
@@ -45,15 +46,6 @@ function invalidateCache(pattern?: string): void {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-    if (!API_BASE_URL) {
-        return res.status(500).json({
-            detail: 'Backend URL not configured',
-            error: 'Configuration error'
-        });
-    }
-
     apiLogger.logApiRequest(req, res);
 
     try {
@@ -84,7 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             invalidateCache('projects');
         }
 
-        let apiUrl = `${API_BASE_URL}/projects`;
+        let apiUrl = `${getBackendUrl()}/projects`;
         const token = await getToken({ req });
 
         // Build query params for GET
@@ -123,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const response = await fetch(apiUrl, {
             method: req.method,
             headers,
+            signal: AbortSignal.timeout(10000),
             ...(req.method !== 'GET' && { body: JSON.stringify(req.body) }),
         });
 

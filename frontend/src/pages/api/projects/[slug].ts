@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 // Simple in-memory cache
 const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
@@ -40,15 +41,7 @@ function invalidateCache(pattern?: string): void {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
     const { slug } = req.query;
-
-    if (!API_BASE_URL) {
-        return res.status(500).json({
-            detail: 'Backend URL not configured',
-            error: 'Configuration error'
-        });
-    }
 
     if (!slug || typeof slug !== 'string') {
         return res.status(400).json({
@@ -89,12 +82,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Determine the endpoint based on request method
         // GET uses slug endpoint, PUT/DELETE use ID endpoint
-        let apiUrl: string;
+        let backendPath: string;
         if (req.method === 'GET') {
-            apiUrl = `${API_BASE_URL}/projects/slug/${slug}`;
+            backendPath = `/projects/slug/${slug}`;
         } else {
             // For PUT/DELETE, slug is actually the project ID
-            apiUrl = `${API_BASE_URL}/projects/${slug}`;
+            backendPath = `/projects/${slug}`;
         }
 
         const headers: HeadersInit = {
@@ -105,7 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${token.accessToken}`;
         }
 
-        const response = await fetch(apiUrl, {
+        const response = await fetchBackend(backendPath, {
             method: req.method,
             headers,
             ...(req.method !== 'GET' && req.method !== 'DELETE' && { body: JSON.stringify(req.body) }),

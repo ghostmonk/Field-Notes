@@ -1,12 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-    if (!API_BASE_URL) {
-        return res.status(500).json({ detail: 'Backend URL not configured' });
-    }
-
     if (req.method !== 'GET') {
         return res.status(405).json({ detail: 'Method not allowed' });
     }
@@ -17,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/sections/by-slug/${slug}`);
+        const response = await fetchBackend(`/sections/by-slug/${slug}`);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));

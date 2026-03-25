@@ -8,17 +8,10 @@ import {
     setCache,
     invalidatePhotoEssayCache,
 } from '@/shared/lib/photo-essay-cache';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
     const { id } = req.query;
-
-    if (!API_BASE_URL) {
-        return res.status(500).json({
-            detail: 'Backend URL not configured',
-            error: 'Configuration error'
-        });
-    }
 
     if (!id || typeof id !== 'string') {
         return res.status(400).json({
@@ -57,8 +50,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             invalidatePhotoEssayCache();
         }
 
-        const apiUrl = `${API_BASE_URL}/photo-essays/${id}`;
-
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
         };
@@ -67,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${token.accessToken}`;
         }
 
-        const response = await fetch(apiUrl, {
+        const response = await fetchBackend(`/photo-essays/${id}`, {
             method: req.method,
             headers,
             ...(req.method !== 'GET' && req.method !== 'DELETE' && { body: JSON.stringify(req.body) }),

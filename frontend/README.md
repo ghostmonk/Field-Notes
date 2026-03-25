@@ -93,30 +93,6 @@ const storyCard = homePage.getStoryCard('story-1');
 await expect(storyCard.title).toBeVisible();
 ```
 
-### Test Configuration
-
-#### ⚠️ Security Notice: UNSAFE_EVAL Flag
-
-The `dev:test` script includes `UNSAFE_EVAL=true` to allow Next.js hot module reloading during tests:
-
-```bash
-# This script is for E2E testing ONLY - never use in production!
-npm run dev:test
-```
-
-**Why it's needed:**
-- Next.js dev mode uses `eval()` for fast refresh/HMR
-- The app's Content Security Policy (CSP) blocks `unsafe-eval` by default
-- Without this flag, JavaScript won't execute in Playwright tests
-
-**Security safeguards:**
-- This flag is ONLY in the `dev:test` script, not in `dev` or `build`
-- Production builds (`npm run build`) never use this flag
-- The flag only affects the CSP header, not actual code execution safety
-- CI/CD should only use `npm run test:e2e` which starts its own isolated server
-
-**⛔ NEVER use `UNSAFE_EVAL=true` in production environments.**
-
 ### Mocking Strategy
 
 Tests use two complementary mocking approaches:

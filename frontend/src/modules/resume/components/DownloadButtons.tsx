@@ -1,15 +1,8 @@
 import { useState } from 'react';
-import dynamic from 'next/dynamic';
 import { Resume } from '@/shared/types/api';
 import { HiOutlineDocumentDownload } from 'react-icons/hi';
-
-const PDFDownload = dynamic(
-  () =>
-    import('../generators/pdf-generator').then((mod) => ({
-      default: mod.PDFDownloadButton,
-    })),
-  { ssr: false }
-);
+import { PDFDownloadButton } from '../generators/pdf-generator';
+import { getResumeFilename } from '../shared';
 
 interface DownloadButtonsProps {
   resume: Partial<Resume>;
@@ -36,7 +29,7 @@ export function DownloadButtons({ resume }: DownloadButtonsProps) {
 
   return (
     <div className="flex gap-2 items-center">
-      {hasData && <PDFDownload resume={resume as Resume} />}
+      {hasData && <PDFDownloadButton fallbackFilename={getResumeFilename(resume as Resume, 'pdf')} />}
       <button
         type="button"
         onClick={handleDocxDownload}

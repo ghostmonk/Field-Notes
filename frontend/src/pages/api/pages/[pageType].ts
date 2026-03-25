@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 // Simple in-memory cache for pages
 const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
@@ -40,19 +41,7 @@ function invalidateCache(pattern?: string): void {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
     const { pageType } = req.query;
-
-    if (!API_BASE_URL) {
-        const error = new Error('Backend URL not configured');
-        apiLogger.error('Configuration error', error, {
-            detail: 'Set BACKEND_URL or NEXT_PUBLIC_API_URL'
-        });
-        return res.status(500).json({
-            detail: 'Backend URL not configured',
-            error: 'Configuration error'
-        });
-    }
 
     apiLogger.logApiRequest(req, res);
 
@@ -85,7 +74,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             invalidateCache(`page:${pageType}`);
         }
 
-        const apiUrl = `${API_BASE_URL}/pages/${pageType}`;
         const token = await getToken({ req });
 
         const headers: HeadersInit = {
@@ -96,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${token.accessToken}`;
         }
 
-        const response = await fetch(apiUrl, {
+        const response = await fetchBackend(`/pages/${pageType}`, {
             method: req.method,
             headers,
             ...(req.method !== 'GET' && { body: JSON.stringify(req.body) }),

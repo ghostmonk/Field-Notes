@@ -8,17 +8,9 @@ import {
     setCache,
     invalidatePhotoEssayCache,
 } from '@/shared/lib/photo-essay-cache';
+import { getBackendUrl } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-    if (!API_BASE_URL) {
-        return res.status(500).json({
-            detail: 'Backend URL not configured',
-            error: 'Configuration error'
-        });
-    }
-
     apiLogger.logApiRequest(req, res);
 
     try {
@@ -59,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     error: 'section_id must be a 24-character hex string'
                 });
             }
-            apiUrl = `${API_BASE_URL}/photo-essays/section/${sectionId}`;
+            apiUrl = `${getBackendUrl()}/photo-essays/section/${sectionId}`;
             const params = new URLSearchParams();
 
             if (req.query.limit) {
@@ -81,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 error: 'Missing required parameter'
             });
         } else {
-            apiUrl = `${API_BASE_URL}/photo-essays`;
+            apiUrl = `${getBackendUrl()}/photo-essays`;
         }
 
         const headers: HeadersInit = {
@@ -95,6 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const response = await fetch(apiUrl, {
             method: req.method,
             headers,
+            signal: AbortSignal.timeout(10000),
             ...(req.method !== 'GET' && { body: JSON.stringify(req.body) }),
         });
 

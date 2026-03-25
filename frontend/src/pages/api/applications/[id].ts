@@ -1,21 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
 import { apiLogger } from '@/shared/utils/logger';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const API_BASE_URL =
-    process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
   const { id } = req.query;
 
   if (!['PUT', 'DELETE'].includes(req.method || '')) {
     return res.status(405).json({ detail: 'Method not allowed' });
-  }
-
-  if (!API_BASE_URL) {
-    return res.status(500).json({ detail: 'Backend URL not configured' });
   }
 
   apiLogger.logApiRequest(req, res);
@@ -27,7 +22,7 @@ export default async function handler(
       return res.status(401).json({ detail: 'Not authenticated' });
     }
 
-    const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
+    const response = await fetchBackend(`/applications/${id}`, {
       method: req.method,
       headers: {
         'Content-Type': 'application/json',

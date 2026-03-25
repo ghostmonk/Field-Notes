@@ -778,6 +778,29 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
     });
   });
 
+  // Resume PDF download endpoint (client-side fetch for download button)
+  await page.route('**/api/resume/download-pdf', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'PDF generation failed' }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/pdf',
+      headers: {
+        'Content-Disposition': 'attachment; filename="Test_User_Resume.pdf"',
+      },
+      body: Buffer.from('%PDF-1.4 mock'),
+    });
+  });
+
   // Resume public endpoint
   await page.route('**/api/resume/public', async (route) => {
     await maybeDelay();

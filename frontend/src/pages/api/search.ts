@@ -1,12 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-    if (!API_BASE_URL) {
-        return res.status(500).json({ detail: "Backend URL not configured" });
-    }
-
     if (req.method !== "GET") {
         return res.status(405).json({ detail: "Method not allowed" });
     }
@@ -22,10 +17,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         params.append("limit", req.query.limit.toString());
     }
 
-    const apiUrl = `${API_BASE_URL}/search?${params.toString()}`;
-
     try {
-        const response = await fetch(apiUrl);
+        const response = await fetchBackend(`/search?${params.toString()}`);
 
         const data = await response.json();
 
