@@ -73,6 +73,8 @@ export function useVideoUpload(editor: Editor | null): UseVideoUploadReturn {
         const posterResult = await uploadPoster(posterFile);
         if (posterResult?.urls?.length) {
           posterUrl = posterResult.urls[0];
+        } else {
+          logger.warn('Poster upload failed — video will have no preview image');
         }
       }
 

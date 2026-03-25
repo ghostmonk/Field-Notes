@@ -2,8 +2,9 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install ffmpeg for video poster frame extraction
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+# FFmpeg for video poster extraction (migration 0013). Set INSTALL_FFMPEG=true to include.
+ARG INSTALL_FFMPEG=false
+RUN if [ "$INSTALL_FFMPEG" = "true" ]; then apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*; fi
 
 # Install shared glogger package first
 COPY shared/python/ ./shared/python/

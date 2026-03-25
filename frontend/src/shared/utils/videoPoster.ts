@@ -27,7 +27,6 @@ export function extractVideoPoster(
 
     const cleanup = () => {
       URL.revokeObjectURL(url);
-      video.remove();
     };
 
     const fail = (msg: string) => {
@@ -78,7 +77,7 @@ export function extractVideoPoster(
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Capture dimensions before cleanup detaches the video element
+      // Capture dimensions before cleanup revokes the object URL
       const width = canvas.width;
       const height = canvas.height;
 
