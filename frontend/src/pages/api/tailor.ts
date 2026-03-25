@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
 import { apiLogger } from '@/shared/utils/logger';
-import { fetchBackend } from '@/shared/utils/backend-fetch';
+import { getBackendUrl } from '@/shared/utils/backend-fetch';
+import { invalidatePdfCache } from './resume/download-pdf';
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,7 +24,8 @@ export default async function handler(
       });
     }
 
-    const response = await fetchBackend('/tailor', {
+    // LLM pipeline takes 30-60s+; no timeout (fetchBackend's 10s default is too short)
+    const response = await fetch(`${getBackendUrl()}/tailor`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -48,6 +50,7 @@ export default async function handler(
     }
 
     const data = await response.json();
+    invalidatePdfCache();
     return res.status(200).json(data);
   } catch (error) {
     apiLogger.error(
