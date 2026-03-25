@@ -5,6 +5,10 @@ import { ResumeDocument } from '@/modules/resume/generators/pdf-document';
 import { getResumeFilename } from '@/modules/resume/shared';
 import { Resume } from '@/shared/types/api';
 import { apiLogger } from '@/shared/utils/logger';
+import { fetchBackend, sanitizeFilename } from '@/shared/utils/backend-fetch';
+
+let cachedPdf: { buffer: Buffer; filename: string; expiresAt: number } | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,15 +18,21 @@ export default async function handler(
     return res.status(405).json({ detail: 'Method not allowed' });
   }
 
-  const API_BASE_URL =
-    process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-  if (!API_BASE_URL) {
-    return res.status(500).json({ detail: 'Backend URL not configured' });
-  }
-
   try {
-    const response = await fetch(`${API_BASE_URL}/resume/public`);
+    // Check cache
+    if (cachedPdf && Date.now() < cachedPdf.expiresAt) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${cachedPdf.filename}"`,
+      );
+      res.setHeader('Content-Length', cachedPdf.buffer.length);
+      res.setHeader('Cache-Control', 'private, no-store');
+      res.setHeader('X-Cache', 'HIT');
+      return res.send(cachedPdf.buffer);
+    }
+
+    const response = await fetchBackend('/resume/public');
 
     if (!response.ok) {
       return res
@@ -38,10 +48,14 @@ export default async function handler(
       element as unknown as Parameters<typeof renderToBuffer>[0]
     );
 
-    const filename = getResumeFilename(resume, 'pdf').replace(
-      /[^A-Za-z0-9._\-]/g,
-      '_',
-    );
+    const filename = sanitizeFilename(getResumeFilename(resume, 'pdf'));
+
+    // Cache the rendered PDF
+    cachedPdf = {
+      buffer: Buffer.from(buffer),
+      filename,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    };
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
@@ -50,6 +64,7 @@ export default async function handler(
     );
     res.setHeader('Content-Length', buffer.length);
     res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('X-Cache', 'MISS');
     return res.send(buffer);
   } catch (error) {
     apiLogger.error(

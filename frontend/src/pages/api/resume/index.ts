@@ -1,28 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
 import { apiLogger } from '@/shared/utils/logger';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const API_BASE_URL =
-    process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
   if (!['GET', 'POST', 'PUT', 'DELETE'].includes(req.method || '')) {
     return res.status(405).json({ detail: 'Method not allowed' });
-  }
-
-  if (!API_BASE_URL) {
-    apiLogger.error(
-      'Configuration error',
-      new Error('Backend URL not configured'),
-      { detail: 'Set BACKEND_URL or NEXT_PUBLIC_API_URL' }
-    );
-    return res.status(500).json({
-      detail: 'Backend URL not configured',
-      error: 'Configuration error',
-    });
   }
 
   apiLogger.logApiRequest(req, res);
@@ -37,14 +23,12 @@ export default async function handler(
       });
     }
 
-    const apiUrl = `${API_BASE_URL}/resume`;
-
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token.accessToken}`,
     };
 
-    const response = await fetch(apiUrl, {
+    const response = await fetchBackend('/resume', {
       method: req.method,
       headers,
       ...(req.method !== 'GET' &&

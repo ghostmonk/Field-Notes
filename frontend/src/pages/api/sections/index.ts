@@ -1,16 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
+import { getBackendUrl, fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-    if (!API_BASE_URL) {
-        return res.status(500).json({
-            detail: 'Backend URL not configured. Set BACKEND_URL or NEXT_PUBLIC_API_URL',
-            error: 'Configuration error'
-        });
-    }
-
     try {
         const token = await getToken({ req });
         const headers: HeadersInit = {
@@ -22,14 +14,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         if (req.method === 'GET') {
-            const url = new URL(`${API_BASE_URL}/sections`);
+            const url = new URL(`${getBackendUrl()}/sections`);
             for (const [key, value] of Object.entries(req.query)) {
                 if (typeof value === 'string') {
                     url.searchParams.set(key, value);
                 }
             }
 
-            const response = await fetch(url.toString(), { headers });
+            const response = await fetch(url.toString(), {
+                headers,
+                signal: AbortSignal.timeout(10000),
+            });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
@@ -43,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
 
-            const response = await fetch(`${API_BASE_URL}/sections`, {
+            const response = await fetchBackend('/sections', {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(req.body),

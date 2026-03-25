@@ -9,24 +9,12 @@ import {
     setCache,
     invalidateStoryCache,
 } from '@/shared/lib/story-cache';
+import { getBackendUrl } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-    
-    if (!API_BASE_URL) {
-        const error = new Error('Backend URL not configured');
-        apiLogger.error('Configuration error', error, { 
-            detail: 'Set BACKEND_URL or NEXT_PUBLIC_API_URL'
-        });
-        return res.status(500).json({ 
-            detail: 'Backend URL not configured. Set BACKEND_URL or NEXT_PUBLIC_API_URL',
-            error: 'Configuration error'
-        });
-    }
-    
     // Start logging the request
     apiLogger.logApiRequest(req, res);
-    
+
     try {
         const token = await getToken({ req });
         const isAuthenticated = !!token?.accessToken;
@@ -68,15 +56,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             invalidateStoryCache();
         }
 
-        let apiUrl = `${API_BASE_URL}/stories`;
-        
+        const backendUrl = getBackendUrl();
+        let apiUrl = `${backendUrl}/stories`;
+
         if (req.method === 'GET' && req.query) {
             const params = new URLSearchParams();
-            
+
             if (req.query.limit) {
                 params.append('limit', req.query.limit.toString());
             }
-            
+
             if (req.query.offset) {
                 params.append('offset', req.query.offset.toString());
             }
@@ -88,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (token?.accessToken) {
                 params.append('include_drafts', 'true');
             }
-            
+
             if (params.toString()) {
                 apiUrl += `?${params.toString()}`;
             }
@@ -97,28 +86,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
         };
-        
+
         if (token?.accessToken) {
             headers.Authorization = `Bearer ${token.accessToken}`;
         }
-        
+
         const requestBody = req.method !== 'GET' ? req.body : undefined;
         console.log(`Backend request: ${req.method} ${apiUrl}`, {
             method: req.method,
             hasToken: !!token?.accessToken,
             bodyPreview: requestBody ? JSON.stringify(requestBody).substring(0, 150) + '...' : undefined
         });
-        
+
         const response = await fetch(apiUrl, {
             method: req.method,
             headers,
+            signal: AbortSignal.timeout(10000),
             ...(req.method !== 'GET' && { body: JSON.stringify(req.body) }),
         });
 
         if (!response.ok) {
             let errorData: any;
             let responseText: string | undefined;
-            
+
             try {
                 errorData = await response.json();
             } catch (_parseError) {
@@ -129,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     errorData = { detail: 'Unable to read error response' };
                 }
             }
-            
+
             console.error('Backend API error:', {
                 status: response.status,
                 statusText: response.statusText,
@@ -138,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 responseText: responseText?.substring(0, 500),
                 headers: Object.fromEntries(response.headers.entries())
             });
-            
+
             return res.status(response.status).json({
                 detail: errorData.detail || `Error: ${response.statusText}`,
                 status: response.status,
@@ -162,23 +152,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (req.method === 'GET') {
             const cacheKey = getCacheKey(isAuthenticated, req.query);
             const ttl = isAuthenticated ? CACHE_TTL : PUBLIC_CACHE_TTL;
-            
+
             setCache(cacheKey, data, ttl);
             apiLogger.info('Cached response', { cacheKey, ttl });
-            
+
             res.setHeader('Cache-Control', cacheControl);
             res.setHeader('X-Cache', 'MISS');
         }
-        
+
         return res.status(200).json(data);
     } catch (error) {
         console.error('Fatal error in /api/stories:', error);
-        
+
         if (error instanceof Error) {
             console.error('Error stack:', error.stack);
         }
-        
-        return res.status(500).json({ 
+
+        return res.status(500).json({
             detail: error instanceof Error ? error.message : 'Internal server error',
             error: 'Failed to process request',
             stack: error instanceof Error ? error.stack : undefined

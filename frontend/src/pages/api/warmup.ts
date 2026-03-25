@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -6,13 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-    
-    if (!backendUrl) {
-      return res.status(500).json({ error: 'Backend URL not configured' });
-    }
-
-    const response = await fetch(`${backendUrl}/warmup`, {
+    const response = await fetchBackend('/warmup', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -23,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(response.status).json(data);
   } catch (error) {
     console.error('Warmup proxy error:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Warmup failed',
       message: error instanceof Error ? error.message : 'Unknown error'
     });

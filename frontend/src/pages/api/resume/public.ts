@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { apiLogger } from '@/shared/utils/logger';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,15 +10,8 @@ export default async function handler(
     return res.status(405).json({ detail: 'Method not allowed' });
   }
 
-  const API_BASE_URL =
-    process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-  if (!API_BASE_URL) {
-    return res.status(500).json({ detail: 'Backend URL not configured' });
-  }
-
   try {
-    const response = await fetch(`${API_BASE_URL}/resume/public`);
+    const response = await fetchBackend('/resume/public');
 
     if (!response.ok) {
       let errorData: Record<string, unknown>;

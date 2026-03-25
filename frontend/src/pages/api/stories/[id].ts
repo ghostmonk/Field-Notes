@@ -1,47 +1,39 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
 import { invalidateStoryCache } from '@/shared/lib/story-cache';
+import { getBackendUrl } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // Use BACKEND_URL for server-to-server communication (in Docker)
-    // Fall back to NEXT_PUBLIC_API_URL if BACKEND_URL is not available
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-    
-    if (!API_BASE_URL) {
-        return res.status(500).json({ 
-            detail: 'Backend URL not configured. Set BACKEND_URL or NEXT_PUBLIC_API_URL',
-            error: 'Configuration error'
-        });
-    }
-    
+    const backendUrl = getBackendUrl();
+
     const { id } = req.query;
-    
+
     if (!id || typeof id !== 'string') {
         return res.status(400).json({ detail: 'Story ID is required', error: 'Invalid request' });
     }
-    
+
     try {
         const token = await getToken({ req });
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
         };
-        
+
         if (token?.accessToken) {
             headers.Authorization = `Bearer ${token.accessToken}`;
         }
-        
+
         // Check if the ID is a MongoDB ObjectID or a slug
         // MongoDB ObjectIDs are 24 hex characters
         const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
-        
+
         let apiUrl: string;
         if (isObjectId) {
-            apiUrl = `${API_BASE_URL}/stories/${id}`;
+            apiUrl = `${backendUrl}/stories/${id}`;
         } else {
             // Treat as a slug
-            apiUrl = `${API_BASE_URL}/stories/slug/${id}`;
+            apiUrl = `${backendUrl}/stories/slug/${id}`;
         }
-        
+
         if (req.method === 'DELETE') {
             if (!token?.accessToken) {
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
@@ -55,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const response = await fetch(apiUrl, {
                 method: 'DELETE',
                 headers,
+                signal: AbortSignal.timeout(10000),
             });
 
             if (!response.ok) {
@@ -81,6 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const response = await fetch(apiUrl, {
                 method: 'PUT',
                 headers,
+                signal: AbortSignal.timeout(10000),
                 body: JSON.stringify(req.body),
             });
 
@@ -97,8 +91,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             try { await res.revalidate('/'); } catch { /* non-fatal */ }
             return res.status(200).json(data);
         } else if (req.method === 'GET') {
-            const response = await fetch(apiUrl, { headers });
-            
+            const response = await fetch(apiUrl, {
+                headers,
+                signal: AbortSignal.timeout(10000),
+            });
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
                 return res.status(response.status).json({
@@ -106,7 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     status: response.status
                 });
             }
-            
+
             const data = await response.json();
             return res.status(200).json(data);
         } else {
@@ -114,7 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
     } catch (error) {
         console.error(`Error in /api/stories/${id}:`, error);
-        return res.status(500).json({ 
+        return res.status(500).json({
             detail: error instanceof Error ? error.message : 'Internal server error',
             error: 'Failed to process request'
         });

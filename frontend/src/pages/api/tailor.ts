@@ -1,28 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
 import { apiLogger } from '@/shared/utils/logger';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const API_BASE_URL =
-    process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
   if (req.method !== 'POST') {
     return res.status(405).json({ detail: 'Method not allowed' });
-  }
-
-  if (!API_BASE_URL) {
-    apiLogger.error(
-      'Configuration error',
-      new Error('Backend URL not configured'),
-      { detail: 'Set BACKEND_URL or NEXT_PUBLIC_API_URL' }
-    );
-    return res.status(500).json({
-      detail: 'Backend URL not configured',
-      error: 'Configuration error',
-    });
   }
 
   apiLogger.logApiRequest(req, res);
@@ -37,7 +23,7 @@ export default async function handler(
       });
     }
 
-    const response = await fetch(`${API_BASE_URL}/tailor`, {
+    const response = await fetchBackend('/tailor', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,15 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 const VALID_SEGMENT = /^[a-zA-Z0-9_-]+$/;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-    if (!API_BASE_URL) {
-        return res.status(500).json({ detail: "Backend URL not configured" });
-    }
-
     if (req.method !== "GET") {
         return res.status(405).json({ detail: "Method not allowed" });
     }
@@ -33,10 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const pathSegments = params.join("/");
-    const apiUrl = `${API_BASE_URL}/versions/${pathSegments}`;
 
     try {
-        const response = await fetch(apiUrl, {
+        const response = await fetchBackend(`/versions/${pathSegments}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

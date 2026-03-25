@@ -1,16 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-    if (!API_BASE_URL) {
-        return res.status(500).json({
-            detail: 'Backend URL not configured. Set BACKEND_URL or NEXT_PUBLIC_API_URL',
-            error: 'Configuration error'
-        });
-    }
-
     const { id } = req.query;
 
     if (!id || typeof id !== 'string') {
@@ -27,10 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${token.accessToken}`;
         }
 
-        const apiUrl = `${API_BASE_URL}/sections/${id}`;
-
         if (req.method === 'GET') {
-            const response = await fetch(apiUrl, { headers });
+            const response = await fetchBackend(`/sections/${id}`, { headers });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
@@ -44,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
 
-            const response = await fetch(apiUrl, {
+            const response = await fetchBackend(`/sections/${id}`, {
                 method: 'PUT',
                 headers,
                 body: JSON.stringify(req.body),
@@ -65,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
 
-            const response = await fetch(apiUrl, {
+            const response = await fetchBackend(`/sections/${id}`, {
                 method: 'DELETE',
                 headers,
             });
