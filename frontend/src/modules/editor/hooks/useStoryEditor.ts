@@ -60,8 +60,18 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const isEmptyStoryDraft = useCallback(
+    (d: { title: string; content: string }) => !d.title && !d.content,
+    []
+  );
+
   const { saveDraft, loadDraft, clearDraft, startAutosave, stopAutosave } =
-    useDraftRecovery(storyId, sectionId);
+    useDraftRecovery<{ title: string; content: string; is_published: boolean }>({
+      contentType: 'story',
+      entityId: storyId,
+      sectionId,
+      isEmpty: isEmptyStoryDraft,
+    });
   const [showDraftRecovery, setShowDraftRecovery] = useState(false);
   const [recoveredDraft, setRecoveredDraft] = useState<{
     title: string;
@@ -223,11 +233,11 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirtyRef.current) {
         const current = storyRef.current;
-        saveDraft(
-          current.title || '',
-          current.content || '',
-          current.is_published || false,
-        );
+        saveDraft({
+          title: current.title || '',
+          content: current.content || '',
+          is_published: current.is_published || false,
+        });
         e.preventDefault();
       }
     };
@@ -254,11 +264,11 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     if (session?.error !== REFRESH_TOKEN_ERROR) return;
     const current = storyRef.current;
     if (current.title || current.content) {
-      saveDraft(
-        current.title || '',
-        current.content || '',
-        current.is_published || false,
-      );
+      saveDraft({
+        title: current.title || '',
+        content: current.content || '',
+        is_published: current.is_published || false,
+      });
     }
   }, [session?.error, saveDraft]);
 

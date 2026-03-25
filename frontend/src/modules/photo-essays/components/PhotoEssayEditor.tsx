@@ -1,8 +1,29 @@
 import { useState, useEffect, useCallback, useRef, DragEvent, MouseEvent as ReactMouseEvent } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import apiClient from '@/shared/lib/api-client';
+import { REFRESH_TOKEN_ERROR } from '@/shared/lib/auth';
 import { resizeImageFile } from '@/shared/utils/uploadUtils';
 import { Button } from '@/components/ui';
+import { useDraftRecovery } from '@/modules/editor/hooks/useDraftRecovery';
+
+interface PhotoEssayDraftPhoto {
+  url: string;
+  srcset?: string;
+  caption: string;
+  width: number;
+  height: number;
+  sort_order: number;
+}
+
+interface PhotoEssayDraftData {
+  title: string;
+  description: string;
+  coverUrl: string | null;
+  coverPosition: string;
+  isPublished: boolean;
+  photos: PhotoEssayDraftPhoto[];
+}
 
 interface EditorPhoto {
   id: string;
@@ -23,11 +44,12 @@ interface Props {
 
 export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   const router = useRouter();
+  const { data: session } = useSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const startIndexRef = useRef(0);
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitleState] = useState('');
+  const [description, setDescriptionState] = useState('');
   const [photos, setPhotos] = useState<EditorPhoto[]>([]);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
@@ -38,6 +60,49 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  const isDirtyRef = useRef(false);
+  const hasCheckedDraftRef = useRef(false);
+  const fetchDoneRef = useRef(!essayId);
+
+  const titleRef = useRef(title);
+  titleRef.current = title;
+  const descriptionRef = useRef(description);
+  descriptionRef.current = description;
+  const photosRef = useRef(photos);
+  photosRef.current = photos;
+  const coverUrlRef = useRef(coverUrl);
+  coverUrlRef.current = coverUrl;
+  const coverPositionRef = useRef(coverPosition);
+  coverPositionRef.current = coverPosition;
+  const isPublishedRef = useRef(isPublished);
+  isPublishedRef.current = isPublished;
+
+  const setTitle = useCallback((v: string) => {
+    isDirtyRef.current = true;
+    setTitleState(v);
+  }, []);
+
+  const setDescription = useCallback((v: string) => {
+    isDirtyRef.current = true;
+    setDescriptionState(v);
+  }, []);
+
+  const isEmptyPhotoEssayDraft = useCallback(
+    (d: PhotoEssayDraftData) => !d.title && d.photos.length === 0,
+    []
+  );
+
+  const { saveDraft, loadDraft, clearDraft, startAutosave, stopAutosave } =
+    useDraftRecovery<PhotoEssayDraftData>({
+      contentType: 'photo-essay',
+      entityId: essayId,
+      sectionId,
+      isEmpty: isEmptyPhotoEssayDraft,
+    });
+
+  const [showDraftRecovery, setShowDraftRecovery] = useState(false);
+  const [recoveredDraft, setRecoveredDraft] = useState<PhotoEssayDraftData | null>(null);
+
   // Load existing essay when editing
   useEffect(() => {
     if (!essayId) return;
@@ -45,8 +110,8 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
 
     apiClient.photoEssays.getById(essayId).then(essay => {
       if (cancelled) return;
-      setTitle(essay.title);
-      setDescription(essay.description || '');
+      setTitleState(essay.title);
+      setDescriptionState(essay.description || '');
       setCoverUrl(essay.cover_image_url);
       setCoverPosition(essay.cover_image_position || '50% 50%');
       setIsPublished(essay.is_published);
@@ -63,10 +128,12 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
         }))
       );
       setLoading(false);
+      fetchDoneRef.current = true;
     }).catch(() => {
       if (!cancelled) {
         setError('Failed to load photo essay.');
         setLoading(false);
+        fetchDoneRef.current = true;
       }
     });
 
@@ -75,6 +142,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
 
   const handleFilesSelected = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    isDirtyRef.current = true;
 
     const newPhotos: EditorPhoto[] = Array.from(files).map(() => ({
       id: crypto.randomUUID(),
@@ -170,6 +238,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
       return;
     }
 
+    isDirtyRef.current = true;
     setPhotos(prev => {
       const updated = [...prev];
       const [moved] = updated.splice(dragIndex, 1);
@@ -186,6 +255,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   }, []);
 
   const handleRemovePhoto = useCallback((index: number) => {
+    isDirtyRef.current = true;
     setPhotos(prev => {
       const updated = prev.filter((_, i) => i !== index);
       const removedUrl = prev[index]?.url;
@@ -197,6 +267,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   }, [coverUrl]);
 
   const handleCaptionChange = useCallback((index: number, caption: string) => {
+    isDirtyRef.current = true;
     setPhotos(prev =>
       prev.map((p, i) => (i === index ? { ...p, caption } : p))
     );
@@ -265,13 +336,106 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
         }, token);
       }
 
+      clearDraft();
+      stopAutosave();
       router.back();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save.');
     } finally {
       setSaving(false);
     }
-  }, [title, description, photos, coverUrl, coverPosition, isPublished, essayId, sectionId, token, router]);
+  }, [title, description, photos, coverUrl, coverPosition, isPublished, essayId, sectionId, token, router, clearDraft, stopAutosave]);
+
+  const getCurrentDraftState = useCallback((): PhotoEssayDraftData => {
+    const readyPhotos = photosRef.current.filter(p => !p.uploading && p.url);
+    return {
+      title: titleRef.current,
+      description: descriptionRef.current,
+      coverUrl: coverUrlRef.current,
+      coverPosition: coverPositionRef.current,
+      isPublished: isPublishedRef.current,
+      photos: readyPhotos.map((p, i) => ({
+        url: p.url,
+        srcset: p.srcset,
+        caption: p.caption,
+        width: p.width,
+        height: p.height,
+        sort_order: i,
+      })),
+    };
+  }, []);
+
+  // Check for recovered draft on initial load
+  useEffect(() => {
+    if (loading || hasCheckedDraftRef.current || !fetchDoneRef.current) return;
+    hasCheckedDraftRef.current = true;
+    const draft = loadDraft();
+    if (draft && (draft.title || draft.photos.length > 0)) {
+      if (draft.title !== titleRef.current || draft.photos.length !== photosRef.current.length) {
+        setRecoveredDraft(draft);
+        setShowDraftRecovery(true);
+      }
+    }
+  }, [loading, loadDraft]);
+
+  // Start autosave timer
+  useEffect(() => {
+    startAutosave(() => {
+      if (!isDirtyRef.current) return null;
+      return getCurrentDraftState();
+    });
+    return () => stopAutosave();
+  }, [startAutosave, stopAutosave, getCurrentDraftState]);
+
+  // Save draft on beforeunload
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirtyRef.current) {
+        saveDraft(getCurrentDraftState());
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [saveDraft, getCurrentDraftState]);
+
+  // Save draft on session error
+  useEffect(() => {
+    if (session?.error !== REFRESH_TOKEN_ERROR) return;
+    if (titleRef.current || photosRef.current.length > 0) {
+      saveDraft(getCurrentDraftState());
+    }
+  }, [session?.error, saveDraft, getCurrentDraftState]);
+
+  const acceptDraft = useCallback(() => {
+    if (recoveredDraft) {
+      setTitleState(recoveredDraft.title);
+      setDescriptionState(recoveredDraft.description);
+      setCoverUrl(recoveredDraft.coverUrl);
+      setCoverPosition(recoveredDraft.coverPosition);
+      setIsPublished(recoveredDraft.isPublished);
+      setPhotos(
+        recoveredDraft.photos.map((p) => ({
+          id: crypto.randomUUID(),
+          url: p.url,
+          srcset: p.srcset,
+          caption: p.caption,
+          width: p.width,
+          height: p.height,
+          sort_order: p.sort_order,
+          uploading: false,
+        }))
+      );
+      isDirtyRef.current = true;
+    }
+    setShowDraftRecovery(false);
+  }, [recoveredDraft]);
+
+  const dismissDraft = useCallback(() => {
+    clearDraft();
+    setShowDraftRecovery(false);
+    setRecoveredDraft(null);
+  }, [clearDraft]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -310,6 +474,45 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
       {error && (
         <div className="error-state mb-lg">
           <p className="error-state__message">{error}</p>
+        </div>
+      )}
+
+      {showDraftRecovery && recoveredDraft && (
+        <div
+          className="mb-4 p-4 rounded-md border"
+          style={{
+            backgroundColor: 'var(--color-status-info-bg, #eff6ff)',
+            borderColor: 'var(--color-status-info, #3b82f6)',
+          }}
+          data-testid="draft-recovery-banner"
+        >
+          <p
+            className="text-sm font-medium"
+            style={{ color: 'var(--color-text-primary)' }}
+          >
+            Unsaved draft found
+            {recoveredDraft.title ? `: "${recoveredDraft.title}"` : ''}.
+          </p>
+          <div className="mt-2 flex gap-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={acceptDraft}
+              data-testid="draft-recovery-accept"
+            >
+              Restore Draft
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={dismissDraft}
+              data-testid="draft-recovery-dismiss"
+            >
+              Discard
+            </Button>
+          </div>
         </div>
       )}
 

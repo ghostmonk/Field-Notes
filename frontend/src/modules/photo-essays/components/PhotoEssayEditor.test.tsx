@@ -6,6 +6,10 @@ vi.mock('next/router', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), query: {} }),
 }));
 
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: null, status: 'unauthenticated' }),
+}));
+
 vi.mock('@/shared/lib/api-client', () => ({
   default: {
     photoEssays: {

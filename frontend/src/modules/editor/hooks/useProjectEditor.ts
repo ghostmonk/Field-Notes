@@ -1,13 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { Project, CreateProjectRequest } from '@/shared/types/api';
+import { REFRESH_TOKEN_ERROR } from '@/shared/lib/auth';
 import apiClient from '@/shared/lib/api-client';
 import { ApiRequestError } from '@/shared/types/error';
 import { ErrorService } from '@/services/errorService';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
 import { stripEmptyParagraphs } from '@/shared/utils/htmlUtils';
+import { useDraftRecovery } from './useDraftRecovery';
+
+interface ProjectDraftData {
+  title: string;
+  summary: string;
+  content: string;
+  technologies: string[];
+  is_published: boolean;
+}
 
 const EMPTY_PROJECT: Partial<Project> = {
   title: '',
@@ -33,6 +43,10 @@ export interface UseProjectEditorReturn {
   handleDelete: () => Promise<void>;
   resetForm: () => void;
   clearError: () => void;
+  showDraftRecovery: boolean;
+  recoveredDraft: ProjectDraftData | null;
+  acceptDraft: () => void;
+  dismissDraft: () => void;
 }
 
 export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseProjectEditorReturn {
@@ -49,6 +63,27 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
   const [isLoading, setIsLoading] = useState(false);
   const accessToken = session?.accessToken;
 
+  const isEmptyProjectDraft = useCallback(
+    (d: ProjectDraftData) => !d.title && !d.summary && !d.content,
+    []
+  );
+
+  const { saveDraft, loadDraft, clearDraft, startAutosave, stopAutosave } =
+    useDraftRecovery<ProjectDraftData>({
+      contentType: 'project',
+      entityId: projectId,
+      sectionId,
+      isEmpty: isEmptyProjectDraft,
+    });
+
+  const [showDraftRecovery, setShowDraftRecovery] = useState(false);
+  const [recoveredDraft, setRecoveredDraft] = useState<ProjectDraftData | null>(null);
+  const projectRef = useRef(project);
+  projectRef.current = project;
+  const isDirtyRef = useRef(false);
+  const hasCheckedDraftRef = useRef(false);
+  const fetchDoneRef = useRef(false);
+
   const clearError = useCallback(() => setError(null), []);
 
   const resetForm = useCallback(() => {
@@ -59,12 +94,16 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
   }, [router, sectionId]);
 
   const setField = useCallback(<K extends keyof Project>(key: K, value: Project[K]) => {
+    isDirtyRef.current = true;
     setProject((prev: Partial<Project>) => ({ ...prev, [key]: value }));
   }, []);
 
   // Fetch existing project for editing
   useEffect(() => {
-    if (!projectId || !accessToken) return;
+    if (!projectId || !accessToken) {
+      fetchDoneRef.current = true;
+      return;
+    }
     let cancelled = false;
 
     async function fetchProject() {
@@ -75,7 +114,10 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
       } catch {
         if (!cancelled) setError('Failed to load project');
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+          fetchDoneRef.current = true;
+        }
       }
     }
 
@@ -120,6 +162,8 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
         await apiClient.projects.create(payload as CreateProjectRequest, session.accessToken);
       }
 
+      clearDraft();
+      stopAutosave();
       showToast('Project saved');
       router.push(sectionSlug ? `/${sectionSlug}` : '/');
     } catch (err) {
@@ -130,7 +174,7 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
       }
       setIsSaving(false);
     }
-  }, [session, project, sectionId, sectionSlug, router, showToast]);
+  }, [session, project, sectionId, sectionSlug, router, showToast, clearDraft, stopAutosave]);
 
   const handleDelete = useCallback(async () => {
     if (!project.id || !session?.accessToken) {
@@ -159,6 +203,88 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
     }
   }, [project.id, project.title, session, sectionSlug, router, confirm, showToast]);
 
+  // Check for recovered draft on initial load
+  useEffect(() => {
+    if (isLoading || hasCheckedDraftRef.current || !fetchDoneRef.current) return;
+    hasCheckedDraftRef.current = true;
+    const draft = loadDraft();
+    if (draft && (draft.title || draft.content || draft.summary)) {
+      const current = projectRef.current;
+      if (
+        draft.title !== (current.title || '') ||
+        draft.content !== (current.content || '') ||
+        draft.summary !== (current.summary || '')
+      ) {
+        setRecoveredDraft(draft);
+        setShowDraftRecovery(true);
+      }
+    }
+  }, [isLoading, loadDraft]);
+
+  // Start autosave timer
+  useEffect(() => {
+    startAutosave(() => {
+      if (!isDirtyRef.current) return null;
+      const current = projectRef.current;
+      return {
+        title: current.title || '',
+        summary: current.summary || '',
+        content: current.content || '',
+        technologies: current.technologies || [],
+        is_published: current.is_published || false,
+      };
+    });
+    return () => stopAutosave();
+  }, [startAutosave, stopAutosave]);
+
+  // Save draft on beforeunload
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirtyRef.current) {
+        const current = projectRef.current;
+        saveDraft({
+          title: current.title || '',
+          summary: current.summary || '',
+          content: current.content || '',
+          technologies: current.technologies || [],
+          is_published: current.is_published || false,
+        });
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [saveDraft]);
+
+  // Save draft on session error
+  useEffect(() => {
+    if (session?.error !== REFRESH_TOKEN_ERROR) return;
+    const current = projectRef.current;
+    if (current.title || current.content || current.summary) {
+      saveDraft({
+        title: current.title || '',
+        summary: current.summary || '',
+        content: current.content || '',
+        technologies: current.technologies || [],
+        is_published: current.is_published || false,
+      });
+    }
+  }, [session?.error, saveDraft]);
+
+  const acceptDraft = useCallback(() => {
+    if (recoveredDraft) {
+      setProject((prev) => ({ ...prev, ...recoveredDraft }));
+      isDirtyRef.current = true;
+    }
+    setShowDraftRecovery(false);
+  }, [recoveredDraft]);
+
+  const dismissDraft = useCallback(() => {
+    clearDraft();
+    setShowDraftRecovery(false);
+    setRecoveredDraft(null);
+  }, [clearDraft]);
+
   // Redirect unauthenticated users
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/');
@@ -175,5 +301,9 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
     handleDelete,
     resetForm,
     clearError,
+    showDraftRecovery,
+    recoveredDraft,
+    acceptDraft,
+    dismissDraft,
   };
 }
