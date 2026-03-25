@@ -81,6 +81,35 @@
         "frontend/src/pages/api/resume/index.ts": 1
       },
       "notes": "Security-focused PR. 7 rounds. R1: 5 findings (3 valid, 1 acknowledged, 1 FP). R2: 6 (5 valid, 1 skipped). R3: 3 (1 valid, 2 repeats). R4: 2 (both repeats). R5: 6 (2 valid — stampede guard, socket leak; 4 FP/repeat). R6: 0. R7: 1 valid (cache invalidation). Bot converged R6-R7. Also drove fetchBackend utility extraction across 28 API routes and /simplify cleanup (saveAs reuse, prop narrowing)."
+    },
+    {
+      "pr": 170,
+      "date": "2026-03-25",
+      "title": "Generic draft recovery for all editors",
+      "rounds": 4,
+      "totals": {
+        "findings": 6,
+        "valid": 6,
+        "false_positive": 0,
+        "skipped": 0
+      },
+      "by_category": {
+        "correctness": 4,
+        "data_loss": 1,
+        "missing_implementation": 1
+      },
+      "by_severity": {
+        "high": 1,
+        "medium": 5,
+        "low": 0
+      },
+      "flagged_files": {
+        "frontend/src/modules/photo-essays/components/PhotoEssayEditor.tsx": 3,
+        "frontend/src/modules/editor/hooks/useDraftRecovery.ts": 1,
+        "frontend/src/modules/editor/hooks/useProjectEditor.ts": 1,
+        "frontend/src/modules/editor/hooks/useStoryEditor.ts": 1
+      },
+      "notes": "100% hit rate — all 6 findings valid. R1: 3 (premature fetchDoneRef, legacy key migration breaks existing drafts, missing cover position dirty tracking). R2: 3 (shallow photo essay comparison, savedAt pollution in legacy migration, missing dirty tracking for publish/cover). R3-R4: 0. Bot converged immediately after fixes."
     }
   ]
 }
