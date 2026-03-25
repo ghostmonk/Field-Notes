@@ -57,7 +57,7 @@ export default async function handler(
 
     const data = await response.json();
 
-    if (req.method === 'PUT' || req.method === 'DELETE') {
+    if (response.ok && (req.method === 'PUT' || req.method === 'DELETE')) {
       invalidatePdfCache();
     }
 
