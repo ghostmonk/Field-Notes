@@ -65,14 +65,12 @@ export function extractVideoPoster(
       const ctx = canvas.getContext('2d');
 
       if (!ctx) {
-        clearTimeout(timeout);
         cleanup();
         reject(new Error('Canvas 2D context not available'));
         return;
       }
 
       if (!canvas.width || !canvas.height) {
-        clearTimeout(timeout);
         cleanup();
         reject(new Error('Video has zero dimensions'));
         return;

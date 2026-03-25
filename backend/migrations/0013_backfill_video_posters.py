@@ -91,23 +91,27 @@ def _upload_gcs_blob(local_path, blob_path):
 
 def _extract_poster_ffmpeg(video_path, output_path):
     """Extract a poster frame from a video using FFmpeg."""
-    result = subprocess.run(
-        [
-            "ffmpeg",
-            "-i",
-            video_path,
-            "-ss",
-            "1",
-            "-frames:v",
-            "1",
-            "-q:v",
-            "2",
-            "-y",
-            output_path,
-        ],
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "ffmpeg",
+                "-i",
+                video_path,
+                "-ss",
+                "1",
+                "-frames:v",
+                "1",
+                "-q:v",
+                "2",
+                "-y",
+                output_path,
+            ],
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        logger.warning("ffmpeg not found in PATH — skipping poster extraction")
+        return False
     if result.returncode != 0:
         logger.error(f"FFmpeg failed for {video_path}: {result.stderr}")
         return False
@@ -212,19 +216,24 @@ def upgrade(db: "pymongo.database.Database"):
         collection = db[coll_name]
         docs = collection.find({"content": {"$regex": "<video"}}, no_cursor_timeout=True)
 
-        for doc in docs:
-            content = doc.get("content", "")
-            if not content:
-                continue
+        try:
+            for doc in docs:
+                content = doc.get("content", "")
+                if not content:
+                    continue
 
-            updated_content = VIDEO_TAG_RE.sub(
-                lambda m: _process_video_tag(m, jobs_collection), content
-            )
+                updated_content = VIDEO_TAG_RE.sub(
+                    lambda m: _process_video_tag(m, jobs_collection), content
+                )
 
-            if updated_content != content:
-                collection.update_one({"_id": doc["_id"]}, {"$set": {"content": updated_content}})
-                logger.info(f"Updated video posters in {coll_name} document {doc['_id']}")
-                print(f"Updated video posters in {coll_name} document {doc['_id']}")
+                if updated_content != content:
+                    collection.update_one(
+                        {"_id": doc["_id"]}, {"$set": {"content": updated_content}}
+                    )
+                    logger.info(f"Updated video posters in {coll_name} document {doc['_id']}")
+                    print(f"Updated video posters in {coll_name} document {doc['_id']}")
+        finally:
+            docs.close()
 
 
 def downgrade(db: "pymongo.database.Database"):
