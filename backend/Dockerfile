@@ -2,6 +2,9 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
+# Install ffmpeg for video poster frame extraction
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
 # Install shared glogger package first
 COPY shared/python/ ./shared/python/
 RUN pip install --no-cache-dir ./shared/python
