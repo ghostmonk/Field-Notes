@@ -30,6 +30,8 @@ export function useVideoUpload(editor: Editor | null): UseVideoUploadReturn {
     context: 'poster',
   });
 
+  const { upload: uploadPoster } = posterUpload;
+
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files.length || !editor) return;
 
@@ -68,7 +70,7 @@ export function useVideoUpload(editor: Editor | null): UseVideoUploadReturn {
           `${file.name.replace(/\.[^.]+$/, '')}_poster.jpg`,
           { type: 'image/jpeg' }
         );
-        const posterResult = await posterUpload.upload(posterFile);
+        const posterResult = await uploadPoster(posterFile);
         if (posterResult?.urls?.length) {
           posterUrl = posterResult.urls[0];
         }
@@ -81,7 +83,7 @@ export function useVideoUpload(editor: Editor | null): UseVideoUploadReturn {
     } else {
       editor.commands.setContent(cleanedContent);
     }
-  }, [editor, baseUpload, posterUpload]);
+  }, [editor, baseUpload, uploadPoster]);
 
   return {
     ...baseUpload,

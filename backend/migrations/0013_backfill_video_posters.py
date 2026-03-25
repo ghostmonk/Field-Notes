@@ -108,9 +108,13 @@ def _extract_poster_ffmpeg(video_path, output_path):
             ],
             capture_output=True,
             text=True,
+            timeout=30,
         )
     except FileNotFoundError:
         logger.warning("ffmpeg not found in PATH — skipping poster extraction")
+        return False
+    except subprocess.TimeoutExpired:
+        logger.warning(f"FFmpeg timed out for {video_path}")
         return False
     if result.returncode != 0:
         logger.error(f"FFmpeg failed for {video_path}: {result.stderr}")
