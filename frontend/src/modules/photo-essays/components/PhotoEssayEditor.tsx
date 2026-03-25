@@ -372,7 +372,15 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
     hasCheckedDraftRef.current = true;
     const draft = loadDraft();
     if (draft && (draft.title || draft.photos.length > 0)) {
-      if (draft.title !== titleRef.current || draft.photos.length !== photosRef.current.length) {
+      const photoCaptions = (ps: typeof draft.photos) => ps.map(p => p.caption).join('|');
+      if (
+        draft.title !== titleRef.current ||
+        draft.description !== descriptionRef.current ||
+        draft.coverUrl !== coverUrlRef.current ||
+        draft.coverPosition !== coverPositionRef.current ||
+        draft.photos.length !== photosRef.current.length ||
+        photoCaptions(draft.photos) !== photoCaptions(photosRef.current)
+      ) {
         setRecoveredDraft(draft);
         setShowDraftRecovery(true);
       }
@@ -455,7 +463,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
             <input
               type="checkbox"
               checked={isPublished}
-              onChange={e => setIsPublished(e.target.checked)}
+              onChange={e => { setIsPublished(e.target.checked); isDirtyRef.current = true; }}
               data-testid="photo-essay-publish-toggle"
             />
             {' '}Publish
@@ -616,7 +624,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => setCoverUrl(photo.url)}
+                      onClick={() => { setCoverUrl(photo.url); isDirtyRef.current = true; }}
                       data-testid={`photo-essay-set-cover-${index}`}
                     >
                       {isCover ? 'Cover' : 'Set cover'}

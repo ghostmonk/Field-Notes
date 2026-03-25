@@ -83,8 +83,14 @@ export function useDraftRecovery<T>({
             localStorage.removeItem(legacyKey);
             return null;
           }
-          // Migrate: save under new key, remove old
-          const data = legacyData.data !== undefined ? legacyData.data : legacyData;
+          // Migrate: save under new key, remove old. Strip savedAt from legacy flat format.
+          let data: T;
+          if (legacyData.data !== undefined) {
+            data = legacyData.data;
+          } else {
+            const { savedAt: _, ...fields } = legacyData;
+            data = fields as T;
+          }
           localStorage.setItem(key, JSON.stringify({ data, savedAt }));
           localStorage.removeItem(legacyKey);
           return data as T;
