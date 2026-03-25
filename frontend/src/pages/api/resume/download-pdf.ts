@@ -8,7 +8,43 @@ import { apiLogger } from '@/shared/utils/logger';
 import { fetchBackend, sanitizeFilename } from '@/shared/utils/backend-fetch';
 
 let cachedPdf: { buffer: Buffer; filename: string; expiresAt: number } | null = null;
+let pendingRender: Promise<{ buffer: Buffer; filename: string }> | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
+
+function sendPdf(
+  res: NextApiResponse,
+  buffer: Buffer,
+  filename: string,
+  cacheStatus: string
+) {
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.setHeader('Content-Length', buffer.length);
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('X-Cache', cacheStatus);
+  return res.send(buffer);
+}
+
+async function renderResumePdf(): Promise<{ buffer: Buffer; filename: string }> {
+  const response = await fetchBackend('/resume/public');
+
+  if (!response.ok) {
+    await response.body?.cancel();
+    throw new Error(`Backend returned ${response.status}`);
+  }
+
+  const resume: Resume = await response.json();
+
+  const element = React.createElement(ResumeDocument, { resume });
+  // react-pdf types require ReactElement<DocumentProps>; wrapper components need a cast
+  const buffer = await renderToBuffer(
+    element as unknown as Parameters<typeof renderToBuffer>[0]
+  );
+
+  const filename = sanitizeFilename(getResumeFilename(resume, 'pdf'));
+
+  return { buffer: Buffer.from(buffer), filename };
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,53 +55,22 @@ export default async function handler(
   }
 
   try {
-    // Check cache
     if (cachedPdf && Date.now() < cachedPdf.expiresAt) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${cachedPdf.filename}"`,
-      );
-      res.setHeader('Content-Length', cachedPdf.buffer.length);
-      res.setHeader('Cache-Control', 'private, no-store');
-      res.setHeader('X-Cache', 'HIT');
-      return res.send(cachedPdf.buffer);
+      return sendPdf(res, cachedPdf.buffer, cachedPdf.filename, 'HIT');
     }
 
-    const response = await fetchBackend('/resume/public');
-
-    if (!response.ok) {
-      return res
-        .status(response.status)
-        .json({ detail: 'Failed to fetch resume' });
+    // Coalesce concurrent cold-cache requests into a single render
+    if (!pendingRender) {
+      pendingRender = renderResumePdf().finally(() => {
+        pendingRender = null;
+      });
     }
 
-    const resume: Resume = await response.json();
+    const result = await pendingRender;
 
-    // react-pdf types require ReactElement<DocumentProps>; wrapper components need a cast
-    const element = React.createElement(ResumeDocument, { resume });
-    const buffer = await renderToBuffer(
-      element as unknown as Parameters<typeof renderToBuffer>[0]
-    );
+    cachedPdf = { ...result, expiresAt: Date.now() + CACHE_TTL_MS };
 
-    const filename = sanitizeFilename(getResumeFilename(resume, 'pdf'));
-
-    // Cache the rendered PDF
-    cachedPdf = {
-      buffer: Buffer.from(buffer),
-      filename,
-      expiresAt: Date.now() + CACHE_TTL_MS,
-    };
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${filename}"`,
-    );
-    res.setHeader('Content-Length', buffer.length);
-    res.setHeader('Cache-Control', 'private, no-store');
-    res.setHeader('X-Cache', 'MISS');
-    return res.send(buffer);
+    return sendPdf(res, result.buffer, result.filename, 'MISS');
   } catch (error) {
     apiLogger.error(
       'PDF generation failed',
