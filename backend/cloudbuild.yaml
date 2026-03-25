@@ -3,10 +3,14 @@ steps:
     args:
       - 'build'
       - '--no-cache'
+      - '--build-arg'
+      - 'INSTALL_FFMPEG=${_INSTALL_FFMPEG}'
       - '-f'
       - 'backend/Dockerfile'
       - '-t'
       - 'gcr.io/$PROJECT_ID/turbulent-service'
       - '.'
+substitutions:
+  _INSTALL_FFMPEG: 'false'
 images:
   - 'gcr.io/$PROJECT_ID/turbulent-service'

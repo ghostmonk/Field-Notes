@@ -55,8 +55,6 @@ export function extractVideoPoster(
 
     video.addEventListener('seeked', () => {
       if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
 
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
@@ -64,25 +62,25 @@ export function extractVideoPoster(
       const ctx = canvas.getContext('2d');
 
       if (!ctx) {
-        cleanup();
-        reject(new Error('Canvas 2D context not available'));
+        fail('Canvas 2D context not available');
         return;
       }
 
       if (!canvas.width || !canvas.height) {
-        cleanup();
-        reject(new Error('Video has zero dimensions'));
+        fail('Video has zero dimensions');
         return;
       }
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Capture dimensions before cleanup revokes the object URL
       const width = canvas.width;
       const height = canvas.height;
 
       canvas.toBlob(
         (blob) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
           cleanup();
           if (!blob) {
             reject(new Error('Failed to create poster blob'));

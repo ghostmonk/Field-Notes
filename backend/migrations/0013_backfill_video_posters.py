@@ -27,7 +27,7 @@ dependencies = ["0012_seed_resume_data"]
 
 COLLECTIONS = ["stories", "projects", "pages"]
 VIDEO_TAG_RE = re.compile(r"<video\b[^>]*>", re.IGNORECASE)
-ATTR_RE = re.compile(r'(\w+)\s*=\s*"([^"]*)"')
+ATTR_RE = re.compile(r'([\w-]+)\s*=\s*"([^"]*)"')
 BOOL_ATTR_RE = re.compile(r"\b(controls|muted|autoplay|loop|playsinline)\b(?!=)")
 
 
@@ -147,7 +147,7 @@ def _generate_poster_url(blob_path):
             tmp_poster = os.path.join(tmp_dir, poster_filename)
             if not _extract_poster_ffmpeg(tmp_video, tmp_poster):
                 return None
-            gcs_blob_path = f"thumbnails/{poster_filename}"
+            gcs_blob_path = f"uploads/thumbnails/{poster_filename}"
             url = _upload_gcs_blob(tmp_poster, gcs_blob_path)
             return url
 
