@@ -54,32 +54,33 @@
       "pr": 169,
       "date": "2026-03-24",
       "title": "Move PDF generation server-side to eliminate unsafe-eval CSP",
-      "rounds": 4,
+      "rounds": 7,
       "totals": {
-        "findings": 16,
-        "valid": 9,
-        "false_positive": 3,
+        "findings": 23,
+        "valid": 12,
+        "false_positive": 7,
         "skipped": 4
       },
       "by_category": {
-        "security": 4,
-        "correctness": 3,
+        "security": 5,
+        "correctness": 4,
         "dead_code": 2,
         "missing_implementation": 1
       },
       "by_severity": {
-        "high": 2,
-        "medium": 8,
+        "high": 3,
+        "medium": 11,
         "low": 2
       },
       "flagged_files": {
-        "frontend/src/pages/api/resume/download-pdf.ts": 7,
-        "frontend/src/modules/resume/generators/pdf-generator.tsx": 3,
+        "frontend/src/pages/api/resume/download-pdf.ts": 11,
+        "frontend/src/modules/resume/generators/pdf-generator.tsx": 4,
         "frontend/src/modules/resume/generators/pdf-document.tsx": 2,
         "frontend/next.config.ts": 2,
-        "frontend/package.json": 2
+        "frontend/package.json": 3,
+        "frontend/src/pages/api/resume/index.ts": 1
       },
-      "notes": "Security-focused PR. 4 rounds. R1: 5 findings (3 valid, 1 acknowledged, 1 false positive). R2: 6 findings (5 valid, 1 skipped — defensive filter). R3: 3 findings (1 valid, 2 repeats). R4: 2 findings (both repeats from R1/R3). Bot converged by R3, repeating rate-limiting and e2e CSP concerns already addressed."
+      "notes": "Security-focused PR. 7 rounds. R1: 5 findings (3 valid, 1 acknowledged, 1 FP). R2: 6 (5 valid, 1 skipped). R3: 3 (1 valid, 2 repeats). R4: 2 (both repeats). R5: 6 (2 valid — stampede guard, socket leak; 4 FP/repeat). R6: 0. R7: 1 valid (cache invalidation). Bot converged R6-R7. Also drove fetchBackend utility extraction across 28 API routes and /simplify cleanup (saveAs reuse, prop narrowing)."
     }
   ]
 }
