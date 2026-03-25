@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-03-23-server-side-pdf': 'Server-Side PDF Generation',
   '2026-03-22-ui-component-library': 'UI Component Library',
   '2026-03-22-dev-auth-mock': 'Dev Auth Mock',
   '2026-03-21-ghostmonk-ai-design': 'Ghostmonk AI',
