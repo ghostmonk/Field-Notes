@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
 import { apiLogger } from '@/shared/utils/logger';
 import { fetchBackend } from '@/shared/utils/backend-fetch';
+import { invalidatePdfCache } from './download-pdf';
 
 export default async function handler(
   req: NextApiRequest,
@@ -29,6 +30,7 @@ export default async function handler(
     });
 
     const data = await response.json();
+    if (response.ok) invalidatePdfCache();
     return res.status(response.status).json(data);
   } catch (error) {
     apiLogger.error(

@@ -11,6 +11,10 @@ let cachedPdf: { buffer: Buffer; filename: string; expiresAt: number } | null = 
 let pendingRender: Promise<{ buffer: Buffer; filename: string }> | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
+export function invalidatePdfCache() {
+  cachedPdf = null;
+}
+
 function sendPdf(
   res: NextApiResponse,
   buffer: Buffer,
