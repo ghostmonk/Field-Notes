@@ -29,20 +29,22 @@ export function extractVideoPoster(
       URL.revokeObjectURL(url);
     };
 
+    let timeout: ReturnType<typeof setTimeout>;
+
     const fail = (msg: string) => {
       if (settled) return;
       settled = true;
+      clearTimeout(timeout);
       cleanup();
       reject(new Error(msg));
     };
 
-    const timeout = setTimeout(
+    timeout = setTimeout(
       () => fail('Poster extraction timed out'),
       EXTRACTION_TIMEOUT_MS
     );
 
     video.addEventListener('error', () => {
-      clearTimeout(timeout);
       fail('Failed to load video for poster extraction');
     }, { once: true });
 

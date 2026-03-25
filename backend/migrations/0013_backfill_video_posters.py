@@ -65,7 +65,7 @@ def _src_to_blob_path(src):
 def _download_gcs_blob(blob_path, dest_path):
     """Download a blob from GCS to a local path."""
     bucket_name = os.environ.get("GCS_BUCKET_NAME", "")
-    if not bucket_name:
+    if not bucket_name or gcs_storage is None:
         return False
     client = gcs_storage.Client()
     bucket = client.bucket(bucket_name)
@@ -78,13 +78,15 @@ def _download_gcs_blob(blob_path, dest_path):
 
 
 def _upload_gcs_blob(local_path, blob_path):
-    """Upload a local file to GCS."""
+    """Upload a local file to GCS. blob_path is relative (e.g. thumbnails/foo.jpg).
+    Stored under uploads/ prefix in GCS to match construct_blob_path convention."""
     bucket_name = os.environ.get("GCS_BUCKET_NAME", "")
-    if not bucket_name:
+    if not bucket_name or gcs_storage is None:
         return None
+    gcs_blob_path = f"uploads/{blob_path}"
     client = gcs_storage.Client()
     bucket = client.bucket(bucket_name)
-    blob = bucket.blob(blob_path)
+    blob = bucket.blob(gcs_blob_path)
     blob.upload_from_filename(local_path)
     return f"/uploads/{blob_path}"
 
@@ -147,7 +149,7 @@ def _generate_poster_url(blob_path):
             tmp_poster = os.path.join(tmp_dir, poster_filename)
             if not _extract_poster_ffmpeg(tmp_video, tmp_poster):
                 return None
-            gcs_blob_path = f"uploads/thumbnails/{poster_filename}"
+            gcs_blob_path = f"thumbnails/{poster_filename}"
             url = _upload_gcs_blob(tmp_poster, gcs_blob_path)
             return url
 
