@@ -28,7 +28,7 @@ dependencies = ["0012_seed_resume_data"]
 COLLECTIONS = ["stories", "projects", "pages"]
 VIDEO_TAG_RE = re.compile(r"<video\b[^>]*>", re.IGNORECASE)
 ATTR_RE = re.compile(r'([\w-]+)\s*=\s*"([^"]*)"')
-BOOL_ATTR_RE = re.compile(r"\b(controls|muted|autoplay|loop|playsinline)\b(?!=)")
+BOOL_ATTRS = {"controls", "muted", "autoplay", "loop", "playsinline"}
 
 
 def _parse_attrs(tag_str):
@@ -36,11 +36,23 @@ def _parse_attrs(tag_str):
     return dict(ATTR_RE.findall(tag_str))
 
 
+def _extract_bool_attrs(tag_str):
+    """Extract boolean attributes from a tag, ignoring matches inside quoted values."""
+    # Remove all quoted attribute values to avoid false matches
+    stripped = re.sub(r'"[^"]*"', "", tag_str)
+    found = set()
+    for token in stripped.split():
+        clean = token.rstrip(">")
+        if clean in BOOL_ATTRS:
+            found.add(clean)
+    return found
+
+
 def _rebuild_tag(tag_str, attrs_update):
     """Rebuild a <video> tag with updated/added attributes, preserving boolean attrs."""
     existing = dict(ATTR_RE.findall(tag_str))
     existing.update(attrs_update)
-    bool_attrs = set(BOOL_ATTR_RE.findall(tag_str))
+    bool_attrs = _extract_bool_attrs(tag_str)
     attr_str = " ".join(f'{k}="{v}"' for k, v in existing.items())
     if bool_attrs:
         attr_str += " " + " ".join(sorted(bool_attrs))
