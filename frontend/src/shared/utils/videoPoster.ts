@@ -48,14 +48,7 @@ export function extractVideoPoster(
       fail('Failed to load video for poster extraction');
     }, { once: true });
 
-    video.addEventListener('loadedmetadata', () => {
-      const seekTime = isFinite(video.duration)
-        ? Math.min(CAPTURE_TIME_SECONDS, video.duration * 0.1)
-        : CAPTURE_TIME_SECONDS;
-      video.currentTime = seekTime;
-    }, { once: true });
-
-    video.addEventListener('seeked', () => {
+    const captureFrame = () => {
       if (settled) return;
 
       const canvas = document.createElement('canvas');
@@ -93,7 +86,20 @@ export function extractVideoPoster(
         'image/jpeg',
         POSTER_QUALITY
       );
+    };
+
+    video.addEventListener('loadedmetadata', () => {
+      const seekTime = isFinite(video.duration)
+        ? Math.min(CAPTURE_TIME_SECONDS, video.duration * 0.1)
+        : CAPTURE_TIME_SECONDS;
+      if (seekTime === video.currentTime) {
+        captureFrame();
+      } else {
+        video.currentTime = seekTime;
+      }
     }, { once: true });
+
+    video.addEventListener('seeked', captureFrame, { once: true });
 
     video.src = url;
   });

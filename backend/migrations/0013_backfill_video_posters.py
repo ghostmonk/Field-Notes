@@ -135,7 +135,7 @@ def _generate_poster_url(blob_path):
         if not os.path.exists(video_path):
             logger.warning(f"Local video file not found: {video_path}")
             return None
-        thumb_dir = os.path.join(local_storage, "thumbnails")
+        thumb_dir = os.path.join(local_storage, "uploads", "thumbnails")
         os.makedirs(thumb_dir, exist_ok=True)
         poster_path = os.path.join(thumb_dir, poster_filename)
         if not _extract_poster_ffmpeg(video_path, poster_path):
