@@ -1,10 +1,12 @@
 /**
- * Hook for video uploads with validation and editor integration.
+ * Hook for video uploads with validation, poster extraction, and editor integration.
  */
 import { useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { useFileUpload, UseFileUploadReturn } from './useFileUpload';
 import { validateVideoFile, createFileValidationError, ALLOWED_VIDEO_TYPES } from '@/shared/utils/uploadUtils';
+import { extractVideoPoster } from '@/shared/utils/videoPoster';
+import { logger } from '@/shared/utils/logger';
 
 export interface UseVideoUploadReturn extends UseFileUploadReturn {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
@@ -13,7 +15,7 @@ export interface UseVideoUploadReturn extends UseFileUploadReturn {
 
 /**
  * Hook for handling video uploads in the rich text editor.
- * Manages validation, upload state, and editor content updates.
+ * Extracts a poster frame and real dimensions from the video before inserting.
  */
 export function useVideoUpload(editor: Editor | null): UseVideoUploadReturn {
   const baseUpload = useFileUpload({
@@ -21,6 +23,14 @@ export function useVideoUpload(editor: Editor | null): UseVideoUploadReturn {
     createValidationError: (file, error) => createFileValidationError(file, error, 'video'),
     context: 'video',
   });
+
+  const posterUpload = useFileUpload({
+    validate: () => ({ isValid: true }),
+    createValidationError: (file, error) => createFileValidationError(file, error, 'image'),
+    context: 'poster',
+  });
+
+  const { upload: uploadPoster } = posterUpload;
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files.length || !editor) return;
@@ -31,27 +41,51 @@ export function useVideoUpload(editor: Editor | null): UseVideoUploadReturn {
     // Insert loading placeholder
     editor.commands.insertContent(loadingText);
 
-    const result = await baseUpload.upload(file);
+    // Extract poster frame and real dimensions while uploading video
+    const [videoResult, posterData] = await Promise.all([
+      baseUpload.upload(file),
+      extractVideoPoster(file).catch((err) => {
+        logger.warn('Poster extraction failed, proceeding without poster', err);
+        return null;
+      }),
+    ]);
 
     // Get current HTML and remove placeholder
     const content = editor.getHTML();
-    const cleanedContent = result
+    const cleanedContent = videoResult
       ? content.replace(loadingText, '')
       : content.replace(/\[Uploading video .*?\]/g, '');
 
-    if (result?.urls?.length) {
-      const videoUrl = result.urls[0];
-      const dimensions = result.dimensions?.[0] || { width: 1280, height: 720 };
+    if (videoResult?.urls?.length) {
+      const videoUrl = videoResult.urls[0];
+      const dimensions = posterData
+        ? { width: posterData.width, height: posterData.height }
+        : videoResult.dimensions?.[0] || { width: 1280, height: 720 };
 
-      // Build video tag and inject into the HTML in a single setContent call.
-      // Two separate commands (setContent + setVideo) race with the content
-      // sync useEffect in RichTextEditor, losing the video node.
-      const videoTag = `<video src="${videoUrl}" width="${dimensions.width}" height="${dimensions.height}" controls muted></video>`;
+      // Upload poster frame if extraction succeeded
+      let posterUrl = '';
+      if (posterData) {
+        const posterFile = new File(
+          [posterData.posterBlob],
+          `${file.name.replace(/\.[^.]+$/, '')}_poster.jpg`,
+          { type: 'image/jpeg' }
+        );
+        const posterResult = await uploadPoster(posterFile);
+        if (posterResult?.urls?.length) {
+          posterUrl = posterResult.urls[0];
+        } else {
+          logger.warn('Poster upload failed — video will have no preview image');
+        }
+      }
+
+      // Build video tag with poster and correct dimensions
+      const posterAttr = posterUrl ? ` poster="${posterUrl}"` : '';
+      const videoTag = `<video src="${videoUrl}"${posterAttr} width="${dimensions.width}" height="${dimensions.height}" controls muted></video>`;
       editor.commands.setContent(cleanedContent + videoTag);
     } else {
       editor.commands.setContent(cleanedContent);
     }
-  }, [editor, baseUpload]);
+  }, [editor, baseUpload, uploadPoster]);
 
   return {
     ...baseUpload,
