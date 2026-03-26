@@ -142,6 +142,34 @@
         "backend/Dockerfile": 3
       },
       "notes": "Complex PR — 16 rounds, 48 findings (54% valid). Key catches: promise leak from settled flag ordering, iOS Safari DOM requirement, boolean attr regex data corruption, GCS blob path double-prefix, captureFrame race condition, zero-dimension guard, NaN duration guard. Repeats: uploading state (5x), FFmpeg deploy (6x), GCS URL format (4x). Bot found real bugs throughout — did not fully converge until round 15-16."
+    },
+    {
+      "pr": 173,
+      "date": "2026-03-26",
+      "title": "Reorganize asset storage: photos/{section_id}/ and video/",
+      "rounds": 7,
+      "totals": {
+        "findings": 11,
+        "valid": 8,
+        "false_positive": 0,
+        "skipped": 3
+      },
+      "by_category": {
+        "correctness": 5,
+        "security": 2,
+        "dead_code": 1
+      },
+      "by_severity": {
+        "high": 3,
+        "medium": 5,
+        "low": 0
+      },
+      "flagged_files": {
+        "backend/migrations/0014_reorganize_assets.py": 8,
+        "backend/handlers/uploads.py": 2,
+        "cloud-functions/video-processor/main.py": 1
+      },
+      "notes": "Migration-heavy PR. 7 rounds. R1: 3 valid (shared image copy, path traversal, dead regex). R2: 3 valid (critical .add() vs = bug, ObjectId validation, double-prefix URLs). R3: 0. R4: 2 valid (tuple crash, double-move removal). R5: 1 valid (double-prefix key mismatch in content rewrite). R6: 1 valid (deploy order). R7: 0. Bot caught a crash-on-run bug (tuple) and a silent data loss bug (.add() vs =). 73% hit rate."
     }
   ]
 }
