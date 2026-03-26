@@ -15,6 +15,7 @@ import logging
 import os
 import re
 import shutil
+from collections import defaultdict
 
 import pymongo
 
@@ -34,7 +35,7 @@ IMAGE_EXTENSIONS = {".webp", ".jpg", ".jpeg", ".png", ".gif"}
 VIDEO_EXTENSIONS = {".mov", ".mp4", ".webm", ".avi"}
 
 # Match /uploads/{filename} URLs in content HTML (src, srcset, poster, data-original-src)
-URL_RE = re.compile(r"/uploads/([\w._-]+\.[\w]+)")
+URL_RE = re.compile(r"/uploads/([\w._/-]+\.[\w]+)")
 
 # Match URLs that are already reorganized (skip them)
 ALREADY_MOVED_RE = re.compile(r"/uploads/(photos/|video/)")
@@ -163,6 +164,58 @@ def _move_gcs_file(old_blob_name, new_blob_name, bucket):
     return True
 
 
+def _copy_local_file(old_blob, new_blob, local_storage):
+    """Copy a file on local filesystem. Returns True if copied."""
+    old_path = os.path.join(local_storage, old_blob)
+    new_path = os.path.join(local_storage, new_blob)
+
+    if not os.path.exists(old_path):
+        return False
+    if os.path.exists(new_path):
+        logger.info(f"Destination already exists, skipping: {new_blob}")
+        return False
+
+    os.makedirs(os.path.dirname(new_path), exist_ok=True)
+    shutil.copy2(old_path, new_path)
+    logger.info(f"Copied local: {old_blob} -> {new_blob}")
+    print(f"Copied local: {old_blob} -> {new_blob}")
+    return True
+
+
+def _delete_local_file(old_blob, local_storage):
+    """Delete a file on local filesystem."""
+    old_path = os.path.join(local_storage, old_blob)
+    if os.path.exists(old_path):
+        os.remove(old_path)
+        logger.info(f"Deleted local original: {old_blob}")
+        print(f"Deleted local original: {old_blob}")
+
+
+def _copy_gcs_file(old_blob_name, new_blob_name, bucket):
+    """Copy a file in GCS without deleting the original. Returns True if copied."""
+    old_blob = bucket.blob(old_blob_name)
+    if not old_blob.exists():
+        return False
+    new_blob = bucket.blob(new_blob_name)
+    if new_blob.exists():
+        logger.info(f"GCS destination already exists, skipping: {new_blob_name}")
+        return False
+
+    bucket.copy_blob(old_blob, bucket, new_blob_name)
+    logger.info(f"Copied GCS: {old_blob_name} -> {new_blob_name}")
+    print(f"Copied GCS: {old_blob_name} -> {new_blob_name}")
+    return True
+
+
+def _delete_gcs_file(old_blob_name, bucket):
+    """Delete a file in GCS."""
+    old_blob = bucket.blob(old_blob_name)
+    if old_blob.exists():
+        old_blob.delete()
+        logger.info(f"Deleted GCS original: {old_blob_name}")
+        print(f"Deleted GCS original: {old_blob_name}")
+
+
 def upgrade(db: "pymongo.database.Database"):
     local_storage = os.environ.get("LOCAL_STORAGE_PATH", "")
     gcs_bucket_name = os.environ.get("GCS_BUCKET_NAME", "")
@@ -173,8 +226,8 @@ def upgrade(db: "pymongo.database.Database"):
         bucket = client.bucket(gcs_bucket_name)
 
     # Phase 1: Build complete URL mapping from all collections
-    # Maps old_url -> new_url for ALL files that need moving
-    global_url_map = {}
+    # Maps old_url -> set of new_urls (one file may map to multiple sections)
+    global_url_map = defaultdict(set)
 
     # 1a. Content collections (stories, projects, pages)
     content_doc_updates = []  # (collection_name, doc_id, url_map)
@@ -185,7 +238,8 @@ def upgrade(db: "pymongo.database.Database"):
             section_id = doc.get("section_id") or ""
             url_map = _build_url_map_from_content(content, section_id)
             if url_map:
-                global_url_map.update(url_map)
+                for old_u, new_u in url_map.items():
+                    global_url_map[old_u].add(new_u)
                 content_doc_updates.append((coll_name, doc["_id"], url_map))
 
     # 1b. Photo essays
@@ -202,7 +256,7 @@ def upgrade(db: "pymongo.database.Database"):
             if m and _is_image(m.group(1)):
                 new_url = f"/uploads/{_new_image_path(m.group(1), section_id)}"
                 doc_url_map[cover_url] = new_url
-                global_url_map[cover_url] = new_url
+                global_url_map[cover_url].add(new_url)
 
         # cover_image_srcset
         cover_srcset = doc.get("cover_image_srcset", "") or ""
@@ -215,7 +269,7 @@ def upgrade(db: "pymongo.database.Database"):
                 old_u = f"/uploads/{fn}"
                 new_u = f"/uploads/{_new_image_path(fn, section_id)}"
                 doc_url_map[old_u] = new_u
-                global_url_map[old_u] = new_u
+                global_url_map[old_u].add(new_u)
 
         # photos[].url and photos[].srcset
         photos = doc.get("photos", [])
@@ -258,7 +312,7 @@ def upgrade(db: "pymongo.database.Database"):
                 new_blob = f"uploads/video/{fn}"
                 doc_url_map[orig] = new_blob
                 # Also add the URL form for content replacement
-                global_url_map[f"/{orig}"] = f"/{new_blob}"
+                global_url_map[f"/{orig}"].add(f"/{new_blob}")
 
         # thumbnail_options[].url
         thumbs = doc.get("thumbnail_options", [])
@@ -269,7 +323,7 @@ def upgrade(db: "pymongo.database.Database"):
             old_u, new_u = _build_url_map_from_thumbnail_path(thumb_url)
             if old_u and new_u:
                 doc_url_map[old_u] = new_u
-                global_url_map[old_u] = new_u
+                global_url_map[old_u].add(new_u)
 
         # processed_formats[].url (can be list of dicts or list of strings)
         processed = doc.get("processed_formats", [])
@@ -283,29 +337,51 @@ def upgrade(db: "pymongo.database.Database"):
             old_u, new_u = _build_url_map_from_thumbnail_path(fmt_url)
             if old_u and new_u:
                 doc_url_map[old_u] = new_u
-                global_url_map[old_u] = new_u
+                global_url_map[old_u].add(new_u)
 
         if doc_url_map:
             video_job_updates.append((doc["_id"], doc_url_map))
 
-    print(f"Built URL map with {len(global_url_map)} entries")
-    logger.info(f"Built URL map with {len(global_url_map)} entries")
+    total_mappings = sum(len(v) for v in global_url_map.values())
+    print(f"Built URL map with {len(global_url_map)} sources -> {total_mappings} destinations")
+    logger.info(
+        f"Built URL map with {len(global_url_map)} sources -> {total_mappings} destinations"
+    )
 
-    # Phase 2: Move all files
+    # Phase 2: Move all files (copy to each destination, then delete original)
     moved_count = 0
-    for old_url, new_url in global_url_map.items():
+    for old_url, new_urls in global_url_map.items():
         old_blob = _url_to_blob_path(old_url)
-        new_blob = _url_to_blob_path(new_url)
-
-        if old_blob == new_blob:
+        destinations = {_url_to_blob_path(u) for u in new_urls} - {old_blob}
+        if not destinations:
             continue
 
-        if local_storage:
-            if _move_local_file(old_blob, new_blob, local_storage):
-                moved_count += 1
-        elif bucket:
-            if _move_gcs_file(old_blob, new_blob, bucket):
-                moved_count += 1
+        if len(destinations) == 1:
+            # Single destination: move directly
+            new_blob = next(iter(destinations))
+            if local_storage:
+                if _move_local_file(old_blob, new_blob, local_storage):
+                    moved_count += 1
+            elif bucket:
+                if _move_gcs_file(old_blob, new_blob, bucket):
+                    moved_count += 1
+        else:
+            # Multiple destinations: copy to each, then delete original
+            copied = False
+            for new_blob in destinations:
+                if local_storage:
+                    if _copy_local_file(old_blob, new_blob, local_storage):
+                        moved_count += 1
+                        copied = True
+                elif bucket:
+                    if _copy_gcs_file(old_blob, new_blob, bucket):
+                        moved_count += 1
+                        copied = True
+            if copied:
+                if local_storage:
+                    _delete_local_file(old_blob, local_storage)
+                elif bucket:
+                    _delete_gcs_file(old_blob, bucket)
 
     # Also handle video job original_file entries (blob paths, not URL paths)
     for doc_id, doc_map in video_job_updates:

@@ -354,6 +354,10 @@ async def upload_media(
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e))
 
+        if section_id:
+            if "/" in section_id or ".." in section_id:
+                raise HTTPException(status_code=400, detail="Invalid section_id")
+
         urls = []
         srcsets = []
         dimensions = []
