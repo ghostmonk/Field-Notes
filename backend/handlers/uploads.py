@@ -4,6 +4,7 @@ import io
 import json
 import mimetypes
 import os
+import re
 import traceback
 import uuid
 from datetime import datetime, timezone
@@ -123,6 +124,41 @@ async def get_media(request: Request, filename: str, size: int | None = None):
         await asyncio.to_thread(blob.reload)
         logger.info(f"Streaming media response for: {filename}")
         content_type = blob.content_type or "application/octet-stream"
+        file_size = blob.size or 0
+
+        range_header = request.headers.get("range")
+        if range_header and file_size:
+            range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
+            if range_match:
+                start = int(range_match.group(1))
+                end = int(range_match.group(2)) if range_match.group(2) else file_size - 1
+                end = min(end, file_size - 1)
+                length = end - start + 1
+
+                def _iter_range():
+                    with blob.open("rb") as reader:
+                        reader.seek(start)
+                        remaining = length
+                        while remaining > 0:
+                            chunk_size = min(65536, remaining)
+                            chunk = reader.read(chunk_size)
+                            if not chunk:
+                                break
+                            remaining -= len(chunk)
+                            yield chunk
+
+                response = StreamingResponse(
+                    _iter_range(),
+                    status_code=206,
+                    media_type=content_type,
+                    headers={
+                        "Content-Range": f"bytes {start}-{end}/{file_size}",
+                        "Content-Length": str(length),
+                        "Accept-Ranges": "bytes",
+                    },
+                )
+                set_media_response_headers(response, request)
+                return response
 
         def _iter_blob():
             with blob.open("rb") as reader:
@@ -132,7 +168,14 @@ async def get_media(request: Request, filename: str, size: int | None = None):
                         break
                     yield chunk
 
-        response = StreamingResponse(_iter_blob(), media_type=content_type)
+        response = StreamingResponse(
+            _iter_blob(),
+            media_type=content_type,
+            headers={
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(file_size),
+            },
+        )
         set_media_response_headers(response, request)
         return response
 
