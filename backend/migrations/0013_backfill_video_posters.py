@@ -182,8 +182,7 @@ def _process_video_tag(match, jobs_collection):
     tag_str = match.group(0)
     attrs = _parse_attrs(tag_str)
 
-    if "poster" in attrs:
-        return tag_str
+    has_poster = "poster" in attrs
 
     src = attrs.get("src", "")
     if not src:
@@ -194,15 +193,25 @@ def _process_video_tag(match, jobs_collection):
 
     job = jobs_collection.find_one({"original_file": blob_path})
 
-    poster_url = None
-    if job and job.get("thumbnail_options"):
-        poster_url = _get_middle_thumbnail_url(job["thumbnail_options"])
+    # If src points to a processed file, try matching by base filename
+    if not job and "/processed/" in src:
+        base = os.path.basename(src)
+        # Strip suffix like _720p or _480p to recover original filename stem
+        stem = re.sub(r"_(720p|480p)", "", os.path.splitext(base)[0])
+        job = jobs_collection.find_one(
+            {"original_file": {"$regex": re.escape(stem)}}
+        )
 
-    if not poster_url:
-        poster_url = _generate_poster_url(blob_path)
+    if not has_poster:
+        poster_url = None
+        if job and job.get("thumbnail_options"):
+            poster_url = _get_middle_thumbnail_url(job["thumbnail_options"])
 
-    if poster_url:
-        updates["poster"] = poster_url
+        if not poster_url:
+            poster_url = _generate_poster_url(blob_path)
+
+        if poster_url:
+            updates["poster"] = poster_url
 
     if job:
         processed = job.get("processed_formats", [])
@@ -210,15 +219,21 @@ def _process_video_tag(match, jobs_collection):
             for fmt in processed:
                 if isinstance(fmt, dict) and fmt.get("format") == "mp4_720p":
                     updates["src"] = fmt["url"]
+                    # Use dimensions from the processed format, not original metadata
+                    if fmt.get("width") and fmt.get("height"):
+                        updates["width"] = str(fmt["width"])
+                        updates["height"] = str(fmt["height"])
                     break
 
-        metadata = job.get("metadata", {})
-        if isinstance(metadata, dict):
-            width = metadata.get("width")
-            height = metadata.get("height")
-            if width and height:
-                updates["width"] = str(width)
-                updates["height"] = str(height)
+        # Fall back to original metadata dimensions if not set by processed format
+        if "width" not in updates or "height" not in updates:
+            metadata = job.get("metadata", {})
+            if isinstance(metadata, dict):
+                width = metadata.get("width")
+                height = metadata.get("height")
+                if width and height:
+                    updates["width"] = str(width)
+                    updates["height"] = str(height)
 
     if not updates:
         return tag_str
