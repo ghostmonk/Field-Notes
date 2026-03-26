@@ -209,7 +209,7 @@ jobs:
             --config cloud-functions/video-processor/cloudbuild.yaml
 
           # Build MongoDB URI from secrets/vars
-          MONGODB_URI="mongodb+srv://${{ secrets.MONGO_USER }}:${{ secrets.MONGO_PASSWORD }}@${{ vars.MONGO_HOST }}/${{ vars.MONGO_DB_NAME }}?retryWrites=true&w=majority&appName=${{ vars.MONGO_APP_NAME }}"
+          MONGODB_URI="mongodb+srv://${{ secrets.MONGO_USER }}:${{ secrets.MONGO_PASSWORD }}@${{ vars.MONGO_CLUSTER }}.${{ vars.MONGO_HOST }}/${{ vars.MONGO_DB_NAME }}?retryWrites=true&w=majority&appName=${{ vars.MONGO_APP_NAME }}"
 
           # Deploy as Cloud Run service (Gen2 functions don't support --image flag)
           gcloud run deploy video-processor \
