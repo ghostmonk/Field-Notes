@@ -47,3 +47,7 @@ Moves all existing GCS files and rewrites all content URLs:
 - Photo essay `photos[].url`, `cover_image_url`, and srcset fields updated
 - Video processing job paths updated
 - Idempotent: checks destination before moving, skips already-moved URLs
+
+## Deploy order
+
+Deploy cloud function first (so new uploads go to `video/`), then deploy backend (runs migration). If a video processing job is in-flight during migration, the cloud function may write to the old path — re-trigger the video after migration completes.
