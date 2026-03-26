@@ -78,9 +78,9 @@ def _build_url_map_from_content(content, section_id):
         # Route thumbnail/processed paths to video subdirs, not photos
         if filename.startswith(("thumbnails/", "processed/")):
             old_url = f"/uploads/{filename}"
-            mapped = _build_url_map_from_thumbnail_path(old_url)
-            if mapped:
-                url_map[old_url] = mapped
+            old_u, new_u = _build_url_map_from_thumbnail_path(old_url)
+            if old_u and new_u:
+                url_map[old_u] = new_u
             continue
         if _is_image(filename):
             new_rel = _new_image_path(filename, section_id)
@@ -399,16 +399,6 @@ def upgrade(db: "pymongo.database.Database"):
                     _delete_local_file(old_blob, local_storage)
                 elif bucket:
                     _delete_gcs_file(old_blob, bucket)
-
-    # Also handle video job original_file entries (blob paths, not URL paths)
-    for doc_id, doc_map in video_job_updates:
-        for old_val, new_val in doc_map.items():
-            # original_file uses blob paths without leading slash
-            if not old_val.startswith("/"):
-                if local_storage:
-                    _move_local_file(old_val, new_val, local_storage)
-                elif bucket:
-                    _move_gcs_file(old_val, new_val, bucket)
 
     print(f"Moved {moved_count} files")
     logger.info(f"Moved {moved_count} files")
