@@ -24,9 +24,13 @@ export function extractVideoPoster(
     video.preload = 'auto';
     video.muted = true;
     video.playsInline = true;
+    // iOS Safari requires video in DOM to decode frames
+    video.style.cssText = 'position:absolute;visibility:hidden;width:0;height:0';
+    document.body.appendChild(video);
 
     const cleanup = () => {
       URL.revokeObjectURL(url);
+      video.remove();
     };
 
     let timeout: ReturnType<typeof setTimeout>;
@@ -98,11 +102,11 @@ export function extractVideoPoster(
       if (seekTime === video.currentTime) {
         captureFrame();
       } else {
+        // Register seeked listener only when we actually need to seek
+        video.addEventListener('seeked', captureFrame, { once: true });
         video.currentTime = seekTime;
       }
     }, { once: true });
-
-    video.addEventListener('seeked', captureFrame, { once: true });
 
     video.src = url;
   });
