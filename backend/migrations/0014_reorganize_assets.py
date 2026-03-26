@@ -113,6 +113,13 @@ def _build_url_map_from_thumbnail_path(url_path):
     return None, None
 
 
+def _normalize_url(url):
+    """Fix legacy double-prefix URLs."""
+    if url and url.startswith("/uploads/uploads/"):
+        return url.replace("/uploads/uploads/", "/uploads/", 1)
+    return url
+
+
 def _apply_url_map(content, url_map):
     """Replace all old URLs with new URLs in content string."""
     if not content or not url_map:
@@ -280,7 +287,7 @@ def upgrade(db: "pymongo.database.Database"):
                 if m and _is_image(m.group(1)):
                     new_url = f"/uploads/{_new_image_path(m.group(1), section_id)}"
                     doc_url_map[photo_url] = new_url
-                    global_url_map[photo_url] = new_url
+                    global_url_map[photo_url].add(new_url)
 
             photo_srcset = photo.get("srcset", "") or ""
             for srcset_match in URL_RE.finditer(photo_srcset):
@@ -292,7 +299,7 @@ def upgrade(db: "pymongo.database.Database"):
                     old_u = f"/uploads/{fn}"
                     new_u = f"/uploads/{_new_image_path(fn, section_id)}"
                     doc_url_map[old_u] = new_u
-                    global_url_map[old_u] = new_u
+                    global_url_map[old_u].add(new_u)
 
         if doc_url_map:
             photo_essay_updates.append((doc["_id"], doc_url_map))
@@ -319,7 +326,7 @@ def upgrade(db: "pymongo.database.Database"):
         for thumb in thumbs:
             if not isinstance(thumb, dict):
                 continue
-            thumb_url = thumb.get("url", "")
+            thumb_url = _normalize_url(thumb.get("url", ""))
             old_u, new_u = _build_url_map_from_thumbnail_path(thumb_url)
             if old_u and new_u:
                 doc_url_map[old_u] = new_u
@@ -329,9 +336,9 @@ def upgrade(db: "pymongo.database.Database"):
         processed = doc.get("processed_formats", [])
         for fmt in processed:
             if isinstance(fmt, dict):
-                fmt_url = fmt.get("url", "")
+                fmt_url = _normalize_url(fmt.get("url", ""))
             elif isinstance(fmt, str):
-                fmt_url = fmt
+                fmt_url = _normalize_url(fmt)
             else:
                 continue
             old_u, new_u = _build_url_map_from_thumbnail_path(fmt_url)

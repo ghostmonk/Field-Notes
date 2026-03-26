@@ -355,7 +355,7 @@ async def upload_media(
             raise HTTPException(status_code=422, detail=str(e))
 
         if section_id:
-            if "/" in section_id or ".." in section_id:
+            if not re.match(r"^[a-f0-9]{24}$", section_id):
                 raise HTTPException(status_code=400, detail="Invalid section_id")
 
         urls = []
