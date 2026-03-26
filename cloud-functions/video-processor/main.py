@@ -194,7 +194,7 @@ def generate_thumbnails(
 
             (
                 ffmpeg.input(input_path, ss=timestamp)
-                .filter("scale", 640, 360)
+                .filter("scale", 640, -2)
                 .output(thumbnail_path, vframes=1, **{"q:v": 2})
                 .overwrite_output()
                 .run(quiet=True, cmd=FFMPEG_PATH)
