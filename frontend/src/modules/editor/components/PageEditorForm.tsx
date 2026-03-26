@@ -274,6 +274,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
             <RichTextEditor
               content={page.content || ''}
               onChange={(val) => { isDirtyRef.current = true; setPage(prev => ({ ...prev, content: val })); }}
+              sectionId={section.id}
               actionSlot={
                 <>
                   {page.is_published && (

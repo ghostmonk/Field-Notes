@@ -5,6 +5,7 @@ Handles video transcoding, thumbnail generation, and metadata extraction using F
 
 import os
 import shutil
+import subprocess
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -55,7 +56,15 @@ def process_video(cloud_event):
         logger.error("FFmpeg not available - cannot process video")
         return
 
-    if not file_name.startswith("uploads/") or not is_video_file(file_name):
+    if not file_name.startswith("uploads/video/"):
+        logger.info(f"Skipping non-video-folder file: {file_name}")
+        return
+
+    if "/thumbnails/" in file_name or "/processed/" in file_name:
+        logger.info(f"Skipping generated file: {file_name}")
+        return
+
+    if not is_video_file(file_name):
         logger.info(f"Skipping non-video file: {file_name}")
         return
 
@@ -110,7 +119,6 @@ def verify_ffmpeg_availability() -> bool:
     """Verify that FFmpeg binaries are available and executable."""
     try:
         # Test FFprobe execution with a simple command
-        import subprocess
 
         result = subprocess.run(
             [FFPROBE_PATH, "-version"], capture_output=True, text=True, check=True
@@ -200,7 +208,7 @@ def generate_thumbnails(
                 .run(quiet=True, cmd=FFMPEG_PATH)
             )
 
-            thumbnail_blob_name = f"uploads/thumbnails/{thumbnail_filename}"
+            thumbnail_blob_name = f"uploads/video/thumbnails/{thumbnail_filename}"
             thumbnail_blob = bucket.blob(thumbnail_blob_name)
             thumbnail_blob.upload_from_filename(thumbnail_path)
 
@@ -211,7 +219,7 @@ def generate_thumbnails(
             thumbnails.append(
                 {
                     "id": f"thumb_{int(timestamp)}s",
-                    "url": f"/uploads/{thumbnail_blob_name}",
+                    "url": f"/{thumbnail_blob_name}",
                     "timestamp_seconds": timestamp,
                     "is_custom": False,
                 }
@@ -273,11 +281,15 @@ def transcode_video(
 
             # Probe actual display dimensions after rotation
             probe = ffmpeg.probe(input_path, cmd=FFPROBE_PATH)
-            video_stream = next(
-                (s for s in probe["streams"] if s["codec_type"] == "video"), None
+            video_stream = next((s for s in probe["streams"] if s["codec_type"] == "video"), None)
+            display_w = (
+                int(video_stream.get("width", original_width)) if video_stream else original_width
             )
-            display_w = int(video_stream.get("width", original_width)) if video_stream else original_width
-            display_h = int(video_stream.get("height", original_height)) if video_stream else original_height
+            display_h = (
+                int(video_stream.get("height", original_height))
+                if video_stream
+                else original_height
+            )
             # Check for rotation metadata (90/270 degrees means portrait)
             rotation = 0
             if video_stream:
@@ -291,12 +303,8 @@ def transcode_video(
 
             if is_portrait:
                 scale_filter = f"scale=-2:{quality_config['max_dim']}"
-                target_width = -2
-                target_height = quality_config["max_dim"]
             else:
                 scale_filter = f"scale={quality_config['max_dim']}:-2"
-                target_width = quality_config["max_dim"]
-                target_height = -2
 
             logger.info(
                 f"Transcoding to {quality_config['name']} (scale={scale_filter}, portrait={is_portrait})..."
@@ -324,13 +332,11 @@ def transcode_video(
 
             # Get actual output dimensions
             out_probe = ffmpeg.probe(output_path, cmd=FFPROBE_PATH)
-            out_stream = next(
-                (s for s in out_probe["streams"] if s["codec_type"] == "video"), None
-            )
+            out_stream = next((s for s in out_probe["streams"] if s["codec_type"] == "video"), None)
             actual_width = int(out_stream["width"]) if out_stream else quality_config["max_dim"]
             actual_height = int(out_stream["height"]) if out_stream else quality_config["max_dim"]
 
-            processed_blob_name = f"uploads/processed/{output_filename}"
+            processed_blob_name = f"uploads/video/processed/{output_filename}"
             processed_blob = bucket.blob(processed_blob_name)
             processed_blob.upload_from_filename(output_path)
 
@@ -341,7 +347,7 @@ def transcode_video(
             processed_formats.append(
                 {
                     "format": quality_config["name"],
-                    "url": f"/uploads/{processed_blob_name}",
+                    "url": f"/{processed_blob_name}",
                     "width": actual_width,
                     "height": actual_height,
                 }
@@ -397,7 +403,13 @@ def update_via_mongodb(original_file: str, update_data: Dict[str, Any]) -> None:
 
         result = collection.update_one(
             {"original_file": original_file},
-            {"$set": update_data, "$setOnInsert": {"original_file": original_file, "created_at": datetime.now(timezone.utc)}},
+            {
+                "$set": update_data,
+                "$setOnInsert": {
+                    "original_file": original_file,
+                    "created_at": datetime.now(timezone.utc),
+                },
+            },
             upsert=True,
         )
 

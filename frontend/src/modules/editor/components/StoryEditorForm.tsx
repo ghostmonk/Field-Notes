@@ -141,6 +141,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
             <RichTextEditor
               content={story.content || ''}
               onChange={setContent}
+              sectionId={section.id}
               actionSlot={
                 <>
                   {story.is_published && (
