@@ -72,6 +72,16 @@ def _build_url_map_from_content(content, section_id):
         if ALREADY_MOVED_RE.match(full_match):
             continue
         filename = match.group(1)
+        # Normalize double-prefix (legacy cloud function bug)
+        if filename.startswith("uploads/"):
+            filename = filename[len("uploads/"):]
+        # Route thumbnail/processed paths to video subdirs, not photos
+        if filename.startswith(("thumbnails/", "processed/")):
+            old_url = f"/uploads/{filename}"
+            mapped = _build_url_map_from_thumbnail_path(old_url)
+            if mapped:
+                url_map[old_url] = mapped
+            continue
         if _is_image(filename):
             new_rel = _new_image_path(filename, section_id)
         elif _is_video(filename):
