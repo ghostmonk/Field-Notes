@@ -120,6 +120,7 @@ async def get_media(request: Request, filename: str, size: int | None = None):
             logger.error(f"Media file not found: {blob_path}")
             raise HTTPException(status_code=404, detail="Media file not found")
 
+        await asyncio.to_thread(blob.reload)
         logger.info(f"Streaming media response for: {filename}")
         content_type = blob.content_type or "application/octet-stream"
 
