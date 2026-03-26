@@ -111,19 +111,27 @@ async def update_video_processing_job_by_file(
         update_fields = request_data.update_data.copy()
         update_fields["updated_at"] = datetime.now(timezone.utc)
 
+        now = datetime.now(timezone.utc)
         result = await video_jobs_collection.update_one(
-            {"original_file": request_data.original_file}, {"$set": update_fields}
+            {"original_file": request_data.original_file},
+            {
+                "$set": update_fields,
+                "$setOnInsert": {
+                    "job_id": str(uuid.uuid4()),
+                    "original_file": request_data.original_file,
+                    "created_at": now,
+                },
+            },
+            upsert=True,
         )
 
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Job not found")
-
+        action = "created" if result.upserted_id else "updated"
         logger.info(
-            f"Updated video processing job for file {request_data.original_file}: {update_fields}"
+            f"{action.capitalize()} video processing job for file {request_data.original_file}"
         )
         return VideoProcessingJobUpdateResponse(
-            status="updated",
-            message=f"Video processing job for {request_data.original_file} updated successfully",
+            status=action,
+            message=f"Video processing job for {request_data.original_file} {action} successfully",
         )
 
     except HTTPException:

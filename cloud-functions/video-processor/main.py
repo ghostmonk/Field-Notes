@@ -353,15 +353,19 @@ def update_via_mongodb(original_file: str, update_data: Dict[str, Any]) -> None:
             raise ValueError("MONGODB_URI environment variable not set")
 
         client = pymongo.MongoClient(MONGODB_URI)
-        db = client.turbulence
+        db = client.ghostmonk
         collection = db.video_processing_jobs
 
         update_data["updated_at"] = datetime.now(timezone.utc)
 
-        result = collection.update_one({"original_file": original_file}, {"$set": update_data})
+        result = collection.update_one(
+            {"original_file": original_file},
+            {"$set": update_data, "$setOnInsert": {"original_file": original_file, "created_at": datetime.now(timezone.utc)}},
+            upsert=True,
+        )
 
-        if result.matched_count == 0:
-            logger.warning(f"No job found for file {original_file}")
+        if result.upserted_id:
+            logger.info(f"Created new job for {original_file} via MongoDB")
         else:
             logger.info(f"Updated job for {original_file} via MongoDB")
 
