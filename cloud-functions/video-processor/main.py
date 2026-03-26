@@ -5,6 +5,7 @@ Handles video transcoding, thumbnail generation, and metadata extraction using F
 
 import os
 import shutil
+import subprocess
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -118,7 +119,6 @@ def verify_ffmpeg_availability() -> bool:
     """Verify that FFmpeg binaries are available and executable."""
     try:
         # Test FFprobe execution with a simple command
-        import subprocess
 
         result = subprocess.run(
             [FFPROBE_PATH, "-version"], capture_output=True, text=True, check=True
