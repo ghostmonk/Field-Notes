@@ -200,7 +200,7 @@ def generate_thumbnails(
                 .run(quiet=True, cmd=FFMPEG_PATH)
             )
 
-            thumbnail_blob_name = f"thumbnails/{thumbnail_filename}"
+            thumbnail_blob_name = f"uploads/thumbnails/{thumbnail_filename}"
             thumbnail_blob = bucket.blob(thumbnail_blob_name)
             thumbnail_blob.upload_from_filename(thumbnail_path)
 
@@ -293,7 +293,7 @@ def transcode_video(
                 .run(quiet=True, cmd=FFMPEG_PATH)
             )
 
-            processed_blob_name = f"processed/{output_filename}"
+            processed_blob_name = f"uploads/processed/{output_filename}"
             processed_blob = bucket.blob(processed_blob_name)
             processed_blob.upload_from_filename(output_path)
 
