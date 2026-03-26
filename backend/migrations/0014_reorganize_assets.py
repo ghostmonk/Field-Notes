@@ -73,24 +73,25 @@ def _build_url_map_from_content(content, section_id):
             continue
         filename = match.group(1)
         # Normalize double-prefix (legacy cloud function bug)
-        if filename.startswith("uploads/"):
-            filename = filename[len("uploads/"):]
+        normalized = filename
+        if normalized.startswith("uploads/"):
+            normalized = normalized[len("uploads/"):]
         # Route thumbnail/processed paths to video subdirs, not photos
-        if filename.startswith(("thumbnails/", "processed/")):
-            old_url = f"/uploads/{filename}"
-            old_u, new_u = _build_url_map_from_thumbnail_path(old_url)
-            if old_u and new_u:
-                url_map[old_u] = new_u
+        if normalized.startswith(("thumbnails/", "processed/")):
+            # Use full_match as key so replacement matches what's actually in content
+            _, new_u = _build_url_map_from_thumbnail_path(f"/uploads/{normalized}")
+            if new_u:
+                url_map[full_match] = new_u
             continue
-        if _is_image(filename):
-            new_rel = _new_image_path(filename, section_id)
-        elif _is_video(filename):
-            new_rel = _new_video_path(filename)
+        if _is_image(normalized):
+            new_rel = _new_image_path(normalized, section_id)
+        elif _is_video(normalized):
+            new_rel = _new_video_path(normalized)
         else:
             continue
-        old_url = f"/uploads/{filename}"
+        # Use full_match as key to handle both normal and double-prefix URLs
         new_url = f"/uploads/{new_rel}"
-        url_map[old_url] = new_url
+        url_map[full_match] = new_url
 
     return url_map
 
