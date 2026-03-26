@@ -110,6 +110,38 @@
         "frontend/src/modules/editor/hooks/useStoryEditor.ts": 1
       },
       "notes": "100% hit rate — all 6 findings valid. R1: 3 (premature fetchDoneRef, legacy key migration breaks existing drafts, missing cover position dirty tracking). R2: 3 (shallow photo essay comparison, savedAt pollution in legacy migration, missing dirty tracking for publish/cover). R3-R4: 0. Bot converged immediately after fixes."
+    },
+    {
+      "pr": 171,
+      "date": "2026-03-25",
+      "title": "Video poster frame and correct dimensions on upload",
+      "rounds": 16,
+      "totals": {
+        "findings": 48,
+        "valid": 26,
+        "false_positive": 4,
+        "skipped": 18
+      },
+      "by_category": {
+        "correctness": 12,
+        "security": 3,
+        "performance": 4,
+        "missing_implementation": 3,
+        "deployment": 4
+      },
+      "by_severity": {
+        "high": 5,
+        "medium": 16,
+        "low": 5
+      },
+      "flagged_files": {
+        "frontend/src/shared/utils/videoPoster.ts": 18,
+        "backend/migrations/0013_backfill_video_posters.py": 16,
+        "frontend/src/hooks/uploads/useVideoUpload.ts": 8,
+        "backend/cloudbuild.yaml": 3,
+        "backend/Dockerfile": 3
+      },
+      "notes": "Complex PR — 16 rounds, 48 findings (54% valid). Key catches: promise leak from settled flag ordering, iOS Safari DOM requirement, boolean attr regex data corruption, GCS blob path double-prefix, captureFrame race condition, zero-dimension guard, NaN duration guard. Repeats: uploading state (5x), FFmpeg deploy (6x), GCS URL format (4x). Bot found real bugs throughout — did not fully converge until round 15-16."
     }
   ]
 }
