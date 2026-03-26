@@ -200,14 +200,14 @@ def _serve_local_file(blob_path: str, request: Request):
 
 
 async def process_single_file(
-    file: UploadFile, bucket, image_filter: str = "none"
+    file: UploadFile, bucket, image_filter: str = "none", section_id: str = ""
 ) -> ProcessedMediaFile:
     """Process a single uploaded file and return ProcessedMediaFile."""
     contents = await file.read()
     file_size = len(contents)
 
     if file.content_type in ALLOWED_IMAGE_TYPES:
-        return await process_image_file(file, contents, file_size, bucket, image_filter)
+        return await process_image_file(file, contents, file_size, bucket, image_filter, section_id)
     elif file.content_type in ALLOWED_VIDEO_TYPES:
         return await process_video_file(file, contents, file_size, bucket)
     else:
@@ -215,12 +215,21 @@ async def process_single_file(
 
 
 async def process_image_file(
-    file: UploadFile, contents: bytes, file_size: int, bucket, image_filter: str = "none"
+    file: UploadFile,
+    contents: bytes,
+    file_size: int,
+    bucket,
+    image_filter: str = "none",
+    section_id: str = "",
 ) -> ProcessedMediaFile:
     """Process an image file and return ProcessedMediaFile."""
     validate_image(file.content_type, file_size)
     new_filename = generate_unique_filename(file.filename)
     base_name, extension = os.path.splitext(new_filename)
+
+    # Route images to photos/{section_id}/ when section_id is provided
+    if section_id:
+        base_name = f"photos/{section_id}/{base_name}"
     webp_extension = f".{OUTPUT_FORMAT}"
 
     # Get original image dimensions for aspect ratio calculation
@@ -280,8 +289,9 @@ async def process_video_file(
     """Process a video file and return ProcessedMediaFile."""
     validate_video(file.content_type, file_size)
     new_filename = generate_unique_filename(file.filename)
+    video_path = f"video/{new_filename}"
 
-    blob_path, _ = await upload_file(contents, new_filename, file.content_type, bucket)
+    blob_path, _ = await upload_file(contents, video_path, file.content_type, bucket)
 
     # Create video processing job entry
     try:
@@ -304,7 +314,7 @@ async def process_video_file(
         # Create video processing job using Pydantic model
         job = VideoProcessingJob(
             job_id=job_id,
-            original_file=f"uploads/{new_filename}",
+            original_file=f"uploads/{video_path}",
             status="pending",  # Will be updated to 'started' by Cloud Function
             created_at=now,
             updated_at=now,
@@ -320,7 +330,7 @@ async def process_video_file(
     except Exception as e:
         logger.error(f"Failed to create video processing job: {str(e)}")
 
-    primary_url = f"/uploads/{new_filename}"
+    primary_url = f"/uploads/{video_path}"
 
     return ProcessedMediaFile(
         primary_url=primary_url,
@@ -336,6 +346,7 @@ async def upload_media(
     request: Request,
     files: List[UploadFile] = File(...),
     image_filter: str = Form("none"),
+    section_id: str = Form(""),
 ) -> UploadResponse:
     try:
         try:
@@ -350,7 +361,7 @@ async def upload_media(
 
         for file in files:
             try:
-                processed_file = await process_single_file(file, bucket, image_filter)
+                processed_file = await process_single_file(file, bucket, image_filter, section_id)
                 urls.append(processed_file.primary_url)
                 srcsets.append(processed_file.srcset)
                 dimensions.append(
