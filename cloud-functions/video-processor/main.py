@@ -243,25 +243,27 @@ def transcode_video(
 
     original_width = metadata.get("width", 1920)
     original_height = metadata.get("height", 1080)
-    aspect_ratio = original_width / original_height
+    # Use the larger dimension to determine if we need to scale down
+    max_dim = max(original_width, original_height)
     target_qualities = [
-        {"name": "mp4_720p", "height": 720, "bitrate": "2500k", "suffix": "_720p"},
-        {"name": "mp4_480p", "height": 480, "bitrate": "1000k", "suffix": "_480p"},
+        {"name": "mp4_720p", "max_dim": 1280, "bitrate": "2500k", "suffix": "_720p"},
+        {"name": "mp4_480p", "max_dim": 854, "bitrate": "1000k", "suffix": "_480p"},
     ]
 
     for quality_config in target_qualities:
         try:
-            target_height = quality_config["height"]
-            target_width = int(target_height * aspect_ratio)
-
-            if target_width % 2 != 0:
-                target_width += 1
-
-            if original_height <= target_height:
+            if max_dim <= quality_config["max_dim"]:
                 logger.info(
-                    f"Skipping {quality_config['name']} - original video is smaller ({original_height}p)"
+                    f"Skipping {quality_config['name']} - original video is smaller ({max_dim}px)"
                 )
                 continue
+
+            # Scale so the longer side fits max_dim, preserve aspect ratio, even dimensions
+            scale_filter = (
+                f"scale={quality_config['max_dim']}:-2"
+                if original_width >= original_height
+                else f"scale=-2:{quality_config['max_dim']}"
+            )
 
             output_filename = f"{base_name}{quality_config['suffix']}.mp4"
             output_path = os.path.join(temp_dir, output_filename)
@@ -269,8 +271,35 @@ def transcode_video(
             bitrate_num = int(quality_config["bitrate"].replace("k", ""))
             bufsize = f"{bitrate_num * 2}k"
 
+            # Probe actual display dimensions after rotation
+            probe = ffmpeg.probe(input_path, cmd=FFPROBE_PATH)
+            video_stream = next(
+                (s for s in probe["streams"] if s["codec_type"] == "video"), None
+            )
+            display_w = int(video_stream.get("width", original_width)) if video_stream else original_width
+            display_h = int(video_stream.get("height", original_height)) if video_stream else original_height
+            # Check for rotation metadata (90/270 degrees means portrait)
+            rotation = 0
+            if video_stream:
+                rotation = abs(int(video_stream.get("tags", {}).get("rotate", "0")))
+                if rotation == 0:
+                    # Check side_data for display rotation
+                    for sd in video_stream.get("side_data_list", []):
+                        if "rotation" in sd:
+                            rotation = abs(int(sd["rotation"]))
+            is_portrait = rotation in (90, 270) or display_h > display_w
+
+            if is_portrait:
+                scale_filter = f"scale=-2:{quality_config['max_dim']}"
+                target_width = -2
+                target_height = quality_config["max_dim"]
+            else:
+                scale_filter = f"scale={quality_config['max_dim']}:-2"
+                target_width = quality_config["max_dim"]
+                target_height = -2
+
             logger.info(
-                f"Transcoding to {quality_config['name']} ({target_width}x{target_height})..."
+                f"Transcoding to {quality_config['name']} (scale={scale_filter}, portrait={is_portrait})..."
             )
 
             (
@@ -278,20 +307,28 @@ def transcode_video(
                 .output(
                     output_path,
                     **{
-                        "c:v": "libx264",  # H.264 codec
-                        "preset": "medium",  # Balance between speed and compression
-                        "crf": "23",  # Constant Rate Factor for quality
+                        "c:v": "libx264",
+                        "preset": "medium",
+                        "crf": "23",
                         "maxrate": quality_config["bitrate"],
                         "bufsize": bufsize,
-                        "vf": f"scale={target_width}:{target_height}",
-                        "c:a": "aac",  # Audio codec
-                        "b:a": "128k",  # Audio bitrate
-                        "movflags": "+faststart",  # Optimize for web streaming
+                        "vf": scale_filter,
+                        "c:a": "aac",
+                        "b:a": "128k",
+                        "movflags": "+faststart",
                     },
                 )
                 .overwrite_output()
                 .run(quiet=True, cmd=FFMPEG_PATH)
             )
+
+            # Get actual output dimensions
+            out_probe = ffmpeg.probe(output_path, cmd=FFPROBE_PATH)
+            out_stream = next(
+                (s for s in out_probe["streams"] if s["codec_type"] == "video"), None
+            )
+            actual_width = int(out_stream["width"]) if out_stream else quality_config["max_dim"]
+            actual_height = int(out_stream["height"]) if out_stream else quality_config["max_dim"]
 
             processed_blob_name = f"uploads/processed/{output_filename}"
             processed_blob = bucket.blob(processed_blob_name)
@@ -305,8 +342,8 @@ def transcode_video(
                 {
                     "format": quality_config["name"],
                     "url": f"/uploads/{processed_blob_name}",
-                    "width": target_width,
-                    "height": target_height,
+                    "width": actual_width,
+                    "height": actual_height,
                 }
             )
 
