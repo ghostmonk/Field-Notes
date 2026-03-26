@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-03-26--asset-reorganization': 'Asset Reorganization',
   '2026-03-25--video-poster': 'Video Poster Frames',
   '2026-03-25--draft-recovery': 'Generic Draft Recovery',
   '2026-03-25--server-side-pdf': 'Server-Side PDF Generation',
