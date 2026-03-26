@@ -22,7 +22,7 @@ export interface UseImageUploadReturn extends UseFileUploadReturn {
   } | null;
 }
 
-export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
+export function useImageUpload(editor: Editor | null, sectionId?: string): UseImageUploadReturn {
   const baseUpload = useFileUpload({
     validate: validateImageType,
     createValidationError: (file, error) => createFileValidationError(file, error, 'image'),
@@ -78,11 +78,12 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     setIsProcessing(true);
     try {
       // Upload original and filtered in parallel when filter is applied
+      const extraFields = { image_filter: 'none', section_id: sectionId || '' };
       const [originalResult, result] = await Promise.all([
         selectedFilter !== 'none'
-          ? baseUpload.upload(uploadFile, { image_filter: 'none' })
+          ? baseUpload.upload(uploadFile, extraFields)
           : Promise.resolve(null),
-        baseUpload.upload(uploadFile, { image_filter: selectedFilter }),
+        baseUpload.upload(uploadFile, { ...extraFields, image_filter: selectedFilter }),
       ]);
 
       if (result?.urls?.length) {
@@ -108,7 +109,7 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     } finally {
       setIsProcessing(false);
     }
-  }, [editor, baseUpload, showFilterPicker]);
+  }, [editor, baseUpload, showFilterPicker, sectionId]);
 
   const refilterImage = useCallback(async (currentSrc: string) => {
     if (!editor) return;
@@ -139,7 +140,7 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
 
     setIsProcessing(true);
     try {
-      const result = await baseUpload.upload(uploadFile, { image_filter: selectedFilter });
+      const result = await baseUpload.upload(uploadFile, { image_filter: selectedFilter, section_id: sectionId || '' });
 
       if (result?.urls?.length) {
         const { urls, srcsets, dimensions } = result;
@@ -158,7 +159,7 @@ export function useImageUpload(editor: Editor | null): UseImageUploadReturn {
     } finally {
       setIsProcessing(false);
     }
-  }, [editor, baseUpload, showFilterPicker]);
+  }, [editor, baseUpload, showFilterPicker, sectionId]);
 
   return {
     ...baseUpload,

@@ -115,6 +115,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
             <RichTextEditor
               content={project.content || ''}
               onChange={(val: string) => setField('content', val)}
+              sectionId={section.id}
               actionSlot={
                 <>
                   <div className="flex items-center gap-4">
