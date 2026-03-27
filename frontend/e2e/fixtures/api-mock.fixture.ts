@@ -821,6 +821,28 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
     });
   });
 
+  // Mock contact form submission endpoint
+  await page.route('**/api/contact', async (route) => {
+    if (route.request().method() === 'POST') {
+      await maybeDelay();
+
+      if (failRequests) {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ detail: 'Internal server error' }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ status: 'ok' }),
+      });
+    }
+  });
+
   // Mock bulk counts endpoint
   await page.route('**/api/engagement/bulk/counts', async (route) => {
     await maybeDelay();

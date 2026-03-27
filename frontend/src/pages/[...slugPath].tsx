@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
 import { processStoryDataSSR } from '@/rendering/server';
 import apiClient from '@/shared/lib/api-client';
+import { ContactForm } from '@/modules/static/pages/ContactForm';
 
 interface SectionPageProps {
     section: Section;
@@ -341,6 +342,11 @@ export default function SectionPage({ section, view, initialListData, detailItem
                 </Head>
                 <div className="page-container">
                     <StaticDisplay content={pageContent.content} title={pageContent.title} />
+                    {section.slug === 'contact' && (
+                        <div style={{ marginTop: 'var(--space-6)' }}>
+                            <ContactForm />
+                        </div>
+                    )}
                 </div>
             </>
         );
