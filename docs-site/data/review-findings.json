@@ -170,6 +170,39 @@
         "cloud-functions/video-processor/main.py": 1
       },
       "notes": "Migration-heavy PR. 7 rounds. R1: 3 valid (shared image copy, path traversal, dead regex). R2: 3 valid (critical .add() vs = bug, ObjectId validation, double-prefix URLs). R3: 0. R4: 2 valid (tuple crash, double-move removal). R5: 1 valid (double-prefix key mismatch in content rewrite). R6: 1 valid (deploy order). R7: 0. Bot caught a crash-on-run bug (tuple) and a silent data loss bug (.add() vs =). 73% hit rate."
+    },
+    {
+      "pr": 174,
+      "date": "2026-03-27",
+      "title": "Public contact form with Turnstile, honeypot, and email notifications",
+      "rounds": 6,
+      "totals": {
+        "findings": 24,
+        "valid": 15,
+        "false_positive": 1,
+        "skipped": 8
+      },
+      "by_category": {
+        "security": 7,
+        "correctness": 4,
+        "architecture": 3,
+        "privacy": 1
+      },
+      "by_severity": {
+        "high": 4,
+        "medium": 8,
+        "low": 3
+      },
+      "flagged_files": {
+        "backend/handlers/contact.py": 9,
+        "frontend/src/pages/api/contact.ts": 5,
+        "frontend/src/pages/[...slugPath].tsx": 3,
+        "frontend/src/components/ui/TurnstileWidget.tsx": 3,
+        "frontend/src/modules/static/pages/ContactForm.tsx": 2,
+        "backend/services/email_service.py": 1,
+        "docs-site/pages/plans/_meta.ts": 1
+      },
+      "notes": "Security-focused contact form. 6 rounds. R1: 6/6 valid (IP forwarding through proxy, blocking SMTP, error detail leak, Turnstile fail-open, duplicate form render, static import bloat). R2: 0. R3: 3 valid (IP spoofing, email in logs, missing onError), 2 repeats. R4: 1 valid (Turnstile cleanup), 1 FP (IP already fixed), 2 repeats. R5: 3 valid (rate limit key_func, CRLF injection, httpx timeout), 2 repeats. R6: 2 valid (meta indentation, Cloud Run IP), 2 repeats (slug hardcode x4). 63% hit rate."
     }
   ]
 }
