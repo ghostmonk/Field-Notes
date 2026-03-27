@@ -70,8 +70,11 @@ async def submit_contact(
     remote_ip = _get_client_ip(request)
     ip_hash = _hash_ip(remote_ip)
 
-    if not await _verify_turnstile(submission.turnstile_token, remote_ip):
-        raise HTTPException(status_code=400, detail="Human verification failed")
+    if submission.turnstile_token:
+        if not await _verify_turnstile(submission.turnstile_token, remote_ip):
+            raise HTTPException(status_code=400, detail="Human verification failed")
+    else:
+        logger.warning(f"Contact submission without Turnstile token from {ip_hash}")
 
     if submission.honeypot:
         logger.info(f"Honeypot triggered from {ip_hash}")

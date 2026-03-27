@@ -49,6 +49,7 @@ export function TurnstileWidget({ siteKey, onVerify, onExpire, onError }: Turnst
       const script = document.createElement('script');
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
       script.async = true;
+      script.onerror = () => onError?.();
       document.head.appendChild(script);
     } else {
       let attempts = 0;
@@ -64,7 +65,7 @@ export function TurnstileWidget({ siteKey, onVerify, onExpire, onError }: Turnst
       }, 100);
       return () => clearInterval(checkReady);
     }
-  }, [renderWidget]);
+  }, [renderWidget, onError]);
 
   useEffect(() => {
     return () => {

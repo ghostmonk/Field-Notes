@@ -157,6 +157,18 @@ class TestContactEndpoint:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
+    async def test_submission_without_turnstile_token(
+        self, contact_client, mock_email, valid_payload
+    ):
+        valid_payload["turnstile_token"] = ""
+        response = await contact_client.post("/contact", json=valid_payload)
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+        await asyncio.sleep(0.1)
+        mock_email.assert_called_once()
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
     async def test_missing_required_fields(self, contact_client):
         response = await contact_client.post("/contact", json={})
         assert response.status_code == 422

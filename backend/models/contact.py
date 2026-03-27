@@ -21,7 +21,7 @@ class ContactSubmission(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
     message: str = Field(..., min_length=1, max_length=2000)
-    turnstile_token: str = Field(..., min_length=1)
+    turnstile_token: str = Field(default="")
     honeypot: str = ""
     elapsed_ms: int = Field(..., ge=0)
 

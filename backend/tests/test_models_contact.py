@@ -90,16 +90,24 @@ class TestContactSubmission:
             )
         assert "name" in str(exc_info.value)
 
-    def test_empty_turnstile_token_rejected(self):
-        with pytest.raises(ValidationError) as exc_info:
-            ContactSubmission(
-                name="Jane",
-                email="jane@example.com",
-                message="Hello",
-                turnstile_token="",
-                elapsed_ms=1000,
-            )
-        assert "turnstile_token" in str(exc_info.value)
+    def test_empty_turnstile_token_allowed(self):
+        data = ContactSubmission(
+            name="Jane",
+            email="jane@example.com",
+            message="Hello",
+            turnstile_token="",
+            elapsed_ms=1000,
+        )
+        assert data.turnstile_token == ""
+
+    def test_turnstile_token_defaults_empty(self):
+        data = ContactSubmission(
+            name="Jane",
+            email="jane@example.com",
+            message="Hello",
+            elapsed_ms=1000,
+        )
+        assert data.turnstile_token == ""
 
     def test_html_stripped_from_name(self):
         data = ContactSubmission(

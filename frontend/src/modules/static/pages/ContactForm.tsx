@@ -30,6 +30,7 @@ export function ContactForm() {
   const [message, setMessage] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileFailed, setTurnstileFailed] = useState(false);
   const [formState, setFormState] = useState<FormState>('idle');
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState('');
@@ -53,7 +54,7 @@ export function ContactForm() {
     else if (message.trim().length > 2000)
       errs.message = 'Message must be 2000 characters or less';
 
-    if (!turnstileToken && TURNSTILE_SITE_KEY)
+    if (!turnstileToken && TURNSTILE_SITE_KEY && !turnstileFailed)
       errs.turnstile = 'Please complete the verification';
 
     return errs;
@@ -172,10 +173,7 @@ export function ContactForm() {
             onExpire={() => setTurnstileToken('')}
             onError={() => {
               setTurnstileToken('');
-              setErrors((prev) => ({
-                ...prev,
-                turnstile: 'Verification failed to load. Please refresh and try again.',
-              }));
+              setTurnstileFailed(true);
             }}
           />
         )}
