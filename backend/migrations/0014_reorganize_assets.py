@@ -75,7 +75,7 @@ def _build_url_map_from_content(content, section_id):
         # Normalize double-prefix (legacy cloud function bug)
         normalized = filename
         if normalized.startswith("uploads/"):
-            normalized = normalized[len("uploads/"):]
+            normalized = normalized[len("uploads/") :]
         # Route thumbnail/processed paths to video subdirs, not photos
         if normalized.startswith(("thumbnails/", "processed/")):
             # Use full_match as key so replacement matches what's actually in content

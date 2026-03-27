@@ -1,5 +1,6 @@
 """API handler for contact form submissions."""
 
+import asyncio
 import hashlib
 import os
 
@@ -22,8 +23,11 @@ async def _verify_turnstile(token: str, remote_ip: str) -> bool:
     """Verify a Cloudflare Turnstile token."""
     secret = os.environ.get("TURNSTILE_SECRET_KEY")
     if not secret:
-        logger.warning("TURNSTILE_SECRET_KEY not set, bypassing verification (dev mode)")
-        return True
+        if os.getenv("ALLOW_DEV_AUTH"):
+            logger.warning("TURNSTILE_SECRET_KEY not set — skipping verification (dev mode)")
+            return True
+        logger.error("TURNSTILE_SECRET_KEY not set — rejecting submission (production)")
+        return False
 
     try:
         async with httpx.AsyncClient() as client:
@@ -38,8 +42,16 @@ async def _verify_turnstile(token: str, remote_ip: str) -> bool:
             result = response.json()
             return result.get("success", False)
     except Exception as e:
-        logger.error(f"Turnstile verification error: {e}")
+        logger.error("Turnstile verification error", exception=e)
         return False
+
+
+def _get_client_ip(request: Request) -> str:
+    """Get the real client IP, accounting for proxy forwarding."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 
 def _hash_ip(ip: str) -> str:
@@ -55,7 +67,7 @@ async def submit_contact(
     collection: AsyncIOMotorCollection = Depends(get_contact_messages_collection),
 ):
     """Accept a public contact form submission."""
-    remote_ip = request.client.host if request.client else "unknown"
+    remote_ip = _get_client_ip(request)
 
     # 1. Turnstile verification
     if not await _verify_turnstile(submission.turnstile_token, remote_ip):
@@ -87,13 +99,14 @@ async def submit_contact(
 
     # 5. Send notification email (best-effort)
     try:
-        send_contact_notification(
-            name=submission.name,
-            email=submission.email,
-            message=submission.message,
+        await asyncio.to_thread(
+            send_contact_notification,
+            submission.name,
+            submission.email,
+            submission.message,
         )
     except Exception as e:
-        logger.error(f"Failed to send contact notification: {e}")
+        logger.error("Failed to send contact notification", exception=e)
 
     logger.info(f"Contact message stored from {submission.email}")
     return {"status": "ok"}

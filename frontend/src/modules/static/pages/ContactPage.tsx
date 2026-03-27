@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { ContactForm } from './ContactForm';
 import DOMPurify from 'isomorphic-dompurify';
 import Head from 'next/head';
 import apiClient from '@/shared/lib/api-client';
@@ -56,10 +55,6 @@ export const ContactPage: React.FC = () => {
                         </div>
                     </div>
                 )}
-
-                <div style={{ marginTop: 'var(--space-6)' }}>
-                    <ContactForm />
-                </div>
             </div>
         </>
     );

@@ -13,9 +13,15 @@ export default async function handler(
   apiLogger.logApiRequest(req, res);
 
   try {
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    const forwardedFor = Array.isArray(clientIp) ? clientIp[0] : clientIp;
+
     const response = await fetchBackend("/contact", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Forwarded-For": forwardedFor,
+      },
       body: JSON.stringify(req.body),
     });
 
@@ -24,7 +30,7 @@ export default async function handler(
   } catch (error) {
     console.error("Fatal error in /api/contact:", error);
     return res.status(500).json({
-      detail: error instanceof Error ? error.message : "Internal server error",
+      detail: "Internal server error",
     });
   }
 }

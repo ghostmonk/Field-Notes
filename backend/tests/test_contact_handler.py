@@ -101,9 +101,9 @@ class TestContactEndpoint:
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
         mock_email.assert_called_once_with(
-            name="Jane Doe",
-            email="jane@example.com",
-            message="Hello, I have a question.",
+            "Jane Doe",
+            "jane@example.com",
+            "Hello, I have a question.",
         )
 
     @pytest.mark.integration
@@ -147,9 +147,9 @@ class TestContactEndpoint:
         response = await contact_client.post("/contact", json=valid_payload)
         assert response.status_code == 200
         mock_email.assert_called_once()
-        call_kwargs = mock_email.call_args[1]
-        assert "<script>" not in call_kwargs["message"]
-        assert "Hello there" in call_kwargs["message"]
+        call_args = mock_email.call_args[0]
+        assert "<script>" not in call_args[2]
+        assert "Hello there" in call_args[2]
 
     @pytest.mark.integration
     @pytest.mark.asyncio

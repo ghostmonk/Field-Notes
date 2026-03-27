@@ -21,7 +21,8 @@ import { EmptyState } from '@/components/EmptyState';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
 import { processStoryDataSSR } from '@/rendering/server';
 import apiClient from '@/shared/lib/api-client';
-import { ContactForm } from '@/modules/static/pages/ContactForm';
+import dynamic from 'next/dynamic';
+const ContactForm = dynamic(() => import('@/modules/static/pages/ContactForm').then(mod => ({ default: mod.ContactForm })), { ssr: false });
 
 interface SectionPageProps {
     section: Section;
