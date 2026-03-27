@@ -9,5 +9,6 @@ export default {
   'video-processing-setup': 'Video Processing',
   'github-actions-video-setup': 'GitHub Actions Video Setup',
   'template-system': 'Template System',
-  'site-configuration': 'Site Configuration'
+  'site-configuration': 'Site Configuration',
+  'saguaro-code-review': 'Saguaro Code Review'
 }

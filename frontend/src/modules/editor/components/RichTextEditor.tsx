@@ -16,12 +16,13 @@ interface RichTextEditorProps {
     onChange: (content: string) => void;
     content?: string;
     actionSlot?: React.ReactNode;
+    sectionId?: string;
 }
 
 /**
  * TipTap-based rich text editor with image and video upload support.
  */
-export default function RichTextEditor({ onChange, content = "", actionSlot }: RichTextEditorProps) {
+export default function RichTextEditor({ onChange, content = "", actionSlot, sectionId }: RichTextEditorProps) {
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -73,7 +74,7 @@ export default function RichTextEditor({ onChange, content = "", actionSlot }: R
     });
 
     // Upload hooks
-    const { pendingAltText, pendingFilter, refilterImage, isProcessing: isImageUploading, ...imageUpload } = useImageUpload(editor);
+    const { pendingAltText, pendingFilter, refilterImage, isProcessing: isImageUploading, ...imageUpload } = useImageUpload(editor, sectionId);
     const videoUpload = useVideoUpload(editor);
 
     // HTML source mode state

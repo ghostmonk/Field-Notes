@@ -198,9 +198,7 @@ def _process_video_tag(match, jobs_collection):
         base = os.path.basename(src)
         # Strip suffix like _720p or _480p to recover original filename stem
         stem = re.sub(r"_(720p|480p)", "", os.path.splitext(base)[0])
-        job = jobs_collection.find_one(
-            {"original_file": {"$regex": re.escape(stem)}}
-        )
+        job = jobs_collection.find_one({"original_file": {"$regex": re.escape(stem)}})
 
     if not has_poster:
         poster_url = None

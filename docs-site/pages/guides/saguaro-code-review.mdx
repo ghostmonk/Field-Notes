@@ -1,0 +1,75 @@
+# Saguaro Code Review
+
+[Saguaro](https://github.com/saguaro-dev/saguaro) is an AI-powered code review tool that enforces project-specific rules during development. It runs as Claude Code hooks and as a background daemon.
+
+## How It Works
+
+Saguaro integrates via two Claude Code hooks defined in `.claude/settings.json`:
+
+- **PreToolUse hook** (`Edit|Write`): Before any file edit, Saguaro injects the relevant rules from `.saguaro/rules/` into the agent's context so it writes compliant code from the start.
+- **Stop hook**: After each code change, Saguaro evaluates the diff against all matching rules. If violations are found, it blocks the agent until they're fixed (fix-loop).
+- **Background daemon**: Runs a senior-engineer-style review asynchronously. Findings are advisory and surfaced on the next agent turn.
+
+## Rules
+
+33 review rules live in `.saguaro/rules/*.md`. Each rule has:
+
+- `id`, `title`, `severity` (error or warning)
+- `globs` — file patterns the rule applies to
+- `tags` — for categorization
+- Instructions with violation/compliant examples
+
+Rules cover: architecture boundaries, error handling, security (XSS sanitization), testing conventions, naming patterns, logging standards, and UI consistency.
+
+## Configuration
+
+| Path | Committed | Purpose |
+|---|---|---|
+| `.saguaro/rules/` | Yes | Review rules (shared across contributors) |
+| `.saguaro/config.yaml` | No | Model, review settings, hook toggles (per-developer) |
+| `.saguaro/cache/` | No | Generated index |
+| `.saguaro/history/` | No | Review history |
+| `.claude/settings.json` | Yes | Claude Code hook definitions |
+| `.claude/settings.local.json` | No | Local Claude Code overrides (per-developer) |
+
+## Commands
+
+```bash
+sag review              # Run rules review on current changes
+sag review --classic    # Run senior-engineer-style review
+sag generate            # Auto-generate rules from codebase analysis
+sag create              # Create a single rule interactively
+```
+
+## Adding a Rule
+
+Run `sag create` to generate a rule interactively, or create a markdown file in `.saguaro/rules/` with this format:
+
+```markdown
+---
+id: my-rule-id
+title: Short description of what the rule enforces
+severity: error
+globs:
+  - frontend/src/**/*.ts
+tags:
+  - architecture
+---
+
+Explanation of the rule and why it exists.
+
+Flag:
+- Specific patterns to catch
+
+### Violations
+
+\`\`\`
+code that violates the rule
+\`\`\`
+
+### Compliant
+
+\`\`\`
+code that follows the rule
+\`\`\`
+```

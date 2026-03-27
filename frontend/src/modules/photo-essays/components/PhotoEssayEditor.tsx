@@ -168,6 +168,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
         const resized = await resizeImageFile(file);
         const formData = new FormData();
         formData.append('files', resized);
+        formData.append('section_id', sectionId);
 
         try {
           const response = await fetch('/api/upload-proxy', {
@@ -212,7 +213,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
       setPhotos(prev => prev.filter(p => p.url !== ''));
       setError(`Failed to upload: ${failures.join(', ')}`);
     }
-  }, []);
+  }, [sectionId]);
 
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, index: number) => {
     setDragIndex(index);
