@@ -51,10 +51,15 @@ export function TurnstileWidget({ siteKey, onVerify, onExpire, onError }: Turnst
       script.async = true;
       document.head.appendChild(script);
     } else {
+      let attempts = 0;
       const checkReady = setInterval(() => {
+        attempts++;
         if (window.turnstile) {
           clearInterval(checkReady);
           renderWidget();
+        } else if (attempts >= 100) {
+          clearInterval(checkReady);
+          onError?.();
         }
       }, 100);
       return () => clearInterval(checkReady);

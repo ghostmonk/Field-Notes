@@ -68,22 +68,19 @@ async def submit_contact(
 ):
     """Accept a public contact form submission."""
     remote_ip = _get_client_ip(request)
+    ip_hash = _hash_ip(remote_ip)
 
-    # 1. Turnstile verification
     if not await _verify_turnstile(submission.turnstile_token, remote_ip):
         raise HTTPException(status_code=400, detail="Human verification failed")
 
-    # 2. Honeypot check — silent fake success
     if submission.honeypot:
-        logger.info(f"Honeypot triggered from {_hash_ip(remote_ip)}")
+        logger.info(f"Honeypot triggered from {ip_hash}")
         return {"status": "ok"}
 
-    # 3. Timing check — silent fake success
     if submission.elapsed_ms < MIN_ELAPSED_MS:
-        logger.info(f"Timing check failed ({submission.elapsed_ms}ms) from {_hash_ip(remote_ip)}")
+        logger.info(f"Timing check failed ({submission.elapsed_ms}ms) from {ip_hash}")
         return {"status": "ok"}
 
-    # 4. Build document and store
     user_id = None
     if hasattr(request.state, "user") and request.state.user:
         user_id = request.state.user.id
@@ -92,21 +89,20 @@ async def submit_contact(
         name=submission.name,
         email=submission.email,
         message=submission.message,
-        ip_hash=_hash_ip(remote_ip),
+        ip_hash=ip_hash,
         user_id=user_id,
     )
     await collection.insert_one(doc.model_dump())
 
-    # 5. Send notification email (best-effort)
-    try:
-        await asyncio.to_thread(
+    # Fire-and-forget — response returns immediately, email sends in background
+    asyncio.create_task(
+        asyncio.to_thread(
             send_contact_notification,
             submission.name,
             submission.email,
             submission.message,
         )
-    except Exception as e:
-        logger.error("Failed to send contact notification", exception=e)
+    )
 
-    logger.info(f"Contact message stored (ip_hash={_hash_ip(remote_ip)})")
+    logger.info(f"Contact message stored (ip_hash={ip_hash})")
     return {"status": "ok"}

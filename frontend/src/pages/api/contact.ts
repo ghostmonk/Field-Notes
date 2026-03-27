@@ -32,7 +32,7 @@ export default async function handler(
     const data = await response.json();
     return res.status(response.status).json(data);
   } catch (error) {
-    console.error("Fatal error in /api/contact:", error);
+    apiLogger.error("Fatal error in /api/contact:", error instanceof Error ? error : new Error(String(error)));
     return res.status(500).json({
       detail: "Internal server error",
     });

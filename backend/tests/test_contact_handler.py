@@ -1,5 +1,6 @@
 """Tests for POST /contact endpoint."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -100,6 +101,8 @@ class TestContactEndpoint:
         response = await contact_client.post("/contact", json=valid_payload)
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
+        # Email is fire-and-forget via create_task — yield to let it complete
+        await asyncio.sleep(0.1)
         mock_email.assert_called_once_with(
             "Jane Doe",
             "jane@example.com",
@@ -146,6 +149,7 @@ class TestContactEndpoint:
         valid_payload["message"] = "<script>alert('xss')</script>Hello there"
         response = await contact_client.post("/contact", json=valid_payload)
         assert response.status_code == 200
+        await asyncio.sleep(0.1)
         mock_email.assert_called_once()
         call_args = mock_email.call_args[0]
         assert "<script>" not in call_args[2]

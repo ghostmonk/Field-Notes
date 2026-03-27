@@ -484,5 +484,5 @@ export interface ContactSubmission {
 }
 
 export interface ContactResponse {
-  status: string;
+  status: 'ok';
 }

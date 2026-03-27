@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, FormEvent } from 'react';
+import { useState, useRef, FormEvent } from 'react';
 import { useSession } from 'next-auth/react';
 import {
   Button,
@@ -35,8 +35,9 @@ export function ContactForm() {
   const [submitError, setSubmitError] = useState('');
 
   const mountTime = useRef(Date.now());
+  const isSubmitting = formState === 'submitting';
 
-  const validate = useCallback((): FormErrors => {
+  function validate(): FormErrors {
     const errs: FormErrors = {};
     if (!name.trim()) errs.name = 'Name is required';
     else if (name.trim().length > 100)
@@ -56,7 +57,7 @@ export function ContactForm() {
       errs.turnstile = 'Please complete the verification';
 
     return errs;
-  }, [name, email, message, turnstileToken, isAuthenticated]);
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -120,7 +121,7 @@ export function ContactForm() {
             onChange={(e) => setName(e.target.value)}
             maxLength={100}
             error={!!errors.name}
-            disabled={formState === 'submitting'}
+            disabled={isSubmitting}
             data-testid="contact-name"
           />
         </FormField>
@@ -138,7 +139,7 @@ export function ContactForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               error={!!errors.email}
-              disabled={formState === 'submitting'}
+              disabled={isSubmitting}
               data-testid="contact-email"
             />
           </FormField>
@@ -157,7 +158,7 @@ export function ContactForm() {
             maxLength={2000}
             rows={6}
             error={!!errors.message}
-            disabled={formState === 'submitting'}
+            disabled={isSubmitting}
             data-testid="contact-message"
           />
         </FormField>
@@ -198,8 +199,8 @@ export function ContactForm() {
         <Button
           type="submit"
           variant="primary"
-          loading={formState === 'submitting'}
-          disabled={formState === 'submitting'}
+          loading={isSubmitting}
+          disabled={isSubmitting}
         >
           Send Message
         </Button>
