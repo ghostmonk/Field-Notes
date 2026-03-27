@@ -79,6 +79,28 @@ class TestContactSubmission:
             )
         assert "message" in str(exc_info.value)
 
+    def test_name_only_html_tags_rejected(self):
+        with pytest.raises(ValidationError) as exc_info:
+            ContactSubmission(
+                name="<b></b>",
+                email="jane@example.com",
+                message="Hello",
+                turnstile_token="tok",
+                elapsed_ms=1000,
+            )
+        assert "name" in str(exc_info.value)
+
+    def test_empty_turnstile_token_rejected(self):
+        with pytest.raises(ValidationError) as exc_info:
+            ContactSubmission(
+                name="Jane",
+                email="jane@example.com",
+                message="Hello",
+                turnstile_token="",
+                elapsed_ms=1000,
+            )
+        assert "turnstile_token" in str(exc_info.value)
+
     def test_html_stripped_from_name(self):
         data = ContactSubmission(
             name="<b>Jane</b> Doe",

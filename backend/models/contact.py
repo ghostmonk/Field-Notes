@@ -3,11 +3,15 @@
 import re
 from datetime import datetime, timezone
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 def _strip_html(value: str) -> str:
-    """Remove HTML tags and strip whitespace."""
+    """Remove HTML tags and strip whitespace.
+
+    Cosmetic only — XSS protection is handled by React auto-escaping
+    at the rendering layer.
+    """
     return re.sub(r"<[^>]+>", "", value).strip()
 
 
@@ -31,6 +35,8 @@ class ContactSubmission(BaseModel):
 
 class ContactMessageDoc(BaseModel):
     """MongoDB document shape for stored contact messages."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     name: str
     email: str
