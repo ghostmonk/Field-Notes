@@ -30,7 +30,7 @@ async def _verify_turnstile(token: str, remote_ip: str) -> bool:
         return False
 
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.post(
                 TURNSTILE_VERIFY_URL,
                 data={
@@ -60,7 +60,7 @@ def _hash_ip(ip: str) -> str:
 
 
 @router.post("/contact")
-@limiter.limit("3/hour")
+@limiter.limit("3/hour", key_func=lambda request: _get_client_ip(request))
 async def submit_contact(
     request: Request,
     submission: ContactSubmission,

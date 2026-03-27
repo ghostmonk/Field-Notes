@@ -13,14 +13,14 @@ export default async function handler(
   apiLogger.logApiRequest(req, res);
 
   try {
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
-    const forwardedFor = Array.isArray(clientIp) ? clientIp[0] : clientIp;
+    // Use socket address as canonical IP — never trust client-supplied X-Forwarded-For
+    const clientIp = req.socket.remoteAddress || '127.0.0.1';
 
     const response = await fetchBackend("/contact", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Forwarded-For": forwardedFor,
+        "X-Forwarded-For": clientIp,
       },
       body: JSON.stringify(req.body),
     });
