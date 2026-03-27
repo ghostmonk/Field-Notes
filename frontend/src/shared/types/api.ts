@@ -470,3 +470,19 @@ export interface VoiceFeedbackResponse extends VoiceFeedbackCreate {
   qdrant_id?: string;
   created_at: string;
 }
+
+/**
+ * Contact form submission
+ */
+export interface ContactSubmission {
+  name: string;
+  email: string;
+  message: string;
+  turnstile_token: string;
+  honeypot: string;
+  elapsed_ms: number;
+}
+
+export interface ContactResponse {
+  status: string;
+}
