@@ -170,6 +170,7 @@ jobs:
             --set-env-vars "MONGO_USER=${{ secrets.MONGO_USER }},MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }},MONGO_CLUSTER=${{ vars.MONGO_CLUSTER }},MONGO_APP_NAME=${{ vars.MONGO_APP_NAME }},MONGO_HOST=${{ vars.MONGO_HOST }},GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }},MONGO_DB_NAME=${{ vars.MONGO_DB_NAME }},GCS_BUCKET_NAME=${{ vars.GCS_BUCKET_NAME }},ADMIN_EMAIL=${{ vars.ADMIN_EMAIL }},GH_TOKEN=${{ secrets.GH_TOKEN }},GH_USERNAME=${{ vars.GH_USERNAME }}" \
             --set-env-vars "GOOGLE_APPLICATION_CREDENTIALS_JSON_B64=${GCP_CREDS_B64}" \
             --set-env-vars "QDRANT_URL=${{ vars.QDRANT_URL }},QDRANT_API_KEY=${{ secrets.QDRANT_API_KEY }},VOYAGE_API_KEY=${{ secrets.VOYAGE_API_KEY }},ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" \
+            --set-env-vars "TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY }},SMTP_USER=${{ secrets.SMTP_USER }},SMTP_APP_PASSWORD=${{ secrets.SMTP_APP_PASSWORD }},CONTACT_NOTIFY_EMAIL=${{ vars.CONTACT_NOTIFY_EMAIL }}" \
             --timeout=600s
 
       - name: Deploy Frontend
@@ -179,7 +180,7 @@ jobs:
           gcloud builds submit ./frontend \
             --config frontend/cloudbuild.yaml \
             --project=${{ vars.GCP_PROJECT_ID }} \
-            --substitutions=_NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            --substitutions=_NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},_NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
           gcloud run deploy turbulent-frontend \
             --image gcr.io/${{ vars.GCP_PROJECT_ID }}/turbulent-frontend \
             --platform managed \

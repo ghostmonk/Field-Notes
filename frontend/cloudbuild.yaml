@@ -4,6 +4,8 @@ steps:
       - 'build'
       - '--build-arg'
       - 'NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_TURNSTILE_SITE_KEY=${_NEXT_PUBLIC_TURNSTILE_SITE_KEY}'
       - '-t'
       - 'gcr.io/$PROJECT_ID/turbulent-frontend'
       - '.'
@@ -11,3 +13,4 @@ images:
   - 'gcr.io/$PROJECT_ID/turbulent-frontend'
 substitutions:
   _NEXT_PUBLIC_API_URL: ''
+  _NEXT_PUBLIC_TURNSTILE_SITE_KEY: ''
