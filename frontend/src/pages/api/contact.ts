@@ -13,8 +13,12 @@ export default async function handler(
   apiLogger.logApiRequest(req, res);
 
   try {
-    // Use socket address as canonical IP — never trust client-supplied X-Forwarded-For
-    const clientIp = req.socket.remoteAddress || '127.0.0.1';
+    // In production (Cloud Run), the infrastructure sets X-Forwarded-For with the real
+    // client IP. Locally, fall back to socket address. Take only the first (leftmost) IP
+    // from X-Forwarded-For to avoid client-appended spoofed entries.
+    const forwarded = req.headers['x-forwarded-for'];
+    const forwardedFirst = Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(',')[0]?.trim();
+    const clientIp = forwardedFirst || req.socket.remoteAddress || '127.0.0.1';
 
     const response = await fetchBackend("/contact", {
       method: "POST",
