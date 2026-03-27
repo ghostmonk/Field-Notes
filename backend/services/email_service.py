@@ -18,7 +18,7 @@ def send_contact_notification(name: str, email: str, message: str) -> None:
     smtp_password = os.environ.get("SMTP_APP_PASSWORD")
     notify_email = os.environ.get("CONTACT_NOTIFY_EMAIL")
 
-    if not all([smtp_user, smtp_password, notify_email]):
+    if not smtp_user or not smtp_password or not notify_email:
         logger.info("SMTP not configured, skipping contact notification email")
         return
 
