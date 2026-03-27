@@ -67,6 +67,7 @@ export function TurnstileWidget({ siteKey, onVerify, onExpire, onError }: Turnst
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
       }
+      window.onTurnstileLoad = undefined;
     };
   }, []);
 
