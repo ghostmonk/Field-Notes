@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-03-26-contact-form': 'Contact Form Design',
   '2026-03-26-asset-reorganization': 'Asset Reorganization',
   '2026-03-23-server-side-pdf': 'Server-Side PDF Generation',
   '2026-03-22-ui-component-library': 'UI Component Library',

@@ -13,6 +13,8 @@ COPY . .
 # Build args needed at build time for next.config.ts headers() and NEXT_PUBLIC_ inlining
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
 
 # Build the Next.js application
 RUN npm run build

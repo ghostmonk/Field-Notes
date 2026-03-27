@@ -38,6 +38,8 @@ import {
   JobApplicationCreate,
   JobApplicationResponse,
   JobApplicationUpdate,
+  ContactSubmission,
+  ContactResponse,
 } from '@/shared/types/api';
 import { ApiRequestError } from '@/shared/types/error';
 
@@ -224,6 +226,9 @@ const apiRoutes = {
   applications: {
     base: () => '/api/applications',
     byId: (id: string) => `/api/applications/${id}`,
+  },
+  contact: {
+    submit: () => '/api/contact',
   },
 };
 
@@ -598,6 +603,14 @@ const apiClient = {
       fetchApi<void>(apiRoutes.applications.byId(id), {
         method: 'DELETE',
         token,
+      }),
+  },
+
+  contact: {
+    submit: (data: ContactSubmission) =>
+      fetchApi<ContactResponse, ContactSubmission>(apiRoutes.contact.submit(), {
+        method: 'POST',
+        body: data,
       }),
   },
 };

@@ -386,6 +386,11 @@ app.get('/photo-essays/:id', (req: Request, res: Response) => {
   }
 });
 
+// Contact form submission
+app.post('/contact', (req: Request, res: Response) => {
+  res.json({ status: 'ok' });
+});
+
 // Resume public endpoint
 app.get('/resume/public', (req: Request, res: Response) => {
   res.json(sampleResume);

@@ -156,6 +156,11 @@ async def get_job_applications_collection() -> AsyncIOMotorCollection:
     return db["job_applications"]
 
 
+async def get_contact_messages_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["contact_messages"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
@@ -319,6 +324,15 @@ async def ensure_indexes() -> None:
         job_applications,
         [("user_id", 1), ("created_at", -1)],
         name="user_id_created_at",
+    )
+
+    # Contact messages indexes
+    contact_messages = db["contact_messages"]
+    await safe_create_index(contact_messages, "ip_hash")
+    await safe_create_index(
+        contact_messages,
+        [("created_at", -1)],
+        name="contact_messages_created_at",
     )
 
     # Voice feedback indexes

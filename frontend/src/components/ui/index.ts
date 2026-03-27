@@ -9,3 +9,5 @@ export { Badge } from './Badge';
 export { Card } from './Card';
 export { Grid } from './Grid';
 export { Tabs } from './Tabs';
+export { TurnstileWidget } from './TurnstileWidget';
+export { HoneypotField } from './HoneypotField';
