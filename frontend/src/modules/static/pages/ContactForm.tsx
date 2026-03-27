@@ -169,6 +169,13 @@ export function ContactForm() {
             siteKey={TURNSTILE_SITE_KEY}
             onVerify={setTurnstileToken}
             onExpire={() => setTurnstileToken('')}
+            onError={() => {
+              setTurnstileToken('');
+              setErrors((prev) => ({
+                ...prev,
+                turnstile: 'Verification failed to load. Please refresh and try again.',
+              }));
+            }}
           />
         )}
 

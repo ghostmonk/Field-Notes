@@ -108,5 +108,5 @@ async def submit_contact(
     except Exception as e:
         logger.error("Failed to send contact notification", exception=e)
 
-    logger.info(f"Contact message stored from {submission.email}")
+    logger.info(f"Contact message stored (ip_hash={_hash_ip(remote_ip)})")
     return {"status": "ok"}
