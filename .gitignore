@@ -317,3 +317,8 @@ local-uploads/
 *.tsbuildinfo
 seed-resume.py
 seed-content.py
+.saguaro/config.yaml
+.saguaro/cache/
+.saguaro/history/
+.claude/settings.local.json
+.mcp.json
