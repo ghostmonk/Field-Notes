@@ -25,7 +25,7 @@ export function ContactForm() {
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user?.email;
 
-  const [name, setName] = useState(session?.user?.name || '');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState(session?.user?.email || '');
   const [message, setMessage] = useState('');
   const [honeypot, setHoneypot] = useState('');
