@@ -25,7 +25,7 @@ export function ContactForm() {
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user?.email;
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState(session?.user?.name || '');
   const [email, setEmail] = useState(session?.user?.email || '');
   const [message, setMessage] = useState('');
   const [honeypot, setHoneypot] = useState('');
@@ -39,11 +39,11 @@ export function ContactForm() {
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
-    if (!name.trim()) errs.name = 'Name is required';
-    else if (name.trim().length > 100)
-      errs.name = 'Name must be 100 characters or less';
-
     if (!isAuthenticated) {
+      if (!name.trim()) errs.name = 'Name is required';
+      else if (name.trim().length > 100)
+        errs.name = 'Name must be 100 characters or less';
+
       if (!email.trim()) errs.email = 'Email is required';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
         errs.email = 'Enter a valid email address';
@@ -70,7 +70,7 @@ export function ContactForm() {
 
     try {
       await apiClient.contact.submit({
-        name: name.trim(),
+        name: isAuthenticated ? (session?.user?.name || '') : name.trim(),
         email: isAuthenticated ? (session?.user?.email || '') : email.trim(),
         message: message.trim(),
         turnstile_token: turnstileToken,
@@ -108,23 +108,25 @@ export function ContactForm() {
           gap: 'var(--space-4)',
         }}
       >
-        <FormField
-          label="Name"
-          htmlFor="contact-name"
-          required
-          error={errors.name}
-        >
-          <Input
-            id="contact-name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={100}
-            error={!!errors.name}
-            disabled={isSubmitting}
-            data-testid="contact-name"
-          />
-        </FormField>
+        {!isAuthenticated && (
+          <FormField
+            label="Name"
+            htmlFor="contact-name"
+            required
+            error={errors.name}
+          >
+            <Input
+              id="contact-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={100}
+              error={!!errors.name}
+              disabled={isSubmitting}
+              data-testid="contact-name"
+            />
+          </FormField>
+        )}
 
         {!isAuthenticated && (
           <FormField

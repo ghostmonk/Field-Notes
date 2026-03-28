@@ -65,8 +65,8 @@ const nextConfig: NextConfig = {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
         const isDev = process.env.NODE_ENV === 'development';
         const devSources = isDev ? 'http://localhost:5001' : '';
-        const scriptSrc = `'self' 'unsafe-inline' ${apiUrl}`;
-        
+        const scriptSrc = `'self' 'unsafe-inline' ${apiUrl} https://challenges.cloudflare.com`;
+
         const csp_value = `
                             default-src 'self';
                             script-src ${scriptSrc};
@@ -75,7 +75,7 @@ const nextConfig: NextConfig = {
                             media-src 'self' data: blob: ${apiUrl} ${devSources} https://storage.googleapis.com;
                             connect-src 'self' data: ${apiUrl} ${devSources} https://accounts.google.com https://*.googleapis.com https://www.google.com;
                             font-src 'self' https://fonts.gstatic.com;
-                            frame-src 'self' https://accounts.google.com https://*.google.com;
+                            frame-src 'self' https://accounts.google.com https://*.google.com https://challenges.cloudflare.com;
                         `.replace(/\n/g, '').trim();
         return [
             {
