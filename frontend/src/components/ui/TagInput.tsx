@@ -69,20 +69,18 @@ export function TagInput({
     }
   }, [searchTags]);
 
-  const addTag = useCallback(async (tagName: string) => {
+  const addTag = useCallback((tagName: string) => {
     const normalized = normalize(tagName);
     if (!normalized || !TAG_PATTERN.test(normalized)) return;
     if (tags.includes(normalized)) return;
 
-    if (token) {
-      try {
-        await apiClient.tags.create({ name: normalized }, token);
-      } catch {
-        // Tag may already exist — that's fine, create is idempotent
-      }
-    }
-
     onChange([...tags, normalized]);
+
+    if (token) {
+      apiClient.tags.create({ name: normalized }, token).catch(() => {
+        // Tag may already exist — that's fine, create is idempotent
+      });
+    }
     setInput('');
     setSuggestions([]);
     setShowSuggestions(false);
