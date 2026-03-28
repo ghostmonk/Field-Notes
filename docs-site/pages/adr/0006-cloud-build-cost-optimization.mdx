@@ -1,0 +1,66 @@
+# ADR 0006: Cloud Build and Container Registry Cost Optimization
+
+## Status
+Accepted
+
+## Context
+A cost spike was observed in GCP billing on 2026-03-26, traced to Cloud Build activity from 2026-03-25 (billing lag). Investigation revealed several compounding inefficiencies in the CI/CD pipeline:
+
+1. **`--no-cache` on Cloud Build**: Backend and video-processor `cloudbuild.yaml` files used `--no-cache`, forcing Docker to rebuild every layer from scratch on every deploy. This turned 1-2 minute builds into 10-15 minute builds, directly increasing billed build-minutes.
+
+2. **No `.gcloudignore`**: `gcloud builds submit .` for backend and video-processor uploaded the entire repo root as build context, including `frontend/node_modules`, `.git` history, docs-site, and local uploads. Hundreds of MB uploaded per build that the Dockerfile never touches.
+
+3. **GCR image accumulation**: Google Container Registry had no lifecycle policy. Every deploy pushed a new image (~500MB-1.5GB each) and old images were never deleted. Over 200 backend revisions had accumulated.
+
+4. **GCR deprecated**: Google Container Registry is officially deprecated in favor of Artifact Registry, which supports native cleanup policies.
+
+5. **Max instances unbounded**: Cloud Run services had `maxScale: 100`, meaning a bot crawl or accidental loop could spin up 100 instances on a personal site.
+
+## Decision
+
+### Remove `--no-cache` from Cloud Build
+Docker layer caching means unchanged layers (base image, `pip install` when `requirements.txt` hasn't changed) are reused. Only the `COPY` and subsequent layers rebuild when source code changes.
+
+### Add `.gcloudignore` at repo root
+Excludes frontend, docs-site, `.git`, local-uploads, credentials, and other files irrelevant to backend/video-processor builds. Same syntax as `.gitignore`. Reduces upload size from hundreds of MB to the actual build context needed.
+
+### Migrate from GCR to Artifact Registry
+All image references changed from `gcr.io/$PROJECT_ID/<service>` to `us-central1-docker.pkg.dev/$PROJECT_ID/field-notes/<service>` across:
+- `backend/cloudbuild.yaml`
+- `frontend/cloudbuild.yaml`
+- `cloud-functions/video-processor/cloudbuild.yaml`
+- `.github/workflows/deploy.yml`
+
+A single AR repository (`field-notes`) hosts all three service images.
+
+### Set AR cleanup policy
+Two rules applied to the `field-notes` repository:
+- **keep-recent**: Always retain the 3 most recent image versions per package
+- **delete-old**: Delete images older than 30 days (2592000s)
+
+### Clean up legacy resources
+- Deleted all old GCR images after confirming AR deploys succeeded
+- Deleted empty `gcf-artifacts` AR repository (leftover from Cloud Functions migration)
+- Verified `_cloudbuild` GCS bucket was already empty
+- Verified empty Cloud Functions source buckets (`gcf-v2-sources`, `gcf-v2-uploads`)
+
+### Cap Cloud Run max instances
+Recommended reducing `maxScale` from 100 to 5 for frontend and backend services. Video-processor was already capped at 5.
+
+## Consequences
+
+### Positive
+- Build times drop from ~10-15 minutes to ~1-2 minutes with layer caching
+- Build context uploads shrink from hundreds of MB to tens of MB
+- Container storage is automatically pruned, preventing unbounded growth
+- Max instance cap prevents runaway costs from traffic spikes
+- Using the supported registry (AR) instead of the deprecated one (GCR)
+
+### Negative
+- Layer caching means a corrupted cache could produce a bad build. Mitigation: Cloud Build can be run with `--no-cache` as a one-off via `workflow_dispatch` if needed.
+- AR cleanup policy could delete an image needed for rollback beyond 30 days. Mitigation: 3 most recent are always kept regardless of age.
+
+## Implementation Notes
+- The deploy workflow's path filters include `.github/workflows/deploy*.yml`, so the AR migration commit triggered deploys for all three services, populating the new registry immediately.
+- `.gcloudignore` is committed to git (not gitignored) so it travels with the repo.
+- The cleanup policy JSON must use `"name"` not `"id"` as the key — the gcloud CLI docs are inconsistent on this.
