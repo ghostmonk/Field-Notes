@@ -9,10 +9,11 @@ test.describe('Contact Form', () => {
     await expect(mockApiPage.getByTestId('contact-message')).toBeVisible();
   });
 
-  test('hides email field for authenticated user', async ({ mockAuthenticatedApiPage }) => {
+  test('hides name and email fields for authenticated user and shows greeting', async ({ mockAuthenticatedApiPage }) => {
     await mockAuthenticatedApiPage.goto('/contact');
     await expect(mockAuthenticatedApiPage.getByTestId('contact-form')).toBeVisible();
-    await expect(mockAuthenticatedApiPage.getByTestId('contact-name')).toBeVisible();
+    await expect(mockAuthenticatedApiPage.getByTestId('contact-greeting')).toBeVisible();
+    await expect(mockAuthenticatedApiPage.getByTestId('contact-name')).not.toBeVisible();
     await expect(mockAuthenticatedApiPage.getByTestId('contact-email')).not.toBeVisible();
     await expect(mockAuthenticatedApiPage.getByTestId('contact-message')).toBeVisible();
   });
