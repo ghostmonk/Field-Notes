@@ -28,6 +28,7 @@ export interface UseStoryEditorReturn {
   setTitle: (title: string) => void;
   setContent: (content: string) => void;
   setPublished: (published: boolean) => void;
+  setTags: (tags: string[]) => void;
   handleSubmit: (e: React.FormEvent, shouldPublish?: boolean) => Promise<void>;
   handleDelete: () => Promise<void>;
   resetForm: () => void;
@@ -109,6 +110,11 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
   const setPublished = useCallback((is_published: boolean) => {
     isDirtyRef.current = true;
     setStory((prev: Partial<Story>) => ({ ...prev, is_published }));
+  }, []);
+
+  const setTags = useCallback((tags: string[]) => {
+    isDirtyRef.current = true;
+    setStory((prev: Partial<Story>) => ({ ...prev, tags }));
   }, []);
 
   // Submit handler
@@ -305,6 +311,7 @@ export function useStoryEditor(sectionId?: string, sectionSlug?: string): UseSto
     setTitle,
     setContent,
     setPublished,
+    setTags,
     handleSubmit,
     handleDelete,
     resetForm,

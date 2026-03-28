@@ -23,6 +23,7 @@ from handlers.resume import router as resume_router
 from handlers.search import router as search_router
 from handlers.sections import router as sections_router
 from handlers.stories import router as stories_router
+from handlers.tags import router as tags_router
 from handlers.tailor import router as tailor_router
 from handlers.uploads import router as uploads_router
 from handlers.users import router as users_router
@@ -254,6 +255,7 @@ app.include_router(tailor_router)
 app.include_router(voice_feedback_router)
 app.include_router(job_applications_router)
 app.include_router(contact_router)
+app.include_router(tags_router)
 
 if __name__ == "__main__":
     import uvicorn

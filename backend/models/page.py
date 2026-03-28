@@ -3,6 +3,7 @@ Page-related Pydantic models for static pages.
 """
 
 from datetime import datetime, timezone
+from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -14,6 +15,7 @@ class PageBase(BaseModel):
     content: str = Field(..., min_length=1, max_length=50000)
     page_type: str = Field(..., min_length=1, max_length=100)
     is_published: bool = True
+    tags: List[str] = Field(default_factory=list)
 
 
 class PageCreate(PageBase):
@@ -28,6 +30,7 @@ class PageUpdate(BaseModel):
     title: str | None = Field(None, min_length=1, max_length=200)
     content: str | None = Field(None, min_length=1, max_length=50000)
     is_published: bool | None = None
+    tags: List[str] | None = None
 
 
 class PageResponse(PageBase):

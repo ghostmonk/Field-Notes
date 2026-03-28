@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { Section } from '@/shared/types/api';
 import { useProjectEditor } from '../hooks/useProjectEditor';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 import { VersionHistory } from '@/modules/versions/components/VersionHistory';
-import { Button, Input, Checkbox, Badge, FormField, Textarea } from '@/components/ui';
+import { Button, Input, Checkbox, Badge, FormField, Textarea, TagInput } from '@/components/ui';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
 
@@ -30,6 +31,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
     resetForm,
     clearError,
   } = useProjectEditor(section.id, section.slug);
+  const { data: session } = useSession();
 
   const [techText, setTechText] = useState((project.technologies || []).join(', '));
 
@@ -182,6 +184,15 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
             />
           </div>
         </div>
+
+        <FormField label="Tags" htmlFor="tags">
+          <TagInput
+            tags={project.tags || []}
+            onChange={(tags) => setField('tags', tags)}
+            token={session?.accessToken}
+            data-testid="editor-tags-input"
+          />
+        </FormField>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField label="Technologies (comma-separated)" htmlFor="technologies">

@@ -155,6 +155,7 @@ export function useProjectEditor(sectionId?: string, sectionSlug?: string): UseP
         is_featured: project.is_featured,
         sort_order: project.sort_order,
         section_id: project.section_id || sectionId,
+        tags: project.tags || [],
       };
 
       if (project.id) {

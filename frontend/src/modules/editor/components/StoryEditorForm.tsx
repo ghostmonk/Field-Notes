@@ -1,12 +1,13 @@
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { Section } from '@/shared/types/api';
 import { useStoryEditor } from '../hooks/useStoryEditor';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 import { VersionHistory } from '@/modules/versions/components/VersionHistory';
-import { Button, Input, Badge, FormField } from '@/components/ui';
+import { Button, Input, Badge, FormField, TagInput } from '@/components/ui';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
 
@@ -25,6 +26,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
     isEditing,
     setTitle,
     setContent,
+    setTags,
     handleSubmit,
     handleDelete,
     resetForm,
@@ -34,6 +36,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
     acceptDraft,
     dismissDraft,
   } = useStoryEditor(section.id, section.slug);
+  const { data: session } = useSession();
 
   if (isLoading && !isSaving) {
     return <div>Loading...</div>;
@@ -130,6 +133,15 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
             required
             disabled={isSaving}
             data-testid="editor-title-input"
+          />
+        </FormField>
+
+        <FormField label="Tags" htmlFor="tags">
+          <TagInput
+            tags={story.tags || []}
+            onChange={setTags}
+            token={session?.accessToken}
+            data-testid="editor-tags-input"
           />
         </FormField>
 
