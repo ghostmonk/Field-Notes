@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Frontend (not needed for backend/video-processor builds)
+frontend/node_modules
+frontend/.next
+frontend/coverage
+frontend/test-results
+frontend/playwright-report
+
+# Docs site
+docs-site
+
+# Development artifacts
+.worktrees
+local-uploads
+htmlcov
+*.pyc
+__pycache__
+.pytest_cache
+.env
+.env.*
+
+# IDE and OS
+.vscode
+.idea
+.DS_Store
+
+# Credentials (should never be uploaded)
+gcp-credentials.json
+
+# Misc
+LICENSE
+README.md
+CHANGELOG.md
+PERFORMANCE_OPTIMIZATIONS.md
+*.zip

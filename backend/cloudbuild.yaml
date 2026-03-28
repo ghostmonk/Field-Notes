@@ -2,7 +2,6 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
-      - '--no-cache'
       - '--build-arg'
       - 'INSTALL_FFMPEG=${_INSTALL_FFMPEG}'
       - '-f'
