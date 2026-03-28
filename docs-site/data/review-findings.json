@@ -203,6 +203,32 @@
         "docs-site/pages/plans/_meta.ts": 1
       },
       "notes": "Security-focused contact form. 6 rounds. R1: 6/6 valid (IP forwarding through proxy, blocking SMTP, error detail leak, Turnstile fail-open, duplicate form render, static import bloat). R2: 0. R3: 3 valid (IP spoofing, email in logs, missing onError), 2 repeats. R4: 1 valid (Turnstile cleanup), 1 FP (IP already fixed), 2 repeats. R5: 3 valid (rate limit key_func, CRLF injection, httpx timeout), 2 repeats. R6: 2 valid (meta indentation, Cloud Run IP), 2 repeats (slug hardcode x4). 63% hit rate."
+    },
+    {
+      "pr": 175,
+      "date": "2026-03-27",
+      "title": "CSP blocking Turnstile and skip name/email for logged-in users",
+      "rounds": 4,
+      "totals": {
+        "findings": 9,
+        "valid": 4,
+        "false_positive": 1,
+        "skipped": 4
+      },
+      "by_category": {
+        "correctness": 3,
+        "security": 1
+      },
+      "by_severity": {
+        "high": 1,
+        "medium": 3,
+        "low": 5
+      },
+      "flagged_files": {
+        "frontend/src/modules/static/pages/ContactForm.tsx": 7,
+        "frontend/next.config.ts": 2
+      },
+      "notes": "Small fix PR. 4 rounds. R1: 2 valid (broken test, null display name 422). R2: 1 valid (misleading useState initializer), 1 FP (empty name unreachable due to isAuthenticated guard). R3: 1 valid (connect-src missing for Turnstile), 2 repeats (null name, name > 100 chars nitpick). R4: 2 repeats (null name untested, dead code fallback). Converged R3-R4. 44% hit rate."
     }
   ]
 }
