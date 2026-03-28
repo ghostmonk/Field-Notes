@@ -31,6 +31,7 @@ export function TurnstileWidget({ siteKey, onVerify, onExpire, onError }: Turnst
       'expired-callback': onExpire,
       'error-callback': onError,
       theme: 'auto',
+      appearance: 'interaction-only',
     });
   }, [siteKey, onVerify, onExpire, onError]);
 

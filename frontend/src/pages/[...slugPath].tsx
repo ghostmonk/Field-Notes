@@ -341,14 +341,12 @@ export default function SectionPage({ section, view, initialListData, detailItem
                     <meta property="og:type" content="website" />
                     <link rel="canonical" href={canonicalUrl} />
                 </Head>
-                <div className="page-container">
-                    <StaticDisplay content={pageContent.content} title={pageContent.title} />
-                    {section.slug === 'contact' && (
-                        <div style={{ marginTop: 'var(--space-6)' }}>
-                            <ContactForm />
-                        </div>
-                    )}
-                </div>
+                <StaticDisplay content={pageContent.content} title={pageContent.title} />
+                {section.slug === 'contact' && (
+                    <div className="page-container mt-6">
+                        <ContactForm />
+                    </div>
+                )}
             </>
         );
     }
