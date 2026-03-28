@@ -73,7 +73,7 @@ const nextConfig: NextConfig = {
                             style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
                             img-src 'self' data: blob: ${apiUrl} ${devSources} https://storage.googleapis.com https://authjs.dev;
                             media-src 'self' data: blob: ${apiUrl} ${devSources} https://storage.googleapis.com;
-                            connect-src 'self' data: ${apiUrl} ${devSources} https://accounts.google.com https://*.googleapis.com https://www.google.com;
+                            connect-src 'self' data: ${apiUrl} ${devSources} https://accounts.google.com https://*.googleapis.com https://www.google.com https://challenges.cloudflare.com;
                             font-src 'self' https://fonts.gstatic.com;
                             frame-src 'self' https://accounts.google.com https://*.google.com https://challenges.cloudflare.com;
                         `.replace(/\n/g, '').trim();
