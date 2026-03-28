@@ -70,7 +70,9 @@ export function ContactForm() {
 
     try {
       await apiClient.contact.submit({
-        name: isAuthenticated ? (session?.user?.name || '') : name.trim(),
+        name: isAuthenticated
+          ? (session?.user?.name || session?.user?.email?.split('@')[0] || '')
+          : name.trim(),
         email: isAuthenticated ? (session?.user?.email || '') : email.trim(),
         message: message.trim(),
         turnstile_token: turnstileToken,

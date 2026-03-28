@@ -39,16 +39,16 @@ describe('ContactForm', () => {
     expect(screen.getByTestId('contact-message')).toBeInTheDocument();
   });
 
-  it('hides email field when authenticated', () => {
+  it('hides name and email fields when authenticated', () => {
     vi.mocked(useSession).mockReturnValue({
-      data: { user: { email: 'user@example.com', name: null, image: null }, expires: '' },
+      data: { user: { email: 'user@example.com', name: 'Test User', image: null }, expires: '' },
       status: 'authenticated',
       update: vi.fn(),
     });
 
     render(<ContactForm />);
 
-    expect(screen.getByTestId('contact-name')).toBeInTheDocument();
+    expect(screen.queryByTestId('contact-name')).not.toBeInTheDocument();
     expect(screen.queryByTestId('contact-email')).not.toBeInTheDocument();
     expect(screen.getByTestId('contact-message')).toBeInTheDocument();
   });
