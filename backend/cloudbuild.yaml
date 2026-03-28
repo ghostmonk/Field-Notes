@@ -7,9 +7,9 @@ steps:
       - '-f'
       - 'backend/Dockerfile'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/turbulent-service'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/field-notes/turbulent-service'
       - '.'
 substitutions:
   _INSTALL_FFMPEG: 'false'
 images:
-  - 'gcr.io/$PROJECT_ID/turbulent-service'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/field-notes/turbulent-service'

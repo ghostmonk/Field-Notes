@@ -162,7 +162,7 @@ jobs:
           GCP_CREDS_B64=$(echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' | base64 -w 0)
           
           gcloud run deploy turbulent-service \
-            --image gcr.io/${{ vars.GCP_PROJECT_ID }}/turbulent-service \
+            --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/turbulent-service \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
@@ -182,7 +182,7 @@ jobs:
             --project=${{ vars.GCP_PROJECT_ID }} \
             --substitutions=_NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},_NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
           gcloud run deploy turbulent-frontend \
-            --image gcr.io/${{ vars.GCP_PROJECT_ID }}/turbulent-frontend \
+            --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/turbulent-frontend \
             --platform managed \
             --region us-central1 \
             --project=${{ vars.GCP_PROJECT_ID }} \
@@ -214,7 +214,7 @@ jobs:
 
           # Deploy as Cloud Run service (Gen2 functions don't support --image flag)
           gcloud run deploy video-processor \
-            --image gcr.io/${{ vars.GCP_PROJECT_ID }}/video-processor \
+            --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/video-processor \
             --platform managed \
             --region us-central1 \
             --project=${{ vars.GCP_PROJECT_ID }} \

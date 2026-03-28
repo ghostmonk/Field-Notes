@@ -5,7 +5,7 @@ steps:
       - '-f'
       - 'cloud-functions/video-processor/Dockerfile'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/video-processor'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/field-notes/video-processor'
       - '.'
 images:
-  - 'gcr.io/$PROJECT_ID/video-processor'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/field-notes/video-processor'
