@@ -96,6 +96,8 @@ export function ContactForm() {
     );
   }
 
+  const firstName = session?.user?.name?.split(' ')[0] || '';
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -103,13 +105,12 @@ export function ContactForm() {
       data-testid="contact-form"
       noValidate
     >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-4)',
-        }}
-      >
+      <div className="flex flex-col gap-4">
+        {isAuthenticated && firstName && (
+          <p className="text-text-primary" data-testid="contact-greeting">
+            Hi {firstName}, send me a message below and I&apos;ll get back to you.
+          </p>
+        )}
         {!isAuthenticated && (
           <FormField
             label="Name"
