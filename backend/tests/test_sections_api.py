@@ -2,7 +2,7 @@
 API tests for Sections endpoints.
 """
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from bson import ObjectId
@@ -422,10 +422,13 @@ class TestUpdateSection:
         ]
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
 
-        # Cascade: find children returns empty
-        find_no_children = MagicMock()
-        find_no_children.to_list = AsyncMock(return_value=[])
-        override_sections_database.find.return_value = find_no_children
+        # find() calls:
+        # 1) Collect old descendant paths (async iter, no children)
+        # 2) Cascade: no children
+        override_sections_database.find.side_effect = [
+            MockCursor([]),  # old descendant paths
+            MockCursor([]),  # cascade: no children
+        ]
 
         response = await sections_async_client.put(
             "/sections/507f1f77bcf86cd799439011",
@@ -735,14 +738,14 @@ class TestPathCascade:
             {**parent_doc, "title": "Articles", "slug": "articles", "path": "articles"},
         ]
 
-        # find().to_list() for cascade: first call returns child, second (recursive) returns empty
-        find_cursor_with_child = MagicMock()
-        find_cursor_with_child.to_list = AsyncMock(return_value=[child_doc])
-        find_cursor_no_children = MagicMock()
-        find_cursor_no_children.to_list = AsyncMock(return_value=[])
+        # find() calls:
+        # 1. Collect old descendant paths (returns child)
+        # 2. Cascade: find children of parent (returns child)
+        # 3. Cascade: find children of child (returns empty)
         override_sections_database.find.side_effect = [
-            find_cursor_with_child,
-            find_cursor_no_children,
+            MockCursor([child_doc]),  # old descendant paths
+            MockCursor([child_doc]),  # cascade: children of parent
+            MockCursor([]),  # cascade: children of child
         ]
 
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
@@ -813,20 +816,16 @@ class TestPathCascade:
             {**root_doc, "title": "Articles", "slug": "articles", "path": "articles"},
         ]
 
-        # Cascade find calls:
-        # 1) children of root -> [mid_doc]
-        # 2) children of mid -> [leaf_doc]
-        # 3) children of leaf -> []
-        find_root_children = MagicMock()
-        find_root_children.to_list = AsyncMock(return_value=[mid_doc])
-        find_mid_children = MagicMock()
-        find_mid_children.to_list = AsyncMock(return_value=[leaf_doc])
-        find_leaf_children = MagicMock()
-        find_leaf_children.to_list = AsyncMock(return_value=[])
+        # find() calls:
+        # 1) Collect old descendant paths (async iter over children of root)
+        # 2) Cascade: children of root -> [mid_doc]
+        # 3) Cascade: children of mid -> [leaf_doc]
+        # 4) Cascade: children of leaf -> []
         override_sections_database.find.side_effect = [
-            find_root_children,
-            find_mid_children,
-            find_leaf_children,
+            MockCursor([mid_doc]),  # old descendant paths
+            MockCursor([mid_doc]),  # cascade: children of root
+            MockCursor([leaf_doc]),  # cascade: children of mid
+            MockCursor([]),  # cascade: children of leaf
         ]
 
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
@@ -880,10 +879,13 @@ class TestPathCascade:
             {**section_a_doc, "title": "Articles", "slug": "articles", "path": "articles"},
         ]
 
-        # No children for section_a
-        find_no_children = MagicMock()
-        find_no_children.to_list = AsyncMock(return_value=[])
-        override_sections_database.find.side_effect = [find_no_children]
+        # find() calls:
+        # 1) Collect old descendant paths (async iter, no children)
+        # 2) Cascade: no children
+        override_sections_database.find.side_effect = [
+            MockCursor([]),  # old descendant paths
+            MockCursor([]),  # cascade: no children
+        ]
 
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
 

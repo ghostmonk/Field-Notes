@@ -54,6 +54,10 @@ class MockCursor:
         """Return self for chaining"""
         return self
 
+    async def to_list(self, length=None):
+        """Return all docs as a list (motor cursor compatibility)"""
+        return list(self.docs)
+
     def __aiter__(self):
         return self
 
