@@ -10,7 +10,7 @@ import pytest
 import pytest_asyncio
 from bson import ObjectId
 from httpx import ASGITransport, AsyncClient
-from tests.conftest import test_app
+from tests.conftest import app_fixture
 
 
 @pytest_asyncio.fixture
@@ -32,14 +32,14 @@ async def mock_db():
 @pytest_asyncio.fixture
 async def moves_client(mock_db, mock_auth, override_users_database):
     """Async test client with patched database and auth."""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 
 @pytest_asyncio.fixture
 async def path_client(mock_db):
     """Async test client for path resolution (no auth needed)."""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 

@@ -42,7 +42,7 @@ class TestAvailableFilters:
 class TestNoneFilter:
     def test_returns_unchanged_copy(self, sample_image):
         result = apply_filter(sample_image, "none")
-        assert list(result.getdata()) == list(sample_image.getdata())
+        assert list(result.tobytes()) == list(sample_image.tobytes())
 
     def test_returns_different_object(self, sample_image):
         result = apply_filter(sample_image, "none")
@@ -54,7 +54,7 @@ class TestAutoEnhanceFilter:
         # Use non-uniform image; contrast/sharpness are no-ops on uniform fills
         img = Image.new("RGB", (100, 100), (200, 100, 50))
         result = apply_filter(img, "auto_enhance")
-        assert list(result.getdata()) != list(img.getdata())
+        assert list(result.tobytes()) != list(img.tobytes())
 
     def test_preserves_size(self, sample_image):
         result = apply_filter(sample_image, "auto_enhance")
@@ -68,14 +68,14 @@ class TestAutoEnhanceFilter:
 class TestWarmFilter:
     def test_changes_pixel_values(self, sample_image):
         result = apply_filter(sample_image, "warm")
-        assert list(result.getdata()) != list(sample_image.getdata())
+        assert list(result.tobytes()) != list(sample_image.tobytes())
 
     def test_boosts_red_channel(self, sample_image):
         result = apply_filter(sample_image, "warm")
         orig_r = sample_image.split()[0]
         result_r = result.split()[0]
-        orig_r_avg = sum(orig_r.getdata()) / len(list(orig_r.getdata()))
-        result_r_avg = sum(result_r.getdata()) / len(list(result_r.getdata()))
+        orig_r_avg = sum(orig_r.tobytes()) / len(list(orig_r.tobytes()))
+        result_r_avg = sum(result_r.tobytes()) / len(list(result_r.tobytes()))
         assert result_r_avg > orig_r_avg
 
     def test_preserves_size(self, sample_image):
@@ -90,14 +90,14 @@ class TestWarmFilter:
 class TestCoolFilter:
     def test_changes_pixel_values(self, sample_image):
         result = apply_filter(sample_image, "cool")
-        assert list(result.getdata()) != list(sample_image.getdata())
+        assert list(result.tobytes()) != list(sample_image.tobytes())
 
     def test_boosts_blue_channel(self, sample_image):
         result = apply_filter(sample_image, "cool")
         orig_b = sample_image.split()[2]
         result_b = result.split()[2]
-        orig_b_avg = sum(orig_b.getdata()) / len(list(orig_b.getdata()))
-        result_b_avg = sum(result_b.getdata()) / len(list(result_b.getdata()))
+        orig_b_avg = sum(orig_b.tobytes()) / len(list(orig_b.tobytes()))
+        result_b_avg = sum(result_b.tobytes()) / len(list(result_b.tobytes()))
         assert result_b_avg > orig_b_avg
 
     def test_preserves_size(self, sample_image):
@@ -114,7 +114,7 @@ class TestHighContrastFilter:
         # Use non-uniform image; contrast is a no-op on uniform fills
         img = Image.new("RGB", (100, 100), (200, 100, 50))
         result = apply_filter(img, "high_contrast")
-        assert list(result.getdata()) != list(img.getdata())
+        assert list(result.tobytes()) != list(img.tobytes())
 
     def test_preserves_size(self, sample_image):
         result = apply_filter(sample_image, "high_contrast")
@@ -130,14 +130,14 @@ class TestBwFilter:
         # Use a non-gray image so BW actually changes values
         img = Image.new("RGB", (100, 100), (200, 100, 50))
         result = apply_filter(img, "bw")
-        assert list(result.getdata()) != list(img.getdata())
+        assert list(result.tobytes()) != list(img.tobytes())
 
     def test_produces_equal_rgb_channels(self):
         img = Image.new("RGB", (100, 100), (200, 100, 50))
         result = apply_filter(img, "bw")
         r, g, b = result.split()
-        assert list(r.getdata()) == list(g.getdata())
-        assert list(g.getdata()) == list(b.getdata())
+        assert list(r.tobytes()) == list(g.tobytes())
+        assert list(g.tobytes()) == list(b.tobytes())
 
     def test_preserves_size(self, sample_image):
         result = apply_filter(sample_image, "bw")
@@ -151,7 +151,7 @@ class TestBwFilter:
 class TestVividFilter:
     def test_changes_pixel_values(self, sample_image):
         result = apply_filter(sample_image, "vivid")
-        assert list(result.getdata()) != list(sample_image.getdata())
+        assert list(result.tobytes()) != list(sample_image.tobytes())
 
     def test_preserves_size(self, sample_image):
         result = apply_filter(sample_image, "vivid")
@@ -165,7 +165,7 @@ class TestVividFilter:
 class TestVintageFilter:
     def test_changes_pixel_values(self, sample_image):
         result = apply_filter(sample_image, "vintage")
-        assert list(result.getdata()) != list(sample_image.getdata())
+        assert list(result.tobytes()) != list(sample_image.tobytes())
 
     def test_preserves_size(self, sample_image):
         result = apply_filter(sample_image, "vintage")

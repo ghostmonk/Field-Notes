@@ -8,7 +8,7 @@ import pytest_asyncio
 from database import get_contact_messages_collection
 from httpx import ASGITransport, AsyncClient
 from middleware.rate_limit import limiter
-from tests.conftest import test_app
+from tests.conftest import app_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -30,14 +30,14 @@ def override_contact_database(mock_contact_collection):
     async def get_mock():
         return mock_contact_collection
 
-    test_app.dependency_overrides[get_contact_messages_collection] = get_mock
+    app_fixture.dependency_overrides[get_contact_messages_collection] = get_mock
     yield mock_contact_collection
-    test_app.dependency_overrides.pop(get_contact_messages_collection, None)
+    app_fixture.dependency_overrides.pop(get_contact_messages_collection, None)
 
 
 @pytest_asyncio.fixture
 async def contact_client(override_contact_database):
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 
