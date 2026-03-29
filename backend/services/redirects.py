@@ -9,6 +9,9 @@ async def write_redirect(
     db, old_path: str, new_path: str, content_id: str = None, content_type: str = None
 ):
     """Write a redirect and flatten any existing chains."""
+    if old_path == new_path:
+        return
+
     now = datetime.now(timezone.utc)
 
     await db["redirects"].update_one(
@@ -31,3 +34,6 @@ async def write_redirect(
         {"new_path": old_path},
         {"$set": {"new_path": new_path}},
     )
+
+    # Clean up any self-redirects created by flattening
+    await db["redirects"].delete_many({"$expr": {"$eq": ["$old_path", "$new_path"]}})

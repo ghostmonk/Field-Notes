@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from bson import ObjectId
 from bson.errors import InvalidId
 from database import get_db
@@ -149,7 +151,10 @@ async def get_children(
             content_items.append(_content_to_listing_item(doc, content_type))
 
     # Sort all content globally by created_at descending
-    content_items.sort(key=lambda x: x.created_at or "", reverse=True)
+    content_items.sort(
+        key=lambda x: x.created_at or datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True,
+    )
 
     # Convert sections to listing items (sections always come first)
     section_items = [_section_to_listing_item(s) for s in child_sections]

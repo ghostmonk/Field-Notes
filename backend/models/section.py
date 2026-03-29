@@ -119,6 +119,7 @@ class SectionResponse(SectionBase):
     id: str
     slug: str
     path: str
+    content_type: str | None = None
     createdDate: datetime
     updatedDate: datetime
     user_id: str | None = None

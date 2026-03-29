@@ -15,6 +15,7 @@ from models.section import SectionCreate, SectionResponse, SectionUpdate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
+from pymongo.errors import DuplicateKeyError
 from services.redirects import write_redirect
 from utils import find_many_and_convert, find_one_and_convert, generate_unique_slug
 
@@ -472,10 +473,35 @@ async def update_section(
                     update_data["path"] = new_slug
             else:
                 update_data["path"] = new_slug
+        elif "slug" in update_data and update_data["slug"] != existing_section.slug:
+            new_slug = update_data["slug"]
+            if existing_section.parent_id:
+                parent = await find_one_and_convert(
+                    collection,
+                    {
+                        "_id": ObjectId(existing_section.parent_id),
+                        "deleted": {"$ne": True},
+                    },
+                    SectionResponse,
+                )
+                if parent:
+                    update_data["path"] = f"{parent.path}/{new_slug}"
+                else:
+                    update_data["path"] = new_slug
+            else:
+                update_data["path"] = new_slug
 
         update_data["updatedDate"] = current_time
 
-        result = await collection.update_one({"_id": ObjectId(section_id)}, {"$set": update_data})
+        try:
+            result = await collection.update_one(
+                {"_id": ObjectId(section_id)}, {"$set": update_data}
+            )
+        except DuplicateKeyError:
+            raise HTTPException(
+                status_code=409,
+                detail="A section with this slug already exists at this level",
+            )
 
         # Cascade path updates and write redirects if path changed
         if "path" in update_data and update_data["path"] != existing_section.path:
@@ -493,7 +519,7 @@ async def update_section(
                 db = collection.database
                 for sid, old_p in old_desc_paths.items():
                     doc = await collection.find_one({"_id": ObjectId(sid)})
-                    new_p = doc["path"] if doc else new_path
+                    new_p = doc.get("path", new_path) if doc else new_path
                     if old_p != new_p:
                         await write_redirect(db, old_p, new_p)
             except Exception as redirect_err:

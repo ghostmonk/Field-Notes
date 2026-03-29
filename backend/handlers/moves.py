@@ -181,7 +181,9 @@ async def move_content(request: Request, content_type: str, content_id: str):
     )
 
     # Return updated item
-    updated = await db[collection_name].find_one({"_id": ObjectId(content_id)})
+    updated = await db[collection_name].find_one(
+        {"_id": ObjectId(content_id), "deleted": {"$ne": True}}
+    )
     if not updated:
         raise HTTPException(status_code=500, detail="Failed to retrieve updated document")
     result = dict(updated)
@@ -322,7 +324,7 @@ async def move_section(request: Request, section_id: str):
     )
 
     # Return updated section
-    updated = await db["sections"].find_one({"_id": ObjectId(section_id)})
+    updated = await db["sections"].find_one({"_id": ObjectId(section_id), "deleted": {"$ne": True}})
     if not updated:
         raise HTTPException(status_code=500, detail="Failed to retrieve updated document")
     result = dict(updated)

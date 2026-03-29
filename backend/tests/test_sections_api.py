@@ -691,7 +691,7 @@ class TestSectionPath:
         override_sections_database,
         sample_section_data,
     ):
-        """Section response must not include content_type."""
+        """Section response includes content_type as optional read-only field."""
         section_id = ObjectId()
         override_sections_database.find_one.return_value = {
             **sample_section_data,
@@ -702,7 +702,8 @@ class TestSectionPath:
 
         assert response.status_code == 200
         data = response.json()
-        assert "content_type" not in data
+        # content_type is present but None when not set in DB data
+        assert data.get("content_type") is None
 
 
 class TestPathCascade:
