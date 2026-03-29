@@ -43,16 +43,13 @@ test.describe('Photo Essays Gallery', () => {
     await photoEssaysPage.clickPhoto(0);
     await photoEssaysPage.waitForViewer();
 
-    let counter = await photoEssaysPage.getViewerCounter();
-    expect(counter).toContain('1 / 3');
+    await photoEssaysPage.waitForCounter('1 / 3');
 
     await photoEssaysPage.pressArrowRight();
-    counter = await photoEssaysPage.getViewerCounter();
-    expect(counter).toContain('2 / 3');
+    await photoEssaysPage.waitForCounter('2 / 3');
 
     await photoEssaysPage.pressArrowLeft();
-    counter = await photoEssaysPage.getViewerCounter();
-    expect(counter).toContain('1 / 3');
+    await photoEssaysPage.waitForCounter('1 / 3');
   });
 
   test('escape closes photo viewer', async () => {
