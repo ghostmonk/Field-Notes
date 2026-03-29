@@ -16,6 +16,7 @@ from handlers.content import router as content_router
 from handlers.engagement import router as engagement_router
 from handlers.github import router as github_router
 from handlers.job_applications import router as job_applications_router
+from handlers.moves import router as moves_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
 from handlers.path_resolution import router as path_resolution_router
@@ -258,6 +259,7 @@ app.include_router(voice_feedback_router)
 app.include_router(job_applications_router)
 app.include_router(contact_router)
 app.include_router(tags_router)
+app.include_router(moves_router)
 app.include_router(path_resolution_router)
 app.include_router(children_router)
 

@@ -1,6 +1,9 @@
+from datetime import datetime, timezone
+
 from bson import ObjectId
 from database import get_db
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import RedirectResponse as FastAPIRedirectResponse
 
 router = APIRouter()
 
@@ -116,6 +119,11 @@ async def resolve_path(request: Request, full_path: str):
                     "breadcrumbs": breadcrumbs,
                 }
 
-    # Phase 4 will add redirect resolution here
+    # Check redirects
+    redirect = await db["redirects"].find_one({"old_path": path})
+    if redirect:
+        if redirect.get("expires_at") and redirect["expires_at"] < datetime.now(timezone.utc):
+            raise HTTPException(status_code=404, detail="Path not found")
+        return FastAPIRedirectResponse(url=f"/{redirect['new_path']}", status_code=301)
 
     raise HTTPException(status_code=404, detail="Path not found")
