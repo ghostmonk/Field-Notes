@@ -38,6 +38,46 @@ from PIL import Image, ImageOps
 
 router = APIRouter()
 
+IMAGE_VARIANTS = {
+    "originals": ".webp",
+    "thumbnails": ".webp",
+    "medium": ".webp",
+    "large": ".webp",
+}
+
+VIDEO_VARIANTS = {
+    "originals": None,
+    "processed": ".mp4",
+    "thumbnails": ".jpg",
+}
+
+VARIANT_WIDTHS = {
+    "thumbnails": 400,
+    "medium": 768,
+    "large": 1536,
+    "originals": None,
+}
+
+
+def build_asset_path(asset_id: str, media_type: str, variant: str, ext: str | None = None) -> str:
+    if media_type == "image":
+        if variant not in IMAGE_VARIANTS:
+            raise ValueError(
+                f"Unknown variant '{variant}' for image. Valid: {list(IMAGE_VARIANTS.keys())}"
+            )
+        extension = ext or IMAGE_VARIANTS[variant]
+        return f"images/{variant}/{asset_id}{extension}"
+    elif media_type == "video":
+        if variant not in VIDEO_VARIANTS:
+            raise ValueError(
+                f"Unknown variant '{variant}' for video. Valid: {list(VIDEO_VARIANTS.keys())}"
+            )
+        extension = ext or VIDEO_VARIANTS[variant]
+        return f"video/{variant}/{asset_id}{extension}"
+    else:
+        raise ValueError(f"Unknown media type '{media_type}'. Valid: image, video")
+
+
 ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/avi"]
 

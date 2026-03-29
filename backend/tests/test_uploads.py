@@ -2,8 +2,48 @@ import io
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from handlers.uploads import IMAGE_SIZES, process_image_file
+from handlers.uploads import IMAGE_SIZES, build_asset_path, process_image_file
 from PIL import Image
+
+
+class TestAssetPaths:
+    """Tests for type-based asset path generation."""
+
+    def test_image_original_path(self):
+        path = build_asset_path("20260329_143022_a7f3b2", "image", "originals")
+        assert path == "images/originals/20260329_143022_a7f3b2.webp"
+
+    def test_image_thumbnail_path(self):
+        path = build_asset_path("20260329_143022_a7f3b2", "image", "thumbnails")
+        assert path == "images/thumbnails/20260329_143022_a7f3b2.webp"
+
+    def test_image_medium_path(self):
+        path = build_asset_path("20260329_143022_a7f3b2", "image", "medium")
+        assert path == "images/medium/20260329_143022_a7f3b2.webp"
+
+    def test_image_large_path(self):
+        path = build_asset_path("20260329_143022_a7f3b2", "image", "large")
+        assert path == "images/large/20260329_143022_a7f3b2.webp"
+
+    def test_video_original_path(self):
+        path = build_asset_path("20260329_143022_a7f3b2", "video", "originals", ext=".mov")
+        assert path == "video/originals/20260329_143022_a7f3b2.mov"
+
+    def test_video_processed_path(self):
+        path = build_asset_path("20260329_143022_a7f3b2", "video", "processed")
+        assert path == "video/processed/20260329_143022_a7f3b2.mp4"
+
+    def test_video_thumbnail_path(self):
+        path = build_asset_path("20260329_143022_a7f3b2", "video", "thumbnails")
+        assert path == "video/thumbnails/20260329_143022_a7f3b2.jpg"
+
+    def test_invalid_media_type_raises(self):
+        with pytest.raises(ValueError, match="Unknown media type"):
+            build_asset_path("id", "audio", "originals")
+
+    def test_invalid_variant_raises(self):
+        with pytest.raises(ValueError, match="Unknown variant"):
+            build_asset_path("id", "image", "huge")
 
 
 class TestImageSizes:
