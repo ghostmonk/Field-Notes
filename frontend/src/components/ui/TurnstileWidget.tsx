@@ -65,6 +65,7 @@ export function TurnstileWidget({ siteKey, onVerify, onExpire, onError }: Turnst
       }, 100);
       return () => clearInterval(checkReady);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- onError is a callback prop; including it causes re-render loops
   }, [renderWidget]);
 
   useEffect(() => {

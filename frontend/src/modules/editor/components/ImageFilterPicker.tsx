@@ -54,6 +54,7 @@ export function ImageFilterPicker({
           className="flex justify-center items-center mb-4"
           style={{ height: '300px' }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element -- canvas filter preview, not a content image */}
           <img
             src={imageUrl}
             alt="Preview"
@@ -88,6 +89,7 @@ export function ImageFilterPicker({
               }}
               data-testid={`filter-option-${key}`}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element -- filter thumbnail preview */}
               <img
                 src={imageUrl}
                 alt={label}

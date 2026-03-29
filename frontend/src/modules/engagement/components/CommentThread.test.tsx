@@ -11,6 +11,7 @@ vi.mock('next-auth/react', () => ({
 }));
 
 vi.mock('next/image', () => ({
+  // eslint-disable-next-line @next/next/no-img-element
   default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
 }));
 

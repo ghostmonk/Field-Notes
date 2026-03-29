@@ -99,6 +99,7 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
             setLoading(false);
             loadingRef.current = false;
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- session?.user?.role is read inside but intentionally excluded to prevent re-fetch loops on role changes
     }, [contentType, sectionId, pageSize, session?.accessToken]);
 
     // Always fetch fresh data on mount

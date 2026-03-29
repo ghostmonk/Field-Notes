@@ -4,6 +4,7 @@ import { ProjectDetail } from './ProjectDetail';
 import { Project } from '@/shared/types/api';
 
 vi.mock('next/image', () => ({
+  // eslint-disable-next-line @next/next/no-img-element
   default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
 }));
 vi.mock('isomorphic-dompurify', () => ({

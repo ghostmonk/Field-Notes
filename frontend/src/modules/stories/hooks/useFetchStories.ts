@@ -90,6 +90,7 @@ export function useFetchStories(options: UseFetchStoriesOptions = {}): UseFetchS
       setLoading(false);
       loadingRef.current = false;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- session?.user?.role intentionally excluded to prevent re-fetch loops
   }, [session?.accessToken]);
 
   // Always fetch fresh data on mount
