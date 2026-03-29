@@ -138,7 +138,7 @@ export default function EditorPage() {
 function SectionPicker({ onSelect }: { onSelect: (section: Section) => void }) {
   const { sections, loading } = useFetchSections();
   const editableSections = sections.filter(s =>
-    ['story', 'project', 'page', 'photo_essay'].includes(s.content_type || '')
+    s.content_type ? ['story', 'project', 'page', 'photo_essay'].includes(s.content_type) : true
   );
 
   useEffect(() => {

@@ -282,7 +282,7 @@ function SectionEditForm({
   disabled: boolean;
 }) {
   const [title, setTitle] = useState(section.title);
-  const [contentType, setContentType] = useState<SectionContentType>(section.content_type || 'story');
+  const [contentType, setContentType] = useState<SectionContentType>((section.content_type || 'story') as SectionContentType);
   const [displayType, setDisplayType] = useState<DisplayType>(section.display_type);
   const [navVisibility, setNavVisibility] = useState<NavVisibility>(section.nav_visibility);
   const [icon, setIcon] = useState<SectionIcon>((section.icon || 'default') as SectionIcon);
