@@ -62,7 +62,7 @@ export interface UpdatePageRequest {
     title?: string;
     content?: string;
     is_published?: boolean;
-    tags: string[];
+    tags?: string[];
 }
 
 /**
@@ -251,7 +251,7 @@ export interface UpdatePhotoEssayRequest {
     cover_image_position?: string;
     photos?: PhotoItem[];
     is_published?: boolean;
-    tags: string[];
+    tags?: string[];
 }
 
 export interface CreateSectionRequest {

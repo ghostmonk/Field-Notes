@@ -110,7 +110,7 @@ async def get_content_by_tag(
             search_collection("stories", "story"),
             search_collection("projects", "project"),
             search_collection("pages", "page"),
-            search_collection("photo_essays", "photo-essay"),
+            search_collection("photo_essays", "photo_essay"),
         )
 
         items = stories + projects + pages + photo_essays
