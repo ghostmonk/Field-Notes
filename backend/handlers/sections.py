@@ -247,7 +247,6 @@ async def create_section(
             {
                 "title": section.title,
                 "display_type": section.display_type,
-                "content_type": section.content_type,
                 "user_id": user.id,
             },
         )
@@ -257,9 +256,23 @@ async def create_section(
         # Generate a unique slug for the new section
         slug = await generate_unique_slug(collection, section.title)
 
+        # Compute materialized path from parent
+        if section.parent_id:
+            parent = await find_one_and_convert(
+                collection,
+                {"_id": ObjectId(section.parent_id), "deleted": {"$ne": True}},
+                SectionResponse,
+            )
+            if not parent:
+                raise HTTPException(status_code=400, detail="Parent section not found")
+            path = f"{parent.path}/{slug}"
+        else:
+            path = slug
+
         document = {
             **section.model_dump(),
             "slug": slug,
+            "path": path,
             "createdDate": current_time,
             "updatedDate": current_time,
             "user_id": user.id,
@@ -387,11 +400,29 @@ async def update_section(
         # Get only the fields that were actually provided (not None)
         update_data = section.model_dump(exclude_unset=True)
 
-        # If title changed, regenerate the slug
+        # If title changed, regenerate the slug and recompute path
         if "title" in update_data and update_data["title"] != existing_section.title:
-            update_data["slug"] = await generate_unique_slug(
+            new_slug = await generate_unique_slug(
                 collection, update_data["title"], ObjectId(section_id)
             )
+            update_data["slug"] = new_slug
+
+            # Recompute path based on parent
+            if existing_section.parent_id:
+                parent = await find_one_and_convert(
+                    collection,
+                    {
+                        "_id": ObjectId(existing_section.parent_id),
+                        "deleted": {"$ne": True},
+                    },
+                    SectionResponse,
+                )
+                if parent:
+                    update_data["path"] = f"{parent.path}/{new_slug}"
+                else:
+                    update_data["path"] = new_slug
+            else:
+                update_data["path"] = new_slug
 
         update_data["updatedDate"] = current_time
 

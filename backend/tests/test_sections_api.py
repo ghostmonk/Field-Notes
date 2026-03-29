@@ -262,7 +262,6 @@ class TestCreateSection:
             json={
                 "title": "Blog",
                 "display_type": "feed",
-                "content_type": "story",
                 "nav_visibility": "main",
                 "sort_order": 0,
             },
@@ -285,7 +284,6 @@ class TestCreateSection:
             json={
                 "title": "Blog",
                 "display_type": "feed",
-                "content_type": "story",
             },
         )
 
@@ -306,7 +304,6 @@ class TestCreateSection:
             json={
                 "title": "Blog",
                 "display_type": "invalid",
-                "content_type": "story",
             },
             headers=auth_headers,
         )
@@ -336,7 +333,6 @@ class TestCreateSection:
             json={
                 "title": "Photos",
                 "display_type": "gallery",
-                "content_type": "photo_essay",
                 "icon": "camera",
             },
             headers=auth_headers,
@@ -360,7 +356,6 @@ class TestCreateSection:
             json={
                 "title": "Photos",
                 "display_type": "gallery",
-                "content_type": "photo_essay",
                 "icon": "nonexistent-icon",
             },
             headers=auth_headers,
@@ -391,7 +386,6 @@ class TestCreateSection:
             json={
                 "title": "Blog",
                 "display_type": "feed",
-                "content_type": "story",
             },
             headers=auth_headers,
         )
@@ -534,3 +528,159 @@ class TestDeleteSection:
         )
 
         assert response.status_code == 401
+
+
+class TestSectionPath:
+    """Tests for section path computation."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_top_level_section_path_equals_slug(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Top-level section path equals its slug."""
+        section_id = ObjectId("507f1f77bcf86cd799439011")
+        override_sections_database.find_one.side_effect = [
+            None,  # slug uniqueness check
+            {**sample_section_data, "_id": section_id, "slug": "notes", "path": "notes"},
+        ]
+        override_sections_database.insert_one.return_value = MagicMock(inserted_id=section_id)
+
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Notes",
+                "display_type": "feed",
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["path"] == "notes"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_child_section_path_includes_parent(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Child section path = parent.path/child.slug."""
+        parent_id = ObjectId("507f1f77bcf86cd799439011")
+        child_id = ObjectId("507f1f77bcf86cd799439012")
+
+        parent_doc = {
+            **sample_section_data,
+            "_id": parent_id,
+            "slug": "blog",
+            "path": "blog",
+        }
+
+        override_sections_database.find_one.side_effect = [
+            None,  # slug uniqueness check
+            parent_doc,  # parent lookup
+            {
+                **sample_section_data,
+                "_id": child_id,
+                "slug": "tech",
+                "path": "blog/tech",
+                "parent_id": str(parent_id),
+            },
+        ]
+        override_sections_database.insert_one.return_value = MagicMock(inserted_id=child_id)
+
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Tech",
+                "display_type": "feed",
+                "parent_id": str(parent_id),
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["path"] == "blog/tech"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_child_section_invalid_parent_returns_400(
+        self,
+        sections_async_client,
+        override_sections_database,
+        mock_auth,
+        auth_headers,
+    ):
+        """Creating a child with a nonexistent parent_id returns 400."""
+        parent_id = ObjectId("507f1f77bcf86cd799439011")
+
+        override_sections_database.find_one.side_effect = [
+            None,  # slug uniqueness check
+            None,  # parent lookup returns nothing
+        ]
+
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Orphan",
+                "display_type": "feed",
+                "parent_id": str(parent_id),
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 400
+        assert "parent" in response.json()["detail"].lower()
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_section_response_includes_path(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+    ):
+        """Section response includes path field."""
+        section_id = ObjectId()
+        override_sections_database.find_one.return_value = {
+            **sample_section_data,
+            "_id": section_id,
+        }
+
+        response = await sections_async_client.get(f"/sections/{section_id}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "path" in data
+        assert data["path"] == "blog"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_section_response_does_not_include_content_type(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+    ):
+        """Section response must not include content_type."""
+        section_id = ObjectId()
+        override_sections_database.find_one.return_value = {
+            **sample_section_data,
+            "_id": section_id,
+        }
+
+        response = await sections_async_client.get(f"/sections/{section_id}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "content_type" not in data

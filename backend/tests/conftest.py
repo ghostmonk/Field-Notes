@@ -585,9 +585,9 @@ def sample_section_data():
     return {
         "title": "Blog",
         "slug": "blog",
+        "path": "blog",
         "parent_id": None,
         "display_type": "feed",
-        "content_type": "story",
         "nav_visibility": "main",
         "sort_order": 0,
         "is_published": True,
