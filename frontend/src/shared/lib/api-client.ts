@@ -40,6 +40,9 @@ import {
   JobApplicationUpdate,
   ContactSubmission,
   ContactResponse,
+  Tag,
+  CreateTagRequest,
+  TaggedContentResponse,
 } from '@/shared/types/api';
 import { ApiRequestError } from '@/shared/types/error';
 
@@ -229,6 +232,12 @@ const apiRoutes = {
   },
   contact: {
     submit: () => '/api/contact',
+  },
+  tags: {
+    list: () => '/api/tags',
+    create: () => '/api/tags',
+    delete: (id: string) => `/api/tags/${id}`,
+    content: (tagName: string) => `/api/tags/${encodeURIComponent(tagName)}/content`,
   },
 };
 
@@ -612,6 +621,29 @@ const apiClient = {
         method: 'POST',
         body: data,
       }),
+  },
+
+  tags: {
+    search: (q: string, limit = 20) =>
+      fetchApi<PaginatedResponse<Tag>>(apiRoutes.tags.list(), {
+        params: { q, limit },
+      }),
+
+    create: (data: CreateTagRequest, token: string) =>
+      fetchApi<Tag, CreateTagRequest>(apiRoutes.tags.create(), {
+        method: 'POST',
+        body: data,
+        token,
+      }),
+
+    delete: (id: string, token: string) =>
+      fetchApi<void>(apiRoutes.tags.delete(id), {
+        method: 'DELETE',
+        token,
+      }),
+
+    getContent: (tagName: string) =>
+      fetchApi<TaggedContentResponse>(apiRoutes.tags.content(tagName)),
   },
 };
 

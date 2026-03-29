@@ -21,6 +21,7 @@ class ProjectBase(BaseModel):
     is_published: bool = True
     is_featured: bool = False
     sort_order: int = Field(default=0)
+    tags: List[str] = Field(default_factory=list)
 
     @field_validator("github_url", "live_url", "image_url")
     @classmethod
@@ -53,6 +54,7 @@ class ProjectUpdate(BaseModel):
     is_featured: bool | None = None
     sort_order: int | None = None
     section_id: str | None = None
+    tags: List[str] | None = None
 
     @field_validator("github_url", "live_url", "image_url")
     @classmethod
@@ -99,6 +101,7 @@ class ProjectCard(BaseModel):
     github_url: Optional[str]
     live_url: Optional[str]
     is_featured: bool
+    tags: List[str] = Field(default_factory=list)
     user_id: str | None = None
     section_id: str | None = None
 

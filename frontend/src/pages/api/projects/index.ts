@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
-import { getBackendUrl } from '@/shared/utils/backend-fetch';
+import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
 
 // Simple in-memory cache for projects
 const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
@@ -62,11 +61,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         }
 
+        const accessToken = await getAccessToken(req);
+
         // Require auth for mutations
         if (req.method !== 'GET') {
-            const token = await getToken({ req });
-
-            if (!token || !token.accessToken) {
+            if (!accessToken) {
                 return res.status(401).json({
                     detail: 'Not authenticated',
                     error: 'Authentication required'
@@ -77,7 +76,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         let apiUrl = `${getBackendUrl()}/projects`;
-        const token = await getToken({ req });
 
         // Build query params for GET
         if (req.method === 'GET' && req.query) {
@@ -95,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (req.query.section_id) {
                 params.append('section_id', req.query.section_id.toString());
             }
-            if (token?.accessToken) {
+            if (accessToken) {
                 params.append('include_unpublished', 'true');
             }
 
@@ -108,8 +106,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             'Content-Type': 'application/json',
         };
 
-        if (token?.accessToken) {
-            headers.Authorization = `Bearer ${token.accessToken}`;
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
         }
 
         const response = await fetch(apiUrl, {

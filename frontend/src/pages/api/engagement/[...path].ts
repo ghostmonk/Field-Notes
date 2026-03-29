@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getToken } from 'next-auth/jwt';
 import { apiLogger } from '@/shared/utils/logger';
-import { getBackendUrl } from '@/shared/utils/backend-fetch';
+import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { path } = req.query;
@@ -11,14 +10,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     apiLogger.logApiRequest(req, res);
 
     try {
-        const token = await getToken({ req });
+        const accessToken = await getAccessToken(req);
 
         // GET requests are always public (reactions/comments viewing)
         // POST to bulk/counts is also public (read-only operation using POST for request body)
         const isPublicPostEndpoint = pathArray.join('/') === 'bulk/counts';
 
         // Require authentication for mutation operations only
-        if (req.method !== 'GET' && !isPublicPostEndpoint && (!token || !token.accessToken)) {
+        if (req.method !== 'GET' && !isPublicPostEndpoint && !accessToken) {
             return res.status(401).json({
                 detail: 'Not authenticated',
                 error: 'Authentication required'
@@ -29,8 +28,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             'Content-Type': 'application/json',
         };
 
-        if (token?.accessToken) {
-            headers.Authorization = `Bearer ${token.accessToken}`;
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
         }
 
         const backendUrl = getBackendUrl();

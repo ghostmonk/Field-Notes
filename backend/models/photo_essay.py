@@ -51,6 +51,7 @@ class PhotoEssayCreate(BaseModel):
     photos: List[PhotoItem] = Field(default_factory=list)
     section_id: Optional[str] = None
     is_published: bool = False
+    tags: List[str] = Field(default_factory=list)
 
     validate_position = field_validator("cover_image_position")(_validate_position)
 
@@ -66,6 +67,7 @@ class PhotoEssayUpdate(BaseModel):
     photos: Optional[List[PhotoItem]] = None
     section_id: Optional[str] = None
     is_published: Optional[bool] = None
+    tags: Optional[List[str]] = None
 
     validate_position = field_validator("cover_image_position")(_validate_position)
 
@@ -81,6 +83,7 @@ class PhotoEssayResponse(BaseModel):
     cover_image_position: Optional[str] = "50% 50%"
     photos: List[PhotoItem]
     is_published: bool
+    tags: List[str] = Field(default_factory=list)
     section_id: Optional[str] = None
     user_id: Optional[str] = None
     createdDate: datetime

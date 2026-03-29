@@ -3,6 +3,7 @@ Story-related Pydantic models.
 """
 
 from datetime import datetime, timezone
+from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -13,6 +14,7 @@ class StoryBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     content: str = Field(..., min_length=1, max_length=10000)
     is_published: bool
+    tags: List[str] = Field(default_factory=list)
 
 
 class StoryCreate(StoryBase):

@@ -33,8 +33,6 @@ export function extractVideoPoster(
       video.remove();
     };
 
-    let timeout: ReturnType<typeof setTimeout>;
-
     const fail = (msg: string) => {
       if (settled) return;
       settled = true;
@@ -43,7 +41,7 @@ export function extractVideoPoster(
       reject(new Error(msg));
     };
 
-    timeout = setTimeout(
+    const timeout = setTimeout(
       () => fail('Poster extraction timed out'),
       EXTRACTION_TIMEOUT_MS
     );

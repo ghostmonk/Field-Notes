@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import apiClient from '@/shared/lib/api-client';
 import { REFRESH_TOKEN_ERROR } from '@/shared/lib/auth';
 import { resizeImageFile } from '@/shared/utils/uploadUtils';
-import { Button } from '@/components/ui';
+import { Button, TagInput } from '@/components/ui';
 import { useDraftRecovery } from '@/modules/editor/hooks/useDraftRecovery';
 
 interface PhotoEssayDraftPhoto {
@@ -54,6 +54,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
   const [coverPosition, setCoverPosition] = useState('50% 50%');
+  const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!essayId);
@@ -112,6 +113,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
       if (cancelled) return;
       setTitleState(essay.title);
       setDescriptionState(essay.description || '');
+      setTags(essay.tags || []);
       setCoverUrl(essay.cover_image_url);
       setCoverPosition(essay.cover_image_position || '50% 50%');
       setIsPublished(essay.is_published);
@@ -324,6 +326,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
           cover_image_position: coverPosition,
           photos: photoItems,
           is_published: isPublished,
+          tags,
         }, token);
       } else {
         await apiClient.photoEssays.create({
@@ -335,6 +338,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
           photos: photoItems,
           section_id: sectionId,
           is_published: isPublished,
+          tags,
         }, token);
       }
 
@@ -346,7 +350,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
     } finally {
       setSaving(false);
     }
-  }, [title, description, photos, coverUrl, coverPosition, isPublished, essayId, sectionId, token, router, clearDraft, stopAutosave]);
+  }, [title, description, photos, coverUrl, coverPosition, isPublished, tags, essayId, sectionId, token, router, clearDraft, stopAutosave]);
 
   const getCurrentDraftState = useCallback((): PhotoEssayDraftData => {
     const readyPhotos = photosRef.current.filter(p => !p.uploading && p.url);
@@ -546,6 +550,16 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
           onChange={e => setDescription(e.target.value)}
           placeholder="Optional description"
           data-testid="photo-essay-description-input"
+        />
+      </div>
+
+      <div className="photo-essay-editor__field">
+        <label>Tags</label>
+        <TagInput
+          tags={tags}
+          onChange={(newTags) => { isDirtyRef.current = true; setTags(newTags); }}
+          token={token}
+          data-testid="photo-essay-tags-input"
         />
       </div>
 

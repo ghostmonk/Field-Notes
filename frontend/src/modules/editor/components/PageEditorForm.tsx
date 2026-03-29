@@ -9,7 +9,7 @@ import { ApiRequestError } from '@/shared/types/error';
 import { ErrorService } from '@/services/errorService';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
-import { Button, Input, Badge, FormField } from '@/components/ui';
+import { Button, Input, Badge, FormField, TagInput } from '@/components/ui';
 import { useDraftRecovery } from '../hooks/useDraftRecovery';
 
 interface PageDraftData {
@@ -100,6 +100,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
         title: page.title,
         content: page.content,
         is_published: shouldPublish !== undefined ? shouldPublish : page.is_published,
+        tags: page.tags || [],
       };
 
       await apiClient.pages.update(pageType, payload, session.accessToken);
@@ -265,6 +266,15 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
             required
             disabled={isSaving}
             data-testid="editor-title-input"
+          />
+        </FormField>
+
+        <FormField label="Tags" htmlFor="tags">
+          <TagInput
+            tags={page.tags || []}
+            onChange={(tags) => { isDirtyRef.current = true; setPage(prev => ({ ...prev, tags })); }}
+            token={session?.accessToken}
+            data-testid="editor-tags-input"
           />
         </FormField>
 

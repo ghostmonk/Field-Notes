@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
-import { fetchBackend } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 // Simple in-memory cache for pages
 const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
@@ -59,11 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         }
 
+        const accessToken = await getAccessToken(req);
+
         // Require auth for mutations
         if (req.method !== 'GET') {
-            const token = await getToken({ req });
-
-            if (!token || !token.accessToken) {
+            if (!accessToken) {
                 return res.status(401).json({
                     detail: 'Not authenticated',
                     error: 'Authentication required'
@@ -74,14 +73,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             invalidateCache(`page:${pageType}`);
         }
 
-        const token = await getToken({ req });
-
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
         };
 
-        if (token?.accessToken) {
-            headers.Authorization = `Bearer ${token.accessToken}`;
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
         }
 
         const response = await fetchBackend(`/pages/${pageType}`, {
