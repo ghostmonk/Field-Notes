@@ -455,9 +455,52 @@ async def update_section(
 
         result = await collection.update_one({"_id": ObjectId(section_id)}, {"$set": update_data})
 
-        # Cascade path updates to descendants if path changed
-        if "path" in update_data:
-            await cascade_path_updates(collection, section_id, update_data["path"])
+        # Cascade path updates and write redirects if path changed
+        if "path" in update_data and update_data["path"] != existing_section.path:
+            old_path = existing_section.path
+            new_path = update_data["path"]
+
+            # Collect old descendant paths before cascade
+            old_desc_paths = {}
+            desc_cursor = collection.find({"parent_id": section_id, "deleted": {"$ne": True}})
+            async for desc in desc_cursor:
+                old_desc_paths[str(desc["_id"])] = desc.get("path", "")
+
+            await cascade_path_updates(collection, section_id, new_path)
+
+            # Write redirects (non-critical — don't fail the rename)
+            try:
+                from database import get_db as _get_db
+
+                rdb = await _get_db()
+
+                await rdb["redirects"].update_one(
+                    {"old_path": old_path},
+                    {"$set": {"new_path": new_path}, "$setOnInsert": {"created_at": current_time}},
+                    upsert=True,
+                )
+                await rdb["redirects"].update_many(
+                    {"new_path": old_path}, {"$set": {"new_path": new_path}}
+                )
+
+                for desc_id, old_desc_path in old_desc_paths.items():
+                    desc_doc = await collection.find_one({"_id": ObjectId(desc_id)})
+                    if desc_doc and desc_doc.get("path") != old_desc_path:
+                        new_desc_path = desc_doc["path"]
+                        await rdb["redirects"].update_one(
+                            {"old_path": old_desc_path},
+                            {
+                                "$set": {"new_path": new_desc_path},
+                                "$setOnInsert": {"created_at": current_time},
+                            },
+                            upsert=True,
+                        )
+                        await rdb["redirects"].update_many(
+                            {"new_path": old_desc_path},
+                            {"$set": {"new_path": new_desc_path}},
+                        )
+            except Exception as redirect_err:
+                logger.warning(f"Failed to write redirects for section rename: {redirect_err}")
 
         if result.modified_count == 0:
             logger.error_with_context(

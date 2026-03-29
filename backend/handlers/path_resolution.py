@@ -146,8 +146,14 @@ async def resolve_path(request: Request, full_path: str):
     # Check redirects
     redirect = await db["redirects"].find_one({"old_path": path})
     if redirect:
-        if redirect.get("expires_at") and redirect["expires_at"] < datetime.now(timezone.utc):
-            raise HTTPException(status_code=404, detail="Path not found")
+        expires_at = redirect.get("expires_at")
+        if expires_at:
+            # Ensure tz-aware comparison
+            now = datetime.now(timezone.utc)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at < now:
+                raise HTTPException(status_code=404, detail="Path not found")
         return FastAPIRedirectResponse(url=f"/{redirect['new_path']}", status_code=301)
 
     raise HTTPException(status_code=404, detail="Path not found")

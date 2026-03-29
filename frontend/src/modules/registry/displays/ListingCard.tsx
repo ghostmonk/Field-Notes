@@ -8,7 +8,7 @@ interface ListingCardProps {
 
 export function ListingCard({ item, sectionPath }: ListingCardProps) {
     const href =
-        item.item_type === 'section'
+        item.item_type === 'section' && item.path
             ? `/${item.path}`
             : `/${sectionPath}/${item.slug}`;
 
