@@ -329,9 +329,9 @@ async def process_video_file(
     """Process a video file and return ProcessedMediaFile."""
     validate_video(file.content_type, file_size)
     new_filename = generate_unique_filename(file.filename)
-    asset_id = os.path.splitext(new_filename)[0]
-    original_ext = os.path.splitext(file.filename)[1]
-    video_path = build_asset_path(asset_id, "video", "originals", ext=original_ext)
+    # Video originals stay in flat video/ directory — the Cloud Function
+    # and Eventarc trigger expect uploads/video/{filename} directly.
+    video_path = f"video/{new_filename}"
 
     blob_path, _ = await upload_file(contents, video_path, file.content_type, bucket)
 
@@ -356,7 +356,7 @@ async def process_video_file(
         # Create video processing job using Pydantic model
         job = VideoProcessingJob(
             job_id=job_id,
-            original_file=f"uploads/{video_path}",
+            original_file=f"uploads/{video_path}",  # e.g. uploads/video/20260329_143022_a7f3b2.mov
             status="pending",  # Will be updated to 'started' by Cloud Function
             created_at=now,
             updated_at=now,
@@ -367,7 +367,7 @@ async def process_video_file(
             error_message="",
         )
         await video_jobs_collection.insert_one(job.model_dump())
-        logger.info(f"Created video processing job: {job_id} for file: {asset_id}")
+        logger.info(f"Created video processing job: {job_id} for file: {new_filename}")
 
     except Exception as e:
         logger.error(f"Failed to create video processing job: {str(e)}")

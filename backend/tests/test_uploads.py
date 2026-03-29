@@ -240,12 +240,12 @@ def _make_video_upload_file(filename="test_video.mp4", content_type="video/mp4")
     return mock_file
 
 
-class TestProcessVideoFileVariantPaths:
-    """Verify process_video_file uses type-based asset paths (video/originals/{asset_id}{ext})."""
+class TestProcessVideoFilePaths:
+    """Verify process_video_file uploads to flat video/ directory (matching Cloud Function expectations)."""
 
     @pytest.mark.asyncio
-    async def test_upload_path_uses_originals_directory(self):
-        """Video original should upload to video/originals/{asset_id}{ext}."""
+    async def test_upload_path_uses_flat_video_directory(self):
+        """Video original should upload to video/{filename} (not video/originals/)."""
         video_bytes = b"\x00" * 1024
         mock_file = _make_video_upload_file()
 
@@ -261,13 +261,13 @@ class TestProcessVideoFileVariantPaths:
         assert mock_upload.call_count == 1
         uploaded_path = mock_upload.call_args[0][1]
         assert re.match(
-            r"^video/originals/\d{8}_\d{6}_[a-f0-9]{8}\.mp4$",
+            r"^video/\d{8}_\d{6}_[a-f0-9]{8}\.mp4$",
             uploaded_path,
         ), f"Unexpected upload path: {uploaded_path}"
 
     @pytest.mark.asyncio
-    async def test_primary_url_uses_originals_directory(self):
-        """Returned primary_url should reference video/originals/."""
+    async def test_primary_url_uses_flat_video_directory(self):
+        """Returned primary_url should reference /uploads/video/{filename}."""
         video_bytes = b"\x00" * 1024
         mock_file = _make_video_upload_file()
 
@@ -280,7 +280,8 @@ class TestProcessVideoFileVariantPaths:
 
             result = await process_video_file(mock_file, video_bytes, len(video_bytes), None)
 
-        assert "/uploads/video/originals/" in result.primary_url
+        assert "/uploads/video/" in result.primary_url
+        assert "/originals/" not in result.primary_url
         assert result.primary_url.endswith(".mp4")
 
     @pytest.mark.asyncio
@@ -302,8 +303,8 @@ class TestProcessVideoFileVariantPaths:
         assert uploaded_path.endswith(".mov"), f"Expected .mov extension, got: {uploaded_path}"
 
     @pytest.mark.asyncio
-    async def test_job_original_file_uses_new_path(self):
-        """Video processing job original_file should use uploads/video/originals/ path."""
+    async def test_job_original_file_matches_upload_path(self):
+        """Video processing job original_file should match the upload path."""
         video_bytes = b"\x00" * 1024
         mock_file = _make_video_upload_file()
 
@@ -316,10 +317,9 @@ class TestProcessVideoFileVariantPaths:
 
             await process_video_file(mock_file, video_bytes, len(video_bytes), None)
 
-        # Verify the job document stored in MongoDB
         mock_collection = mock_db.return_value.video_processing_jobs
         insert_call = mock_collection.insert_one.call_args[0][0]
         assert re.match(
-            r"^uploads/video/originals/\d{8}_\d{6}_[a-f0-9]{8}\.mp4$",
+            r"^uploads/video/\d{8}_\d{6}_[a-f0-9]{8}\.mp4$",
             insert_call["original_file"],
         ), f"Unexpected original_file in job: {insert_call['original_file']}"
