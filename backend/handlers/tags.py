@@ -18,6 +18,7 @@ from models.tag import (
 )
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
+from pymongo import ReturnDocument
 from utils import find_many_and_convert, find_one_and_convert, mongo_to_pydantic
 
 router = APIRouter()
@@ -148,24 +149,15 @@ async def create_tag(
     collection: AsyncIOMotorCollection = Depends(get_tags_collection),
 ):
     try:
-        existing = await find_one_and_convert(collection, {"name": tag.name}, TagResponse)
-        if existing:
-            return existing
-
         current_time = datetime.now(timezone.utc)
-        document = {
-            "name": tag.name,
-            "createdDate": current_time,
-        }
-
-        result = await collection.insert_one(document)
-
-        created_tag = await find_one_and_convert(
-            collection, {"_id": result.inserted_id}, TagResponse
+        doc = await collection.find_one_and_update(
+            {"name": tag.name},
+            {"$setOnInsert": {"name": tag.name, "createdDate": current_time}},
+            upsert=True,
+            return_document=ReturnDocument.AFTER,
         )
 
-        if not created_tag:
-            raise HTTPException(status_code=500, detail="Failed to retrieve created tag")
+        created_tag = mongo_to_pydantic(doc, TagResponse)
 
         logger.info_with_context(
             "Tag created",
