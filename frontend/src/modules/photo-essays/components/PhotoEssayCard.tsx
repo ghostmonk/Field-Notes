@@ -11,7 +11,7 @@ export function PhotoEssayCard({ essay, basePath }: Props) {
     return (
         <Link href={`${basePath}/${essay.slug || essay.id}`} className="gallery-card" data-testid="photo-essay-card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            {essay.cover_image_url && <img
                 src={essay.cover_image_url}
                 srcSet={essay.cover_image_srcset || undefined}
                 sizes="(min-width: 1024px) 50vw, 100vw"
@@ -22,7 +22,7 @@ export function PhotoEssayCard({ essay, basePath }: Props) {
                 style={{ objectPosition: essay.cover_image_position || '50% 50%' }}
                 onLoad={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
                 onError={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
-            />
+            />}
             <div className="gallery-card__overlay">
                 <h2 className="gallery-card__title">{essay.title}</h2>
                 {essay.description && (
