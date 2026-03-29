@@ -79,13 +79,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             invalidateCache('project');
         }
 
-        // Determine the endpoint based on request method
-        // GET uses slug endpoint, PUT/DELETE use ID endpoint
+        // Determine the backend endpoint.
+        // For GET: if the parameter looks like a MongoDB ObjectId, fetch by ID;
+        // otherwise fetch by slug. PUT/DELETE always use the ID endpoint.
         let backendPath: string;
         if (req.method === 'GET') {
-            backendPath = `/projects/slug/${slug}`;
+            const isObjectId = /^[a-f\d]{24}$/i.test(slug);
+            backendPath = isObjectId ? `/projects/${slug}` : `/projects/slug/${slug}`;
         } else {
-            // For PUT/DELETE, slug is actually the project ID
             backendPath = `/projects/${slug}`;
         }
 
