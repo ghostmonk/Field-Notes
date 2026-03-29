@@ -256,6 +256,14 @@ async def process_single_file(
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.content_type}")
 
 
+SIZE_TO_VARIANT = {
+    2048: "originals",
+    1536: "large",
+    768: "medium",
+    400: "thumbnails",
+}
+
+
 async def process_image_file(
     file: UploadFile,
     contents: bytes,
@@ -267,12 +275,7 @@ async def process_image_file(
     """Process an image file and return ProcessedMediaFile."""
     validate_image(file.content_type, file_size)
     new_filename = generate_unique_filename(file.filename)
-    base_name, extension = os.path.splitext(new_filename)
-
-    # Route images to photos/{section_id}/ when section_id is provided
-    if section_id:
-        base_name = f"photos/{section_id}/{base_name}"
-    webp_extension = f".{OUTPUT_FORMAT}"
+    asset_id = os.path.splitext(new_filename)[0]
 
     # Get original image dimensions for aspect ratio calculation
     original_image = Image.open(io.BytesIO(contents))
@@ -294,20 +297,15 @@ async def process_image_file(
     final_height = original_height
 
     for size in IMAGE_SIZES:
-        sized_filename = (
-            f"{base_name}_{size}{webp_extension}"
-            if size != MAX_IMAGE_SIZE
-            else f"{base_name}{webp_extension}"
-        )
+        variant = SIZE_TO_VARIANT[size]
+        variant_path = build_asset_path(asset_id, "image", variant)
         resized_image = resize_image(contents, size, exif_corrected=(image_filter != "none"))
 
         blob_path, _ = await upload_file(
-            resized_image, sized_filename, f"image/{OUTPUT_FORMAT}", bucket
+            resized_image, variant_path, f"image/{OUTPUT_FORMAT}", bucket
         )
 
-        # Always use API endpoint instead of signed URLs to avoid expiration issues
-        # The API endpoint will handle signed URL generation on-demand
-        url = f"/uploads/{sized_filename}"
+        url = f"/uploads/{variant_path}"
 
         srcset_entries.append(f"{url} {size}w")
         if size == MAX_IMAGE_SIZE:

@@ -1,8 +1,14 @@
 import io
+import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from handlers.uploads import IMAGE_SIZES, build_asset_path, process_image_file
+from handlers.uploads import (
+    IMAGE_SIZES,
+    SIZE_TO_VARIANT,
+    build_asset_path,
+    process_image_file,
+)
 from PIL import Image
 
 
@@ -74,6 +80,98 @@ def _make_upload_file(filename="test.png", content_type="image/png"):
     mock_file.filename = filename
     mock_file.content_type = content_type
     return mock_file
+
+
+class TestProcessImageFileVariantPaths:
+    """Verify process_image_file uses type-based asset paths (images/{variant}/{asset_id}.webp)."""
+
+    @pytest.mark.asyncio
+    async def test_upload_paths_use_variant_directories(self):
+        """Each upload call should use build_asset_path format: images/{variant}/{asset_id}.webp"""
+        contents = _make_test_image()
+        mock_file = _make_upload_file()
+
+        with patch("handlers.uploads.upload_file", new_callable=AsyncMock) as mock_upload:
+            mock_upload.return_value = ("blob", "/url")
+
+            await process_image_file(mock_file, contents, len(contents), None)
+
+        assert mock_upload.call_count == len(IMAGE_SIZES)
+
+        uploaded_filenames = [call[0][1] for call in mock_upload.call_args_list]
+        for filename in uploaded_filenames:
+            assert re.match(
+                r"^images/(originals|large|medium|thumbnails)/\d{8}_\d{6}_[a-f0-9]{8}\.webp$",
+                filename,
+            ), f"Unexpected upload path: {filename}"
+
+    @pytest.mark.asyncio
+    async def test_primary_url_is_originals_variant(self):
+        contents = _make_test_image()
+        mock_file = _make_upload_file()
+
+        with patch("handlers.uploads.upload_file", new_callable=AsyncMock) as mock_upload:
+            mock_upload.return_value = ("blob", "/url")
+
+            result = await process_image_file(mock_file, contents, len(contents), None)
+
+        assert "/uploads/images/originals/" in result.primary_url
+        assert result.primary_url.endswith(".webp")
+
+    @pytest.mark.asyncio
+    async def test_srcset_contains_all_variants(self):
+        contents = _make_test_image()
+        mock_file = _make_upload_file()
+
+        with patch("handlers.uploads.upload_file", new_callable=AsyncMock) as mock_upload:
+            mock_upload.return_value = ("blob", "/url")
+
+            result = await process_image_file(mock_file, contents, len(contents), None)
+
+        for size, variant in SIZE_TO_VARIANT.items():
+            assert f"images/{variant}/" in result.srcset, f"Missing variant {variant} in srcset"
+            assert f"{size}w" in result.srcset, f"Missing size {size}w in srcset"
+
+    @pytest.mark.asyncio
+    async def test_section_id_does_not_affect_paths(self):
+        """section_id parameter should be ignored for path generation."""
+        contents = _make_test_image()
+        mock_file = _make_upload_file()
+
+        with patch("handlers.uploads.upload_file", new_callable=AsyncMock) as mock_upload:
+            mock_upload.return_value = ("blob", "/url")
+
+            result = await process_image_file(
+                mock_file, contents, len(contents), None, section_id="abc123def456abc123def456"
+            )
+
+        # No section_id or "photos" in any path
+        assert "photos" not in result.primary_url
+        assert "photos" not in result.srcset
+        uploaded_filenames = [call[0][1] for call in mock_upload.call_args_list]
+        for filename in uploaded_filenames:
+            assert "photos" not in filename
+            assert filename.startswith("images/")
+
+    @pytest.mark.asyncio
+    async def test_all_variants_share_same_asset_id(self):
+        contents = _make_test_image()
+        mock_file = _make_upload_file()
+
+        with patch("handlers.uploads.upload_file", new_callable=AsyncMock) as mock_upload:
+            mock_upload.return_value = ("blob", "/url")
+
+            await process_image_file(mock_file, contents, len(contents), None)
+
+        uploaded_filenames = [call[0][1] for call in mock_upload.call_args_list]
+        # Extract asset_id from each path (images/{variant}/{asset_id}.webp)
+        asset_ids = set()
+        for filename in uploaded_filenames:
+            parts = filename.split("/")
+            asset_id = parts[-1].replace(".webp", "")
+            asset_ids.add(asset_id)
+
+        assert len(asset_ids) == 1, f"Expected one asset_id across all variants, got: {asset_ids}"
 
 
 class TestProcessImageFileWithFilter:
