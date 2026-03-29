@@ -140,8 +140,8 @@ def _collect_file_moves_from_content(content):
     return moves
 
 
-def _move_local_file(old_blob, new_blob, local_storage):
-    """Move a file on local filesystem. Returns True if moved."""
+def _copy_local_file(old_blob, new_blob, local_storage):
+    """Copy a file on local filesystem. Returns True if copied."""
     old_path = os.path.join(local_storage, old_blob)
     new_path = os.path.join(local_storage, new_blob)
 
@@ -152,14 +152,14 @@ def _move_local_file(old_blob, new_blob, local_storage):
         return False
 
     os.makedirs(os.path.dirname(new_path), exist_ok=True)
-    shutil.move(old_path, new_path)
-    logger.info(f"Moved local: {old_blob} -> {new_blob}")
-    print(f"Moved local: {old_blob} -> {new_blob}")
+    shutil.copy2(old_path, new_path)
+    logger.info(f"Copied local: {old_blob} -> {new_blob}")
+    print(f"Copied local: {old_blob} -> {new_blob}")
     return True
 
 
-def _move_gcs_file(old_blob_name, new_blob_name, bucket):
-    """Move a file in GCS. Returns True if moved."""
+def _copy_gcs_file(old_blob_name, new_blob_name, bucket):
+    """Copy a file in GCS without deleting original. Returns True if copied."""
     old_blob = bucket.blob(old_blob_name)
     if not old_blob.exists():
         return False
@@ -169,10 +169,27 @@ def _move_gcs_file(old_blob_name, new_blob_name, bucket):
         return False
 
     bucket.copy_blob(old_blob, bucket, new_blob_name)
-    old_blob.delete()
-    logger.info(f"Moved GCS: {old_blob_name} -> {new_blob_name}")
-    print(f"Moved GCS: {old_blob_name} -> {new_blob_name}")
+    logger.info(f"Copied GCS: {old_blob_name} -> {new_blob_name}")
+    print(f"Copied GCS: {old_blob_name} -> {new_blob_name}")
     return True
+
+
+def _delete_local_file(blob, local_storage):
+    """Delete a file on local filesystem."""
+    path = os.path.join(local_storage, blob)
+    if os.path.exists(path):
+        os.remove(path)
+        logger.info(f"Deleted local: {blob}")
+        print(f"Deleted local: {blob}")
+
+
+def _delete_gcs_file(blob_name, bucket):
+    """Delete a file in GCS."""
+    blob = bucket.blob(blob_name)
+    if blob.exists():
+        blob.delete()
+        logger.info(f"Deleted GCS: {blob_name}")
+        print(f"Deleted GCS: {blob_name}")
 
 
 def upgrade(db: "pymongo.database.Database"):
@@ -229,18 +246,18 @@ def upgrade(db: "pymongo.database.Database"):
     print(f"Collected {len(all_moves)} file moves")
     logger.info(f"Collected {len(all_moves)} file moves")
 
-    # Phase 2: Move files
-    moved_count = 0
+    # Phase 2: Copy files to new locations (keep originals until URLs are rewritten)
+    copied_pairs = []  # (old_blob, new_blob) pairs that were successfully copied
     for old_blob, new_blob in all_moves.items():
         if local_storage:
-            if _move_local_file(old_blob, new_blob, local_storage):
-                moved_count += 1
+            if _copy_local_file(old_blob, new_blob, local_storage):
+                copied_pairs.append((old_blob, new_blob))
         elif bucket:
-            if _move_gcs_file(old_blob, new_blob, bucket):
-                moved_count += 1
+            if _copy_gcs_file(old_blob, new_blob, bucket):
+                copied_pairs.append((old_blob, new_blob))
 
-    print(f"Moved {moved_count} files")
-    logger.info(f"Moved {moved_count} files")
+    print(f"Copied {len(copied_pairs)} files to new locations")
+    logger.info(f"Copied {len(copied_pairs)} files to new locations")
 
     # Phase 3: Rewrite URLs in database
 
@@ -325,6 +342,19 @@ def upgrade(db: "pymongo.database.Database"):
 
     print(f"Updated {updated_count} documents")
     logger.info(f"Updated {updated_count} documents")
+
+    # Phase 4: Delete old files now that URLs point to new locations
+    deleted_count = 0
+    for old_blob, _new_blob in copied_pairs:
+        if local_storage:
+            _delete_local_file(old_blob, local_storage)
+            deleted_count += 1
+        elif bucket:
+            _delete_gcs_file(old_blob, bucket)
+            deleted_count += 1
+
+    print(f"Deleted {deleted_count} old files")
+    logger.info(f"Deleted {deleted_count} old files")
 
     print("Migration 0015 complete")
     logger.info("Migration 0015 complete")
