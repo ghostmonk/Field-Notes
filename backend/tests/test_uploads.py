@@ -45,6 +45,14 @@ class TestAssetPaths:
         with pytest.raises(ValueError, match="Unknown variant"):
             build_asset_path("id", "image", "huge")
 
+    def test_video_original_without_ext_raises(self):
+        with pytest.raises(ValueError, match="requires an explicit ext"):
+            build_asset_path("id", "video", "originals")
+
+    def test_invalid_video_variant_raises(self):
+        with pytest.raises(ValueError, match="Unknown variant"):
+            build_asset_path("id", "video", "huge")
+
 
 class TestImageSizes:
     def test_image_sizes(self):

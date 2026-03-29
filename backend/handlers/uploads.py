@@ -73,6 +73,8 @@ def build_asset_path(asset_id: str, media_type: str, variant: str, ext: str | No
                 f"Unknown variant '{variant}' for video. Valid: {list(VIDEO_VARIANTS.keys())}"
             )
         extension = ext or VIDEO_VARIANTS[variant]
+        if extension is None:
+            raise ValueError(f"Video variant '{variant}' requires an explicit ext argument")
         return f"video/{variant}/{asset_id}{extension}"
     else:
         raise ValueError(f"Unknown media type '{media_type}'. Valid: image, video")
