@@ -309,8 +309,8 @@ const sections = [...sampleSections];
 const allSectionsList = [...allSections];
 
 // GET /sections/resolve-path/:path(*) - Resolve path to section or content
-app.get('/sections/resolve-path/*', (req: Request, res: Response) => {
-  const fullPath = req.params[0];
+app.get('/sections/resolve-path/{*path}', (req: Request, res: Response) => {
+  const fullPath = req.params.path;
   if (!fullPath) {
     res.status(404).json({ detail: 'Path not found' });
     return;
