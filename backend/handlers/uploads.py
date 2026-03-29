@@ -329,7 +329,9 @@ async def process_video_file(
     """Process a video file and return ProcessedMediaFile."""
     validate_video(file.content_type, file_size)
     new_filename = generate_unique_filename(file.filename)
-    video_path = f"video/{new_filename}"
+    asset_id = os.path.splitext(new_filename)[0]
+    original_ext = os.path.splitext(file.filename)[1]
+    video_path = build_asset_path(asset_id, "video", "originals", ext=original_ext)
 
     blob_path, _ = await upload_file(contents, video_path, file.content_type, bucket)
 
@@ -365,7 +367,7 @@ async def process_video_file(
             error_message="",
         )
         await video_jobs_collection.insert_one(job.model_dump())
-        logger.info(f"Created video processing job: {job_id} for file: {new_filename}")
+        logger.info(f"Created video processing job: {job_id} for file: {asset_id}")
 
     except Exception as e:
         logger.error(f"Failed to create video processing job: {str(e)}")
