@@ -15,7 +15,7 @@ export function sectionToNavItem(section: Section): NavSectionItem {
     return {
         id: section.id,
         slug: section.slug,
-        path: `/${section.slug}`,
+        path: `/${section.path || section.slug}`,
         label: section.title,
         icon: VALID_ICON_SET.has(section.icon) ? (section.icon as SectionIcon) : 'default',
     };
