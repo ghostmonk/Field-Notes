@@ -35,12 +35,8 @@ CONTENT_COLLECTIONS = ["stories", "projects", "pages"]
 # Group 1: section_id, Group 2: base_name (without suffix), Group 3: size suffix (optional)
 IMAGE_URL_RE = re.compile(r"/uploads/photos/([^/]+)/([^/_]+?)(_2048|_1536|_768|_400)?\.webp")
 
-# Matches original video files directly under /uploads/video/ (not in subdirectories)
-VIDEO_ORIG_RE = re.compile(r"/uploads/video/([^/]+\.\w+)")
-
-# Already-migrated patterns to skip
+# Already-migrated pattern to skip
 ALREADY_MIGRATED_IMAGE_RE = re.compile(r"/uploads/images/")
-ALREADY_MIGRATED_VIDEO_RE = re.compile(r"/uploads/video/originals/")
 
 # Size suffix -> variant directory
 SUFFIX_TO_VARIANT = {
@@ -61,45 +57,32 @@ def _rewrite_image_url(match):
     return f"/uploads/images/{variant}/{base_name}.webp"
 
 
-def _rewrite_video_url(match):
-    """Regex replacement function for video original URLs."""
-    filename = match.group(1)
-    return f"/uploads/video/originals/{filename}"
-
-
 def _rewrite_content(content):
-    """Rewrite all image and video URLs in a content string. Returns (new_content, changed)."""
+    """Rewrite image URLs in a content string. Returns (new_content, changed).
+
+    Video original URLs are NOT rewritten — moving video files in GCS would trigger
+    the Eventarc video processor Cloud Function, causing unnecessary re-processing.
+    Old videos stay at uploads/video/{filename}, new uploads go to video/originals/.
+    """
     if not content:
         return content, False
 
     result = content
 
-    # Rewrite image URLs (skip already-migrated)
+    # Rewrite image URLs only (skip already-migrated)
     result = IMAGE_URL_RE.sub(_rewrite_image_url, result)
-
-    # Rewrite video original URLs, but only those NOT already in a subdirectory
-    # VIDEO_ORIG_RE only matches /uploads/video/{filename} (no intermediate dir)
-    # We need to avoid matching /uploads/video/thumbnails/ or /uploads/video/processed/
-    # or /uploads/video/originals/ — the regex already excludes paths with extra slashes
-    result = VIDEO_ORIG_RE.sub(_rewrite_video_url, result)
-
-    # The video regex is greedy and will also match already-correct paths like
-    # /uploads/video/originals/foo.mov (capturing "originals/foo.mov" as filename).
-    # But originals/foo.mov contains a slash, and [^/] prevents that. Safe.
 
     changed = result != content
     return result, changed
 
 
 def _rewrite_url_field(url):
-    """Rewrite a single URL field value. Returns (new_url, changed)."""
+    """Rewrite a single image URL field value. Returns (new_url, changed)."""
     if not url:
         return url, False
-    # Skip already-migrated
-    if ALREADY_MIGRATED_IMAGE_RE.search(url) or ALREADY_MIGRATED_VIDEO_RE.search(url):
+    if ALREADY_MIGRATED_IMAGE_RE.search(url):
         return url, False
     new_url = IMAGE_URL_RE.sub(_rewrite_image_url, url)
-    new_url = VIDEO_ORIG_RE.sub(_rewrite_video_url, new_url)
     return new_url, new_url != url
 
 
@@ -112,7 +95,10 @@ def _rewrite_srcset(srcset):
 
 
 def _collect_file_moves_from_content(content):
-    """Extract old->new blob path mappings from content HTML."""
+    """Extract old->new blob path mappings for images from content HTML.
+
+    Video originals are excluded — moving them in GCS would trigger Eventarc.
+    """
     moves = {}
     if not content:
         return moves
@@ -122,16 +108,6 @@ def _collect_file_moves_from_content(content):
         if ALREADY_MIGRATED_IMAGE_RE.search(old_url):
             continue
         new_url = _rewrite_image_url(match)
-        old_blob = old_url.lstrip("/")
-        new_blob = new_url.lstrip("/")
-        if old_blob != new_blob:
-            moves[old_blob] = new_blob
-
-    for match in VIDEO_ORIG_RE.finditer(content):
-        old_url = match.group(0)
-        if ALREADY_MIGRATED_VIDEO_RE.search(old_url):
-            continue
-        new_url = _rewrite_video_url(match)
         old_blob = old_url.lstrip("/")
         new_blob = new_url.lstrip("/")
         if old_blob != new_blob:
@@ -212,12 +188,6 @@ def upgrade(db: "pymongo.database.Database"):
             moves = _collect_file_moves_from_content(content)
             all_moves.update(moves)
 
-        # Also check for video originals in content
-        for doc in collection.find({"content": {"$regex": "/uploads/video/"}}):
-            content = doc.get("content", "")
-            moves = _collect_file_moves_from_content(content)
-            all_moves.update(moves)
-
     # 1b. Photo essays
     photo_essays = db["photo_essays"]
     for doc in photo_essays.find():
@@ -232,16 +202,9 @@ def upgrade(db: "pymongo.database.Database"):
                 moves = _collect_file_moves_from_content(field_val)
                 all_moves.update(moves)
 
-    # 1c. Video processing jobs — original_file field (blob path, not URL)
-    video_jobs = db["video_processing_jobs"]
-    for doc in video_jobs.find():
-        orig = doc.get("original_file", "") or ""
-        # original_file is stored as blob path like "uploads/video/filename.mov"
-        if orig.startswith("uploads/video/") and not orig.startswith("uploads/video/originals/"):
-            filename = orig.replace("uploads/video/", "", 1)
-            # Only move if it's a direct file (no subdirectory)
-            if "/" not in filename:
-                all_moves[orig] = f"uploads/video/originals/{filename}"
+    # Video files are NOT migrated — moving them in GCS triggers the Eventarc
+    # video processor Cloud Function. Old videos stay at uploads/video/{filename},
+    # new uploads go to video/originals/. Both paths are served correctly.
 
     print(f"Collected {len(all_moves)} file moves")
     logger.info(f"Collected {len(all_moves)} file moves")
@@ -324,21 +287,7 @@ def upgrade(db: "pymongo.database.Database"):
             print(f"Updated photo_essay {doc['_id']}")
             logger.info(f"Updated photo_essay {doc['_id']}")
 
-    # 3c. Video processing jobs
-    for doc in video_jobs.find():
-        update_fields = {}
-
-        orig = doc.get("original_file", "") or ""
-        if orig.startswith("uploads/video/") and not orig.startswith("uploads/video/originals/"):
-            filename = orig.replace("uploads/video/", "", 1)
-            if "/" not in filename:
-                update_fields["original_file"] = f"uploads/video/originals/{filename}"
-
-        if update_fields:
-            video_jobs.update_one({"_id": doc["_id"]}, {"$set": update_fields})
-            updated_count += 1
-            print(f"Updated video_processing_job {doc['_id']}")
-            logger.info(f"Updated video_processing_job {doc['_id']}")
+    # Video processing jobs are NOT updated — video files are not migrated.
 
     print(f"Updated {updated_count} documents")
     logger.info(f"Updated {updated_count} documents")
