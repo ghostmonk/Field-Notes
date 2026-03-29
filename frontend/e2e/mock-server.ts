@@ -484,7 +484,7 @@ app.get('/sections/by-slug/:slug', (req: Request, res: Response) => {
 
 // GET /sections/:id - Get section by ID
 app.get('/sections/:id', (req: Request, res: Response) => {
-  const section = sections.find((s) => s.id === req.params.id);
+  const section = allSectionsList.find((s) => s.id === req.params.id);
   if (section) {
     res.json(section);
   } else {

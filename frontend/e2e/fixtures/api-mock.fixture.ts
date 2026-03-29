@@ -907,8 +907,8 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
       return;
     }
 
-    // GET
-    const section = sections.find((s) => s.id === id);
+    // GET — search all sections (including nested) for editor support
+    const section = sharedAllSections.find((s) => s.id === id) || sections.find((s) => s.id === id);
     if (section) {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(section) });
     } else {

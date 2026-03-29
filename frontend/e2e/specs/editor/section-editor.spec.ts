@@ -111,6 +111,38 @@ test.describe('Section-Aware Editor', () => {
     expect(body.title).toBe('Test Project With Section');
   });
 
+  test('renders correct editor form for nested section', async ({ mockAuthenticatedApiPage }) => {
+    // blog/tech is a nested section with content_type: 'story'
+    await mockAuthenticatedApiPage.goto(`/editor?section_id=${TEST_SECTION_IDS.BLOG_TECH}`);
+    await mockAuthenticatedApiPage.getByTestId('editor-page').waitFor({ state: 'visible' });
+
+    // Should show story editor form (not "does not have an editor form yet")
+    await expect(mockAuthenticatedApiPage.getByTestId('editor-title-input')).toBeVisible();
+    await expect(mockAuthenticatedApiPage.getByText('New Story')).toBeVisible();
+  });
+
+  test('nested section editor includes correct section_id in save payload', async ({ mockAuthenticatedApiPage }) => {
+    await mockAuthenticatedApiPage.goto(`/editor?section_id=${TEST_SECTION_IDS.BLOG_TECH}`);
+    await mockAuthenticatedApiPage.getByTestId('editor-page').waitFor({ state: 'visible' });
+
+    await mockAuthenticatedApiPage.getByTestId('editor-title-input').fill('Nested Section Story');
+
+    const editor = mockAuthenticatedApiPage.locator('.tiptap.ProseMirror');
+    await editor.waitFor({ state: 'visible', timeout: 10000 });
+    await editor.click();
+    await mockAuthenticatedApiPage.keyboard.type('Content in nested section');
+
+    const createPromise = mockAuthenticatedApiPage.waitForRequest(
+      (req) => req.url().includes('/api/stories') && req.method() === 'POST'
+    );
+
+    await mockAuthenticatedApiPage.getByTestId('editor-save-draft').click();
+    const createRequest = await createPromise;
+    const body = createRequest.postDataJSON();
+    expect(body.section_id).toBe(TEST_SECTION_IDS.BLOG_TECH);
+    expect(body.title).toBe('Nested Section Story');
+  });
+
   test('redirects unauthenticated users to home', async ({ mockApiPage }) => {
     await mockApiPage.goto('/editor');
     await mockApiPage.waitForURL('/', { timeout: 10000 });
