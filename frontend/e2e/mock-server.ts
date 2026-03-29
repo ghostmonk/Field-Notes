@@ -362,6 +362,18 @@ app.get('/sections/resolve-path/{*path}', (req: Request, res: Response) => {
         res.json({ type: 'content', section: parentSection, content_item: { ...project, content_type: 'project' }, breadcrumbs });
         return;
       }
+
+      // Check photo essays
+      const essay = samplePhotoEssayCards.find((e) => e.id === itemSlug);
+      if (essay && parentSection.content_type === 'photo_essay') {
+        const detail = essay.id === samplePhotoEssayDetail.id ? samplePhotoEssayDetail : essay;
+        const breadcrumbs = [
+          { title: parentSection.title, path: parentSection.path },
+          { title: essay.title, path: fullPath },
+        ];
+        res.json({ type: 'content', section: parentSection, content_item: { ...detail, content_type: 'photo_essay' }, breadcrumbs });
+        return;
+      }
     }
   }
 

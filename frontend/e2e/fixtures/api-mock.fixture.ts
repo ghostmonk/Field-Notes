@@ -676,6 +676,26 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
           });
           return;
         }
+
+        // Check photo essays
+        const essay = sharedPhotoEssayCards.find((e) => e.id === itemSlug);
+        if (essay && parentSection.content_type === 'photo_essay') {
+          const detail = essay.id === sharedPhotoEssayDetail.id ? sharedPhotoEssayDetail : essay;
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              type: 'content',
+              section: parentSection,
+              content_item: { ...detail, content_type: 'photo_essay' },
+              breadcrumbs: [
+                { title: parentSection.title, path: parentSection.path },
+                { title: essay.title, path: fullPath },
+              ],
+            }),
+          });
+          return;
+        }
       }
     }
 

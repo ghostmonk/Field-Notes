@@ -40,6 +40,7 @@ test.describe('Contact Page', () => {
     await contactPage.goto();
 
     await expect(contactPage.nav.nav).toBeVisible();
+    await contactPage.nav.openMenu();
     await expect(contactPage.nav.blogLink).toBeVisible();
   });
 

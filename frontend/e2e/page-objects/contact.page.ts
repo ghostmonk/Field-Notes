@@ -20,7 +20,7 @@ export class ContactPage extends BasePage {
     this.nav = new TopNavComponent(page);
 
     this.pageTitle = page.locator('h1.page-title');
-    this.contentCard = page.locator('.card');
+    this.contentCard = page.locator('.card').first();
     this.content = page.locator('.prose');
     this.loadingState = page.getByText('Loading...');
     this.errorState = page.getByText(/Page not found|Failed to load/);

@@ -470,7 +470,7 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
                     excerpt = project.summary;
                 }
             } else if (contentType === 'photo_essay') {
-                const essayRes = await fetch(`${API_BASE_URL}/photo-essays/${contentItem.slug}`);
+                const essayRes = await fetch(`${API_BASE_URL}/photo-essays/${contentItem.id || contentItem.slug}`);
                 if (essayRes.ok) {
                     const essay: PhotoEssay = await essayRes.json();
                     detailItem = essay;

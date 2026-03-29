@@ -163,7 +163,7 @@ function SectionCreateForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSubmit({ title: title.trim(), display_type: displayType, nav_visibility: navVisibility, icon });
+    onSubmit({ title: title.trim(), display_type: displayType, content_type: contentType, nav_visibility: navVisibility, icon });
   };
 
   return (
