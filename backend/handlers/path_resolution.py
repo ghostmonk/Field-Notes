@@ -4,6 +4,32 @@ from fastapi import APIRouter, HTTPException, Request
 
 router = APIRouter()
 
+CONTENT_COLLECTIONS = [
+    ("stories", "story"),
+    ("projects", "project"),
+    ("photo_essays", "photo_essay"),
+    ("pages", "page"),
+]
+
+
+async def find_content_in_section(db, section_id: str, slug: str) -> dict | None:
+    """Search all content collections for an item with this slug in this section."""
+    for collection_name, content_type in CONTENT_COLLECTIONS:
+        item = await db[collection_name].find_one(
+            {
+                "section_id": section_id,
+                "slug": slug,
+                "is_published": True,
+                "deleted": {"$ne": True},
+            }
+        )
+        if item:
+            result = dict(item)
+            result["id"] = str(result.pop("_id"))
+            result["content_type"] = content_type
+            return result
+    return None
+
 
 async def build_breadcrumbs(db, section: dict) -> list:
     """Walk ancestors to build breadcrumb chain."""
@@ -63,7 +89,33 @@ async def resolve_path(request: Request, full_path: str):
             "breadcrumbs": breadcrumbs,
         }
 
-    # Phase 2.2 will add content item resolution here
+    # Split: try parent path as section, last segment as content
+    segments = path.split("/")
+    if len(segments) > 1:
+        parent_path = "/".join(segments[:-1])
+        item_slug = segments[-1]
+
+        section = await db["sections"].find_one(
+            {
+                "path": parent_path,
+                "is_published": True,
+                "deleted": {"$ne": True},
+            }
+        )
+
+        if section:
+            content = await find_content_in_section(db, str(section["_id"]), item_slug)
+            if content:
+                section_dict = _section_to_dict(section)
+                breadcrumbs = await build_breadcrumbs(db, section)
+                breadcrumbs.append({"title": content.get("title", item_slug), "path": path})
+                return {
+                    "type": "content",
+                    "section": section_dict,
+                    "content_item": content,
+                    "breadcrumbs": breadcrumbs,
+                }
+
     # Phase 4 will add redirect resolution here
 
     raise HTTPException(status_code=404, detail="Path not found")
