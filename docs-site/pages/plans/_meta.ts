@@ -1,5 +1,7 @@
 export default {
   index: 'Overview',
+  '2026-03-29-nested-routing': 'Nested Routing',
+  '2026-03-29-asset-reorganization': 'Asset Reorganization (Nested Routing Prereq)',
   '2026-03-26-contact-form': 'Contact Form Design',
   '2026-03-26-asset-reorganization': 'Asset Reorganization',
   '2026-03-23-server-side-pdf': 'Server-Side PDF Generation',
