@@ -234,7 +234,7 @@ function SectionRow({
       </div>
       <div className="flex flex-wrap gap-1">
         <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.display_type}</span>
-        <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.content_type}</span>
+        {section.content_type && <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.content_type}</span>}
         <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{section.nav_visibility}</span>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -282,7 +282,7 @@ function SectionEditForm({
   disabled: boolean;
 }) {
   const [title, setTitle] = useState(section.title);
-  const [contentType, setContentType] = useState<SectionContentType>(section.content_type);
+  const [contentType, setContentType] = useState<SectionContentType>(section.content_type || 'story');
   const [displayType, setDisplayType] = useState<DisplayType>(section.display_type);
   const [navVisibility, setNavVisibility] = useState<NavVisibility>(section.nav_visibility);
   const [icon, setIcon] = useState<SectionIcon>((section.icon || 'default') as SectionIcon);
