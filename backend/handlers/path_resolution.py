@@ -39,10 +39,15 @@ async def find_content_in_section(
 
 
 async def build_breadcrumbs(db, section: dict) -> list:
-    """Walk ancestors to build breadcrumb chain."""
+    """Walk ancestors to build breadcrumb chain with cycle guard."""
     crumbs = []
     current = section
+    visited = set()
     while current:
+        current_id = str(current.get("_id", ""))
+        if current_id in visited:
+            break
+        visited.add(current_id)
         crumbs.append({"title": current["title"], "path": current["path"]})
         if current.get("parent_id"):
             try:

@@ -98,7 +98,7 @@ class SectionUpdate(BaseModel):
 
     title: str | None = Field(None, min_length=1, max_length=200)
     slug: str | None = Field(None, min_length=1, max_length=200)
-    parent_id: str | None = Field(None)
+    # parent_id excluded — use PUT /sections/{id}/move for reparenting (has cycle detection)
     display_type: DisplayType | None = None
     nav_visibility: NavVisibility | None = None
     sort_order: int | None = Field(None, ge=0)
