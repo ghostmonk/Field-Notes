@@ -93,6 +93,10 @@ async def get_children(
     """Return child sections and content items for a section."""
     db = await get_db()
 
+    # Auth check must come before section lookup to avoid leaking existence of unpublished sections
+    if include_unpublished:
+        await verify_auth(request)
+
     # Validate section_id
     try:
         obj_id = ObjectId(section_id)
@@ -106,10 +110,6 @@ async def get_children(
     section = await db["sections"].find_one(section_query)
     if not section:
         raise HTTPException(status_code=404, detail="Section not found")
-
-    # Auth check for unpublished content
-    if include_unpublished:
-        await verify_auth(request)
 
     # Determine which section IDs to query content from
     target_section_ids = [section_id]

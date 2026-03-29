@@ -495,7 +495,7 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
         }
 
         // Section view
-        const section = resolved.section as Section;
+        let section = resolved.section as Section;
         const displayType = section.display_type;
 
         // Static page view
@@ -513,28 +513,41 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
             }
         }
 
-        // List view — fetch children
+        // List view — use per-type endpoints for SSR data (matches display component expectations)
+        // The children endpoint returns ListingItem[] which doesn't match Story[]/Project[] shapes
+        // that SectionListView and useFetchContent expect. Use old endpoints for backward compat.
         try {
-            const childrenRes = await fetch(`${API_BASE_URL}/sections/${section.id}/children?limit=20&offset=0`);
             let initialListData: PaginatedResponse<any> | undefined;
-            if (childrenRes.ok) {
-                initialListData = await childrenRes.json();
-            }
+            const contentType = section.content_type;
 
-            // Infer content_type from the first child item for backward compatibility
-            const sectionWithContentType = { ...section };
-            if (initialListData?.items?.length) {
-                const firstContentItem = initialListData.items.find((item: any) => item.item_type === 'content');
-                if (firstContentItem?.content_type) {
-                    sectionWithContentType.content_type = firstContentItem.content_type;
+            if (contentType === 'story') {
+                const listRes = await fetch(`${API_BASE_URL}/stories?limit=10&offset=0&section_id=${section.id}`);
+                if (listRes.ok) initialListData = await listRes.json();
+            } else if (contentType === 'project') {
+                const listRes = await fetch(`${API_BASE_URL}/projects?limit=10&offset=0&section_id=${section.id}`);
+                if (listRes.ok) initialListData = await listRes.json();
+            } else if (contentType === 'photo_essay') {
+                const listRes = await fetch(`${API_BASE_URL}/photo-essays/section/${section.id}?limit=20&offset=0`);
+                if (listRes.ok) initialListData = await listRes.json();
+            } else {
+                // For sections without content_type (new nested sections), try children endpoint
+                const childrenRes = await fetch(`${API_BASE_URL}/sections/${section.id}/children?limit=20&offset=0`);
+                if (childrenRes.ok) {
+                    const childrenData = await childrenRes.json();
+                    // Infer content_type from first content item
+                    const firstContentItem = childrenData.items?.find((item: any) => item.item_type === 'content');
+                    if (firstContentItem?.content_type) {
+                        section = { ...section, content_type: firstContentItem.content_type } as Section;
+                    }
+                    initialListData = childrenData;
                 }
             }
 
             return {
                 props: {
-                    section: sectionWithContentType as Section,
+                    section,
                     view: 'list',
-                    initialListData: initialListData || { items: [], total: 0, limit: 20, offset: 0 },
+                    initialListData: initialListData || { items: [], total: 0, limit: 10, offset: 0 },
                 },
             };
         } catch {
@@ -542,7 +555,7 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
                 props: {
                     section,
                     view: 'list',
-                    initialListData: { items: [], total: 0, limit: 20, offset: 0 },
+                    initialListData: { items: [], total: 0, limit: 10, offset: 0 },
                 },
             };
         }

@@ -283,6 +283,8 @@ async def create_section(
 
         # Compute materialized path from parent
         if section.parent_id:
+            if not ObjectId.is_valid(section.parent_id):
+                raise HTTPException(status_code=400, detail="Invalid parent_id format")
             parent = await find_one_and_convert(
                 collection,
                 {"_id": ObjectId(section.parent_id), "deleted": {"$ne": True}},
