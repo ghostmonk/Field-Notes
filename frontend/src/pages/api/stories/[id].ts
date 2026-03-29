@@ -18,8 +18,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             'Content-Type': 'application/json',
         };
 
-        if (token?.accessToken) {
-            headers.Authorization = `Bearer ${token.accessToken}`;
+        const accessToken = token?.accessToken || req.headers.authorization?.replace('Bearer ', '');
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
         }
 
         // Check if the ID is a MongoDB ObjectID or a slug
@@ -35,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         if (req.method === 'DELETE') {
-            if (!token?.accessToken) {
+            if (!accessToken) {
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
 
@@ -62,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             try { await res.revalidate('/'); } catch { /* non-fatal */ }
             return res.status(204).end();
         } else if (req.method === 'PUT') {
-            if (!token?.accessToken) {
+            if (!accessToken) {
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
 
