@@ -16,6 +16,7 @@ export function ListingCard({ item, sectionPath }: ListingCardProps) {
         <Link href={href} className="card" data-testid="listing-card">
             {item.image_url && (
                 <div className="card__image-container">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src={item.image_url}
                         alt={item.title}

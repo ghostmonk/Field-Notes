@@ -115,7 +115,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
       }
       setIsSaving(false);
     }
-  }, [session, page, pageType, section.slug, router, clearDraft, stopAutosave]);
+  }, [session, page, pageType, section.slug, section.path, router, clearDraft, stopAutosave]);
 
   // Check for recovered draft on initial load
   useEffect(() => {
