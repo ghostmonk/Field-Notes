@@ -38,6 +38,48 @@ from PIL import Image, ImageOps
 
 router = APIRouter()
 
+IMAGE_VARIANTS = {
+    "originals": ".webp",
+    "thumbnails": ".webp",
+    "medium": ".webp",
+    "large": ".webp",
+}
+
+VIDEO_VARIANTS = {
+    "originals": None,
+    "processed": ".mp4",
+    "thumbnails": ".jpg",
+}
+
+VARIANT_WIDTHS = {
+    "thumbnails": 400,
+    "medium": 768,
+    "large": 1536,
+    "originals": None,
+}
+
+
+def build_asset_path(asset_id: str, media_type: str, variant: str, ext: str | None = None) -> str:
+    if media_type == "image":
+        if variant not in IMAGE_VARIANTS:
+            raise ValueError(
+                f"Unknown variant '{variant}' for image. Valid: {list(IMAGE_VARIANTS.keys())}"
+            )
+        extension = ext or IMAGE_VARIANTS[variant]
+        return f"images/{variant}/{asset_id}{extension}"
+    elif media_type == "video":
+        if variant not in VIDEO_VARIANTS:
+            raise ValueError(
+                f"Unknown variant '{variant}' for video. Valid: {list(VIDEO_VARIANTS.keys())}"
+            )
+        extension = ext or VIDEO_VARIANTS[variant]
+        if extension is None:
+            raise ValueError(f"Video variant '{variant}' requires an explicit ext argument")
+        return f"video/{variant}/{asset_id}{extension}"
+    else:
+        raise ValueError(f"Unknown media type '{media_type}'. Valid: image, video")
+
+
 ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/avi"]
 
@@ -214,6 +256,14 @@ async def process_single_file(
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.content_type}")
 
 
+SIZE_TO_VARIANT = {
+    2048: "originals",
+    1536: "large",
+    768: "medium",
+    400: "thumbnails",
+}
+
+
 async def process_image_file(
     file: UploadFile,
     contents: bytes,
@@ -225,12 +275,7 @@ async def process_image_file(
     """Process an image file and return ProcessedMediaFile."""
     validate_image(file.content_type, file_size)
     new_filename = generate_unique_filename(file.filename)
-    base_name, extension = os.path.splitext(new_filename)
-
-    # Route images to photos/{section_id}/ when section_id is provided
-    if section_id:
-        base_name = f"photos/{section_id}/{base_name}"
-    webp_extension = f".{OUTPUT_FORMAT}"
+    asset_id = os.path.splitext(new_filename)[0]
 
     # Get original image dimensions for aspect ratio calculation
     original_image = Image.open(io.BytesIO(contents))
@@ -252,20 +297,15 @@ async def process_image_file(
     final_height = original_height
 
     for size in IMAGE_SIZES:
-        sized_filename = (
-            f"{base_name}_{size}{webp_extension}"
-            if size != MAX_IMAGE_SIZE
-            else f"{base_name}{webp_extension}"
-        )
+        variant = SIZE_TO_VARIANT[size]
+        variant_path = build_asset_path(asset_id, "image", variant)
         resized_image = resize_image(contents, size, exif_corrected=(image_filter != "none"))
 
         blob_path, _ = await upload_file(
-            resized_image, sized_filename, f"image/{OUTPUT_FORMAT}", bucket
+            resized_image, variant_path, f"image/{OUTPUT_FORMAT}", bucket
         )
 
-        # Always use API endpoint instead of signed URLs to avoid expiration issues
-        # The API endpoint will handle signed URL generation on-demand
-        url = f"/uploads/{sized_filename}"
+        url = f"/uploads/{variant_path}"
 
         srcset_entries.append(f"{url} {size}w")
         if size == MAX_IMAGE_SIZE:
@@ -289,6 +329,8 @@ async def process_video_file(
     """Process a video file and return ProcessedMediaFile."""
     validate_video(file.content_type, file_size)
     new_filename = generate_unique_filename(file.filename)
+    # Video originals stay in flat video/ directory — the Cloud Function
+    # and Eventarc trigger expect uploads/video/{filename} directly.
     video_path = f"video/{new_filename}"
 
     blob_path, _ = await upload_file(contents, video_path, file.content_type, bucket)
@@ -314,7 +356,7 @@ async def process_video_file(
         # Create video processing job using Pydantic model
         job = VideoProcessingJob(
             job_id=job_id,
-            original_file=f"uploads/{video_path}",
+            original_file=f"uploads/{video_path}",  # e.g. uploads/video/20260329_143022_a7f3b2.mov
             status="pending",  # Will be updated to 'started' by Cloud Function
             created_at=now,
             updated_at=now,
