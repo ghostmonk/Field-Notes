@@ -15,6 +15,7 @@ from models.section import SectionCreate, SectionResponse, SectionUpdate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
+from services.redirects import write_redirect
 from utils import find_many_and_convert, find_one_and_convert, generate_unique_slug
 
 router = APIRouter()
@@ -43,6 +44,27 @@ async def cascade_path_updates(
             {"$set": {"path": child_new_path, "updatedDate": datetime.now(timezone.utc)}},
         )
         await cascade_path_updates(collection, str(child["_id"]), child_new_path, visited)
+
+
+async def _collect_all_descendant_paths(
+    collection: AsyncIOMotorCollection,
+    section_id: str,
+    paths: dict,
+    visited: set | None = None,
+):
+    """Recursively collect paths of all descendant sections."""
+    if visited is None:
+        visited = set()
+    if section_id in visited:
+        return
+    visited.add(section_id)
+    children = await collection.find({"parent_id": section_id, "deleted": {"$ne": True}}).to_list(
+        None
+    )
+    for child in children:
+        child_id = str(child["_id"])
+        paths[child_id] = child.get("path", "")
+        await _collect_all_descendant_paths(collection, child_id, paths, visited)
 
 
 @router.get("/sections")
@@ -460,45 +482,20 @@ async def update_section(
             old_path = existing_section.path
             new_path = update_data["path"]
 
-            # Collect old descendant paths before cascade
-            old_desc_paths = {}
-            desc_cursor = collection.find({"parent_id": section_id, "deleted": {"$ne": True}})
-            async for desc in desc_cursor:
-                old_desc_paths[str(desc["_id"])] = desc.get("path", "")
+            # Collect ALL old descendant paths before cascade (recursive)
+            old_desc_paths = {section_id: old_path}
+            await _collect_all_descendant_paths(collection, section_id, old_desc_paths)
 
             await cascade_path_updates(collection, section_id, new_path)
 
             # Write redirects (non-critical — don't fail the rename)
             try:
-                from database import get_db as _get_db
-
-                rdb = await _get_db()
-
-                await rdb["redirects"].update_one(
-                    {"old_path": old_path},
-                    {"$set": {"new_path": new_path}, "$setOnInsert": {"created_at": current_time}},
-                    upsert=True,
-                )
-                await rdb["redirects"].update_many(
-                    {"new_path": old_path}, {"$set": {"new_path": new_path}}
-                )
-
-                for desc_id, old_desc_path in old_desc_paths.items():
-                    desc_doc = await collection.find_one({"_id": ObjectId(desc_id)})
-                    if desc_doc and desc_doc.get("path") != old_desc_path:
-                        new_desc_path = desc_doc["path"]
-                        await rdb["redirects"].update_one(
-                            {"old_path": old_desc_path},
-                            {
-                                "$set": {"new_path": new_desc_path},
-                                "$setOnInsert": {"created_at": current_time},
-                            },
-                            upsert=True,
-                        )
-                        await rdb["redirects"].update_many(
-                            {"new_path": old_desc_path},
-                            {"$set": {"new_path": new_desc_path}},
-                        )
+                db = collection.database
+                for sid, old_p in old_desc_paths.items():
+                    doc = await collection.find_one({"_id": ObjectId(sid)})
+                    new_p = doc["path"] if doc else new_path
+                    if old_p != new_p:
+                        await write_redirect(db, old_p, new_p)
             except Exception as redirect_err:
                 logger.warning(f"Failed to write redirects for section rename: {redirect_err}")
 
