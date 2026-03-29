@@ -166,6 +166,11 @@ async def get_tags_collection() -> AsyncIOMotorCollection:
     return db["tags"]
 
 
+async def get_redirects_collection() -> AsyncIOMotorCollection:
+    db = await get_db()
+    return db["redirects"]
+
+
 async def ensure_indexes() -> None:
     """Create database indexes for optimal query performance.
 
@@ -363,6 +368,11 @@ async def ensure_indexes() -> None:
     await safe_create_index(voice_feedback, "user_id")
     await safe_create_index(voice_feedback, "feedback_type")
     await safe_create_index(voice_feedback, "job_context")
+
+    # Redirects indexes
+    redirects = db["redirects"]
+    if not await safe_create_index(redirects, [("old_path", 1)], unique=True):
+        failed_indexes.append("redirects.old_path")
 
     # Tags indexes
     tags = db["tags"]
