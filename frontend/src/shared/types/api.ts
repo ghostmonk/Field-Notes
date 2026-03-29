@@ -214,6 +214,7 @@ export interface PhotoEssay {
  */
 export interface PhotoEssayCard {
     id: string;
+    slug?: string;
     title: string;
     description?: string;
     cover_image_url: string;

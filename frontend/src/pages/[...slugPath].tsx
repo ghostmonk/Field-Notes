@@ -22,6 +22,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
 import { processStoryDataSSR } from '@/rendering/server';
 import apiClient from '@/shared/lib/api-client';
+import { SectionProvider } from '@/contexts/SectionContext';
 import dynamic from 'next/dynamic';
 const ContactForm = dynamic(() => import('@/modules/static/pages/ContactForm').then(mod => ({ default: mod.ContactForm })), { ssr: false });
 
@@ -319,6 +320,14 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
 }
 
 export default function SectionPage({ section, view, initialListData, detailItem, pageContent, ogImage, excerpt, error }: SectionPageProps) {
+    return (
+        <SectionProvider section={error ? null : section}>
+            <SectionPageContent section={section} view={view} initialListData={initialListData} detailItem={detailItem} pageContent={pageContent} ogImage={ogImage} excerpt={excerpt} error={error} />
+        </SectionProvider>
+    );
+}
+
+function SectionPageContent({ section, view, initialListData, detailItem, pageContent, ogImage, excerpt, error }: SectionPageProps) {
     const canonicalUrl = getCanonicalUrl();
     const { data: session } = useSession();
     const router = useRouter();

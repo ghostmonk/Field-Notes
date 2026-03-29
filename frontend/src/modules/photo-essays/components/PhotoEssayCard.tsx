@@ -9,7 +9,7 @@ interface Props {
 
 export function PhotoEssayCard({ essay, basePath }: Props) {
     return (
-        <Link href={`${basePath}/${essay.id}`} className="gallery-card" data-testid="photo-essay-card">
+        <Link href={`${basePath}/${essay.slug || essay.id}`} className="gallery-card" data-testid="photo-essay-card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
                 src={essay.cover_image_url}

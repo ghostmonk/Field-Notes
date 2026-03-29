@@ -98,6 +98,7 @@ class PhotoEssayCard(BaseModel):
     """Lightweight listing model without the photos array."""
 
     id: str
+    slug: Optional[str] = None
     title: str
     description: Optional[str] = None
     cover_image_url: str
