@@ -106,7 +106,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
       await apiClient.pages.update(pageType, payload, session.accessToken);
       clearDraft();
       stopAutosave();
-      router.push(`/${section.slug}`);
+      router.push(`/${section.path || section.slug}`);
     } catch (err) {
       if (err instanceof ApiRequestError) {
         setError(err.status === 401 ? ErrorService.handleAuthError(err) : err.getUserMessage());
@@ -327,7 +327,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => router.push(`/${section.slug}`)}
+                      onClick={() => router.push(`/${section.path || section.slug}`)}
                       disabled={isSaving}
                       data-testid="editor-cancel-button"
                     >

@@ -30,7 +30,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
     handleDelete,
     resetForm,
     clearError,
-  } = useProjectEditor(section.id, section.slug);
+  } = useProjectEditor(section.id, section.path || section.slug);
   const { data: session } = useSession();
 
   const [techText, setTechText] = useState((project.technologies || []).join(', '));
@@ -172,7 +172,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => router.push(`/${section.slug}`)}
+                      onClick={() => router.push(`/${section.path || section.slug}`)}
                       disabled={isSaving}
                       data-testid="editor-cancel-button"
                     >

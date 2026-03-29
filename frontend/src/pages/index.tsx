@@ -72,7 +72,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
                 const sectionsData = await sectionsRes.json();
                 const storySection = sectionsData.items.find((s: { content_type: string }) => s.content_type === 'story');
                 if (storySection) {
-                    storySectionSlug = storySection.slug;
+                    storySectionSlug = storySection.path || storySection.slug;
                 }
             }
         } catch {

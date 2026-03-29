@@ -35,7 +35,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
     recoveredDraft,
     acceptDraft,
     dismissDraft,
-  } = useStoryEditor(section.id, section.slug);
+  } = useStoryEditor(section.id, section.path || section.slug);
   const { data: session } = useSession();
 
   if (isLoading && !isSaving) {
@@ -196,7 +196,7 @@ export function StoryEditorForm({ section }: StoryEditorFormProps) {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => router.push(`/${section.slug}`)}
+                      onClick={() => router.push(`/${section.path || section.slug}`)}
                       disabled={isSaving}
                       data-testid="editor-cancel-button"
                     >
