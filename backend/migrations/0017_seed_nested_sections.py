@@ -140,7 +140,7 @@ WRITING_STORIES = [
 
 def _find_section_by_path(db, path):
     """Find a section by its path field."""
-    return db["sections"].find_one({"path": path, "is_deleted": {"$ne": True}})
+    return db["sections"].find_one({"path": path, "deleted": {"$ne": True}})
 
 
 def upgrade(db: "pymongo.database.Database"):
@@ -161,7 +161,7 @@ def upgrade(db: "pymongo.database.Database"):
     # Update existing top-level sections with path and sort_order
     for slug, updates in TOP_LEVEL_UPDATES.items():
         sections.update_one(
-            {"slug": slug, "is_deleted": {"$ne": True}, "parent_id": None},
+            {"slug": slug, "deleted": {"$ne": True}, "parent_id": None},
             {"$set": {**updates, "updatedDate": now}},
         )
 
@@ -189,7 +189,7 @@ def upgrade(db: "pymongo.database.Database"):
                 "nav_visibility": child_def["nav_visibility"],
                 "sort_order": child_def["sort_order"],
                 "is_published": True,
-                "is_deleted": False,
+                "deleted": False,
                 "createdDate": now,
                 "updatedDate": now,
             }
@@ -210,7 +210,7 @@ def upgrade(db: "pymongo.database.Database"):
                     "date": now - timedelta(days=len(TECH_STORIES) - i),
                     "user_id": user_id,
                     "section_id": tech_section_id,
-                    "is_deleted": False,
+                    "deleted": False,
                     "createdDate": now - timedelta(days=len(TECH_STORIES) - i),
                     "updatedDate": now,
                 }
@@ -231,7 +231,7 @@ def upgrade(db: "pymongo.database.Database"):
                     "date": now,
                     "user_id": user_id,
                     "section_id": personal_section_id,
-                    "is_deleted": False,
+                    "deleted": False,
                     "createdDate": now,
                     "updatedDate": now,
                 }
@@ -256,7 +256,7 @@ def upgrade(db: "pymongo.database.Database"):
                     "photos": [],
                     "section_id": portraits_section_id,
                     "user_id": user_id,
-                    "is_deleted": False,
+                    "deleted": False,
                     "createdDate": now,
                     "updatedDate": now,
                 }
@@ -277,7 +277,7 @@ def upgrade(db: "pymongo.database.Database"):
                     "date": now,
                     "user_id": user_id,
                     "section_id": writing_section_id,
-                    "is_deleted": False,
+                    "deleted": False,
                     "createdDate": now,
                     "updatedDate": now,
                 }

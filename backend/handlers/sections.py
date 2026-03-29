@@ -24,8 +24,14 @@ async def cascade_path_updates(
     collection: AsyncIOMotorCollection,
     section_id: str,
     new_path: str,
+    visited: set | None = None,
 ):
     """Recursively update paths of all descendant sections."""
+    if visited is None:
+        visited = set()
+    if section_id in visited:
+        return
+    visited.add(section_id)
     children = await collection.find({"parent_id": section_id, "deleted": {"$ne": True}}).to_list(
         None
     )
@@ -36,7 +42,7 @@ async def cascade_path_updates(
             {"_id": child["_id"]},
             {"$set": {"path": child_new_path, "updatedDate": datetime.now(timezone.utc)}},
         )
-        await cascade_path_updates(collection, str(child["_id"]), child_new_path)
+        await cascade_path_updates(collection, str(child["_id"]), child_new_path, visited)
 
 
 @router.get("/sections")

@@ -46,8 +46,10 @@ async def write_redirect(
                 "new_path": new_path,
                 "content_id": content_id,
                 "content_type": content_type,
+            },
+            "$setOnInsert": {
                 "created_at": now,
-            }
+            },
         },
         upsert=True,
     )
@@ -200,6 +202,8 @@ async def move_content(request: Request, content_type: str, content_id: str):
 
     # Return updated item
     updated = await db[collection_name].find_one({"_id": ObjectId(content_id)})
+    if not updated:
+        raise HTTPException(status_code=500, detail="Failed to retrieve updated document")
     result = dict(updated)
     result["id"] = str(result.pop("_id"))
     return result
@@ -333,6 +337,8 @@ async def move_section(request: Request, section_id: str):
 
     # Return updated section
     updated = await db["sections"].find_one({"_id": ObjectId(section_id)})
+    if not updated:
+        raise HTTPException(status_code=500, detail="Failed to retrieve updated document")
     result = dict(updated)
     result["id"] = str(result.pop("_id"))
     return result

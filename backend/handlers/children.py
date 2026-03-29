@@ -15,8 +15,13 @@ CONTENT_COLLECTIONS = [
 ]
 
 
-async def collect_descendant_ids(db, section_id: str) -> list[str]:
+async def collect_descendant_ids(db, section_id: str, visited: set | None = None) -> list[str]:
     """Recursively collect all descendant section IDs."""
+    if visited is None:
+        visited = set()
+    if section_id in visited:
+        return []
+    visited.add(section_id)
     ids = []
     children = (
         await db["sections"]
@@ -26,7 +31,7 @@ async def collect_descendant_ids(db, section_id: str) -> list[str]:
     for child in children:
         child_id = str(child["_id"])
         ids.append(child_id)
-        ids.extend(await collect_descendant_ids(db, child_id))
+        ids.extend(await collect_descendant_ids(db, child_id, visited))
     return ids
 
 

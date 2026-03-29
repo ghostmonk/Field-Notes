@@ -27,8 +27,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.redirect(301, location || '/');
         }
 
-        if (response.status === 404) {
-            return res.status(404).json({ detail: 'Path not found' });
+        if (!response.ok && response.status !== 301) {
+            const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+            return res.status(response.status).json(errorData);
         }
 
         const data = await response.json();

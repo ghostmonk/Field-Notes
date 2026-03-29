@@ -408,7 +408,7 @@ app.get('/sections/:id/children', (req: Request, res: Response) => {
 
   // For sections with content, add content items
   const contentItems = sampleStories
-    .filter(() => section.content_type === 'story')
+    .filter((s) => section.content_type === 'story' && s.section_id === sectionId)
     .map((s) => ({
       id: s.id,
       slug: s.slug,
@@ -423,7 +423,7 @@ app.get('/sections/:id/children', (req: Request, res: Response) => {
     }));
 
   const projectItems = sampleProjects
-    .filter(() => section.content_type === 'project')
+    .filter((p) => section.content_type === 'project' && p.section_id === sectionId)
     .map((p) => ({
       id: p.id,
       slug: p.slug,
