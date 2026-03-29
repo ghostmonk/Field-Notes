@@ -6,9 +6,10 @@ import { Card, Badge, Button } from '@/components/ui';
 
 interface ProjectDetailProps {
     project: Project;
+    onEdit?: () => void;
 }
 
-export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
+export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit }) => {
     return (
         <>
             {project.image_url && (
@@ -21,14 +22,26 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
                 />
             )}
 
-            <h1 className="page-title mb-sm">
-                {project.title}
-                {project.is_featured && (
-                    <Badge variant="featured">
-                        Featured
-                    </Badge>
+            <div className="flex items-center justify-between mb-sm">
+                <h1 className="page-title">
+                    {project.title}
+                    {project.is_featured && (
+                        <Badge variant="featured">
+                            Featured
+                        </Badge>
+                    )}
+                </h1>
+                {onEdit && (
+                    <Button
+                        onClick={onEdit}
+                        variant="secondary"
+                        size="sm"
+                        data-testid="project-edit-button"
+                    >
+                        Edit
+                    </Button>
                 )}
-            </h1>
+            </div>
 
             <p className="text-text-secondary text-lg mb-xl">
                 {project.summary}

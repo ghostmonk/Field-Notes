@@ -16,6 +16,7 @@ import { PhotoEssayCard, PhotoEssayPage } from '@/modules/photo-essays';
 import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
+import { Button } from '@/components/ui';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { EmptyState } from '@/components/EmptyState';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
@@ -290,13 +291,16 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
 
     if (contentType === 'project') {
         const project = item as Project;
+        const handleEdit = session?.user?.role === 'admin'
+            ? () => router.push({ pathname: '/editor', query: { id: project.id, section_id: section.id } })
+            : undefined;
         return (
             <div className="page-container">
                 <Breadcrumbs items={[
                     { label: section.title, href: `/${section.slug}` },
                     { label: project.title },
                 ]} />
-                <ProjectDetail project={project} />
+                <ProjectDetail project={project} onEdit={handleEdit} />
             </div>
         );
     }
@@ -313,6 +317,8 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
 
 export default function SectionPage({ section, view, initialListData, detailItem, pageContent, ogImage, excerpt, error }: SectionPageProps) {
     const canonicalUrl = getCanonicalUrl();
+    const { data: session } = useSession();
+    const router = useRouter();
 
     if (error) {
         return (
@@ -342,6 +348,18 @@ export default function SectionPage({ section, view, initialListData, detailItem
                     <link rel="canonical" href={canonicalUrl} />
                 </Head>
                 <StaticDisplay content={pageContent.content} title={pageContent.title} />
+                {session?.user?.role === 'admin' && (
+                    <div className="page-container flex justify-end mt-4">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => router.push({ pathname: '/editor', query: { section_id: section.id } })}
+                            data-testid="page-edit-button"
+                        >
+                            Edit
+                        </Button>
+                    </div>
+                )}
                 {section.slug === 'contact' && (
                     <div className="page-container mt-6">
                         <ContactForm />
