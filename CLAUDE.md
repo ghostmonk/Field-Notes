@@ -150,7 +150,7 @@ Assume all work happens in a worktree unless the user explicitly says to work on
 
 - **Worktree location**: `.worktrees/<descriptive-name>` (e.g., `.worktrees/video-upload-fix`)
 - **Branch naming**: `ghostmonk/{issue#}_descriptive_title` when an issue exists, `ghostmonk/descriptive_title` otherwise (e.g., `ghostmonk/142_video-upload-fix`, `ghostmonk/development-optimization`)
-- **Setup**: symlink `.env` and `gcp-credentials.json` from main repo (also symlink `gcp-credentials.json` into `backend/` — migrations run from that cwd), run `cd frontend && npm install`
+- **Setup**: symlink `.env`, `gcp-credentials.json`, and `.saguaro/config.yaml` from main repo (also symlink `gcp-credentials.json` into `backend/` — migrations run from that cwd), run `cd frontend && npm install`
 - **Port isolation**: When running multiple worktrees simultaneously, create `.env.local` in the worktree with offset ports to avoid conflicts:
   ```
   FRONTEND_PORT=3010
