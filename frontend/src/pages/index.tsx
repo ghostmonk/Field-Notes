@@ -70,7 +70,8 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
             const sectionsRes = await fetch(`${backendUrl}/sections`);
             if (sectionsRes.ok) {
                 const sectionsData = await sectionsRes.json();
-                const storySection = sectionsData.items.find((s: { content_type: string }) => s.content_type === 'story');
+                const storySection = sectionsData.items.find((s: { content_type: string; parent_id: string | null }) => s.content_type === 'story' && !s.parent_id)
+                    || sectionsData.items.find((s: { content_type: string }) => s.content_type === 'story');
                 if (storySection) {
                     storySectionSlug = storySection.path || storySection.slug;
                 }
