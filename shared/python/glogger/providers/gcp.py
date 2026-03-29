@@ -174,7 +174,7 @@ class GCPLogProvider(LogProvider):
             }
 
         log_level = self._convert_log_level(entry.level)
-        logger_name = entry.context.get("component", "app") if entry.context else "app"
+        logger_name = entry.context.component if entry.context else "app"
         self.handler.emit(
             logging.LogRecord(
                 name=logger_name,
