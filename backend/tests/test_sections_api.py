@@ -2,7 +2,7 @@
 API tests for Sections endpoints.
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from bson import ObjectId
@@ -422,6 +422,11 @@ class TestUpdateSection:
         ]
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
 
+        # Cascade: find children returns empty
+        find_no_children = MagicMock()
+        find_no_children.to_list = AsyncMock(return_value=[])
+        override_sections_database.find.return_value = find_no_children
+
         response = await sections_async_client.put(
             "/sections/507f1f77bcf86cd799439011",
             json={"title": "Updated Blog"},
@@ -684,3 +689,213 @@ class TestSectionPath:
         assert response.status_code == 200
         data = response.json()
         assert "content_type" not in data
+
+
+class TestPathCascade:
+    """Tests for path cascade on section rename."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_rename_parent_updates_child_paths(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Renaming a parent section cascades path updates to children."""
+        parent_id = ObjectId("507f1f77bcf86cd799439011")
+        child_id = ObjectId("507f1f77bcf86cd799439012")
+
+        parent_doc = {
+            **sample_section_data,
+            "_id": parent_id,
+            "title": "Blog",
+            "slug": "blog",
+            "path": "blog",
+            "parent_id": None,
+            "user_id": "mock_user_id",
+        }
+
+        child_doc = {
+            **sample_section_data,
+            "_id": child_id,
+            "title": "Tech",
+            "slug": "tech",
+            "path": "blog/tech",
+            "parent_id": str(parent_id),
+            "user_id": "mock_user_id",
+        }
+
+        # find_one calls: existing section check, slug uniqueness, cascade retrieval, updated section
+        override_sections_database.find_one.side_effect = [
+            parent_doc,  # Existing section check
+            None,  # Slug uniqueness check
+            {**parent_doc, "title": "Articles", "slug": "articles", "path": "articles"},
+        ]
+
+        # find().to_list() for cascade: first call returns child, second (recursive) returns empty
+        find_cursor_with_child = MagicMock()
+        find_cursor_with_child.to_list = AsyncMock(return_value=[child_doc])
+        find_cursor_no_children = MagicMock()
+        find_cursor_no_children.to_list = AsyncMock(return_value=[])
+        override_sections_database.find.side_effect = [
+            find_cursor_with_child,
+            find_cursor_no_children,
+        ]
+
+        override_sections_database.update_one.return_value = MagicMock(modified_count=1)
+
+        response = await sections_async_client.put(
+            f"/sections/{parent_id}",
+            json={"title": "Articles"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+
+        # Verify cascade update_one was called for the child with new path
+        update_calls = override_sections_database.update_one.call_args_list
+        # First call: update the parent itself
+        # Second call: cascade update for the child
+        assert len(update_calls) == 2
+        child_update = update_calls[1]
+        assert child_update[0][0] == {"_id": child_id}
+        assert child_update[0][1]["$set"]["path"] == "articles/tech"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_rename_cascades_to_grandchildren(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Renaming root cascades path updates through mid-level to leaf."""
+        root_id = ObjectId("507f1f77bcf86cd799439011")
+        mid_id = ObjectId("507f1f77bcf86cd799439012")
+        leaf_id = ObjectId("507f1f77bcf86cd799439013")
+
+        root_doc = {
+            **sample_section_data,
+            "_id": root_id,
+            "title": "Blog",
+            "slug": "blog",
+            "path": "blog",
+            "parent_id": None,
+            "user_id": "mock_user_id",
+        }
+
+        mid_doc = {
+            **sample_section_data,
+            "_id": mid_id,
+            "title": "Tech",
+            "slug": "tech",
+            "path": "blog/tech",
+            "parent_id": str(root_id),
+        }
+
+        leaf_doc = {
+            **sample_section_data,
+            "_id": leaf_id,
+            "title": "Python",
+            "slug": "python",
+            "path": "blog/tech/python",
+            "parent_id": str(mid_id),
+        }
+
+        override_sections_database.find_one.side_effect = [
+            root_doc,  # Existing section check
+            None,  # Slug uniqueness check
+            {**root_doc, "title": "Articles", "slug": "articles", "path": "articles"},
+        ]
+
+        # Cascade find calls:
+        # 1) children of root -> [mid_doc]
+        # 2) children of mid -> [leaf_doc]
+        # 3) children of leaf -> []
+        find_root_children = MagicMock()
+        find_root_children.to_list = AsyncMock(return_value=[mid_doc])
+        find_mid_children = MagicMock()
+        find_mid_children.to_list = AsyncMock(return_value=[leaf_doc])
+        find_leaf_children = MagicMock()
+        find_leaf_children.to_list = AsyncMock(return_value=[])
+        override_sections_database.find.side_effect = [
+            find_root_children,
+            find_mid_children,
+            find_leaf_children,
+        ]
+
+        override_sections_database.update_one.return_value = MagicMock(modified_count=1)
+
+        response = await sections_async_client.put(
+            f"/sections/{root_id}",
+            json={"title": "Articles"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+
+        update_calls = override_sections_database.update_one.call_args_list
+        # 3 calls: root update, mid cascade, leaf cascade
+        assert len(update_calls) == 3
+
+        mid_update = update_calls[1]
+        assert mid_update[0][0] == {"_id": mid_id}
+        assert mid_update[0][1]["$set"]["path"] == "articles/tech"
+
+        leaf_update = update_calls[2]
+        assert leaf_update[0][0] == {"_id": leaf_id}
+        assert leaf_update[0][1]["$set"]["path"] == "articles/tech/python"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_rename_only_cascades_to_descendants(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Renaming one section does not affect unrelated sections."""
+        section_a_id = ObjectId("507f1f77bcf86cd799439011")
+
+        section_a_doc = {
+            **sample_section_data,
+            "_id": section_a_id,
+            "title": "Blog",
+            "slug": "blog",
+            "path": "blog",
+            "parent_id": None,
+            "user_id": "mock_user_id",
+        }
+
+        override_sections_database.find_one.side_effect = [
+            section_a_doc,  # Existing section check
+            None,  # Slug uniqueness check
+            {**section_a_doc, "title": "Articles", "slug": "articles", "path": "articles"},
+        ]
+
+        # No children for section_a
+        find_no_children = MagicMock()
+        find_no_children.to_list = AsyncMock(return_value=[])
+        override_sections_database.find.side_effect = [find_no_children]
+
+        override_sections_database.update_one.return_value = MagicMock(modified_count=1)
+
+        response = await sections_async_client.put(
+            f"/sections/{section_a_id}",
+            json={"title": "Articles"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+
+        # Only one update_one call: the section itself, no cascade calls
+        update_calls = override_sections_database.update_one.call_args_list
+        assert len(update_calls) == 1
+        assert update_calls[0][0][0] == {"_id": ObjectId(str(section_a_id))}

@@ -20,6 +20,25 @@ from utils import find_many_and_convert, find_one_and_convert, generate_unique_s
 router = APIRouter()
 
 
+async def cascade_path_updates(
+    collection: AsyncIOMotorCollection,
+    section_id: str,
+    new_path: str,
+):
+    """Recursively update paths of all descendant sections."""
+    children = await collection.find({"parent_id": section_id, "deleted": {"$ne": True}}).to_list(
+        None
+    )
+
+    for child in children:
+        child_new_path = f"{new_path}/{child['slug']}"
+        await collection.update_one(
+            {"_id": child["_id"]},
+            {"$set": {"path": child_new_path, "updatedDate": datetime.now(timezone.utc)}},
+        )
+        await cascade_path_updates(collection, str(child["_id"]), child_new_path)
+
+
 @router.get("/sections")
 async def get_sections(
     request: Request,
@@ -427,6 +446,10 @@ async def update_section(
         update_data["updatedDate"] = current_time
 
         result = await collection.update_one({"_id": ObjectId(section_id)}, {"$set": update_data})
+
+        # Cascade path updates to descendants if path changed
+        if "path" in update_data:
+            await cascade_path_updates(collection, section_id, update_data["path"])
 
         if result.modified_count == 0:
             logger.error_with_context(
