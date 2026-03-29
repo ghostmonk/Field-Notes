@@ -414,20 +414,31 @@ class TestUpdateSection:
             **sample_section_data,
             "user_id": "mock_user_id",
         }
-        # First find_one for checking section exists, second for returning updated
+        updated_doc = {
+            **sample_doc,
+            "title": "Updated Blog",
+            "slug": "updated-blog",
+            "path": "updated-blog",
+        }
+        # find_one calls:
+        # 1) Existing section check
+        # 2) Slug uniqueness check
+        # 3) Redirect block: find_one for section itself
+        # 4) find_one_and_convert: return updated section
         override_sections_database.find_one.side_effect = [
             sample_doc,  # Existing section check
             None,  # Slug uniqueness check
-            {**sample_doc, "title": "Updated Blog", "slug": "updated-blog"},  # Updated section
+            updated_doc,  # Redirect block: find_one for this section
+            updated_doc,  # find_one_and_convert: updated section
         ]
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
 
         # find() calls:
-        # 1) Collect old descendant paths (async iter, no children)
-        # 2) Cascade: no children
+        # 1) _collect_all_descendant_paths: children of section (none)
+        # 2) cascade_path_updates: children of section (none)
         override_sections_database.find.side_effect = [
-            MockCursor([]),  # old descendant paths
-            MockCursor([]),  # cascade: no children
+            MockCursor([]),  # _collect_all_descendant_paths: no children
+            MockCursor([]),  # cascade_path_updates: no children
         ]
 
         response = await sections_async_client.put(
@@ -731,21 +742,31 @@ class TestPathCascade:
             "user_id": "mock_user_id",
         }
 
-        # find_one calls: existing section check, slug uniqueness, cascade retrieval, updated section
+        updated_parent = {**parent_doc, "title": "Articles", "slug": "articles", "path": "articles"}
+        # find_one calls:
+        # 1) Existing section check
+        # 2) Slug uniqueness check
+        # 3) Redirect block: find_one for parent_id
+        # 4) Redirect block: find_one for child_id
+        # 5) find_one_and_convert: return updated section
         override_sections_database.find_one.side_effect = [
             parent_doc,  # Existing section check
             None,  # Slug uniqueness check
-            {**parent_doc, "title": "Articles", "slug": "articles", "path": "articles"},
+            updated_parent,  # Redirect: find_one for parent
+            {**child_doc, "path": "articles/tech"},  # Redirect: find_one for child
+            updated_parent,  # find_one_and_convert: updated section
         ]
 
         # find() calls:
-        # 1. Collect old descendant paths (returns child)
-        # 2. Cascade: find children of parent (returns child)
-        # 3. Cascade: find children of child (returns empty)
+        # 1) _collect_all_descendant_paths: children of parent -> [child]
+        # 2) _collect_all_descendant_paths: children of child -> []
+        # 3) cascade_path_updates: children of parent -> [child]
+        # 4) cascade_path_updates: children of child -> []
         override_sections_database.find.side_effect = [
-            MockCursor([child_doc]),  # old descendant paths
-            MockCursor([child_doc]),  # cascade: children of parent
-            MockCursor([]),  # cascade: children of child
+            MockCursor([child_doc]),  # _collect_all_descendant_paths: children of parent
+            MockCursor([]),  # _collect_all_descendant_paths: children of child
+            MockCursor([child_doc]),  # cascade_path_updates: children of parent
+            MockCursor([]),  # cascade_path_updates: children of child
         ]
 
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
@@ -810,22 +831,37 @@ class TestPathCascade:
             "parent_id": str(mid_id),
         }
 
+        updated_root = {**root_doc, "title": "Articles", "slug": "articles", "path": "articles"}
+        # find_one calls:
+        # 1) Existing section check
+        # 2) Slug uniqueness check
+        # 3) Redirect block: find_one for root_id
+        # 4) Redirect block: find_one for mid_id
+        # 5) Redirect block: find_one for leaf_id
+        # 6) find_one_and_convert: return updated section
         override_sections_database.find_one.side_effect = [
             root_doc,  # Existing section check
             None,  # Slug uniqueness check
-            {**root_doc, "title": "Articles", "slug": "articles", "path": "articles"},
+            updated_root,  # Redirect: find_one for root
+            {**mid_doc, "path": "articles/tech"},  # Redirect: find_one for mid
+            {**leaf_doc, "path": "articles/tech/python"},  # Redirect: find_one for leaf
+            updated_root,  # find_one_and_convert: updated section
         ]
 
         # find() calls:
-        # 1) Collect old descendant paths (async iter over children of root)
-        # 2) Cascade: children of root -> [mid_doc]
-        # 3) Cascade: children of mid -> [leaf_doc]
-        # 4) Cascade: children of leaf -> []
+        # 1) _collect_all_descendant_paths: children of root -> [mid]
+        # 2) _collect_all_descendant_paths: children of mid -> [leaf]
+        # 3) _collect_all_descendant_paths: children of leaf -> []
+        # 4) cascade_path_updates: children of root -> [mid]
+        # 5) cascade_path_updates: children of mid -> [leaf]
+        # 6) cascade_path_updates: children of leaf -> []
         override_sections_database.find.side_effect = [
-            MockCursor([mid_doc]),  # old descendant paths
-            MockCursor([mid_doc]),  # cascade: children of root
-            MockCursor([leaf_doc]),  # cascade: children of mid
-            MockCursor([]),  # cascade: children of leaf
+            MockCursor([mid_doc]),  # _collect_all_descendant_paths: children of root
+            MockCursor([leaf_doc]),  # _collect_all_descendant_paths: children of mid
+            MockCursor([]),  # _collect_all_descendant_paths: children of leaf
+            MockCursor([mid_doc]),  # cascade_path_updates: children of root
+            MockCursor([leaf_doc]),  # cascade_path_updates: children of mid
+            MockCursor([]),  # cascade_path_updates: children of leaf
         ]
 
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
@@ -873,18 +909,25 @@ class TestPathCascade:
             "user_id": "mock_user_id",
         }
 
+        updated_a = {**section_a_doc, "title": "Articles", "slug": "articles", "path": "articles"}
+        # find_one calls:
+        # 1) Existing section check
+        # 2) Slug uniqueness check
+        # 3) Redirect block: find_one for section_a_id
+        # 4) find_one_and_convert: return updated section
         override_sections_database.find_one.side_effect = [
             section_a_doc,  # Existing section check
             None,  # Slug uniqueness check
-            {**section_a_doc, "title": "Articles", "slug": "articles", "path": "articles"},
+            updated_a,  # Redirect: find_one for section_a
+            updated_a,  # find_one_and_convert: updated section
         ]
 
         # find() calls:
-        # 1) Collect old descendant paths (async iter, no children)
-        # 2) Cascade: no children
+        # 1) _collect_all_descendant_paths: no children
+        # 2) cascade_path_updates: no children
         override_sections_database.find.side_effect = [
-            MockCursor([]),  # old descendant paths
-            MockCursor([]),  # cascade: no children
+            MockCursor([]),  # _collect_all_descendant_paths: no children
+            MockCursor([]),  # cascade_path_updates: no children
         ]
 
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
