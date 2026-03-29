@@ -163,9 +163,13 @@ test-ci:
 	pytest -v --tb=short --cov=. --cov-report=term-missing
 
 test-frontend:
+	-pkill -f "mock-server" 2>/dev/null; true
+	-docker compose stop frontend 2>/dev/null; true
 	cd frontend && npm run test:e2e
 
 test-frontend-ui:
+	-pkill -f "mock-server" 2>/dev/null; true
+	-docker compose stop frontend 2>/dev/null; true
 	cd frontend && npm run test:e2e:ui
 
 test-frontend-unit:
