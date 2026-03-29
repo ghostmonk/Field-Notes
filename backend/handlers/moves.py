@@ -10,6 +10,7 @@ from decorators.auth import verify_auth
 from fastapi import APIRouter, HTTPException, Request
 from glogger import logger
 from handlers.sections import cascade_path_updates
+from pymongo.errors import DuplicateKeyError
 
 router = APIRouter()
 
@@ -82,15 +83,20 @@ async def would_create_cycle(db, section_id: str, target_parent_id: str) -> bool
     return False
 
 
-async def _collect_descendant_sections(db, section_id: str) -> list:
-    """Collect all descendant sections recursively."""
+async def _collect_descendant_sections(db, section_id: str, visited: set | None = None) -> list:
+    """Collect all descendant sections recursively with cycle guard."""
+    if visited is None:
+        visited = set()
+    if section_id in visited:
+        return []
+    visited.add(section_id)
     descendants = []
     children = (
         await db["sections"].find({"parent_id": section_id, "deleted": {"$ne": True}}).to_list(None)
     )
     for child in children:
         descendants.append(child)
-        descendants.extend(await _collect_descendant_sections(db, str(child["_id"])))
+        descendants.extend(await _collect_descendant_sections(db, str(child["_id"]), visited))
     return descendants
 
 
@@ -178,10 +184,16 @@ async def move_content(request: Request, content_type: str, content_id: str):
         )
 
     # Update section_id
-    await db[collection_name].update_one(
-        {"_id": ObjectId(content_id)},
-        {"$set": {"section_id": target_section_id, "updatedDate": datetime.now(timezone.utc)}},
-    )
+    try:
+        await db[collection_name].update_one(
+            {"_id": ObjectId(content_id)},
+            {"$set": {"section_id": target_section_id, "updatedDate": datetime.now(timezone.utc)}},
+        )
+    except DuplicateKeyError:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Target section already has content with slug '{slug}'",
+        )
 
     # Write redirect
     old_path = f"{old_section['path']}/{slug}"
@@ -284,16 +296,22 @@ async def move_section(request: Request, section_id: str):
     new_path = f"{target_parent_path}/{slug}" if target_parent_path else slug
 
     # Update the section
-    await db["sections"].update_one(
-        {"_id": ObjectId(section_id)},
-        {
-            "$set": {
-                "parent_id": target_parent_id,
-                "path": new_path,
-                "updatedDate": datetime.now(timezone.utc),
-            }
-        },
-    )
+    try:
+        await db["sections"].update_one(
+            {"_id": ObjectId(section_id)},
+            {
+                "$set": {
+                    "parent_id": target_parent_id,
+                    "path": new_path,
+                    "updatedDate": datetime.now(timezone.utc),
+                }
+            },
+        )
+    except DuplicateKeyError:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Target parent already has a child section with slug '{slug}'",
+        )
 
     # Cascade path updates to descendants
     sections_collection = db["sections"]
