@@ -80,6 +80,7 @@ class SectionCreate(BaseModel):
     slug: str | None = Field(None, min_length=1, max_length=200)
     parent_id: str | None = Field(None)
     display_type: DisplayType
+    content_type: ContentType | None = None
     nav_visibility: NavVisibility = "main"
     sort_order: int = Field(0, ge=0)
     is_published: bool = True
