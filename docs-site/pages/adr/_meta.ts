@@ -5,5 +5,6 @@ export default {
   '0003-dynamic-content-management': 'ADR-0003: Dynamic Content Management',
   '0004-engagement-system': 'ADR-0004: Engagement System',
   '0005-dynamic-sections': 'ADR-0005: Dynamic Sections',
-  '0006-cloud-build-cost-optimization': 'ADR-0006: Cloud Build Cost Optimization'
+  '0006-cloud-build-cost-optimization': 'ADR-0006: Cloud Build Cost Optimization',
+  '0007-nested-routing': 'ADR-0007: Nested Section Routing'
 }

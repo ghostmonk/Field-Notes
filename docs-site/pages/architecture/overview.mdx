@@ -50,7 +50,7 @@ Adding a new type means creating components and registering them. No routing or 
 
 ### Dynamic Routing
 
-A single catch-all route (`pages/[...slugPath].tsx`) resolves all content URLs. It looks up the section by slug, fetches content based on `content_type`, and renders via the registry. Static routes were removed in favor of this unified approach.
+A single catch-all route (`pages/[...slugPath].tsx`) resolves all content URLs via a `resolve-path` backend endpoint that handles any URL depth in one call. Sections support unlimited nesting through `parent_id` references and a materialized `path` field for O(1) URL resolution. When content or sections move, automatic 301 redirects preserve old URLs. See [ADR-0007](/adr/0007-nested-routing) for the full design rationale.
 
 ### Navigation
 
