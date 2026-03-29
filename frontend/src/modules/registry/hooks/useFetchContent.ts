@@ -101,15 +101,11 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
         }
     }, [contentType, sectionId, pageSize, session?.accessToken]);
 
-    // Mark initial fetch as done if we have SSR data; otherwise fetch on mount
+    // Always fetch fresh data on mount
     useEffect(() => {
-        if (initialData && initialData.items.length > 0) {
-            initialFetchDoneRef.current = true;
-        } else {
-            fetchInternal(true);
-            initialFetchDoneRef.current = true;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only; initialData is from SSR props
+        fetchInternal(true);
+        initialFetchDoneRef.current = true;
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only fetch; fetchInternal is stable via refs
     }, []);
 
     // Re-fetch when sectionId changes (client-side navigation)
