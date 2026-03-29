@@ -11,7 +11,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'DELETE') {
     const token = await getToken({ req });
-    if (!token?.accessToken) {
+    const accessToken = token?.accessToken || req.headers.authorization?.replace('Bearer ', '');
+    if (!accessToken) {
       return res.status(401).json({ detail: 'Authentication required' });
     }
 
@@ -19,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const response = await fetchBackend(`/tags/${encodeURIComponent(name)}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${token.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
