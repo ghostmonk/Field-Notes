@@ -12,9 +12,13 @@ export {
   TEST_SECTION_IDS,
   TEST_COMMENT_IDS,
   sampleSections,
+  allSections,
+  nestedSections,
   sampleReactions,
   sampleComments,
+  sampleBlogChildren,
   createTestReactions,
   createTestComment,
+  createTestListingItem,
 } from '../test-data';
-export type { TestSection, TestReactionCounts, TestComment } from '../test-data';
+export type { TestSection, TestListingItem, TestReactionCounts, TestComment } from '../test-data';
