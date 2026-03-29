@@ -282,7 +282,7 @@ async def ensure_indexes() -> None:
 
     # Sections indexes
     sections = db["sections"]
-    if not await safe_create_index(sections, [("path", 1)], unique=True, sparse=True):
+    if not await safe_create_index(sections, [("path", 1)], unique=True):
         failed_indexes.append("sections.path")
     if not await safe_create_index(sections, [("parent_id", 1), ("slug", 1)], unique=True):
         failed_indexes.append("sections.parent_id_slug")

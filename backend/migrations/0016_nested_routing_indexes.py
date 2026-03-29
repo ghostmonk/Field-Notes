@@ -40,7 +40,7 @@ def upgrade(db):
         logger.info("No slug_1 index to drop on sections")
 
     # Create new indexes on sections
-    sections.create_index([("path", 1)], unique=True, sparse=True)
+    sections.create_index([("path", 1)], unique=True)
     print("Created unique index on sections.path")
     logger.info("Created unique index on sections.path")
 

@@ -99,8 +99,11 @@ async def get_children(
     except (InvalidId, Exception):
         raise HTTPException(status_code=404, detail="Section not found")
 
-    # Verify section exists
-    section = await db["sections"].find_one({"_id": obj_id, "deleted": {"$ne": True}})
+    # Verify section exists and is accessible
+    section_query = {"_id": obj_id, "deleted": {"$ne": True}}
+    if not include_unpublished:
+        section_query["is_published"] = True
+    section = await db["sections"].find_one(section_query)
     if not section:
         raise HTTPException(status_code=404, detail="Section not found")
 
@@ -135,68 +138,28 @@ async def get_children(
     if featured_only:
         content_query_base["is_featured"] = True
 
-    # Count content across all collections for accurate total
-    content_count = 0
-    for collection_name, _ct in CONTENT_COLLECTIONS:
-        content_count += await db[collection_name].count_documents(content_query_base)
+    # Fetch content from all collections, merge globally by date, then paginate.
+    # Correct cross-collection sort requires fetching all items first.
+    content_items = []
+    for collection_name, content_type in CONTENT_COLLECTIONS:
+        docs = (
+            await db[collection_name].find(content_query_base).sort("createdDate", -1).to_list(None)
+        )
+        for doc in docs:
+            content_items.append(_content_to_listing_item(doc, content_type))
 
-    # Convert sections to listing items
+    # Sort all content globally by created_at descending
+    content_items.sort(key=lambda x: x.created_at or "", reverse=True)
+
+    # Convert sections to listing items (sections always come first)
     section_items = [_section_to_listing_item(s) for s in child_sections]
-    total = len(section_items) + content_count
 
-    # Sections come first. If pagination falls within sections, no content needed.
-    # If it extends past sections, fetch only the content needed for the page.
-    section_end = len(section_items)
-    if offset >= section_end:
-        # All sections skipped, fetch content with MongoDB-level pagination
-        content_offset = offset - section_end
-        content_items = []
-        remaining = limit
-        skipped = 0
-        for collection_name, content_type in CONTENT_COLLECTIONS:
-            if remaining <= 0:
-                break
-            coll_count = await db[collection_name].count_documents(content_query_base)
-            if skipped + coll_count <= content_offset:
-                skipped += coll_count
-                continue
-            skip_in_coll = max(0, content_offset - skipped)
-            docs = (
-                await db[collection_name]
-                .find(content_query_base)
-                .sort("createdDate", -1)
-                .skip(skip_in_coll)
-                .limit(remaining)
-                .to_list(remaining)
-            )
-            for doc in docs:
-                content_items.append(_content_to_listing_item(doc, content_type))
-                remaining -= 1
-            skipped += coll_count
-        paginated = content_items
-    elif offset + limit <= section_end:
-        # Entirely within sections
-        paginated = section_items[offset : offset + limit]
-    else:
-        # Straddles sections and content
-        paginated_sections = section_items[offset:]
-        content_needed = limit - len(paginated_sections)
-        content_items = []
-        remaining = content_needed
-        for collection_name, content_type in CONTENT_COLLECTIONS:
-            if remaining <= 0:
-                break
-            docs = (
-                await db[collection_name]
-                .find(content_query_base)
-                .sort("createdDate", -1)
-                .limit(remaining)
-                .to_list(remaining)
-            )
-            for doc in docs:
-                content_items.append(_content_to_listing_item(doc, content_type))
-                remaining -= 1
-        paginated = paginated_sections + content_items
+    # Merge: sections first, then content
+    all_items = section_items + content_items
+    total = len(all_items)
+
+    # Apply pagination
+    paginated = all_items[offset : offset + limit]
 
     return {
         "items": [item.model_dump() for item in paginated],
