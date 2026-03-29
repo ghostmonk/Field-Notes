@@ -32,7 +32,7 @@ export interface Story {
     updatedDate: string;
     user_id?: string;
     section_id?: string;
-    tags?: string[];
+    tags: string[];
 }
 
 /**
@@ -49,7 +49,7 @@ export interface Page {
     content: string;
     page_type: PageType;
     is_published: boolean;
-    tags?: string[];
+    tags: string[];
     createdDate: string;
     updatedDate: string;
     user_id?: string;
@@ -62,7 +62,7 @@ export interface UpdatePageRequest {
     title?: string;
     content?: string;
     is_published?: boolean;
-    tags?: string[];
+    tags: string[];
 }
 
 /**
@@ -98,7 +98,7 @@ export interface Project {
     is_published: boolean;
     is_featured: boolean;
     sort_order: number;
-    tags?: string[];
+    tags: string[];
     createdDate: string;
     updatedDate: string;
     user_id?: string;
@@ -120,7 +120,7 @@ export interface CreateProjectRequest {
     is_featured?: boolean;
     sort_order?: number;
     section_id?: string;
-    tags?: string[];
+    tags: string[];
 }
 
 /**
@@ -136,7 +136,7 @@ export interface CreateStoryRequest {
     content: string;
     is_published: boolean;
     section_id?: string;
-    tags?: string[];
+    tags: string[];
 }
 
 /**
@@ -201,7 +201,7 @@ export interface PhotoEssay {
     cover_image_position?: string;
     photos: PhotoItem[];
     is_published: boolean;
-    tags?: string[];
+    tags: string[];
     section_id?: string;
     user_id?: string;
     createdDate: string;
@@ -237,7 +237,7 @@ export interface CreatePhotoEssayRequest {
     photos: PhotoItem[];
     section_id?: string;
     is_published?: boolean;
-    tags?: string[];
+    tags: string[];
 }
 
 /**
@@ -251,7 +251,7 @@ export interface UpdatePhotoEssayRequest {
     cover_image_position?: string;
     photos?: PhotoItem[];
     is_published?: boolean;
-    tags?: string[];
+    tags: string[];
 }
 
 export interface CreateSectionRequest {

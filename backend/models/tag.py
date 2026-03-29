@@ -1,16 +1,12 @@
-import re
 from datetime import datetime, timezone
 from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from utils import slugify
 
 
 def normalize_tag(name: str) -> str:
-    name = name.strip().lower()
-    name = re.sub(r"\s+", "-", name)
-    name = re.sub(r"[^a-z0-9-]", "", name)
-    name = re.sub(r"-+", "-", name)
-    return name.strip("-")
+    return slugify(name.strip())
 
 
 class TagCreate(BaseModel):

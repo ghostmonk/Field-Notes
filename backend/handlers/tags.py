@@ -1,4 +1,5 @@
 import asyncio
+import re
 import traceback
 from datetime import datetime, timezone
 
@@ -34,7 +35,7 @@ async def get_tags(
         query = {}
         if q:
             normalized_q = normalize_tag(q)
-            query["name"] = {"$regex": f"^{normalized_q}"}
+            query["name"] = {"$regex": f"^{re.escape(normalized_q)}"}
 
         total = await collection.count_documents(query)
 
@@ -97,7 +98,9 @@ async def get_content_by_tag(
 
         async def search_collection(coll_name, content_type):
             results = []
-            async for doc in db[coll_name].find(base_query, projection).sort("createdDate", -1):
+            async for doc in (
+                db[coll_name].find(base_query, projection).sort("createdDate", -1).limit(50)
+            ):
                 doc["content_type"] = content_type
                 results.append(mongo_to_pydantic(doc, TaggedContentItem))
             return results

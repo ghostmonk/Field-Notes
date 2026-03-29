@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, KeyboardEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, useId, KeyboardEvent } from 'react';
 import { Tag } from '@/shared/types/api';
 import { apiClient } from '@/shared/lib/api-client';
 
@@ -77,9 +77,7 @@ export function TagInput({
     onChange([...tags, normalized]);
 
     if (token) {
-      apiClient.tags.create({ name: normalized }, token).catch(() => {
-        // Tag may already exist — that's fine, create is idempotent
-      });
+      apiClient.tags.create({ name: normalized }, token).catch(() => {});
     }
     setInput('');
     setSuggestions([]);
@@ -131,6 +129,7 @@ export function TagInput({
     };
   }, []);
 
+  const listboxId = useId();
   const classes = ['tag-input'];
   if (className) classes.push(className);
 
@@ -164,11 +163,12 @@ export function TagInput({
           placeholder={tags.length === 0 ? placeholder : ''}
           aria-label="Tag input"
           aria-autocomplete="list"
+          aria-controls={listboxId}
           aria-expanded={showSuggestions}
         />
       </div>
       {showSuggestions && (
-        <ul className="tag-input__suggestions" role="listbox">
+        <ul id={listboxId} className="tag-input__suggestions" role="listbox">
           {suggestions.map((tag, index) => (
             <li
               key={tag.id}

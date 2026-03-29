@@ -54,7 +54,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
   const [coverPosition, setCoverPosition] = useState('50% 50%');
-  const [tags, setTagsState] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!essayId);
@@ -113,7 +113,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
       if (cancelled) return;
       setTitleState(essay.title);
       setDescriptionState(essay.description || '');
-      setTagsState(essay.tags || []);
+      setTags(essay.tags || []);
       setCoverUrl(essay.cover_image_url);
       setCoverPosition(essay.cover_image_position || '50% 50%');
       setIsPublished(essay.is_published);
@@ -557,7 +557,7 @@ export function PhotoEssayEditor({ sectionId, essayId, token }: Props) {
         <label>Tags</label>
         <TagInput
           tags={tags}
-          onChange={(newTags) => { isDirtyRef.current = true; setTagsState(newTags); }}
+          onChange={(newTags) => { isDirtyRef.current = true; setTags(newTags); }}
           token={token}
           data-testid="photo-essay-tags-input"
         />

@@ -1,3 +1,5 @@
+import { getToken } from 'next-auth/jwt';
+
 const TIMEOUT_MS = 10000;
 
 export function getBackendUrl(): string {
@@ -42,8 +44,6 @@ export async function getAccessToken(req: { headers: Record<string, string | str
   if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
     return authHeader.slice(7);
   }
-  // Fall back to NextAuth JWT cookie
-  const { getToken } = await import('next-auth/jwt');
   const token = await getToken({ req: req as any });
   if (token?.accessToken) return token.accessToken as string;
   return undefined;
