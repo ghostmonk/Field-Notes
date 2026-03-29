@@ -94,7 +94,7 @@ export function TagInput({
   }, [tags, onChange]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
       e.preventDefault();
       if (activeIndex >= 0 && suggestions[activeIndex]) {
         addTag(suggestions[activeIndex].name);
