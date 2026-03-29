@@ -43,6 +43,7 @@ from handlers.engagement import router as engagement_router
 from handlers.job_applications import router as job_applications_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
+from handlers.path_resolution import router as path_resolution_router
 from handlers.photo_essays import router as photo_essays_router
 from handlers.projects import router as projects_router
 from handlers.resume import router as resume_router
@@ -77,6 +78,7 @@ test_app.include_router(tailor_router)
 test_app.include_router(voice_feedback_router)
 test_app.include_router(job_applications_router)
 test_app.include_router(contact_router)
+test_app.include_router(path_resolution_router)
 
 
 @pytest.fixture
