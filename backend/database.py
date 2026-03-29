@@ -226,6 +226,10 @@ async def ensure_indexes() -> None:
     projects = db["projects"]
     if not await safe_create_index(projects, "slug", unique=True):
         failed_indexes.append("projects.slug")
+    if not await safe_create_index(
+        projects, [("section_id", 1), ("slug", 1)], unique=True, sparse=True
+    ):
+        failed_indexes.append("projects.section_id_slug")
     await safe_create_index(projects, [("is_published", 1), ("is_featured", -1)])
     await safe_create_index(projects, [("is_published", 1), ("createdDate", -1)])
     await safe_create_index(projects, "user_id")
@@ -236,6 +240,10 @@ async def ensure_indexes() -> None:
     stories = db["stories"]
     if not await safe_create_index(stories, "slug", unique=True):
         failed_indexes.append("stories.slug")
+    if not await safe_create_index(
+        stories, [("section_id", 1), ("slug", 1)], unique=True, sparse=True
+    ):
+        failed_indexes.append("stories.section_id_slug")
     await safe_create_index(stories, [("is_published", 1), ("date", -1)])
     await safe_create_index(stories, "user_id")
     await safe_create_index(stories, "section_id")
@@ -269,10 +277,12 @@ async def ensure_indexes() -> None:
 
     # Sections indexes
     sections = db["sections"]
-    if not await safe_create_index(sections, "slug", unique=True):
-        failed_indexes.append("sections.slug")
-    await safe_create_index(sections, "parent_id")
+    if not await safe_create_index(sections, [("path", 1)], unique=True, sparse=True):
+        failed_indexes.append("sections.path")
+    if not await safe_create_index(sections, [("parent_id", 1), ("slug", 1)], unique=True):
+        failed_indexes.append("sections.parent_id_slug")
     await safe_create_index(sections, [("nav_visibility", 1), ("sort_order", 1)])
+    await safe_create_index(sections, [("parent_id", 1), ("sort_order", 1)])
     await safe_create_index(sections, [("is_published", 1), ("sort_order", 1)])
 
     # NavLinks indexes
@@ -284,6 +294,10 @@ async def ensure_indexes() -> None:
     photo_essays = db["photo_essays"]
     if not await safe_create_index(photo_essays, "slug", unique=True):
         failed_indexes.append("photo_essays.slug")
+    if not await safe_create_index(
+        photo_essays, [("section_id", 1), ("slug", 1)], unique=True, sparse=True
+    ):
+        failed_indexes.append("photo_essays.section_id_slug")
     await safe_create_index(
         photo_essays,
         [("section_id", 1), ("is_published", 1), ("deleted", 1), ("createdDate", -1)],
