@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
 import {
     CACHE_TTL,
@@ -9,15 +8,15 @@ import {
     setCache,
     invalidateStoryCache,
 } from '@/shared/lib/story-cache';
-import { getBackendUrl } from '@/shared/utils/backend-fetch';
+import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Start logging the request
     apiLogger.logApiRequest(req, res);
 
     try {
-        const token = await getToken({ req });
-        const isAuthenticated = !!token?.accessToken;
+        const accessToken = await getAccessToken(req);
+        const isAuthenticated = !!accessToken;
 
         // No browser caching — the server-side in-memory cache handles
         // performance. Browser caching causes stale responses to overwrite
@@ -74,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 params.append('section_id', req.query.section_id.toString());
             }
 
-            if (token?.accessToken) {
+            if (accessToken) {
                 params.append('include_drafts', 'true');
             }
 
@@ -87,14 +86,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             'Content-Type': 'application/json',
         };
 
-        if (token?.accessToken) {
-            headers.Authorization = `Bearer ${token.accessToken}`;
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
         }
 
         const requestBody = req.method !== 'GET' ? req.body : undefined;
         console.log(`Backend request: ${req.method} ${apiUrl}`, {
             method: req.method,
-            hasToken: !!token?.accessToken,
+            hasToken: !!accessToken,
             bodyPreview: requestBody ? JSON.stringify(requestBody).substring(0, 150) + '...' : undefined
         });
 

@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getToken } from 'next-auth/jwt';
 import { apiLogger } from '@/shared/utils/logger';
-import { fetchBackend } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 import { invalidatePdfCache } from './download-pdf';
 
 export default async function handler(
@@ -15,8 +14,8 @@ export default async function handler(
   apiLogger.logApiRequest(req, res);
 
   try {
-    const token = await getToken({ req });
-    if (!token || !token.accessToken) {
+    const accessToken = await getAccessToken(req);
+    if (!accessToken) {
       return res.status(401).json({ detail: 'Not authenticated' });
     }
 
@@ -24,7 +23,7 @@ export default async function handler(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 

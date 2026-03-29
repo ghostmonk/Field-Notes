@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getToken } from "next-auth/jwt";
-import { fetchBackend } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 const VALID_SEGMENT = /^[a-zA-Z0-9_-]+$/;
 
@@ -9,8 +8,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ detail: "Method not allowed" });
     }
 
-    const token = await getToken({ req });
-    if (!token?.accessToken) {
+    const accessToken = await getAccessToken(req);
+    if (!accessToken) {
         return res.status(401).json({ detail: "Not authenticated" });
     }
 
@@ -34,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${token.accessToken}`,
+                Authorization: `Bearer ${accessToken}`,
             },
         });
 

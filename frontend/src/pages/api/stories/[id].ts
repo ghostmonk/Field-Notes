@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getToken } from 'next-auth/jwt';
 import { invalidateStoryCache } from '@/shared/lib/story-cache';
-import { getBackendUrl } from '@/shared/utils/backend-fetch';
+import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const backendUrl = getBackendUrl();
@@ -13,12 +12,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        const token = await getToken({ req });
+        const accessToken = await getAccessToken(req);
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
         };
 
-        const accessToken = token?.accessToken || req.headers.authorization?.replace('Bearer ', '');
         if (accessToken) {
             headers.Authorization = `Bearer ${accessToken}`;
         }

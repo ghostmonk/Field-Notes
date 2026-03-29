@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getToken } from 'next-auth/jwt';
 import { apiLogger } from '@/shared/utils/logger';
-import { getBackendUrl } from '@/shared/utils/backend-fetch';
+import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,9 +15,9 @@ export default async function handler(
   apiLogger.logApiRequest(req, res);
 
   try {
-    const token = await getToken({ req });
+    const accessToken = await getAccessToken(req);
 
-    if (!token || !token.accessToken) {
+    if (!accessToken) {
       return res.status(401).json({ detail: 'Not authenticated' });
     }
 
@@ -34,7 +33,7 @@ export default async function handler(
       method: req.method,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       signal: AbortSignal.timeout(10000),
     });

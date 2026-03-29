@@ -1,16 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getToken } from 'next-auth/jwt';
-import { getBackendUrl, fetchBackend } from '@/shared/utils/backend-fetch';
+import { getAccessToken, getBackendUrl, fetchBackend } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        const token = await getToken({ req });
+        const accessToken = await getAccessToken(req);
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
         };
 
-        if (token?.accessToken) {
-            headers.Authorization = `Bearer ${token.accessToken}`;
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
         }
 
         if (req.method === 'GET') {
@@ -34,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const data = await response.json();
             return res.status(200).json(data);
         } else if (req.method === 'POST') {
-            if (!token?.accessToken) {
+            if (!accessToken) {
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
 

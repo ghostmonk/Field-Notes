@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getToken } from "next-auth/jwt";
 import { apiLogger } from '@/shared/utils/logger';
 import {
     CACHE_TTL,
@@ -8,13 +7,13 @@ import {
     setCache,
     invalidatePhotoEssayCache,
 } from '@/shared/lib/photo-essay-cache';
-import { getBackendUrl } from '@/shared/utils/backend-fetch';
+import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     apiLogger.logApiRequest(req, res);
 
     try {
-        const token = await getToken({ req });
+        const accessToken = await getAccessToken(req);
 
         // Check cache for GET requests
         if (req.method === 'GET') {
@@ -31,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Require auth for mutations
         if (req.method !== 'GET') {
-            if (!token || !token.accessToken) {
+            if (!accessToken) {
                 return res.status(401).json({
                     detail: 'Not authenticated',
                     error: 'Authentication required'
@@ -60,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (req.query.offset) {
                 params.append('offset', req.query.offset.toString());
             }
-            if (token?.accessToken) {
+            if (accessToken) {
                 params.append('include_unpublished', 'true');
             }
 
@@ -80,8 +79,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             'Content-Type': 'application/json',
         };
 
-        if (token?.accessToken) {
-            headers.Authorization = `Bearer ${token.accessToken}`;
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
         }
 
         const response = await fetch(apiUrl, {

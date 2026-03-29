@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getToken } from 'next-auth/jwt';
-import { fetchBackend } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { name } = req.query;
@@ -10,8 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'DELETE') {
-    const token = await getToken({ req });
-    const accessToken = token?.accessToken || req.headers.authorization?.replace('Bearer ', '');
+    const accessToken = await getAccessToken(req);
     if (!accessToken) {
       return res.status(401).json({ detail: 'Authentication required' });
     }
