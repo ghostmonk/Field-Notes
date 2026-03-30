@@ -1,18 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaSun, FaMoon, FaDesktop } from "react-icons/fa6";
-
-type Theme = "light" | "dark" | "system";
-
-const getSystemTheme = (): "light" | "dark" => {
-    if (typeof window !== "undefined" && window.matchMedia) {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
-    return "light";
-};
-
-const getEffectiveTheme = (theme: Theme): "light" | "dark" => {
-    return theme === "system" ? getSystemTheme() : theme;
-};
+import { type Theme, getEffectiveTheme, applyTheme } from "@/lib/theme";
 
 export default function ThemeToggle() {
     const [theme, setTheme] = useState<Theme>("system");
@@ -47,31 +35,17 @@ export default function ThemeToggle() {
         if (theme === "system" && typeof window !== "undefined" && window.matchMedia) {
             const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
             const handleChange = () => {
-                const effectiveTheme = getEffectiveTheme("system");
-                applyTheme(effectiveTheme);
+                applyTheme(getEffectiveTheme("system"));
             };
-            
+
             mediaQuery.addEventListener("change", handleChange);
             return () => mediaQuery.removeEventListener("change", handleChange);
         }
     }, [theme]);
 
-    const applyTheme = (effectiveTheme: "light" | "dark") => {
-        if (typeof window !== "undefined") {
-            document.documentElement.setAttribute("data-theme", effectiveTheme);
-            
-            if (effectiveTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        }
-    };
-
     useEffect(() => {
         if (!isLoading) {
-            const effectiveTheme = getEffectiveTheme(theme);
-            applyTheme(effectiveTheme);
+            applyTheme(getEffectiveTheme(theme));
         }
     }, [theme, isLoading]);
 
