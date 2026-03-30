@@ -5,13 +5,11 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { applyStoredTheme } from "@/lib/theme";
 import { useSectionTree } from "../hooks/useSectionTree";
-import { useSectionReorder } from "../hooks/useSectionReorder";
 
 export function AdminLayout() {
   const router = useRouter();
   const selectedSectionId = (router.query.section as string) ?? null;
   const { treeData, loading, refetch } = useSectionTree();
-  const { onDrop } = useSectionReorder(refetch);
 
   useEffect(() => {
     applyStoredTheme();
@@ -33,7 +31,7 @@ export function AdminLayout() {
           onSelectSection={handleSelectSection}
           treeData={treeData}
           loading={loading}
-          onDrop={onDrop}
+          onRefetch={refetch}
         />
         <AdminDetailPanel selectedSectionId={selectedSectionId} />
       </div>

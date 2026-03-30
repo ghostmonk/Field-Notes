@@ -3,20 +3,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/shared/lib/api-client";
 import { Section } from "@/shared/types/api";
 
-export interface SectionTreeItem {
-  id: string;
-  title: string;
-  icon: string;
-  slug: string;
-  path: string;
-  content_type?: string;
-  display_type: string;
-  nav_visibility: string;
-  is_published: boolean;
-  sort_order: number;
-  parent_id: string | null;
-  childrenIds: string[];
-}
+export type SectionTreeItem = Section & { childrenIds: string[] };
 
 export interface SectionTreeData {
   [id: string]: SectionTreeItem;
@@ -26,20 +13,7 @@ function buildTreeData(sections: Section[]): SectionTreeData {
   const data: SectionTreeData = {};
 
   for (const section of sections) {
-    data[section.id] = {
-      id: section.id,
-      title: section.title,
-      icon: section.icon,
-      slug: section.slug,
-      path: section.path,
-      content_type: section.content_type,
-      display_type: section.display_type,
-      nav_visibility: section.nav_visibility,
-      is_published: section.is_published,
-      sort_order: section.sort_order,
-      parent_id: section.parent_id,
-      childrenIds: [],
-    };
+    data[section.id] = { ...section, childrenIds: [] };
   }
 
   for (const section of sections) {
@@ -66,14 +40,15 @@ function buildTreeData(sections: Section[]): SectionTreeData {
     icon: "default",
     slug: "",
     path: "",
-    content_type: undefined,
-    display_type: "",
+    display_type: "feed",
     nav_visibility: "hidden",
     is_published: true,
     sort_order: 0,
     parent_id: null,
+    createdDate: "",
+    updatedDate: "",
     childrenIds: rootChildren,
-  };
+  } as SectionTreeItem;
 
   return data;
 }

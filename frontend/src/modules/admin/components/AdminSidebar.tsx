@@ -5,8 +5,7 @@ import { Separator } from "@/components/admin-ui/separator";
 import { Plus, Search } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { SectionTree } from "./SectionTree";
-import { SectionTreeData, SectionTreeItem } from "../hooks/useSectionTree";
-import { ItemInstance, DragTarget } from "@headless-tree/core";
+import { SectionTreeData } from "../hooks/useSectionTree";
 import { useState } from "react";
 
 interface AdminSidebarProps {
@@ -14,10 +13,7 @@ interface AdminSidebarProps {
   onSelectSection: (id: string | null) => void;
   treeData: SectionTreeData;
   loading: boolean;
-  onDrop?: (
-    items: ItemInstance<SectionTreeItem>[],
-    target: DragTarget<SectionTreeItem>
-  ) => void | Promise<void>;
+  onRefetch: () => void;
 }
 
 export function AdminSidebar({
@@ -25,7 +21,7 @@ export function AdminSidebar({
   onSelectSection,
   treeData,
   loading,
-  onDrop,
+  onRefetch,
 }: AdminSidebarProps) {
   const [filter, setFilter] = useState("");
 
@@ -62,7 +58,7 @@ export function AdminSidebar({
             data={treeData}
             selectedSectionId={selectedSectionId}
             onSelectSection={onSelectSection}
-            onDrop={onDrop}
+            onRefetch={onRefetch}
             filter={filter}
           />
         )}
