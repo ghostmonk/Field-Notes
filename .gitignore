@@ -321,3 +321,4 @@ seed-content.py
 .saguaro/history/
 .claude/settings.local.json
 .mcp.json
+.gstack/

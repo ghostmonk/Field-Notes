@@ -24,6 +24,7 @@ import { processStoryDataSSR } from '@/rendering/server';
 import apiClient from '@/shared/lib/api-client';
 import { getSectionPath } from '@/shared/lib/navigation';
 import { SectionProvider } from '@/contexts/SectionContext';
+import { fetchBackend } from '@/shared/utils/backend-fetch';
 import dynamic from 'next/dynamic';
 const ContactForm = dynamic(() => import('@/modules/static/pages/ContactForm').then(mod => ({ default: mod.ContactForm })), { ssr: false });
 
@@ -420,11 +421,6 @@ function SectionPageContent({ section, view, initialListData, detailItem, pageCo
 
 export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (context) => {
     const { slugPath } = context.params || {};
-    const API_BASE_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-
-    if (!API_BASE_URL) {
-        return { props: { section: {} as Section, view: 'list', error: 'Backend URL not configured' } };
-    }
 
     if (!slugPath || !Array.isArray(slugPath) || slugPath.length === 0) {
         return { notFound: true };
@@ -433,8 +429,8 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
     const fullPath = slugPath.join('/');
 
     try {
-        // Resolve the path via the new endpoint
-        const resolveRes = await fetch(`${API_BASE_URL}/sections/resolve-path/${fullPath}`, {
+        // Resolve the path — uses fetchBackend for connection reuse
+        const resolveRes = await fetchBackend(`/sections/resolve-path/${fullPath}`, {
             redirect: 'manual',
         });
 
@@ -492,7 +488,7 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
         if (displayType === 'static-page') {
             try {
                 const pageSlug = slugPath[slugPath.length - 1];
-                const pageRes = await fetch(`${API_BASE_URL}/pages/${pageSlug}`);
+                const pageRes = await fetchBackend(`/pages/${pageSlug}`);
                 if (pageRes.ok) {
                     const pageContent: Page = await pageRes.json();
                     return { props: { section, view: 'static-page', pageContent } };
@@ -503,28 +499,24 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
             }
         }
 
-        // List view — use per-type endpoints for SSR data (matches display component expectations)
-        // The children endpoint returns ListingItem[] which doesn't match Story[]/Project[] shapes
-        // that SectionListView and useFetchContent expect. Use old endpoints for backward compat.
+        // List view — fetch initial content for SSR
         try {
             let initialListData: PaginatedResponse<any> | undefined;
             const contentType = section.content_type;
 
             if (contentType === 'story') {
-                const listRes = await fetch(`${API_BASE_URL}/stories?limit=10&offset=0&section_id=${section.id}`);
+                const listRes = await fetchBackend(`/stories?limit=10&offset=0&section_id=${section.id}`);
                 if (listRes.ok) initialListData = await listRes.json();
             } else if (contentType === 'project') {
-                const listRes = await fetch(`${API_BASE_URL}/projects?limit=10&offset=0&section_id=${section.id}`);
+                const listRes = await fetchBackend(`/projects?limit=10&offset=0&section_id=${section.id}`);
                 if (listRes.ok) initialListData = await listRes.json();
             } else if (contentType === 'photo_essay') {
-                const listRes = await fetch(`${API_BASE_URL}/photo-essays/section/${section.id}?limit=20&offset=0`);
+                const listRes = await fetchBackend(`/photo-essays/section/${section.id}?limit=20&offset=0`);
                 if (listRes.ok) initialListData = await listRes.json();
             } else {
-                // For sections without content_type (new nested sections), try children endpoint
-                const childrenRes = await fetch(`${API_BASE_URL}/sections/${section.id}/children?limit=20&offset=0`);
+                const childrenRes = await fetchBackend(`/sections/${section.id}/children?limit=20&offset=0`);
                 if (childrenRes.ok) {
                     const childrenData = await childrenRes.json();
-                    // Infer content_type from first content item
                     const firstContentItem = childrenData.items?.find((item: any) => item.item_type === 'content');
                     if (firstContentItem?.content_type) {
                         section = { ...section, content_type: firstContentItem.content_type } as Section;

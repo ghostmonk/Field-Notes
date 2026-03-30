@@ -35,15 +35,16 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
     const { contentType, sectionId, initialData, pageSize = PAGE_SIZE } = options;
     const { data: session } = useSession();
 
-    const [items, setItems] = useState<T[]>(initialData?.items || []);
+    const initialItems = initialData?.items ?? [];
+    const [items, setItems] = useState<T[]>(initialItems);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(
-        initialData ? initialData.items.length < initialData.total : true
+        initialData ? initialItems.length < initialData.total : true
     );
     const [total, setTotal] = useState(initialData?.total || 0);
 
-    const offsetRef = useRef(initialData?.items.length || 0);
+    const offsetRef = useRef(initialItems.length);
     const tokenRef = useRef(session?.accessToken);
     const loadingRef = useRef(false);
     const hasMoreRef = useRef(hasMore);
@@ -84,11 +85,12 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
 
             const fetcher = contentFetchers[contentType];
             const response = await fetcher(tokenRef.current, params);
+            const responseItems = response.items ?? [];
 
             setTotal(response.total);
-            setItems(prev => reset ? response.items : [...prev, ...response.items]);
+            setItems(prev => reset ? responseItems : [...prev, ...responseItems]);
 
-            offsetRef.current += response.items.length;
+            offsetRef.current += responseItems.length;
             const newHasMore = offsetRef.current < response.total;
             setHasMore(newHasMore);
             hasMoreRef.current = newHasMore;
@@ -102,9 +104,11 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
     // eslint-disable-next-line react-hooks/exhaustive-deps -- session?.user?.role is read inside but intentionally excluded to prevent re-fetch loops on role changes
     }, [contentType, sectionId, pageSize, session?.accessToken]);
 
-    // Always fetch fresh data on mount
+    // Fetch on mount only if no SSR data was provided
     useEffect(() => {
-        fetchInternal(true);
+        if (!initialData || initialData.items.length === 0) {
+            fetchInternal(true);
+        }
         initialFetchDoneRef.current = true;
         // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only fetch; fetchInternal is stable via refs
     }, []);
@@ -114,11 +118,12 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
         if (prevSectionIdRef.current !== sectionId) {
             prevSectionIdRef.current = sectionId;
             // Immediately show SSR data for the new section
-            if (initialData && initialData.items.length > 0) {
-                setItems(initialData.items);
-                setTotal(initialData.total);
-                offsetRef.current = initialData.items.length;
-                const newHasMore = initialData.items.length < initialData.total;
+            const newInitialItems = initialData?.items ?? [];
+            if (newInitialItems.length > 0) {
+                setItems(newInitialItems);
+                setTotal(initialData!.total);
+                offsetRef.current = newInitialItems.length;
+                const newHasMore = newInitialItems.length < initialData!.total;
                 setHasMore(newHasMore);
                 hasMoreRef.current = newHasMore;
             }

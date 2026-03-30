@@ -33,16 +33,17 @@ export function useFetchStories(options: UseFetchStoriesOptions = {}): UseFetchS
   const { initialData, initialError } = options;
   const { data: session } = useSession();
 
-  const [stories, setStories] = useState<Story[]>(initialData?.items || []);
+  const initialItems = initialData?.items ?? [];
+  const [stories, setStories] = useState<Story[]>(initialItems);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError || null);
   const [hasMore, setHasMore] = useState(
-    initialData ? initialData.items.length < initialData.total : true
+    initialData ? initialItems.length < initialData.total : true
   );
   const [totalStories, setTotalStories] = useState(initialData?.total || 0);
 
   // Refs to track state without triggering re-renders
-  const offsetRef = useRef(initialData?.items.length || 0);
+  const offsetRef = useRef(initialItems.length);
   const tokenRef = useRef(session?.accessToken);
   const loadingRef = useRef(loading);
   const hasMoreRef = useRef(hasMore);
@@ -76,10 +77,11 @@ export function useFetchStories(options: UseFetchStoriesOptions = {}): UseFetchS
         include_drafts: session?.user?.role === 'admin'
       });
 
+      const responseItems = response.items ?? [];
       setTotalStories(response.total);
-      setStories(prev => reset ? response.items : [...prev, ...response.items]);
+      setStories(prev => reset ? responseItems : [...prev, ...responseItems]);
 
-      offsetRef.current += response.items.length;
+      offsetRef.current += responseItems.length;
       const newHasMore = offsetRef.current < response.total;
       setHasMore(newHasMore);
       hasMoreRef.current = newHasMore;
