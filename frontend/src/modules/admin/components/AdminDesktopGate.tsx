@@ -14,16 +14,10 @@ export function AdminDesktopGate({ children }: { children: React.ReactNode }) {
 
   if (!isDesktop) {
     return (
-      <div
-        className="flex h-dvh items-center justify-center p-8 text-center"
-        style={{
-          backgroundColor: "var(--background)",
-          color: "var(--foreground)",
-        }}
-      >
+      <div className="admin-theme flex h-dvh items-center justify-center bg-background text-foreground p-8 text-center">
         <div className="max-w-md space-y-4">
           <h1 className="text-2xl font-semibold">Command Center</h1>
-          <p className="text-[var(--muted-foreground)]">
+          <p className="text-muted-foreground">
             The command center requires a desktop browser. Use the site
             navigation to manage content on mobile.
           </p>

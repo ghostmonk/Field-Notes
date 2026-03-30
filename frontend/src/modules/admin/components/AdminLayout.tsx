@@ -42,11 +42,7 @@ export function AdminLayout() {
   return (
     <AdminDesktopGate>
       <div
-        className="admin-theme flex h-dvh"
-        style={{
-          backgroundColor: "var(--background)",
-          color: "var(--foreground)",
-        }}
+        className="admin-theme flex h-dvh bg-background text-foreground"
         data-testid="admin-command-center"
       >
         <AdminSidebar

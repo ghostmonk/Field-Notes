@@ -20,16 +20,10 @@ export function AdminDetailPanel({
         data-testid="admin-dashboard"
       >
         <div className="text-center space-y-4">
-          <h1
-            className="text-3xl font-semibold"
-            style={{ color: "var(--foreground)" }}
-          >
+          <h1 className="text-3xl font-semibold text-foreground">
             Command Center
           </h1>
-          <p
-            className="text-lg"
-            style={{ color: "var(--muted-foreground)" }}
-          >
+          <p className="text-lg text-muted-foreground">
             Select a section to manage its content, or view site-wide stats
             here.
           </p>
@@ -41,10 +35,7 @@ export function AdminDetailPanel({
   return (
     <div className="flex flex-1 flex-col" data-testid="admin-detail-panel">
       <Tabs defaultValue="content" className="flex flex-1 flex-col">
-        <div
-          className="border-b px-6 pt-4"
-          style={{ borderColor: "var(--border)" }}
-        >
+        <div className="border-b border-border px-6 pt-4">
           <TabsList>
             <TabsTrigger value="content" data-testid="admin-tab-content">
               Content
@@ -60,7 +51,7 @@ export function AdminDetailPanel({
         <ScrollArea className="flex-1">
           <TabsContent value="content" className="p-6 mt-0">
             <p
-              style={{ color: "var(--muted-foreground)" }}
+              className="text-muted-foreground"
               data-testid="admin-content-placeholder"
             >
               Content list will render here
@@ -68,7 +59,7 @@ export function AdminDetailPanel({
           </TabsContent>
           <TabsContent value="assets" className="p-6 mt-0">
             <p
-              style={{ color: "var(--muted-foreground)" }}
+              className="text-muted-foreground"
               data-testid="admin-assets-placeholder"
             >
               Assets grid will render here
@@ -76,7 +67,7 @@ export function AdminDetailPanel({
           </TabsContent>
           <TabsContent value="settings" className="p-6 mt-0">
             <p
-              style={{ color: "var(--muted-foreground)" }}
+              className="text-muted-foreground"
               data-testid="admin-settings-placeholder"
             >
               Section settings will render here

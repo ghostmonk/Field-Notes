@@ -3,6 +3,7 @@ import { Input } from "@/components/admin-ui/input";
 import { Button } from "@/components/admin-ui/button";
 import { Separator } from "@/components/admin-ui/separator";
 import { Plus, Search } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface AdminSidebarProps {
   selectedSectionId: string | null;
@@ -16,27 +17,16 @@ export function AdminSidebar({
   onSelectSection,
 }: AdminSidebarProps) {
   return (
-    <div
-      className="flex h-full w-72 flex-col border-r"
-      style={{
-        borderColor: "var(--sidebar-border)",
-        backgroundColor: "var(--sidebar-background)",
-      }}
-    >
+    <div className="flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar-background">
       <div className="flex items-center justify-between p-4">
-        <h2
-          className="text-lg font-semibold"
-          style={{ color: "var(--sidebar-foreground)" }}
-        >
+        <h2 className="text-lg font-semibold text-sidebar-foreground">
           Sections
         </h2>
+        <ThemeToggle />
       </div>
       <div className="px-4 pb-3">
         <div className="relative">
-          <Search
-            className="absolute left-2.5 top-2.5 h-4 w-4"
-            style={{ color: "var(--muted-foreground)" }}
-          />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Filter sections..."
             className="pl-9"
@@ -48,8 +38,7 @@ export function AdminSidebar({
       <ScrollArea className="flex-1">
         <div className="p-4">
           <p
-            className="text-sm"
-            style={{ color: "var(--muted-foreground)" }}
+            className="text-sm text-muted-foreground"
             data-testid="admin-tree-placeholder"
           >
             Section tree will render here
