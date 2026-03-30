@@ -22,6 +22,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
 import { processStoryDataSSR } from '@/rendering/server';
 import apiClient from '@/shared/lib/api-client';
+import { getSectionPath } from '@/shared/lib/navigation';
 import { SectionProvider } from '@/contexts/SectionContext';
 import dynamic from 'next/dynamic';
 const ContactForm = dynamic(() => import('@/modules/static/pages/ContactForm').then(mod => ({ default: mod.ContactForm })), { ssr: false });
@@ -124,7 +125,7 @@ function SectionListView({ section, initialListData }: { section: Section; initi
         }
     }, [session, router, deleteStory, reset, confirm, showToast]);
 
-    const basePath = `/${section.path || section.slug}`;
+    const basePath = getSectionPath(section);
 
     const renderItem = useMemo(() => {
         if (contentType === 'story') {
@@ -242,7 +243,7 @@ function PhotoEssayDetailView({ section, essay }: { section: Section; essay: Pho
         try {
             await apiClient.photoEssays.delete(essay.id, session.accessToken);
             showToast('Photo essay deleted');
-            router.push(`/${section.path || section.slug}`);
+            router.push(getSectionPath(section));
         } catch {
             showToast('Failed to delete photo essay');
         }
@@ -253,7 +254,7 @@ function PhotoEssayDetailView({ section, essay }: { section: Section; essay: Pho
     return (
         <div className="page-container">
             <Breadcrumbs items={[
-                { label: section.title, href: `/${section.path || section.slug}` },
+                { label: section.title, href: getSectionPath(section) },
                 { label: essay.title },
             ]} />
             <PhotoEssayPage
@@ -281,7 +282,7 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
         return (
             <div className="detail-container">
                 <Breadcrumbs items={[
-                    { label: section.title, href: `/${section.path || section.slug}` },
+                    { label: section.title, href: getSectionPath(section) },
                     { label: story.title },
                 ]} />
                 <EngagementProvider targetType="story" targetId={story.id}>
@@ -301,7 +302,7 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
         return (
             <div className="page-container">
                 <Breadcrumbs items={[
-                    { label: section.title, href: `/${section.path || section.slug}` },
+                    { label: section.title, href: getSectionPath(section) },
                     { label: project.title },
                 ]} />
                 <ProjectDetail project={project} onEdit={handleEdit} />

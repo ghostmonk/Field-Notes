@@ -2,9 +2,11 @@
 API handlers for content and section move operations.
 """
 
+import asyncio
 from datetime import datetime, timezone
 
 from bson import ObjectId
+from constants import CONTENT_COLLECTIONS, CONTENT_TYPE_TO_COLLECTION
 from database import get_db
 from decorators.auth import verify_auth
 from fastapi import APIRouter, HTTPException, Request
@@ -14,20 +16,6 @@ from pymongo.errors import DuplicateKeyError
 from services.redirects import write_redirect
 
 router = APIRouter()
-
-CONTENT_TYPE_TO_COLLECTION = {
-    "story": "stories",
-    "project": "projects",
-    "photo_essay": "photo_essays",
-    "page": "pages",
-}
-
-CONTENT_COLLECTIONS = [
-    ("stories", "story"),
-    ("projects", "project"),
-    ("photo_essays", "photo_essay"),
-    ("pages", "page"),
-]
 
 
 async def would_create_cycle(db, section_id: str, target_parent_id: str) -> bool:
@@ -70,14 +58,18 @@ async def _collect_descendant_sections(db, section_id: str, visited: set | None 
 
 async def _collect_content_paths(db, section_id: str, section_path: str) -> list:
     """Collect all content slugs in a section, returning (old_full_path, slug, content_id, content_type)."""
-    items = []
-    for collection_name, content_type in CONTENT_COLLECTIONS:
+
+    async def _fetch(collection_name: str, content_type: str):
+        result = []
         cursor = db[collection_name].find({"section_id": section_id, "deleted": {"$ne": True}})
         async for doc in cursor:
             slug = doc.get("slug")
             if slug:
-                items.append((f"{section_path}/{slug}", slug, str(doc["_id"]), content_type))
-    return items
+                result.append((f"{section_path}/{slug}", slug, str(doc["_id"]), content_type))
+        return result
+
+    results = await asyncio.gather(*[_fetch(col, ct) for col, ct in CONTENT_COLLECTIONS])
+    return [item for batch in results for item in batch]
 
 
 @router.put("/content/{content_type}/{content_id}/move")
@@ -287,30 +279,22 @@ async def move_section(request: Request, section_id: str):
     sections_collection = db["sections"]
     await cascade_path_updates(sections_collection, section_id, new_path)
 
-    # Re-fetch descendants to get new paths
-    updated_descendants = await _collect_descendant_sections(db, section_id)
-    new_paths = {section_id: new_path}
-    for desc in updated_descendants:
-        new_paths[str(desc["_id"])] = desc["path"]
+    # Compute new paths deterministically from old prefix
+    new_paths = {}
+    for sid, old_p in old_paths.items():
+        new_paths[sid] = new_path + old_p[len(old_section_path) :]
 
     # Write redirects for sections
     for sid, old_p in old_paths.items():
-        new_p = new_paths.get(sid)
-        if new_p and old_p != new_p:
+        new_p = new_paths[sid]
+        if old_p != new_p:
             await write_redirect(db, old_p, new_p)
 
     # Write redirects for content
     for old_content_path, content_slug, cid, ctype in old_content_paths:
-        # Figure out which section this content belongs to
-        # and compute new content path from section's new path
-        for sid, old_sp in old_paths.items():
-            if old_content_path == f"{old_sp}/{content_slug}":
-                new_sp = new_paths.get(sid)
-                if new_sp:
-                    new_content_path = f"{new_sp}/{content_slug}"
-                    if old_content_path != new_content_path:
-                        await write_redirect(db, old_content_path, new_content_path, cid, ctype)
-                break
+        new_content_path = new_path + old_content_path[len(old_section_path) :]
+        if old_content_path != new_content_path:
+            await write_redirect(db, old_content_path, new_content_path, cid, ctype)
 
     logger.info_with_context(
         "Section moved",

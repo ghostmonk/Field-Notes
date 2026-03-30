@@ -3,6 +3,10 @@ import { SectionIcon, SECTION_ICONS } from '@/shared/lib/navIcons';
 
 const VALID_ICON_SET = new Set<string>(SECTION_ICONS);
 
+export function getSectionPath(section: { path?: string; slug: string }): string {
+    return `/${section.path || section.slug}`;
+}
+
 export interface NavSectionItem {
     id: string;
     slug: string;
@@ -15,7 +19,7 @@ export function sectionToNavItem(section: Section): NavSectionItem {
     return {
         id: section.id,
         slug: section.slug,
-        path: `/${section.path || section.slug}`,
+        path: getSectionPath(section),
         label: section.title,
         icon: VALID_ICON_SET.has(section.icon) ? (section.icon as SectionIcon) : 'default',
     };

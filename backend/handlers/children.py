@@ -1,20 +1,15 @@
+import asyncio
 from datetime import datetime, timezone
 
 from bson import ObjectId
 from bson.errors import InvalidId
+from constants import CONTENT_COLLECTIONS
 from database import get_db
 from decorators.auth import verify_auth
 from fastapi import APIRouter, HTTPException, Query, Request
 from models.listing import ListingItem
 
 router = APIRouter()
-
-CONTENT_COLLECTIONS = [
-    ("stories", "story"),
-    ("projects", "project"),
-    ("photo_essays", "photo_essay"),
-    ("pages", "page"),
-]
 
 
 async def collect_descendant_ids(db, section_id: str, visited: set | None = None) -> list[str]:
@@ -140,15 +135,15 @@ async def get_children(
     if featured_only:
         content_query_base["is_featured"] = True
 
-    # Fetch content from all collections, merge globally by date, then paginate.
-    # Correct cross-collection sort requires fetching all items first.
-    content_items = []
-    for collection_name, content_type in CONTENT_COLLECTIONS:
+    # Fetch content from all collections concurrently, merge globally by date, then paginate.
+    async def _fetch_collection(collection_name: str, content_type: str):
         docs = (
             await db[collection_name].find(content_query_base).sort("createdDate", -1).to_list(None)
         )
-        for doc in docs:
-            content_items.append(_content_to_listing_item(doc, content_type))
+        return [_content_to_listing_item(doc, content_type) for doc in docs]
+
+    results = await asyncio.gather(*[_fetch_collection(col, ct) for col, ct in CONTENT_COLLECTIONS])
+    content_items = [item for batch in results for item in batch]
 
     # Sort all content globally by created_at descending
     content_items.sort(

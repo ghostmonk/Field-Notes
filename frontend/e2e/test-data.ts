@@ -30,6 +30,7 @@ export interface TestStory {
   title: string;
   content: string;
   slug: string;
+  section_id?: string;
   is_published: boolean;
   createdDate: string;
   updatedDate: string;
@@ -48,6 +49,7 @@ export const sampleStories: TestStory[] = [
     title: 'My Published Story',
     content: '<p>This is a published story with rich content.</p>',
     slug: TEST_STORY_SLUGS.PUBLISHED,
+    section_id: 'section-blog',
     is_published: true,
     createdDate: FIXED_TIMESTAMP,
     updatedDate: FIXED_TIMESTAMP,
@@ -57,6 +59,7 @@ export const sampleStories: TestStory[] = [
     title: 'My Draft Story',
     content: '<p>This draft is still in progress.</p>',
     slug: TEST_STORY_SLUGS.DRAFT,
+    section_id: 'section-blog',
     is_published: false,
     createdDate: FIXED_TIMESTAMP,
     updatedDate: FIXED_TIMESTAMP,
@@ -66,6 +69,7 @@ export const sampleStories: TestStory[] = [
     title: 'Story With Images',
     content: '<p>Story with an image:</p><img src="/test-image.jpg" alt="Test" width="800" height="600" />',
     slug: TEST_STORY_SLUGS.WITH_IMAGES,
+    section_id: 'section-blog',
     is_published: true,
     createdDate: FIXED_TIMESTAMP,
     updatedDate: FIXED_TIMESTAMP,

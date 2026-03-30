@@ -451,30 +451,16 @@ async def update_section(
         update_data = section.model_dump(exclude_unset=True)
 
         # If title changed, regenerate the slug and recompute path
+        new_slug = None
         if "title" in update_data and update_data["title"] != existing_section.title:
             new_slug = await generate_unique_slug(
                 collection, update_data["title"], ObjectId(section_id)
             )
             update_data["slug"] = new_slug
-
-            # Recompute path based on parent
-            if existing_section.parent_id:
-                parent = await find_one_and_convert(
-                    collection,
-                    {
-                        "_id": ObjectId(existing_section.parent_id),
-                        "deleted": {"$ne": True},
-                    },
-                    SectionResponse,
-                )
-                if parent:
-                    update_data["path"] = f"{parent.path}/{new_slug}"
-                else:
-                    update_data["path"] = new_slug
-            else:
-                update_data["path"] = new_slug
         elif "slug" in update_data and update_data["slug"] != existing_section.slug:
             new_slug = update_data["slug"]
+
+        if new_slug:
             if existing_section.parent_id:
                 parent = await find_one_and_convert(
                     collection,
@@ -484,10 +470,7 @@ async def update_section(
                     },
                     SectionResponse,
                 )
-                if parent:
-                    update_data["path"] = f"{parent.path}/{new_slug}"
-                else:
-                    update_data["path"] = new_slug
+                update_data["path"] = f"{parent.path}/{new_slug}" if parent else new_slug
             else:
                 update_data["path"] = new_slug
 
@@ -518,8 +501,7 @@ async def update_section(
             try:
                 db = collection.database
                 for sid, old_p in old_desc_paths.items():
-                    doc = await collection.find_one({"_id": ObjectId(sid)})
-                    new_p = doc.get("path", new_path) if doc else new_path
+                    new_p = new_path + old_p[len(old_path) :]
                     if old_p != new_p:
                         await write_redirect(db, old_p, new_p)
             except Exception as redirect_err:

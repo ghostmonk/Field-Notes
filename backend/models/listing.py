@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -7,7 +7,7 @@ from pydantic import BaseModel
 class ListingItem(BaseModel):
     id: str
     slug: str
-    item_type: str  # "section" or "content"
+    item_type: Literal["section", "content"]
     content_type: Optional[str] = None
     title: str
     summary: Optional[str] = None

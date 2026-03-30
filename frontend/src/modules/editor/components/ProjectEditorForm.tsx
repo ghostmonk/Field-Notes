@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { Section } from '@/shared/types/api';
+import { getSectionPath } from '@/shared/lib/navigation';
 import { useProjectEditor } from '../hooks/useProjectEditor';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -172,7 +173,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => router.push(`/${section.path || section.slug}`)}
+                      onClick={() => router.push(getSectionPath(section))}
                       disabled={isSaving}
                       data-testid="editor-cancel-button"
                     >

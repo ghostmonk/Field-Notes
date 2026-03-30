@@ -1,7 +1,9 @@
+import asyncio
 from datetime import datetime, timezone
 
 from bson import ObjectId
 from bson.errors import InvalidId
+from constants import CONTENT_COLLECTIONS
 from database import get_db
 from decorators.auth import verify_auth
 from fastapi import APIRouter, HTTPException, Request
@@ -9,33 +11,30 @@ from fastapi.responses import RedirectResponse as FastAPIRedirectResponse
 
 router = APIRouter()
 
-CONTENT_COLLECTIONS = [
-    ("stories", "story"),
-    ("projects", "project"),
-    ("photo_essays", "photo_essay"),
-    ("pages", "page"),
-]
-
 
 async def find_content_in_section(
     db, section_id: str, slug: str, include_unpublished: bool = False
 ) -> dict | None:
     """Search all content collections for an item with this slug in this section."""
-    for collection_name, content_type in CONTENT_COLLECTIONS:
-        query = {
-            "section_id": section_id,
-            "slug": slug,
-            "deleted": {"$ne": True},
-        }
-        if not include_unpublished:
-            query["is_published"] = True
+    query = {
+        "section_id": section_id,
+        "slug": slug,
+        "deleted": {"$ne": True},
+    }
+    if not include_unpublished:
+        query["is_published"] = True
+
+    async def _find_in(collection_name: str, content_type: str):
         item = await db[collection_name].find_one(query)
         if item:
             result = dict(item)
             result["id"] = str(result.pop("_id"))
             result["content_type"] = content_type
             return result
-    return None
+        return None
+
+    results = await asyncio.gather(*[_find_in(col, ct) for col, ct in CONTENT_COLLECTIONS])
+    return next((r for r in results if r is not None), None)
 
 
 async def build_breadcrumbs(db, section: dict) -> list:

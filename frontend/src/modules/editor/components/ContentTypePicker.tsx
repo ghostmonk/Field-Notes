@@ -1,5 +1,4 @@
 interface ContentTypePickerProps {
-    sectionId: string;
     onSelect: (contentType: string) => void;
 }
 
@@ -11,7 +10,6 @@ const CONTENT_TYPES = [
 ];
 
 export function ContentTypePicker({
-    sectionId: _sectionId,
     onSelect,
 }: ContentTypePickerProps) {
     return (

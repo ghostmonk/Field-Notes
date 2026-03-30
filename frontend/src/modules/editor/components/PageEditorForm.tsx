@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { Section, Page, UpdatePageRequest } from '@/shared/types/api';
+import { getSectionPath } from '@/shared/lib/navigation';
 import { REFRESH_TOKEN_ERROR } from '@/shared/lib/auth';
 import apiClient from '@/shared/lib/api-client';
 import { ApiRequestError } from '@/shared/types/error';
@@ -106,7 +107,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
       await apiClient.pages.update(pageType, payload, session.accessToken);
       clearDraft();
       stopAutosave();
-      router.push(`/${section.path || section.slug}`);
+      router.push(getSectionPath(section));
     } catch (err) {
       if (err instanceof ApiRequestError) {
         setError(err.status === 401 ? ErrorService.handleAuthError(err) : err.getUserMessage());
@@ -327,7 +328,7 @@ export function PageEditorForm({ section }: PageEditorFormProps) {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => router.push(`/${section.path || section.slug}`)}
+                      onClick={() => router.push(getSectionPath(section))}
                       disabled={isSaving}
                       data-testid="editor-cancel-button"
                     >
