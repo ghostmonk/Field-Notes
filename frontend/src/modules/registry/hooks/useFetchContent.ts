@@ -106,7 +106,7 @@ export function useFetchContent<T>(options: UseFetchContentOptions<T>): UseFetch
 
     // Fetch on mount only if no SSR data was provided
     useEffect(() => {
-        if (!initialData || initialData.items.length === 0) {
+        if (!initialData?.items?.length) {
             fetchInternal(true);
         }
         initialFetchDoneRef.current = true;

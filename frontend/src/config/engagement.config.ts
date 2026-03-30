@@ -15,7 +15,7 @@ export interface EngagementTypeConfig {
 
 export const engagementConfig = {
   /** Real-time update strategy */
-  realtime: 'websocket' as RealtimeStrategy,
+  realtime: 'none' as RealtimeStrategy,
 
   /** Polling interval in ms (used if realtime is 'polling') */
   pollingInterval: 10000,
