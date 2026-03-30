@@ -11,23 +11,20 @@ const AdminPage: NextPageWithLayout = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (status !== "loading" && (!session || session.user?.role !== "admin")) {
       router.replace("/");
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   if (status === "loading") {
     return (
-      <div
-        className="admin-theme flex h-dvh items-center justify-center"
-        style={{ backgroundColor: "var(--background)" }}
-      >
-        <p style={{ color: "var(--muted-foreground)" }}>Loading...</p>
+      <div className="admin-theme flex h-dvh items-center justify-center bg-background">
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
-  if (!session) {
+  if (!session || session.user?.role !== "admin") {
     return null;
   }
 
