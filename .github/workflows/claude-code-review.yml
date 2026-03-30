@@ -2,22 +2,17 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    types: [ready_for_review]
+    paths:
+      - "frontend/src/**/*.ts"
+      - "frontend/src/**/*.tsx"
+      - "frontend/src/**/*.js"
+      - "frontend/src/**/*.jsx"
+      - "backend/**/*.py"
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,24 +35,27 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Review this PR thoroughly. Flag:
-            - Bugs, logic errors, off-by-one mistakes, race conditions
+            Review ONLY the diff of this PR. Do not read files outside the diff unless needed to verify a specific concern.
+
+            Report a MAXIMUM of 5 findings. Only report issues you are confident are real bugs or security vulnerabilities:
             - Security vulnerabilities (XSS, injection, auth bypass, secrets in code)
-            - Missing error handling that could break production
-            - Breaking API changes (backend contract changes without frontend updates, missing migrations)
-            - Performance issues (N+1 queries, unnecessary re-renders, missing indexes)
-            - Dead code or unused imports introduced in this PR
-            - Inconsistencies with patterns established in the codebase
+            - Bugs that will cause runtime errors, data loss, or incorrect behavior
+            - Breaking API contract changes (missing migrations, mismatched types)
 
-            Do not comment on: style preferences, naming bikeshedding, or suggestions to add features not in the PR scope. Do not summarize what the PR does.
+            Do NOT review:
+            - Documentation, markdown, README, or comment changes
+            - Style, naming, formatting, or import ordering
+            - Test files (unless a test is asserting wrong behavior)
+            - Suggestions for features not in the PR scope
 
-            If there are no issues worth flagging, say so in one line. If there are issues, list them as bullet points with file:line references. Be direct.
+            Rules:
+            - Each finding: one sentence + file:line reference. No elaboration.
+            - Do not summarize the PR.
+            - Do not repeat findings across categories.
+            - If nothing worth flagging, say "No issues found." and stop.
 
-            Use the repository's CLAUDE.md for guidance on conventions.
+            Use `gh pr diff ${{ github.event.pull_request.number }}` to get the diff, then `gh pr comment` to post findings.
 
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
-
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+          model: claude-haiku-4-5-20251001
+          claude_args: '--max-turns 3 --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
 

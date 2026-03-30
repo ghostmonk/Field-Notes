@@ -162,6 +162,10 @@ Assume all work happens in a worktree unless the user explicitly says to work on
 - **Dev testing**: use `make dev-local` or `make dev` to start services — don't run commands manually
 - **Cleanup**: run `make down` in the worktree to stop all Docker containers before removing the worktree with `git worktree remove`
 
+### Pull Request Creation
+
+Always create PRs in **draft mode** (`gh pr create --draft`). The Claude code review bot only triggers on `ready_for_review`, so draft PRs avoid unnecessary review cycles and token burn. Mark as ready for review only when the work is complete and tests pass.
+
 ### Squash Merge Commit Messages
 
 When squash-merging a PR via `gh pr merge --squash`, the `--body` becomes the commit message in git history. Keep it tight:
