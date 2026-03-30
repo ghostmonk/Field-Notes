@@ -1,9 +1,11 @@
+import { useEffect, useRef } from "react";
 import { useTree } from "@headless-tree/react";
 import {
   syncDataLoaderFeature,
   selectionFeature,
   hotkeysCoreFeature,
   dragAndDropFeature,
+  expandAllFeature,
   ItemInstance,
   DragTarget,
 } from "@headless-tree/core";
@@ -55,8 +57,22 @@ export function SectionTree({
       selectionFeature,
       hotkeysCoreFeature,
       dragAndDropFeature,
+      expandAllFeature,
     ],
   });
+
+  const prevFilterRef = useRef(filter);
+  useEffect(() => {
+    const wasFiltering = prevFilterRef.current.length > 0;
+    const isFiltering = filter.length > 0;
+    prevFilterRef.current = filter;
+
+    if (isFiltering) {
+      tree.expandAll();
+    } else if (wasFiltering) {
+      tree.collapseAll();
+    }
+  }, [filter, tree]);
 
   if (!data["root"]) return null;
 
