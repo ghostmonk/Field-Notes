@@ -9,8 +9,9 @@ import { Layout } from "@/layout";
 import { ToastProvider, useToast } from "@/components/Toast";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { NetworkStatus } from "@/components/NetworkStatus";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { NextPageWithLayout } from "@/shared/types/page";
 import { REFRESH_TOKEN_ERROR } from "@/shared/lib/auth";
 import { useImageZoom } from "@/hooks/useImageZoom";
 import { useRouter } from 'next/router';
@@ -36,7 +37,7 @@ function SessionGuard({ children }: { children: ReactNode }) {
     return <>{children}</>;
 }
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps }: AppProps & { Component: NextPageWithLayout }) {
     const mainRef = useRef<HTMLDivElement>(null);
     useImageZoom(mainRef);
     const [isWarming, setIsWarming] = useState(false);
@@ -98,6 +99,19 @@ function MyApp({ Component, pageProps }: AppProps) {
         await doWarmup(isSkeletonTest);
     }, [doWarmup, isSkeletonTest]);
 
+    const getLayout = Component.getLayout ?? ((page: ReactElement) => (
+        <Layout>
+            <BackendWarmupBanner
+                isWarming={isWarming}
+                warmupFailed={warmupFailed}
+                onRetry={handleWarmupRetry}
+            />
+            <div ref={mainRef}>
+                {page}
+            </div>
+        </Layout>
+    ));
+
     return (
         <SessionProvider session={pageProps.session} refetchInterval={4 * 60}>
             <ToastProvider>
@@ -112,16 +126,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                             <link rel="canonical" href="https://ghostmonk.com/"/>
                         </Head>
                         <NetworkStatus />
-                        <Layout>
-                            <BackendWarmupBanner
-                                isWarming={isWarming}
-                                warmupFailed={warmupFailed}
-                                onRetry={handleWarmupRetry}
-                            />
-                            <div ref={mainRef}>
-                                <Component {...pageProps} />
-                            </div>
-                        </Layout>
+                        {getLayout(<Component {...pageProps} />)}
                     </ConfirmProvider>
                 </SessionGuard>
             </ToastProvider>
