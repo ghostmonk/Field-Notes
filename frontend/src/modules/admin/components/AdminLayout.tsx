@@ -4,11 +4,29 @@ import { AdminDetailPanel } from "./AdminDetailPanel";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
+function applyStoredTheme() {
+  const stored = localStorage.getItem("theme");
+  const theme = stored && ["light", "dark", "system"].includes(stored) ? stored : "system";
+  const effective = theme === "system"
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : theme;
+  document.documentElement.setAttribute("data-theme", effective);
+  if (effective === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+}
+
 export function AdminLayout() {
   const router = useRouter();
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
     null
   );
+
+  useEffect(() => {
+    applyStoredTheme();
+  }, []);
 
   useEffect(() => {
     const sectionId = router.query.section as string | undefined;
