@@ -171,6 +171,7 @@ jobs:
             --set-env-vars "GOOGLE_APPLICATION_CREDENTIALS_JSON_B64=${GCP_CREDS_B64}" \
             --set-env-vars "QDRANT_URL=${{ vars.QDRANT_URL }},QDRANT_API_KEY=${{ secrets.QDRANT_API_KEY }},VOYAGE_API_KEY=${{ secrets.VOYAGE_API_KEY }},ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" \
             --set-env-vars "TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY }},SMTP_USER=${{ secrets.SMTP_USER }},SMTP_APP_PASSWORD=${{ secrets.SMTP_APP_PASSWORD }},CONTACT_NOTIFY_EMAIL=${{ vars.CONTACT_NOTIFY_EMAIL }}" \
+            --min-instances=1 \
             --timeout=600s
 
       - name: Deploy Frontend
@@ -188,6 +189,7 @@ jobs:
             --project=${{ vars.GCP_PROJECT_ID }} \
             --allow-unauthenticated \
             --set-env-vars GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }},GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }},NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }},NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }},NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},NEXTAUTH_DEBUG=${{ vars.NEXTAUTH_DEBUG }},BACKEND_URL=${{ vars.BACKEND_URL }} \
+            --min-instances=1 \
             --timeout=600s
 
       - name: Make Frontend Public
