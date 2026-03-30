@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-03-30-editor-command-center': 'Editor Command Center',
   '2026-03-29-nested-routing': 'Nested Routing',
   '2026-03-29-asset-reorganization': 'Asset Reorganization (Nested Routing Prereq)',
   '2026-03-26-contact-form': 'Contact Form Design',
