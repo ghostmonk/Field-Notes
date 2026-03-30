@@ -165,8 +165,9 @@ export interface Section {
     id: string;
     title: string;
     slug: string;
+    path: string;
     display_type: DisplayType;
-    content_type: SectionContentType;
+    content_type?: SectionContentType;
     nav_visibility: NavVisibility;
     sort_order: number;
     is_published: boolean;
@@ -213,6 +214,7 @@ export interface PhotoEssay {
  */
 export interface PhotoEssayCard {
     id: string;
+    slug?: string;
     title: string;
     description?: string;
     cover_image_url: string;
@@ -257,7 +259,7 @@ export interface UpdatePhotoEssayRequest {
 export interface CreateSectionRequest {
     title: string;
     display_type: DisplayType;
-    content_type: SectionContentType;
+    content_type?: SectionContentType;
     nav_visibility?: NavVisibility;
     sort_order?: number;
     is_published?: boolean;

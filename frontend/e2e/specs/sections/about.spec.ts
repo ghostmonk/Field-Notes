@@ -40,6 +40,7 @@ test.describe('About Page', () => {
     await aboutPage.goto();
 
     await expect(aboutPage.nav.nav).toBeVisible();
+    await aboutPage.nav.openMenu();
     await expect(aboutPage.nav.blogLink).toBeVisible();
   });
 

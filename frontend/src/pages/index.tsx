@@ -8,13 +8,13 @@ import { getSiteConfig } from '@/config';
 
 interface HomeProps {
     initialStories?: PaginatedResponse<Story>;
-    storySectionSlug?: string | null;
+    sectionPathMap?: Record<string, string>;
     error?: string;
 }
 
 const config = getSiteConfig();
 
-const Home: React.FC<HomeProps> = ({ initialStories, storySectionSlug, error }) => {
+const Home: React.FC<HomeProps> = ({ initialStories, sectionPathMap, error }) => {
     return (
         <>
             <Head>
@@ -32,7 +32,7 @@ const Home: React.FC<HomeProps> = ({ initialStories, storySectionSlug, error }) 
                         <p className="hero__subtitle">{config.site.tagline}</p>
                     </header>
                 )}
-                <StoryList initialData={initialStories} initialError={error} basePath={storySectionSlug ? `/${storySectionSlug}` : undefined} featureFirst />
+                <StoryList initialData={initialStories} initialError={error} sectionPathMap={sectionPathMap} featureFirst />
             </div>
         </>
     );
@@ -64,15 +64,14 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
 
         const data: PaginatedResponse<Story> = await response.json();
 
-        // Resolve the story section slug for links
-        let storySectionSlug: string | undefined;
+        // Build section path lookup so each story links to its own section
+        const sectionPathMap: Record<string, string> = {};
         try {
-            const sectionsRes = await fetch(`${backendUrl}/sections`);
+            const sectionsRes = await fetch(`${backendUrl}/sections?limit=100`);
             if (sectionsRes.ok) {
                 const sectionsData = await sectionsRes.json();
-                const storySection = sectionsData.items.find((s: { content_type: string }) => s.content_type === 'story');
-                if (storySection) {
-                    storySectionSlug = storySection.slug;
+                for (const s of sectionsData.items) {
+                    sectionPathMap[s.id] = s.path || s.slug;
                 }
             }
         } catch {
@@ -82,7 +81,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
         return {
             props: {
                 initialStories: data,
-                storySectionSlug: storySectionSlug || null,
+                sectionPathMap,
             },
             revalidate: 300,
         };

@@ -22,6 +22,8 @@ import { EmptyState } from '@/components/EmptyState';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
 import { processStoryDataSSR } from '@/rendering/server';
 import apiClient from '@/shared/lib/api-client';
+import { getSectionPath } from '@/shared/lib/navigation';
+import { SectionProvider } from '@/contexts/SectionContext';
 import dynamic from 'next/dynamic';
 const ContactForm = dynamic(() => import('@/modules/static/pages/ContactForm').then(mod => ({ default: mod.ContactForm })), { ssr: false });
 
@@ -60,7 +62,7 @@ function StoryEngagement() {
 }
 
 function SectionListView({ section, initialListData }: { section: Section; initialListData?: PaginatedResponse<any> }) {
-    const contentType = section.content_type as ContentType;
+    const contentType = (section.content_type || 'story') as ContentType;
     const displayType = section.display_type as DisplayType;
     const { data: session } = useSession();
     const router = useRouter();
@@ -123,7 +125,7 @@ function SectionListView({ section, initialListData }: { section: Section; initi
         }
     }, [session, router, deleteStory, reset, confirm, showToast]);
 
-    const basePath = `/${section.slug}`;
+    const basePath = getSectionPath(section);
 
     const renderItem = useMemo(() => {
         if (contentType === 'story') {
@@ -241,18 +243,18 @@ function PhotoEssayDetailView({ section, essay }: { section: Section; essay: Pho
         try {
             await apiClient.photoEssays.delete(essay.id, session.accessToken);
             showToast('Photo essay deleted');
-            router.push(`/${section.slug}`);
+            router.push(getSectionPath(section));
         } catch {
             showToast('Failed to delete photo essay');
         }
-    }, [session, essay.id, essay.title, section.slug, router, confirm, showToast]);
+    }, [session, essay.id, essay.title, section.path, section.slug, router, confirm, showToast]);
 
     const isAdmin = session?.user?.role === 'admin';
 
     return (
         <div className="page-container">
             <Breadcrumbs items={[
-                { label: section.title, href: `/${section.slug}` },
+                { label: section.title, href: getSectionPath(section) },
                 { label: essay.title },
             ]} />
             <PhotoEssayPage
@@ -265,7 +267,10 @@ function PhotoEssayDetailView({ section, essay }: { section: Section; essay: Pho
 }
 
 function SectionDetailView({ section, item }: { section: Section; item: Story | Project | PhotoEssay }) {
-    const contentType = section.content_type as ContentType;
+    const contentType = (section.content_type ||
+        ('content' in item ? 'story' :
+         'technologies' in item ? 'project' :
+         'photos' in item ? 'photo_essay' : 'story')) as ContentType;
     const { data: session } = useSession();
     const router = useRouter();
 
@@ -277,7 +282,7 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
         return (
             <div className="detail-container">
                 <Breadcrumbs items={[
-                    { label: section.title, href: `/${section.slug}` },
+                    { label: section.title, href: getSectionPath(section) },
                     { label: story.title },
                 ]} />
                 <EngagementProvider targetType="story" targetId={story.id}>
@@ -297,7 +302,7 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
         return (
             <div className="page-container">
                 <Breadcrumbs items={[
-                    { label: section.title, href: `/${section.slug}` },
+                    { label: section.title, href: getSectionPath(section) },
                     { label: project.title },
                 ]} />
                 <ProjectDetail project={project} onEdit={handleEdit} />
@@ -316,6 +321,14 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
 }
 
 export default function SectionPage({ section, view, initialListData, detailItem, pageContent, ogImage, excerpt, error }: SectionPageProps) {
+    return (
+        <SectionProvider section={error ? null : section}>
+            <SectionPageContent section={section} view={view} initialListData={initialListData} detailItem={detailItem} pageContent={pageContent} ogImage={ogImage} excerpt={excerpt} error={error} />
+        </SectionProvider>
+    );
+}
+
+function SectionPageContent({ section, view, initialListData, detailItem, pageContent, ogImage, excerpt, error }: SectionPageProps) {
     const canonicalUrl = getCanonicalUrl();
     const { data: session } = useSession();
     const router = useRouter();
@@ -413,81 +426,67 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
         return { props: { section: {} as Section, view: 'list', error: 'Backend URL not configured' } };
     }
 
-    if (!slugPath || !Array.isArray(slugPath) || slugPath.length === 0 || slugPath.length > 2) {
+    if (!slugPath || !Array.isArray(slugPath) || slugPath.length === 0) {
         return { notFound: true };
     }
 
-    const sectionSlug = slugPath[0];
-    const itemSlug = slugPath.length === 2 ? slugPath[1] : null;
+    const fullPath = slugPath.join('/');
 
-    // Resolve section
-    let section: Section;
     try {
-        const sectionRes = await fetch(`${API_BASE_URL}/sections/by-slug/${sectionSlug}`);
-        if (!sectionRes.ok) {
+        // Resolve the path via the new endpoint
+        const resolveRes = await fetch(`${API_BASE_URL}/sections/resolve-path/${fullPath}`, {
+            redirect: 'manual',
+        });
+
+        // Handle redirects
+        if (resolveRes.status === 301) {
+            const location = resolveRes.headers.get('location');
+            if (location) {
+                return { redirect: { destination: location, permanent: true } };
+            }
             return { notFound: true };
         }
-        section = await sectionRes.json();
-    } catch {
-        return { notFound: true };
-    }
 
-    if (!section.is_published) {
-        return { notFound: true };
-    }
-
-    const contentType = section.content_type;
-    const displayType = section.display_type;
-
-    // Static page view
-    if (displayType === 'static-page') {
-        try {
-            const pageRes = await fetch(`${API_BASE_URL}/pages/${sectionSlug}`);
-            if (pageRes.ok) {
-                const pageContent: Page = await pageRes.json();
-                return { props: { section, view: 'static-page', pageContent } };
-            }
-            return { props: { section, view: 'static-page', pageContent: null } };
-        } catch {
-            return { props: { section, view: 'static-page', pageContent: null } };
+        if (!resolveRes.ok) {
+            return { notFound: true };
         }
-    }
 
-    // Detail view (2 segments)
-    if (itemSlug) {
-        try {
+        const resolved = await resolveRes.json();
+
+        // Content item detail view
+        if (resolved.type === 'content') {
+            const section = resolved.section as Section;
+            const contentItem = resolved.content_item;
+            const contentType = contentItem.content_type;
+
             let detailItem: Story | Project | PhotoEssay | null = null;
             let ogImage: string | undefined;
             let excerpt: string | undefined;
 
             if (contentType === 'story') {
-                const storyRes = await fetch(`${API_BASE_URL}/stories/slug/${itemSlug}`);
-                if (!storyRes.ok) {
-                    return { notFound: true };
+                const storyRes = await fetch(`${API_BASE_URL}/stories/slug/${contentItem.slug}`);
+                if (storyRes.ok) {
+                    const story: Story = await storyRes.json();
+                    detailItem = story;
+                    const ssrData = await processStoryDataSSR(story);
+                    ogImage = ssrData.ogImage;
+                    excerpt = ssrData.excerpt;
                 }
-                const story: Story = await storyRes.json();
-                detailItem = story;
-
-                const ssrData = await processStoryDataSSR(story);
-                ogImage = ssrData.ogImage;
-                excerpt = ssrData.excerpt;
             } else if (contentType === 'project') {
-                const projectRes = await fetch(`${API_BASE_URL}/projects/slug/${itemSlug}`);
-                if (!projectRes.ok) {
-                    return { notFound: true };
+                const projectRes = await fetch(`${API_BASE_URL}/projects/slug/${contentItem.slug}`);
+                if (projectRes.ok) {
+                    const project: Project = await projectRes.json();
+                    detailItem = project;
+                    excerpt = project.summary;
                 }
-                const project: Project = await projectRes.json();
-                detailItem = project;
-                excerpt = project.summary;
             } else if (contentType === 'photo_essay') {
-                const essayRes = await fetch(`${API_BASE_URL}/photo-essays/${itemSlug}`);
-                if (!essayRes.ok) {
-                    return { notFound: true };
+                const essayRes = await fetch(`${API_BASE_URL}/photo-essays/${contentItem.id || contentItem.slug}`);
+                if (essayRes.ok) {
+                    const essay: PhotoEssay = await essayRes.json();
+                    detailItem = essay;
+                    ogImage = essay.cover_image_url;
+                    excerpt = essay.description;
                 }
-                const essay: PhotoEssay = await essayRes.json();
-                detailItem = essay;
-                ogImage = essay.cover_image_url;
-                excerpt = essay.description;
             }
 
             if (!detailItem) {
@@ -496,53 +495,81 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
 
             return {
                 props: {
-                    section,
+                    section: { ...section, content_type: contentType } as Section,
                     view: 'detail',
                     detailItem,
                     ogImage: ogImage || `${getBaseUrl()}/images/default-og.png`,
                     excerpt: excerpt || '',
                 },
             };
+        }
+
+        // Section view
+        let section = resolved.section as Section;
+        const displayType = section.display_type;
+
+        // Static page view
+        if (displayType === 'static-page') {
+            try {
+                const pageSlug = slugPath[slugPath.length - 1];
+                const pageRes = await fetch(`${API_BASE_URL}/pages/${pageSlug}`);
+                if (pageRes.ok) {
+                    const pageContent: Page = await pageRes.json();
+                    return { props: { section, view: 'static-page', pageContent } };
+                }
+                return { props: { section, view: 'static-page', pageContent: null } };
+            } catch {
+                return { props: { section, view: 'static-page', pageContent: null } };
+            }
+        }
+
+        // List view — use per-type endpoints for SSR data (matches display component expectations)
+        // The children endpoint returns ListingItem[] which doesn't match Story[]/Project[] shapes
+        // that SectionListView and useFetchContent expect. Use old endpoints for backward compat.
+        try {
+            let initialListData: PaginatedResponse<any> | undefined;
+            const contentType = section.content_type;
+
+            if (contentType === 'story') {
+                const listRes = await fetch(`${API_BASE_URL}/stories?limit=10&offset=0&section_id=${section.id}`);
+                if (listRes.ok) initialListData = await listRes.json();
+            } else if (contentType === 'project') {
+                const listRes = await fetch(`${API_BASE_URL}/projects?limit=10&offset=0&section_id=${section.id}`);
+                if (listRes.ok) initialListData = await listRes.json();
+            } else if (contentType === 'photo_essay') {
+                const listRes = await fetch(`${API_BASE_URL}/photo-essays/section/${section.id}?limit=20&offset=0`);
+                if (listRes.ok) initialListData = await listRes.json();
+            } else {
+                // For sections without content_type (new nested sections), try children endpoint
+                const childrenRes = await fetch(`${API_BASE_URL}/sections/${section.id}/children?limit=20&offset=0`);
+                if (childrenRes.ok) {
+                    const childrenData = await childrenRes.json();
+                    // Infer content_type from first content item
+                    const firstContentItem = childrenData.items?.find((item: any) => item.item_type === 'content');
+                    if (firstContentItem?.content_type) {
+                        section = { ...section, content_type: firstContentItem.content_type } as Section;
+                    }
+                    initialListData = childrenData;
+                }
+            }
+
+            return {
+                props: {
+                    section,
+                    view: 'list',
+                    initialListData: initialListData || { items: [], total: 0, limit: 10, offset: 0 },
+                },
+            };
         } catch {
-            return { notFound: true };
+            return {
+                props: {
+                    section,
+                    view: 'list',
+                    initialListData: { items: [], total: 0, limit: 10, offset: 0 },
+                },
+            };
         }
-    }
-
-    // List view (1 segment)
-    try {
-        let initialListData: PaginatedResponse<any> | undefined;
-
-        if (contentType === 'story') {
-            const listRes = await fetch(`${API_BASE_URL}/stories?limit=10&offset=0&section_id=${section.id}`);
-            if (listRes.ok) {
-                initialListData = await listRes.json();
-            }
-        } else if (contentType === 'project') {
-            const listRes = await fetch(`${API_BASE_URL}/projects?limit=10&offset=0&section_id=${section.id}`);
-            if (listRes.ok) {
-                initialListData = await listRes.json();
-            }
-        } else if (contentType === 'photo_essay') {
-            const listRes = await fetch(`${API_BASE_URL}/photo-essays/section/${section.id}?limit=20&offset=0`);
-            if (listRes.ok) {
-                initialListData = await listRes.json();
-            }
-        }
-
-        return {
-            props: {
-                section,
-                view: 'list',
-                initialListData: initialListData || { items: [], total: 0, limit: 10, offset: 0 },
-            },
-        };
     } catch {
-        return {
-            props: {
-                section,
-                view: 'list',
-                initialListData: { items: [], total: 0, limit: 10, offset: 0 },
-            },
-        };
+        return { notFound: true };
     }
 };

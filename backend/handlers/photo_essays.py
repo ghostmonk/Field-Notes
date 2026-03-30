@@ -62,6 +62,7 @@ async def get_photo_essays_by_section(
         # Projection excludes photos array for listing; include photo_count via aggregation
         projection = {
             "_id": 1,
+            "slug": 1,
             "title": 1,
             "description": 1,
             "cover_image_url": 1,

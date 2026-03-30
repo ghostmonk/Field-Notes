@@ -81,7 +81,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: MOCK_SERVER_TIMEOUT,
       cwd: __dirname,
-      stdout: 'ignore',
+      stdout: 'pipe',
       stderr: 'pipe',
     },
     {
@@ -90,7 +90,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: NEXT_DEV_TIMEOUT,
       cwd: __dirname,
-      stdout: 'ignore',
+      stdout: 'pipe',
       stderr: 'pipe',
     },
   ],

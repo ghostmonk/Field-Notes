@@ -85,8 +85,11 @@ export class AdminSectionsPage extends BasePage {
     navVisibility?: string;
   }) {
     await this.titleInput.fill(options.title);
-    if (options.displayType) await this.displayTypeSelect.selectOption(options.displayType);
+    // Content type must be set before display type (it filters available options)
     if (options.contentType) await this.contentTypeSelect.selectOption(options.contentType);
+    if (options.displayType && await this.displayTypeSelect.isVisible()) {
+      await this.displayTypeSelect.selectOption(options.displayType);
+    }
     if (options.navVisibility) await this.navVisibilitySelect.selectOption(options.navVisibility);
   }
 

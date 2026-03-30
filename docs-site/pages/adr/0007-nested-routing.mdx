@@ -1,0 +1,43 @@
+# ADR-0007: Nested Section Routing
+
+**Status:** Accepted
+**Date:** 2026-03-29
+**Decision Makers:** ghostmonk
+
+## Context
+
+The existing routing system was flat — sections mapped 1:1 to top-level URL segments with a maximum depth of 2 (`/section/item`). Content types were encoded on sections, forcing every section to contain exactly one kind of content. This prevented:
+
+- Deep organizational hierarchies (e.g., `/creative-work/photography/portraits/beach-sunset`)
+- Mixed content types within a single section
+- Moving content between sections without breaking URLs
+
+## Decision
+
+Replace flat routing with arbitrary-depth nested sections using:
+
+1. **Materialized `path` field** on sections for O(1) URL resolution
+2. **Single `resolve-path` backend endpoint** that resolves any URL depth in one HTTP call
+3. **Content types on items, not sections** — sections are display containers, items carry their own type
+4. **Uniform `ListingItem` interface** for display-type-agnostic rendering
+5. **Automatic 301 redirects** when content or sections move
+6. **Redirect flattening** to prevent chains (A→B→C becomes A→C)
+
+## Consequences
+
+### Positive
+- Unlimited URL depth for content organization
+- Mixed content types per section (stories + projects in same section)
+- Content can move between sections with URL preservation
+- Simpler frontend — one endpoint call instead of multi-step resolution
+- Breadcrumbs come free from the resolution endpoint
+
+### Negative
+- Migration complexity — existing sections need `path` field backfilled
+- `content_type` removal from sections requires frontend guards during transition
+- Move operations cascade through subtrees (performance concern for deep trees)
+- Two path formats for video assets (old flat, new with originals/) until fully migrated
+
+### Risks
+- Deep recursive queries for subtree operations on large hierarchies
+- Redirect table growth over time (needs periodic cleanup)

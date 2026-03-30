@@ -70,6 +70,7 @@ test.describe('Projects Page', () => {
       await projectsPage.goto();
 
       await expect(projectsPage.nav.nav).toBeVisible();
+      await projectsPage.nav.openMenu();
       await expect(projectsPage.nav.blogLink).toBeVisible();
     });
   });

@@ -54,6 +54,10 @@ export class PhotoEssaysPage extends BasePage {
     await this.page.keyboard.press('ArrowLeft');
   }
 
+  async waitForCounter(expected: string) {
+    await this.page.locator('.photo-viewer__counter', { hasText: expected }).waitFor({ timeout: 5000 });
+  }
+
   async pressEscape() {
     await this.page.keyboard.press('Escape');
   }

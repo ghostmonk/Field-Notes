@@ -32,8 +32,9 @@ dependencies = ["0014_reorganize_assets"]
 CONTENT_COLLECTIONS = ["stories", "projects", "pages"]
 
 # Matches image URLs under /uploads/photos/{section_id}/{base_name}[_suffix].webp
-# Group 1: section_id, Group 2: base_name (without suffix), Group 3: size suffix (optional)
-IMAGE_URL_RE = re.compile(r"/uploads/photos/([^/]+)/([^/_]+?)(_2048|_1536|_768|_400)?\.webp")
+# Group 1: section_id, Group 2: base_name (may contain underscores), Group 3: size suffix (optional)
+# The base_name pattern uses a greedy match up to an optional size suffix before .webp
+IMAGE_URL_RE = re.compile(r"/uploads/photos/([^/]+)/(.+?)(_2048|_1536|_768|_400)?\.webp")
 
 # Already-migrated pattern to skip
 ALREADY_MIGRATED_IMAGE_RE = re.compile(r"/uploads/images/")

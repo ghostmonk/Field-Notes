@@ -25,7 +25,7 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ onChange, content = "", actionSlot, sectionId }: RichTextEditorProps) {
     const editor = useEditor({
         extensions: [
-            StarterKit,
+            StarterKit.configure({ link: false }),
             Link.configure({
                 openOnClick: false,
                 validate: (href: string) => /^(https?:\/\/|mailto:|tel:)/i.test(href),

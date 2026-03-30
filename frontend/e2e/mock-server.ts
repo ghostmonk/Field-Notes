@@ -4,6 +4,8 @@ import {
   samplePages,
   sampleProjects,
   sampleSections,
+  allSections,
+  nestedSections,
   projectToCard,
   FIXED_TIMESTAMP,
   sampleReactions,
@@ -13,6 +15,8 @@ import {
   samplePhotoEssayCards,
   samplePhotoEssayDetail,
   sampleResume,
+  sampleBlogChildren,
+  TEST_SECTION_IDS,
 } from './test-data';
 
 const app = express();
@@ -302,6 +306,168 @@ app.post('/engagement/bulk/counts', (req: Request, res: Response) => {
 // ============================================================================
 
 const sections = [...sampleSections];
+const allSectionsList = [...allSections];
+
+// Mock redirects for testing path redirect following
+const mockRedirects = [
+  { old_path: 'old-blog/my-published-story', new_path: 'blog/my-published-story' },
+];
+
+// GET /sections/resolve-path/:path(*) - Resolve path to section or content
+app.get('/sections/resolve-path/{*path}', (req: Request, res: Response) => {
+  const rawPath = req.params.path;
+  const fullPath = Array.isArray(rawPath) ? rawPath.join('/') : rawPath;
+  if (!fullPath) {
+    res.status(404).json({ detail: 'Path not found' });
+    return;
+  }
+
+  // Try full path as section
+  const section = allSectionsList.find((s) => s.path === fullPath && s.is_published);
+  if (section) {
+    // Build breadcrumbs by walking parents
+    const breadcrumbs: Array<{ title: string; path: string }> = [];
+    let current: typeof section | undefined = section;
+    while (current) {
+      breadcrumbs.unshift({ title: current.title, path: current.path });
+      current = current.parent_id
+        ? allSectionsList.find((s) => s.id === current!.parent_id) as typeof section | undefined
+        : undefined;
+    }
+    res.json({ type: 'section', section, breadcrumbs });
+    return;
+  }
+
+  // Try parent path as section, last segment as content slug
+  const segments = fullPath.split('/');
+  if (segments.length > 1) {
+    const parentPath = segments.slice(0, -1).join('/');
+    const itemSlug = segments[segments.length - 1];
+    const parentSection = allSectionsList.find((s) => s.path === parentPath && s.is_published);
+
+    if (parentSection) {
+      // Check stories
+      const story = sampleStories.find((s) => s.slug === itemSlug);
+      if (story) {
+        const breadcrumbs = [
+          { title: parentSection.title, path: parentSection.path },
+          { title: story.title, path: fullPath },
+        ];
+        res.json({ type: 'content', section: parentSection, content_item: { ...story, content_type: 'story' }, breadcrumbs });
+        return;
+      }
+
+      // Check projects
+      const project = sampleProjects.find((p) => p.slug === itemSlug && p.is_published);
+      if (project) {
+        const breadcrumbs = [
+          { title: parentSection.title, path: parentSection.path },
+          { title: project.title, path: fullPath },
+        ];
+        res.json({ type: 'content', section: parentSection, content_item: { ...project, content_type: 'project' }, breadcrumbs });
+        return;
+      }
+
+      // Check photo essays
+      const essay = samplePhotoEssayCards.find((e) => e.id === itemSlug);
+      if (essay && parentSection.content_type === 'photo_essay') {
+        const detail = essay.id === samplePhotoEssayDetail.id ? samplePhotoEssayDetail : essay;
+        const breadcrumbs = [
+          { title: parentSection.title, path: parentSection.path },
+          { title: essay.title, path: fullPath },
+        ];
+        res.json({ type: 'content', section: parentSection, content_item: { ...detail, content_type: 'photo_essay' }, breadcrumbs });
+        return;
+      }
+    }
+  }
+
+  // Check redirects
+  const redirect = mockRedirects.find((r) => r.old_path === fullPath);
+  if (redirect) {
+    res.redirect(301, `/${redirect.new_path}`);
+    return;
+  }
+
+  res.status(404).json({ detail: 'Path not found' });
+});
+
+// GET /sections/:id/children - Return child items for a section
+app.get('/sections/:id/children', (req: Request, res: Response) => {
+  const sectionId = req.params.id;
+  const limit = Math.max(1, parseInt(req.query.limit as string || '20', 10) || 20);
+  const offset = Math.max(0, parseInt(req.query.offset as string || '0', 10) || 0);
+
+  // Check if section exists
+  const section = allSectionsList.find((s) => s.id === sectionId);
+  if (!section) {
+    res.status(404).json({ detail: 'Section not found' });
+    return;
+  }
+
+  // Use pre-built children for blog section
+  if (sectionId === TEST_SECTION_IDS.BLOG) {
+    const paginated = sampleBlogChildren.slice(offset, offset + limit);
+    res.json({ items: paginated, total: sampleBlogChildren.length, limit, offset });
+    return;
+  }
+
+  // For other sections, return child sections + content items from stories/projects
+  const childSections = allSectionsList
+    .filter((s) => s.parent_id === sectionId && s.is_published)
+    .map((s) => ({
+      id: s.id,
+      slug: s.slug,
+      item_type: 'section' as const,
+      content_type: s.content_type,
+      title: s.title,
+      path: s.path,
+      display_type: s.display_type,
+      tags: [] as string[],
+      is_published: true,
+      is_featured: false,
+      sort_order: s.sort_order,
+      created_at: s.createdDate,
+      updated_at: s.updatedDate,
+    }));
+
+  // For sections with content, add content items
+  const contentItems = sampleStories
+    .filter(() => !section.content_type || section.content_type === 'story')
+    .map((s) => ({
+      id: s.id,
+      slug: s.slug,
+      item_type: 'content' as const,
+      content_type: 'story',
+      title: s.title,
+      tags: [] as string[],
+      is_published: s.is_published,
+      is_featured: false,
+      created_at: s.createdDate,
+      updated_at: s.updatedDate,
+    }));
+
+  const projectItems = sampleProjects
+    .filter(() => !section.content_type || section.content_type === 'project')
+    .map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      item_type: 'content' as const,
+      content_type: 'project',
+      title: p.title,
+      summary: p.summary,
+      tags: p.technologies,
+      is_published: p.is_published,
+      is_featured: p.is_featured,
+      sort_order: p.sort_order,
+      created_at: p.createdDate,
+      updated_at: p.updatedDate,
+    }));
+
+  const allItems = [...childSections, ...contentItems, ...projectItems];
+  const paginated = allItems.slice(offset, offset + limit);
+  res.json({ items: paginated, total: allItems.length, limit, offset });
+});
 
 // GET /sections - List sections with optional nav_visibility filter
 app.get('/sections', (req: Request, res: Response) => {
@@ -330,7 +496,7 @@ app.get('/sections/by-slug/:slug', (req: Request, res: Response) => {
 
 // GET /sections/:id - Get section by ID
 app.get('/sections/:id', (req: Request, res: Response) => {
-  const section = sections.find((s) => s.id === req.params.id);
+  const section = allSectionsList.find((s) => s.id === req.params.id);
   if (section) {
     res.json(section);
   } else {

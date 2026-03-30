@@ -631,14 +631,12 @@ class TestSectionBase:
             title="Blog",
             slug="blog",
             display_type="feed",
-            content_type="story",
             nav_visibility="main",
             sort_order=0,
         )
         assert section.title == "Blog"
         assert section.slug == "blog"
         assert section.display_type == "feed"
-        assert section.content_type == "story"
         assert section.nav_visibility == "main"
         assert section.sort_order == 0
         assert section.parent_id is None
@@ -651,7 +649,6 @@ class TestSectionBase:
             title="Photography",
             slug="photography",
             display_type="gallery",
-            content_type="photo_essay",
             nav_visibility="main",
             sort_order=1,
             parent_id="507f1f77bcf86cd799439011",
@@ -665,7 +662,6 @@ class TestSectionBase:
             SectionBase(
                 slug="blog",
                 display_type="feed",
-                content_type="story",
                 nav_visibility="main",
                 sort_order=0,
             )
@@ -678,7 +674,6 @@ class TestSectionBase:
                 title="Blog",
                 slug="blog",
                 display_type="invalid",
-                content_type="story",
                 nav_visibility="main",
                 sort_order=0,
             )
@@ -691,7 +686,6 @@ class TestSectionBase:
                 title="Blog",
                 slug="blog",
                 display_type="feed",
-                content_type="story",
                 nav_visibility="invalid",
                 sort_order=0,
             )
@@ -706,7 +700,6 @@ class TestSectionCreate:
         section = SectionCreate(
             title="Projects",
             display_type="card-grid",
-            content_type="project",
             nav_visibility="main",
             sort_order=2,
         )
@@ -743,8 +736,8 @@ class TestSectionResponse:
             id="507f1f77bcf86cd799439011",
             title="Blog",
             slug="blog",
+            path="blog",
             display_type="feed",
-            content_type="story",
             nav_visibility="main",
             sort_order=0,
             is_published=True,

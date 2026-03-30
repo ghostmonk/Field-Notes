@@ -16,10 +16,11 @@ interface StoriesProps {
     initialData?: PaginatedResponse<Story>;
     initialError?: string;
     basePath?: string;
+    sectionPathMap?: Record<string, string>;
     featureFirst?: boolean;
 }
 
-const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath, featureFirst }) => {
+const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath, sectionPathMap, featureFirst }) => {
     const { data: session } = useSession();
     const router = useRouter();
     const {
@@ -91,20 +92,25 @@ const Stories: React.FC<StoriesProps> = ({ initialData, initialError, basePath, 
 
     // Memoize the story list to prevent unnecessary re-renders
     const storyItems = useMemo(() => {
-        return stories.map((story, index) => (
-            <StoryCard
-                key={story.id}
-                story={story}
-                session={session}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                deleteLoading={deleteLoading}
-                engagementCounts={engagementCounts[`story:${story.id}`]}
-                basePath={basePath}
-                featured={featureFirst && index === 0 && story.is_published}
-            />
-        ));
-    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath, featureFirst]);
+        return stories.map((story, index) => {
+            const storyBasePath = sectionPathMap && story.section_id
+                ? `/${sectionPathMap[story.section_id]}`
+                : basePath;
+            return (
+                <StoryCard
+                    key={story.id}
+                    story={story}
+                    session={session}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    deleteLoading={deleteLoading}
+                    engagementCounts={engagementCounts[`story:${story.id}`]}
+                    basePath={storyBasePath}
+                    featured={featureFirst && index === 0 && story.is_published}
+                />
+            );
+        });
+    }, [stories, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath, sectionPathMap, featureFirst]);
 
     // Handle error state
     if (error) {

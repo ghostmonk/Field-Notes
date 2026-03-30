@@ -5,11 +5,13 @@ import {
   samplePages as sharedPages,
   sampleProjects as sharedProjects,
   sampleSections as sharedSections,
+  allSections as sharedAllSections,
   sampleReactions as sharedReactions,
   sampleComments as sharedComments,
   samplePhotoEssayCards as sharedPhotoEssayCards,
   samplePhotoEssayDetail as sharedPhotoEssayDetail,
   sampleResume as sharedResume,
+  sampleBlogChildren as sharedBlogChildren,
   FIXED_TIMESTAMP,
   TestStory,
   TestPage,
@@ -20,6 +22,7 @@ import {
   projectToCard,
   createTestComment,
   createTestSection,
+  TEST_SECTION_IDS,
 } from '../test-data';
 
 /**
@@ -594,6 +597,190 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
     }
   });
 
+  // Mock sections resolve-path endpoint
+  await page.route('**/api/sections/resolve-path/**', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const urlObj = new URL(route.request().url());
+    const pathMatch = urlObj.pathname.match(/\/api\/sections\/resolve-path\/(.+)/);
+    const fullPath = pathMatch ? pathMatch[1] : '';
+
+    // Try full path as section
+    const section = sharedAllSections.find((s) => s.path === fullPath && s.is_published);
+    if (section) {
+      const breadcrumbs: Array<{ title: string; path: string }> = [];
+      let current: typeof section | undefined = section;
+      while (current) {
+        breadcrumbs.unshift({ title: current.title, path: current.path });
+        current = current.parent_id
+          ? sharedAllSections.find((s) => s.id === current!.parent_id) as typeof section | undefined
+          : undefined;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ type: 'section', section, breadcrumbs }),
+      });
+      return;
+    }
+
+    // Try parent path as section, last segment as content slug
+    const segments = fullPath.split('/');
+    if (segments.length > 1) {
+      const parentPath = segments.slice(0, -1).join('/');
+      const itemSlug = segments[segments.length - 1];
+      const parentSection = sharedAllSections.find((s) => s.path === parentPath && s.is_published);
+
+      if (parentSection) {
+        const story = stories.find((s) => s.slug === itemSlug);
+        if (story) {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              type: 'content',
+              section: parentSection,
+              content_item: { ...story, content_type: 'story' },
+              breadcrumbs: [
+                { title: parentSection.title, path: parentSection.path },
+                { title: story.title, path: fullPath },
+              ],
+            }),
+          });
+          return;
+        }
+
+        const project = projects.find((p) => p.slug === itemSlug && p.is_published);
+        if (project) {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              type: 'content',
+              section: parentSection,
+              content_item: { ...project, content_type: 'project' },
+              breadcrumbs: [
+                { title: parentSection.title, path: parentSection.path },
+                { title: project.title, path: fullPath },
+              ],
+            }),
+          });
+          return;
+        }
+
+        // Check photo essays
+        const essay = sharedPhotoEssayCards.find((e) => e.id === itemSlug);
+        if (essay && parentSection.content_type === 'photo_essay') {
+          const detail = essay.id === sharedPhotoEssayDetail.id ? sharedPhotoEssayDetail : essay;
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              type: 'content',
+              section: parentSection,
+              content_item: { ...detail, content_type: 'photo_essay' },
+              breadcrumbs: [
+                { title: parentSection.title, path: parentSection.path },
+                { title: essay.title, path: fullPath },
+              ],
+            }),
+          });
+          return;
+        }
+      }
+    }
+
+    await route.fulfill({
+      status: 404,
+      contentType: 'application/json',
+      body: JSON.stringify({ detail: 'Path not found' }),
+    });
+  });
+
+  // Mock sections children endpoint
+  await page.route('**/api/sections/*/children**', async (route) => {
+    await maybeDelay();
+
+    if (failRequests) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Internal server error' }),
+      });
+      return;
+    }
+
+    const urlObj = new URL(route.request().url());
+    const pathParts = urlObj.pathname.split('/');
+    // Pattern: /api/sections/{id}/children
+    const childrenIdx = pathParts.indexOf('children');
+    const sectionId = childrenIdx > 0 ? pathParts[childrenIdx - 1] : '';
+    const limit = parseInt(urlObj.searchParams.get('limit') || '20', 10);
+    const offset = parseInt(urlObj.searchParams.get('offset') || '0', 10);
+
+    if (sectionId === TEST_SECTION_IDS.BLOG) {
+      const paginated = sharedBlogChildren.slice(offset, offset + limit);
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ items: paginated, total: sharedBlogChildren.length, limit, offset }),
+      });
+      return;
+    }
+
+    // For other sections, return stories or projects based on content_type
+    const section = sharedAllSections.find((s) => s.id === sectionId);
+    if (!section) {
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Section not found' }),
+      });
+      return;
+    }
+
+    const childSections = sharedAllSections
+      .filter((s) => s.parent_id === sectionId && s.is_published)
+      .map((s) => ({
+        id: s.id, slug: s.slug, item_type: 'section', content_type: s.content_type,
+        title: s.title, path: s.path, display_type: s.display_type, tags: [],
+        is_published: true, is_featured: false, sort_order: s.sort_order,
+        created_at: s.createdDate, updated_at: s.updatedDate,
+      }));
+
+    const contentItems = section.content_type === 'story'
+      ? stories.map((s) => ({
+          id: s.id, slug: s.slug, item_type: 'content', content_type: 'story',
+          title: s.title, tags: [], is_published: s.is_published, is_featured: false,
+          created_at: s.createdDate, updated_at: s.updatedDate,
+        }))
+      : section.content_type === 'project'
+        ? projects.filter((p) => p.is_published).map((p) => ({
+            id: p.id, slug: p.slug, item_type: 'content', content_type: 'project',
+            title: p.title, summary: p.summary, tags: p.technologies,
+            is_published: p.is_published, is_featured: p.is_featured,
+            sort_order: p.sort_order, created_at: p.createdDate, updated_at: p.updatedDate,
+          }))
+        : [];
+
+    const allItems = [...childSections, ...contentItems];
+    const paginated = allItems.slice(offset, offset + limit);
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: paginated, total: allItems.length, limit, offset }),
+    });
+  });
+
   // Mock sections navigation endpoint (used by useNavSections hook)
   await page.route('**/api/sections/navigation', async (route) => {
     await maybeDelay();
@@ -692,7 +879,7 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
   });
 
   // Mock section by ID endpoint (GET/PUT/DELETE /api/sections/{id})
-  await page.route(/\/api\/sections\/(?!by-slug|navigation)[\w-]+$/, async (route) => {
+  await page.route(/\/api\/sections\/(?!by-slug|navigation|resolve-path)[\w-]+$/, async (route) => {
     await maybeDelay();
     const method = route.request().method();
     const urlObj = new URL(route.request().url());
@@ -720,8 +907,8 @@ async function setupApiMocks(page: Page, options: ApiMockOptions = {}) {
       return;
     }
 
-    // GET
-    const section = sections.find((s) => s.id === id);
+    // GET — search all sections (including nested) for editor support
+    const section = sharedAllSections.find((s) => s.id === id) || sections.find((s) => s.id === id);
     if (section) {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(section) });
     } else {

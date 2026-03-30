@@ -10,6 +10,7 @@ test.describe('Smoke Tests', () => {
 
     // Verify navigation is visible
     await expect(homePage.nav.nav).toBeVisible();
+    await homePage.nav.openMenu();
     await expect(homePage.nav.blogLink).toBeVisible();
 
     // Verify page title
@@ -68,7 +69,8 @@ test.describe('Smoke Tests', () => {
     await homePage.goto();
     await homePage.waitForLoad();
 
-    // Verify New content link is visible
+    // Verify New content link is visible (inside mobile menu overlay)
+    await homePage.nav.openMenu();
     await expect(homePage.nav.newContentLink).toBeVisible();
   });
 
@@ -103,7 +105,8 @@ test.describe('Smoke Tests', () => {
     await homePage.goto();
     await homePage.waitForLoad();
 
-    // Verify all section links are visible
+    // Section links are inside the mobile menu overlay
+    await homePage.nav.openMenu();
     await expect(homePage.nav.blogLink).toBeVisible();
     await expect(homePage.nav.aboutLink).toBeVisible();
     await expect(homePage.nav.projectsLink).toBeVisible();

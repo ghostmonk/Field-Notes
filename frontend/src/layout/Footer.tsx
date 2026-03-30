@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { getSiteConfig } from '@/config';
 import { useNavSections } from '@/hooks/useNavSections';
 import { useActiveSection } from '@/hooks/useActiveSection';
+import { useCurrentSection } from '@/contexts/SectionContext';
 import { iconMap } from '@/shared/lib/navIcons';
 import { HiPlusSm, HiCog, HiSearch, HiDocumentText } from 'react-icons/hi';
 import { FaGithub, FaLinkedinIn, FaInstagram, FaXTwitter, FaTiktok, FaYoutube, FaSpotify } from 'react-icons/fa6';
@@ -26,7 +27,8 @@ const Footer: React.FC = () => {
     const { data: session } = useSession();
     const sections = useNavSections();
     const activeSlug = useActiveSection(sections);
-    const activeSectionId = sections.find(s => s.slug === activeSlug)?.id;
+    const currentSection = useCurrentSection();
+    const activeSectionId = currentSection?.id || sections.find(s => s.slug === activeSlug)?.id;
 
     return (
         <footer className="site-footer" data-testid="site-footer">

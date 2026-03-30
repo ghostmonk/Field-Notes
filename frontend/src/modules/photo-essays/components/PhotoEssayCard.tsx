@@ -9,20 +9,22 @@ interface Props {
 
 export function PhotoEssayCard({ essay, basePath }: Props) {
     return (
-        <Link href={`${basePath}/${essay.id}`} className="gallery-card" data-testid="photo-essay-card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-                src={essay.cover_image_url}
-                srcSet={essay.cover_image_srcset || undefined}
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                alt={essay.title}
-                className="gallery-card__image"
-                loading="lazy"
-                decoding="async"
-                style={{ objectPosition: essay.cover_image_position || '50% 50%' }}
-                onLoad={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
-                onError={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
-            />
+        <Link href={`${basePath}/${essay.slug || essay.id}`} className="gallery-card" data-testid="photo-essay-card">
+            {essay.cover_image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                    src={essay.cover_image_url}
+                    srcSet={essay.cover_image_srcset || undefined}
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    alt={essay.title}
+                    className="gallery-card__image"
+                    loading="lazy"
+                    decoding="async"
+                    style={{ objectPosition: essay.cover_image_position || '50% 50%' }}
+                    onLoad={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
+                    onError={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
+                />
+            ) : null}
             <div className="gallery-card__overlay">
                 <h2 className="gallery-card__title">{essay.title}</h2>
                 {essay.description && (

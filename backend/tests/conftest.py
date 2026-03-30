@@ -37,12 +37,15 @@ from fastapi.testclient import TestClient
 
 # Create a test app without lifespan to avoid DB connections during startup
 # Import routers directly to avoid the lifespan event
+from handlers.children import router as children_router
 from handlers.contact import router as contact_router
 from handlers.content import router as content_router
 from handlers.engagement import router as engagement_router
 from handlers.job_applications import router as job_applications_router
+from handlers.moves import router as moves_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
+from handlers.path_resolution import router as path_resolution_router
 from handlers.photo_essays import router as photo_essays_router
 from handlers.projects import router as projects_router
 from handlers.resume import router as resume_router
@@ -58,25 +61,28 @@ from middleware.rate_limit import limiter
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-test_app = FastAPI()
-test_app.state.limiter = limiter
-test_app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-test_app.include_router(stories_router)
-test_app.include_router(uploads_router)
-test_app.include_router(users_router)
-test_app.include_router(video_processing_router)
-test_app.include_router(pages_router)
-test_app.include_router(projects_router)
-test_app.include_router(sections_router)
-test_app.include_router(navlinks_router)
-test_app.include_router(engagement_router)
-test_app.include_router(photo_essays_router)
-test_app.include_router(resume_router)
-test_app.include_router(content_router)
-test_app.include_router(tailor_router)
-test_app.include_router(voice_feedback_router)
-test_app.include_router(job_applications_router)
-test_app.include_router(contact_router)
+app_fixture = FastAPI()
+app_fixture.state.limiter = limiter
+app_fixture.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app_fixture.include_router(stories_router)
+app_fixture.include_router(uploads_router)
+app_fixture.include_router(users_router)
+app_fixture.include_router(video_processing_router)
+app_fixture.include_router(pages_router)
+app_fixture.include_router(projects_router)
+app_fixture.include_router(sections_router)
+app_fixture.include_router(navlinks_router)
+app_fixture.include_router(engagement_router)
+app_fixture.include_router(photo_essays_router)
+app_fixture.include_router(resume_router)
+app_fixture.include_router(content_router)
+app_fixture.include_router(tailor_router)
+app_fixture.include_router(voice_feedback_router)
+app_fixture.include_router(job_applications_router)
+app_fixture.include_router(contact_router)
+app_fixture.include_router(moves_router)
+app_fixture.include_router(path_resolution_router)
+app_fixture.include_router(children_router)
 
 
 @pytest.fixture
@@ -113,22 +119,22 @@ def override_database(mock_collection):
         return mock_collection
 
     # Use FastAPI's dependency override system
-    test_app.dependency_overrides[get_collection] = get_mock_collection
+    app_fixture.dependency_overrides[get_collection] = get_mock_collection
     yield mock_collection
     # Clear the overrides after the test
-    test_app.dependency_overrides.clear()
+    app_fixture.dependency_overrides.clear()
 
 
 @pytest.fixture
 def client(override_database):
     """Test client for synchronous tests"""
-    return TestClient(test_app)
+    return TestClient(app_fixture)
 
 
 @pytest_asyncio.fixture
 async def async_client(override_database):
     """Async test client for async tests - requires override_database to mock DB"""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 
@@ -220,9 +226,9 @@ def override_pages_database(mock_pages_collection):
     async def get_mock_pages_collection():
         return mock_pages_collection
 
-    test_app.dependency_overrides[get_pages_collection] = get_mock_pages_collection
+    app_fixture.dependency_overrides[get_pages_collection] = get_mock_pages_collection
     yield mock_pages_collection
-    test_app.dependency_overrides.pop(get_pages_collection, None)
+    app_fixture.dependency_overrides.pop(get_pages_collection, None)
 
 
 @pytest.fixture
@@ -232,22 +238,22 @@ def override_projects_database(mock_projects_collection):
     async def get_mock_projects_collection():
         return mock_projects_collection
 
-    test_app.dependency_overrides[get_projects_collection] = get_mock_projects_collection
+    app_fixture.dependency_overrides[get_projects_collection] = get_mock_projects_collection
     yield mock_projects_collection
-    test_app.dependency_overrides.pop(get_projects_collection, None)
+    app_fixture.dependency_overrides.pop(get_projects_collection, None)
 
 
 @pytest_asyncio.fixture
 async def pages_async_client(override_pages_database):
     """Async test client for pages tests"""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 
 @pytest_asyncio.fixture
 async def projects_async_client(override_projects_database):
     """Async test client for projects tests"""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 
@@ -306,9 +312,9 @@ def override_users_database(mock_users_collection):
     async def get_mock_users_collection():
         return mock_users_collection
 
-    test_app.dependency_overrides[get_users_collection] = get_mock_users_collection
+    app_fixture.dependency_overrides[get_users_collection] = get_mock_users_collection
     yield mock_users_collection
-    test_app.dependency_overrides.pop(get_users_collection, None)
+    app_fixture.dependency_overrides.pop(get_users_collection, None)
 
 
 @pytest.fixture
@@ -526,8 +532,8 @@ def override_engagement_database(
         "is_published": True,
     }
 
-    test_app.dependency_overrides[get_reactions_collection] = get_mock_reactions_collection
-    test_app.dependency_overrides[get_comments_collection] = get_mock_comments_collection
+    app_fixture.dependency_overrides[get_reactions_collection] = get_mock_reactions_collection
+    app_fixture.dependency_overrides[get_comments_collection] = get_mock_comments_collection
 
     # Patch module-level imports for validate_target_exists (not dependency injected)
     with (
@@ -536,14 +542,14 @@ def override_engagement_database(
     ):
         yield mock_reactions_collection, mock_comments_collection
 
-    test_app.dependency_overrides.pop(get_reactions_collection, None)
-    test_app.dependency_overrides.pop(get_comments_collection, None)
+    app_fixture.dependency_overrides.pop(get_reactions_collection, None)
+    app_fixture.dependency_overrides.pop(get_comments_collection, None)
 
 
 @pytest_asyncio.fixture
 async def engagement_async_client(override_engagement_database):
     """Async test client for engagement tests"""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 
@@ -566,15 +572,15 @@ def override_sections_database(mock_sections_collection):
     async def get_mock_sections_collection():
         return mock_sections_collection
 
-    test_app.dependency_overrides[get_sections_collection] = get_mock_sections_collection
+    app_fixture.dependency_overrides[get_sections_collection] = get_mock_sections_collection
     yield mock_sections_collection
-    test_app.dependency_overrides.pop(get_sections_collection, None)
+    app_fixture.dependency_overrides.pop(get_sections_collection, None)
 
 
 @pytest_asyncio.fixture
 async def sections_async_client(override_sections_database):
     """Async test client for sections tests"""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 
@@ -585,9 +591,9 @@ def sample_section_data():
     return {
         "title": "Blog",
         "slug": "blog",
+        "path": "blog",
         "parent_id": None,
         "display_type": "feed",
-        "content_type": "story",
         "nav_visibility": "main",
         "sort_order": 0,
         "is_published": True,
@@ -616,15 +622,15 @@ def override_navlinks_database(mock_navlinks_collection):
     async def get_mock_navlinks_collection():
         return mock_navlinks_collection
 
-    test_app.dependency_overrides[get_navlinks_collection] = get_mock_navlinks_collection
+    app_fixture.dependency_overrides[get_navlinks_collection] = get_mock_navlinks_collection
     yield mock_navlinks_collection
-    test_app.dependency_overrides.pop(get_navlinks_collection, None)
+    app_fixture.dependency_overrides.pop(get_navlinks_collection, None)
 
 
 @pytest_asyncio.fixture
 async def navlinks_async_client(override_navlinks_database):
     """Async test client for navlinks tests"""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 
@@ -661,15 +667,15 @@ def override_photo_essays_database(mock_photo_essays_collection):
     async def get_mock_photo_essays_collection():
         return mock_photo_essays_collection
 
-    test_app.dependency_overrides[get_photo_essays_collection] = get_mock_photo_essays_collection
+    app_fixture.dependency_overrides[get_photo_essays_collection] = get_mock_photo_essays_collection
     yield mock_photo_essays_collection
-    test_app.dependency_overrides.pop(get_photo_essays_collection, None)
+    app_fixture.dependency_overrides.pop(get_photo_essays_collection, None)
 
 
 @pytest_asyncio.fixture
 async def photo_essays_async_client(override_photo_essays_database):
     """Async test client for photo essays tests"""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 
@@ -735,23 +741,23 @@ def override_resumes_database(mock_resumes_collection):
     async def get_mock_job_applications_collection():
         return mock_job_applications
 
-    test_app.dependency_overrides[get_resumes_collection] = get_mock_resumes_collection
-    test_app.dependency_overrides[get_voice_feedback_collection] = (
+    app_fixture.dependency_overrides[get_resumes_collection] = get_mock_resumes_collection
+    app_fixture.dependency_overrides[get_voice_feedback_collection] = (
         get_mock_voice_feedback_collection
     )
-    test_app.dependency_overrides[get_job_applications_collection] = (
+    app_fixture.dependency_overrides[get_job_applications_collection] = (
         get_mock_job_applications_collection
     )
     yield mock_resumes_collection
-    test_app.dependency_overrides.pop(get_resumes_collection, None)
-    test_app.dependency_overrides.pop(get_voice_feedback_collection, None)
-    test_app.dependency_overrides.pop(get_job_applications_collection, None)
+    app_fixture.dependency_overrides.pop(get_resumes_collection, None)
+    app_fixture.dependency_overrides.pop(get_voice_feedback_collection, None)
+    app_fixture.dependency_overrides.pop(get_job_applications_collection, None)
 
 
 @pytest_asyncio.fixture
 async def resumes_async_client(override_resumes_database):
     """Async test client for resumes tests"""
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app_fixture), base_url="http://test") as ac:
         yield ac
 
 

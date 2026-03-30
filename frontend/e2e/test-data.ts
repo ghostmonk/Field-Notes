@@ -30,6 +30,7 @@ export interface TestStory {
   title: string;
   content: string;
   slug: string;
+  section_id?: string;
   is_published: boolean;
   createdDate: string;
   updatedDate: string;
@@ -48,6 +49,7 @@ export const sampleStories: TestStory[] = [
     title: 'My Published Story',
     content: '<p>This is a published story with rich content.</p>',
     slug: TEST_STORY_SLUGS.PUBLISHED,
+    section_id: 'section-blog',
     is_published: true,
     createdDate: FIXED_TIMESTAMP,
     updatedDate: FIXED_TIMESTAMP,
@@ -57,6 +59,7 @@ export const sampleStories: TestStory[] = [
     title: 'My Draft Story',
     content: '<p>This draft is still in progress.</p>',
     slug: TEST_STORY_SLUGS.DRAFT,
+    section_id: 'section-blog',
     is_published: false,
     createdDate: FIXED_TIMESTAMP,
     updatedDate: FIXED_TIMESTAMP,
@@ -66,6 +69,7 @@ export const sampleStories: TestStory[] = [
     title: 'Story With Images',
     content: '<p>Story with an image:</p><img src="/test-image.jpg" alt="Test" width="800" height="600" />',
     slug: TEST_STORY_SLUGS.WITH_IMAGES,
+    section_id: 'section-blog',
     is_published: true,
     createdDate: FIXED_TIMESTAMP,
     updatedDate: FIXED_TIMESTAMP,
@@ -280,6 +284,7 @@ export interface TestSection {
   id: string;
   title: string;
   slug: string;
+  path: string;
   icon: string;
   parent_id: string | null;
   display_type: string;
@@ -291,12 +296,38 @@ export interface TestSection {
   updatedDate: string;
 }
 
+export interface TestListingItem {
+  id: string;
+  slug: string;
+  item_type: 'section' | 'content';
+  content_type?: string;
+  title: string;
+  summary?: string;
+  image_url?: string;
+  video_url?: string;
+  path?: string;
+  display_type?: string;
+  tags: string[];
+  is_published: boolean;
+  is_featured: boolean;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
+}
+
 export const TEST_SECTION_IDS = {
   BLOG: 'section-blog',
   ABOUT: 'section-about',
   PROJECTS: 'section-projects',
   CONTACT: 'section-contact',
   PHOTO_ESSAYS: '507f1f77bcf86cd799439019',
+  BLOG_TECH: 'section-blog-tech',
+  BLOG_PERSONAL: 'section-blog-personal',
+  CREATIVE_WORK: 'section-creative-work',
+  PHOTOGRAPHY: 'section-photography',
+  PORTRAITS: 'section-portraits',
+  WRITING: 'section-writing',
 } as const;
 
 export const sampleSections: TestSection[] = [
@@ -304,6 +335,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.BLOG,
     title: 'Blog',
     slug: 'blog',
+    path: 'blog',
     icon: 'home',
     parent_id: null,
     display_type: 'feed',
@@ -318,6 +350,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.ABOUT,
     title: 'About',
     slug: 'about',
+    path: 'about',
     icon: 'user',
     parent_id: null,
     display_type: 'static-page',
@@ -332,6 +365,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.PROJECTS,
     title: 'Projects',
     slug: 'projects',
+    path: 'projects',
     icon: 'folder',
     parent_id: null,
     display_type: 'card-grid',
@@ -346,6 +380,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.CONTACT,
     title: 'Contact',
     slug: 'contact',
+    path: 'contact',
     icon: 'mail',
     parent_id: null,
     display_type: 'static-page',
@@ -360,6 +395,7 @@ export const sampleSections: TestSection[] = [
     id: TEST_SECTION_IDS.PHOTO_ESSAYS,
     title: 'Photo Essays',
     slug: 'photo-essays',
+    path: 'photo-essays',
     icon: 'photograph',
     parent_id: null,
     display_type: 'gallery',
@@ -372,6 +408,101 @@ export const sampleSections: TestSection[] = [
   },
 ];
 
+export const nestedSections: TestSection[] = [
+  {
+    id: TEST_SECTION_IDS.BLOG_TECH,
+    title: 'Tech',
+    slug: 'tech',
+    path: 'blog/tech',
+    icon: 'code',
+    parent_id: TEST_SECTION_IDS.BLOG,
+    display_type: 'feed',
+    content_type: 'story',
+    nav_visibility: 'hidden',
+    sort_order: 0,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+  {
+    id: TEST_SECTION_IDS.BLOG_PERSONAL,
+    title: 'Personal',
+    slug: 'personal',
+    path: 'blog/personal',
+    icon: 'heart',
+    parent_id: TEST_SECTION_IDS.BLOG,
+    display_type: 'feed',
+    content_type: 'story',
+    nav_visibility: 'hidden',
+    sort_order: 1,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+  {
+    id: TEST_SECTION_IDS.CREATIVE_WORK,
+    title: 'Creative Work',
+    slug: 'creative-work',
+    path: 'creative-work',
+    icon: 'palette',
+    parent_id: null,
+    display_type: 'card-grid',
+    content_type: 'project',
+    nav_visibility: 'main',
+    sort_order: 5,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+  {
+    id: TEST_SECTION_IDS.PHOTOGRAPHY,
+    title: 'Photography',
+    slug: 'photography',
+    path: 'creative-work/photography',
+    icon: 'camera',
+    parent_id: TEST_SECTION_IDS.CREATIVE_WORK,
+    display_type: 'gallery',
+    content_type: 'photo_essay',
+    nav_visibility: 'hidden',
+    sort_order: 0,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+  {
+    id: TEST_SECTION_IDS.PORTRAITS,
+    title: 'Portraits',
+    slug: 'portraits',
+    path: 'creative-work/photography/portraits',
+    icon: 'user',
+    parent_id: TEST_SECTION_IDS.PHOTOGRAPHY,
+    display_type: 'gallery',
+    content_type: 'photo_essay',
+    nav_visibility: 'hidden',
+    sort_order: 0,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+  {
+    id: TEST_SECTION_IDS.WRITING,
+    title: 'Writing',
+    slug: 'writing',
+    path: 'creative-work/writing',
+    icon: 'pen',
+    parent_id: TEST_SECTION_IDS.CREATIVE_WORK,
+    display_type: 'feed',
+    content_type: 'story',
+    nav_visibility: 'hidden',
+    sort_order: 1,
+    is_published: true,
+    createdDate: FIXED_TIMESTAMP,
+    updatedDate: FIXED_TIMESTAMP,
+  },
+];
+
+export const allSections: TestSection[] = [...sampleSections, ...nestedSections];
+
 /**
  * Helper to create a mock section with defaults.
  */
@@ -380,6 +511,7 @@ export function createTestSection(overrides: Partial<TestSection> = {}): TestSec
     id: `section-${Date.now()}`,
     title: 'Test Section',
     slug: 'test-section',
+    path: 'test-section',
     icon: 'default',
     parent_id: null,
     display_type: 'feed',
@@ -392,6 +524,58 @@ export function createTestSection(overrides: Partial<TestSection> = {}): TestSec
     ...overrides,
   };
 }
+
+/**
+ * Helper to create a mock ListingItem with defaults.
+ */
+export function createTestListingItem(overrides: Partial<TestListingItem> = {}): TestListingItem {
+  return {
+    id: `item-${Date.now()}`,
+    slug: 'test-item',
+    item_type: 'content',
+    content_type: 'story',
+    title: 'Test Item',
+    tags: [],
+    is_published: true,
+    is_featured: false,
+    created_at: FIXED_TIMESTAMP,
+    updated_at: FIXED_TIMESTAMP,
+    ...overrides,
+  };
+}
+
+/**
+ * Sample listing items for children endpoint testing.
+ */
+export const sampleBlogChildren: TestListingItem[] = [
+  createTestListingItem({
+    id: TEST_SECTION_IDS.BLOG_TECH,
+    slug: 'tech',
+    item_type: 'section',
+    content_type: 'story',
+    title: 'Tech',
+    path: 'blog/tech',
+    display_type: 'feed',
+    sort_order: 0,
+  }),
+  createTestListingItem({
+    id: TEST_SECTION_IDS.BLOG_PERSONAL,
+    slug: 'personal',
+    item_type: 'section',
+    content_type: 'story',
+    title: 'Personal',
+    path: 'blog/personal',
+    display_type: 'feed',
+    sort_order: 1,
+  }),
+  createTestListingItem({
+    id: TEST_STORY_IDS.PUBLISHED,
+    slug: TEST_STORY_SLUGS.PUBLISHED,
+    item_type: 'content',
+    content_type: 'story',
+    title: 'My Published Story',
+  }),
+];
 
 // ============================================================================
 // Engagement (Reactions & Comments)

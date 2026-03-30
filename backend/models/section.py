@@ -60,7 +60,6 @@ class SectionBase(BaseModel):
     slug: str | None = Field(None, min_length=1, max_length=200)
     parent_id: str | None = Field(None)
     display_type: DisplayType
-    content_type: ContentType
     nav_visibility: NavVisibility = "main"
     sort_order: int = Field(0, ge=0)
     is_published: bool = True
@@ -81,7 +80,7 @@ class SectionCreate(BaseModel):
     slug: str | None = Field(None, min_length=1, max_length=200)
     parent_id: str | None = Field(None)
     display_type: DisplayType
-    content_type: ContentType
+    content_type: ContentType | None = None
     nav_visibility: NavVisibility = "main"
     sort_order: int = Field(0, ge=0)
     is_published: bool = True
@@ -100,9 +99,8 @@ class SectionUpdate(BaseModel):
 
     title: str | None = Field(None, min_length=1, max_length=200)
     slug: str | None = Field(None, min_length=1, max_length=200)
-    parent_id: str | None = Field(None)
+    # parent_id excluded — use PUT /sections/{id}/move for reparenting (has cycle detection)
     display_type: DisplayType | None = None
-    content_type: ContentType | None = None
     nav_visibility: NavVisibility | None = None
     sort_order: int | None = Field(None, ge=0)
     is_published: bool | None = None
@@ -121,6 +119,8 @@ class SectionResponse(SectionBase):
 
     id: str
     slug: str
+    path: str
+    content_type: str | None = None
     createdDate: datetime
     updatedDate: datetime
     user_id: str | None = None

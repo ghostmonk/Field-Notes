@@ -262,7 +262,6 @@ class TestCreateSection:
             json={
                 "title": "Blog",
                 "display_type": "feed",
-                "content_type": "story",
                 "nav_visibility": "main",
                 "sort_order": 0,
             },
@@ -285,7 +284,6 @@ class TestCreateSection:
             json={
                 "title": "Blog",
                 "display_type": "feed",
-                "content_type": "story",
             },
         )
 
@@ -306,7 +304,6 @@ class TestCreateSection:
             json={
                 "title": "Blog",
                 "display_type": "invalid",
-                "content_type": "story",
             },
             headers=auth_headers,
         )
@@ -336,7 +333,6 @@ class TestCreateSection:
             json={
                 "title": "Photos",
                 "display_type": "gallery",
-                "content_type": "photo_essay",
                 "icon": "camera",
             },
             headers=auth_headers,
@@ -360,7 +356,6 @@ class TestCreateSection:
             json={
                 "title": "Photos",
                 "display_type": "gallery",
-                "content_type": "photo_essay",
                 "icon": "nonexistent-icon",
             },
             headers=auth_headers,
@@ -391,7 +386,6 @@ class TestCreateSection:
             json={
                 "title": "Blog",
                 "display_type": "feed",
-                "content_type": "story",
             },
             headers=auth_headers,
         )
@@ -420,13 +414,32 @@ class TestUpdateSection:
             **sample_section_data,
             "user_id": "mock_user_id",
         }
-        # First find_one for checking section exists, second for returning updated
+        updated_doc = {
+            **sample_doc,
+            "title": "Updated Blog",
+            "slug": "updated-blog",
+            "path": "updated-blog",
+        }
+        # find_one calls:
+        # 1) Existing section check
+        # 2) Slug uniqueness check
+        # 3) Redirect block: find_one for section itself
+        # 4) find_one_and_convert: return updated section
         override_sections_database.find_one.side_effect = [
             sample_doc,  # Existing section check
             None,  # Slug uniqueness check
-            {**sample_doc, "title": "Updated Blog", "slug": "updated-blog"},  # Updated section
+            updated_doc,  # Redirect block: find_one for this section
+            updated_doc,  # find_one_and_convert: updated section
         ]
         override_sections_database.update_one.return_value = MagicMock(modified_count=1)
+
+        # find() calls:
+        # 1) _collect_all_descendant_paths: children of section (none)
+        # 2) cascade_path_updates: children of section (none)
+        override_sections_database.find.side_effect = [
+            MockCursor([]),  # _collect_all_descendant_paths: no children
+            MockCursor([]),  # cascade_path_updates: no children
+        ]
 
         response = await sections_async_client.put(
             "/sections/507f1f77bcf86cd799439011",
@@ -534,3 +547,401 @@ class TestDeleteSection:
         )
 
         assert response.status_code == 401
+
+
+class TestSectionPath:
+    """Tests for section path computation."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_top_level_section_path_equals_slug(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Top-level section path equals its slug."""
+        section_id = ObjectId("507f1f77bcf86cd799439011")
+        override_sections_database.find_one.side_effect = [
+            None,  # slug uniqueness check
+            {**sample_section_data, "_id": section_id, "slug": "notes", "path": "notes"},
+        ]
+        override_sections_database.insert_one.return_value = MagicMock(inserted_id=section_id)
+
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Notes",
+                "display_type": "feed",
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["path"] == "notes"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_child_section_path_includes_parent(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Child section path = parent.path/child.slug."""
+        parent_id = ObjectId("507f1f77bcf86cd799439011")
+        child_id = ObjectId("507f1f77bcf86cd799439012")
+
+        parent_doc = {
+            **sample_section_data,
+            "_id": parent_id,
+            "slug": "blog",
+            "path": "blog",
+        }
+
+        override_sections_database.find_one.side_effect = [
+            None,  # slug uniqueness check
+            parent_doc,  # parent lookup
+            {
+                **sample_section_data,
+                "_id": child_id,
+                "slug": "tech",
+                "path": "blog/tech",
+                "parent_id": str(parent_id),
+            },
+        ]
+        override_sections_database.insert_one.return_value = MagicMock(inserted_id=child_id)
+
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Tech",
+                "display_type": "feed",
+                "parent_id": str(parent_id),
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["path"] == "blog/tech"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_create_child_section_invalid_parent_returns_400(
+        self,
+        sections_async_client,
+        override_sections_database,
+        mock_auth,
+        auth_headers,
+    ):
+        """Creating a child with a nonexistent parent_id returns 400."""
+        parent_id = ObjectId("507f1f77bcf86cd799439011")
+
+        override_sections_database.find_one.side_effect = [
+            None,  # slug uniqueness check
+            None,  # parent lookup returns nothing
+        ]
+
+        response = await sections_async_client.post(
+            "/sections",
+            json={
+                "title": "Orphan",
+                "display_type": "feed",
+                "parent_id": str(parent_id),
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 400
+        assert "parent" in response.json()["detail"].lower()
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_section_response_includes_path(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+    ):
+        """Section response includes path field."""
+        section_id = ObjectId()
+        override_sections_database.find_one.return_value = {
+            **sample_section_data,
+            "_id": section_id,
+        }
+
+        response = await sections_async_client.get(f"/sections/{section_id}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "path" in data
+        assert data["path"] == "blog"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_section_response_does_not_include_content_type(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+    ):
+        """Section response includes content_type as optional read-only field."""
+        section_id = ObjectId()
+        override_sections_database.find_one.return_value = {
+            **sample_section_data,
+            "_id": section_id,
+        }
+
+        response = await sections_async_client.get(f"/sections/{section_id}")
+
+        assert response.status_code == 200
+        data = response.json()
+        # content_type is present but None when not set in DB data
+        assert data.get("content_type") is None
+
+
+class TestPathCascade:
+    """Tests for path cascade on section rename."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_rename_parent_updates_child_paths(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Renaming a parent section cascades path updates to children."""
+        parent_id = ObjectId("507f1f77bcf86cd799439011")
+        child_id = ObjectId("507f1f77bcf86cd799439012")
+
+        parent_doc = {
+            **sample_section_data,
+            "_id": parent_id,
+            "title": "Blog",
+            "slug": "blog",
+            "path": "blog",
+            "parent_id": None,
+            "user_id": "mock_user_id",
+        }
+
+        child_doc = {
+            **sample_section_data,
+            "_id": child_id,
+            "title": "Tech",
+            "slug": "tech",
+            "path": "blog/tech",
+            "parent_id": str(parent_id),
+            "user_id": "mock_user_id",
+        }
+
+        updated_parent = {**parent_doc, "title": "Articles", "slug": "articles", "path": "articles"}
+        # find_one calls:
+        # 1) Existing section check
+        # 2) Slug uniqueness check
+        # 3) Redirect block: find_one for parent_id
+        # 4) Redirect block: find_one for child_id
+        # 5) find_one_and_convert: return updated section
+        override_sections_database.find_one.side_effect = [
+            parent_doc,  # Existing section check
+            None,  # Slug uniqueness check
+            updated_parent,  # Redirect: find_one for parent
+            {**child_doc, "path": "articles/tech"},  # Redirect: find_one for child
+            updated_parent,  # find_one_and_convert: updated section
+        ]
+
+        # find() calls:
+        # 1) _collect_all_descendant_paths: children of parent -> [child]
+        # 2) _collect_all_descendant_paths: children of child -> []
+        # 3) cascade_path_updates: children of parent -> [child]
+        # 4) cascade_path_updates: children of child -> []
+        override_sections_database.find.side_effect = [
+            MockCursor([child_doc]),  # _collect_all_descendant_paths: children of parent
+            MockCursor([]),  # _collect_all_descendant_paths: children of child
+            MockCursor([child_doc]),  # cascade_path_updates: children of parent
+            MockCursor([]),  # cascade_path_updates: children of child
+        ]
+
+        override_sections_database.update_one.return_value = MagicMock(modified_count=1)
+
+        response = await sections_async_client.put(
+            f"/sections/{parent_id}",
+            json={"title": "Articles"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+
+        # Verify cascade update_one was called for the child with new path
+        update_calls = override_sections_database.update_one.call_args_list
+        # First call: update the parent itself
+        # Second call: cascade update for the child
+        assert len(update_calls) == 2
+        child_update = update_calls[1]
+        assert child_update[0][0] == {"_id": child_id}
+        assert child_update[0][1]["$set"]["path"] == "articles/tech"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_rename_cascades_to_grandchildren(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Renaming root cascades path updates through mid-level to leaf."""
+        root_id = ObjectId("507f1f77bcf86cd799439011")
+        mid_id = ObjectId("507f1f77bcf86cd799439012")
+        leaf_id = ObjectId("507f1f77bcf86cd799439013")
+
+        root_doc = {
+            **sample_section_data,
+            "_id": root_id,
+            "title": "Blog",
+            "slug": "blog",
+            "path": "blog",
+            "parent_id": None,
+            "user_id": "mock_user_id",
+        }
+
+        mid_doc = {
+            **sample_section_data,
+            "_id": mid_id,
+            "title": "Tech",
+            "slug": "tech",
+            "path": "blog/tech",
+            "parent_id": str(root_id),
+        }
+
+        leaf_doc = {
+            **sample_section_data,
+            "_id": leaf_id,
+            "title": "Python",
+            "slug": "python",
+            "path": "blog/tech/python",
+            "parent_id": str(mid_id),
+        }
+
+        updated_root = {**root_doc, "title": "Articles", "slug": "articles", "path": "articles"}
+        # find_one calls:
+        # 1) Existing section check
+        # 2) Slug uniqueness check
+        # 3) Redirect block: find_one for root_id
+        # 4) Redirect block: find_one for mid_id
+        # 5) Redirect block: find_one for leaf_id
+        # 6) find_one_and_convert: return updated section
+        override_sections_database.find_one.side_effect = [
+            root_doc,  # Existing section check
+            None,  # Slug uniqueness check
+            updated_root,  # Redirect: find_one for root
+            {**mid_doc, "path": "articles/tech"},  # Redirect: find_one for mid
+            {**leaf_doc, "path": "articles/tech/python"},  # Redirect: find_one for leaf
+            updated_root,  # find_one_and_convert: updated section
+        ]
+
+        # find() calls:
+        # 1) _collect_all_descendant_paths: children of root -> [mid]
+        # 2) _collect_all_descendant_paths: children of mid -> [leaf]
+        # 3) _collect_all_descendant_paths: children of leaf -> []
+        # 4) cascade_path_updates: children of root -> [mid]
+        # 5) cascade_path_updates: children of mid -> [leaf]
+        # 6) cascade_path_updates: children of leaf -> []
+        override_sections_database.find.side_effect = [
+            MockCursor([mid_doc]),  # _collect_all_descendant_paths: children of root
+            MockCursor([leaf_doc]),  # _collect_all_descendant_paths: children of mid
+            MockCursor([]),  # _collect_all_descendant_paths: children of leaf
+            MockCursor([mid_doc]),  # cascade_path_updates: children of root
+            MockCursor([leaf_doc]),  # cascade_path_updates: children of mid
+            MockCursor([]),  # cascade_path_updates: children of leaf
+        ]
+
+        override_sections_database.update_one.return_value = MagicMock(modified_count=1)
+
+        response = await sections_async_client.put(
+            f"/sections/{root_id}",
+            json={"title": "Articles"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+
+        update_calls = override_sections_database.update_one.call_args_list
+        # 3 calls: root update, mid cascade, leaf cascade
+        assert len(update_calls) == 3
+
+        mid_update = update_calls[1]
+        assert mid_update[0][0] == {"_id": mid_id}
+        assert mid_update[0][1]["$set"]["path"] == "articles/tech"
+
+        leaf_update = update_calls[2]
+        assert leaf_update[0][0] == {"_id": leaf_id}
+        assert leaf_update[0][1]["$set"]["path"] == "articles/tech/python"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_rename_only_cascades_to_descendants(
+        self,
+        sections_async_client,
+        override_sections_database,
+        sample_section_data,
+        mock_auth,
+        auth_headers,
+    ):
+        """Renaming one section does not affect unrelated sections."""
+        section_a_id = ObjectId("507f1f77bcf86cd799439011")
+
+        section_a_doc = {
+            **sample_section_data,
+            "_id": section_a_id,
+            "title": "Blog",
+            "slug": "blog",
+            "path": "blog",
+            "parent_id": None,
+            "user_id": "mock_user_id",
+        }
+
+        updated_a = {**section_a_doc, "title": "Articles", "slug": "articles", "path": "articles"}
+        # find_one calls:
+        # 1) Existing section check
+        # 2) Slug uniqueness check
+        # 3) Redirect block: find_one for section_a_id
+        # 4) find_one_and_convert: return updated section
+        override_sections_database.find_one.side_effect = [
+            section_a_doc,  # Existing section check
+            None,  # Slug uniqueness check
+            updated_a,  # Redirect: find_one for section_a
+            updated_a,  # find_one_and_convert: updated section
+        ]
+
+        # find() calls:
+        # 1) _collect_all_descendant_paths: no children
+        # 2) cascade_path_updates: no children
+        override_sections_database.find.side_effect = [
+            MockCursor([]),  # _collect_all_descendant_paths: no children
+            MockCursor([]),  # cascade_path_updates: no children
+        ]
+
+        override_sections_database.update_one.return_value = MagicMock(modified_count=1)
+
+        response = await sections_async_client.put(
+            f"/sections/{section_a_id}",
+            json={"title": "Articles"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+
+        # Only one update_one call: the section itself, no cascade calls
+        update_calls = override_sections_database.update_one.call_args_list
+        assert len(update_calls) == 1
+        assert update_calls[0][0][0] == {"_id": ObjectId(str(section_a_id))}

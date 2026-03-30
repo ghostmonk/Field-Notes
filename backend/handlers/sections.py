@@ -15,9 +15,57 @@ from models.section import SectionCreate, SectionResponse, SectionUpdate
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
+from pymongo.errors import DuplicateKeyError
+from services.redirects import write_redirect
 from utils import find_many_and_convert, find_one_and_convert, generate_unique_slug
 
 router = APIRouter()
+
+
+async def cascade_path_updates(
+    collection: AsyncIOMotorCollection,
+    section_id: str,
+    new_path: str,
+    visited: set | None = None,
+):
+    """Recursively update paths of all descendant sections."""
+    if visited is None:
+        visited = set()
+    if section_id in visited:
+        return
+    visited.add(section_id)
+    children = await collection.find({"parent_id": section_id, "deleted": {"$ne": True}}).to_list(
+        None
+    )
+
+    for child in children:
+        child_new_path = f"{new_path}/{child['slug']}"
+        await collection.update_one(
+            {"_id": child["_id"]},
+            {"$set": {"path": child_new_path, "updatedDate": datetime.now(timezone.utc)}},
+        )
+        await cascade_path_updates(collection, str(child["_id"]), child_new_path, visited)
+
+
+async def _collect_all_descendant_paths(
+    collection: AsyncIOMotorCollection,
+    section_id: str,
+    paths: dict,
+    visited: set | None = None,
+):
+    """Recursively collect paths of all descendant sections."""
+    if visited is None:
+        visited = set()
+    if section_id in visited:
+        return
+    visited.add(section_id)
+    children = await collection.find({"parent_id": section_id, "deleted": {"$ne": True}}).to_list(
+        None
+    )
+    for child in children:
+        child_id = str(child["_id"])
+        paths[child_id] = child.get("path", "")
+        await _collect_all_descendant_paths(collection, child_id, paths, visited)
 
 
 @router.get("/sections")
@@ -247,7 +295,6 @@ async def create_section(
             {
                 "title": section.title,
                 "display_type": section.display_type,
-                "content_type": section.content_type,
                 "user_id": user.id,
             },
         )
@@ -257,9 +304,25 @@ async def create_section(
         # Generate a unique slug for the new section
         slug = await generate_unique_slug(collection, section.title)
 
+        # Compute materialized path from parent
+        if section.parent_id:
+            if not ObjectId.is_valid(section.parent_id):
+                raise HTTPException(status_code=400, detail="Invalid parent_id format")
+            parent = await find_one_and_convert(
+                collection,
+                {"_id": ObjectId(section.parent_id), "deleted": {"$ne": True}},
+                SectionResponse,
+            )
+            if not parent:
+                raise HTTPException(status_code=400, detail="Parent section not found")
+            path = f"{parent.path}/{slug}"
+        else:
+            path = slug
+
         document = {
             **section.model_dump(),
             "slug": slug,
+            "path": path,
             "createdDate": current_time,
             "updatedDate": current_time,
             "user_id": user.id,
@@ -387,15 +450,62 @@ async def update_section(
         # Get only the fields that were actually provided (not None)
         update_data = section.model_dump(exclude_unset=True)
 
-        # If title changed, regenerate the slug
+        # If title changed, regenerate the slug and recompute path
+        new_slug = None
         if "title" in update_data and update_data["title"] != existing_section.title:
-            update_data["slug"] = await generate_unique_slug(
+            new_slug = await generate_unique_slug(
                 collection, update_data["title"], ObjectId(section_id)
             )
+            update_data["slug"] = new_slug
+        elif "slug" in update_data and update_data["slug"] != existing_section.slug:
+            new_slug = update_data["slug"]
+
+        if new_slug:
+            if existing_section.parent_id:
+                parent = await find_one_and_convert(
+                    collection,
+                    {
+                        "_id": ObjectId(existing_section.parent_id),
+                        "deleted": {"$ne": True},
+                    },
+                    SectionResponse,
+                )
+                update_data["path"] = f"{parent.path}/{new_slug}" if parent else new_slug
+            else:
+                update_data["path"] = new_slug
 
         update_data["updatedDate"] = current_time
 
-        result = await collection.update_one({"_id": ObjectId(section_id)}, {"$set": update_data})
+        try:
+            result = await collection.update_one(
+                {"_id": ObjectId(section_id)}, {"$set": update_data}
+            )
+        except DuplicateKeyError:
+            raise HTTPException(
+                status_code=409,
+                detail="A section with this slug already exists at this level",
+            )
+
+        # Cascade path updates and write redirects if path changed
+        if "path" in update_data and update_data["path"] != existing_section.path:
+            old_path = existing_section.path
+            new_path = update_data["path"]
+
+            # Collect ALL old descendant paths before cascade (recursive)
+            old_desc_paths = {section_id: old_path}
+            await _collect_all_descendant_paths(collection, section_id, old_desc_paths)
+
+            await cascade_path_updates(collection, section_id, new_path)
+
+            # Write redirects (non-critical — don't fail the rename)
+            try:
+                db = collection.database
+                for sid, old_p in old_desc_paths.items():
+                    new_p = new_path + old_p[len(old_path) :]
+                    if old_p != new_p:
+                        await write_redirect(db, old_p, new_p)
+            except Exception as redirect_err:
+                logger.warning(f"Failed to write redirects for section rename: {redirect_err}")
 
         if result.modified_count == 0:
             logger.error_with_context(

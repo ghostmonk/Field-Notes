@@ -10,13 +10,16 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from glogger import logger
 from handlers.backfill import backfill_published_flag
+from handlers.children import router as children_router
 from handlers.contact import router as contact_router
 from handlers.content import router as content_router
 from handlers.engagement import router as engagement_router
 from handlers.github import router as github_router
 from handlers.job_applications import router as job_applications_router
+from handlers.moves import router as moves_router
 from handlers.navlinks import router as navlinks_router
 from handlers.pages import router as pages_router
+from handlers.path_resolution import router as path_resolution_router
 from handlers.photo_essays import router as photo_essays_router
 from handlers.projects import router as projects_router
 from handlers.resume import router as resume_router
@@ -256,6 +259,9 @@ app.include_router(voice_feedback_router)
 app.include_router(job_applications_router)
 app.include_router(contact_router)
 app.include_router(tags_router)
+app.include_router(moves_router)
+app.include_router(path_resolution_router)
+app.include_router(children_router)
 
 if __name__ == "__main__":
     import uvicorn

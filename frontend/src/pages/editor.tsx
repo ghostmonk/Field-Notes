@@ -126,7 +126,7 @@ export default function EditorPage() {
       {section.content_type === 'photo_essay' && session?.accessToken && (
         <PhotoEssayEditor sectionId={section.id} essayId={editId} token={session.accessToken} />
       )}
-      {!['story', 'project', 'page', 'photo_essay'].includes(section.content_type) && (
+      {!['story', 'project', 'page', 'photo_essay'].includes(section.content_type || '') && (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           Content type &quot;{section.content_type}&quot; does not have an editor form yet.
         </div>
@@ -138,7 +138,7 @@ export default function EditorPage() {
 function SectionPicker({ onSelect }: { onSelect: (section: Section) => void }) {
   const { sections, loading } = useFetchSections();
   const editableSections = sections.filter(s =>
-    ['story', 'project', 'page', 'photo_essay'].includes(s.content_type)
+    s.content_type ? ['story', 'project', 'page', 'photo_essay'].includes(s.content_type) : true
   );
 
   useEffect(() => {
