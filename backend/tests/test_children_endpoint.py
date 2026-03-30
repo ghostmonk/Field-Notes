@@ -229,6 +229,49 @@ class TestGetChildren:
         assert "Tutorial Post" in titles
 
     @pytest.mark.asyncio
+    async def test_subtree_excludes_unpublished_subsection_content(self, mock_db, children_client):
+        parent = _make_section({"title": "Blog", "slug": "blog", "path": "blog"})
+        published_child = _make_section(
+            {
+                "title": "Tutorials",
+                "slug": "tutorials",
+                "path": "blog/tutorials",
+                "parent_id": str(parent["_id"]),
+                "is_published": True,
+            }
+        )
+        unpublished_child = _make_section(
+            {
+                "title": "Drafts",
+                "slug": "drafts",
+                "path": "blog/drafts",
+                "parent_id": str(parent["_id"]),
+                "is_published": False,
+            }
+        )
+        story_in_published = _make_story(
+            str(published_child["_id"]),
+            {"title": "Published Tutorial", "slug": "published-tutorial"},
+        )
+        story_in_unpublished = _make_story(
+            str(unpublished_child["_id"]),
+            {"title": "Draft Post", "slug": "draft-post"},
+        )
+        await mock_db["sections"].insert_many([parent, published_child, unpublished_child])
+        await mock_db["stories"].insert_many([story_in_published, story_in_unpublished])
+
+        response = await children_client.get(
+            f"/sections/{parent['_id']}/children?subtree=true&include_unpublished=false"
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        titles = {item["title"] for item in data["items"]}
+        assert "Published Tutorial" in titles
+        assert "Draft Post" not in titles
+        assert "Drafts" not in titles
+
+    @pytest.mark.asyncio
     async def test_nonexistent_section_404(self, mock_db, children_client):
         fake_id = str(ObjectId())
         response = await children_client.get(f"/sections/{fake_id}/children")

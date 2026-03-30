@@ -12,7 +12,9 @@ from models.listing import ListingItem
 router = APIRouter()
 
 
-async def collect_descendant_ids(db, section_id: str, visited: set | None = None) -> list[str]:
+async def collect_descendant_ids(
+    db, section_id: str, include_unpublished: bool = False, visited: set | None = None
+) -> list[str]:
     """Recursively collect all descendant section IDs."""
     if visited is None:
         visited = set()
@@ -20,15 +22,14 @@ async def collect_descendant_ids(db, section_id: str, visited: set | None = None
         return []
     visited.add(section_id)
     ids = []
-    children = (
-        await db["sections"]
-        .find({"parent_id": section_id, "deleted": {"$ne": True}}, {"_id": 1})
-        .to_list(None)
-    )
+    query = {"parent_id": section_id, "deleted": {"$ne": True}}
+    if not include_unpublished:
+        query["is_published"] = True
+    children = await db["sections"].find(query, {"_id": 1}).to_list(None)
     for child in children:
         child_id = str(child["_id"])
         ids.append(child_id)
-        ids.extend(await collect_descendant_ids(db, child_id, visited))
+        ids.extend(await collect_descendant_ids(db, child_id, include_unpublished, visited))
     return ids
 
 
@@ -111,7 +112,9 @@ async def get_children(
     # Determine which section IDs to query content from
     target_section_ids = [section_id]
     if subtree:
-        descendant_ids = await collect_descendant_ids(db, section_id)
+        descendant_ids = await collect_descendant_ids(
+            db, section_id, include_unpublished=include_unpublished
+        )
         target_section_ids.extend(descendant_ids)
 
     # Build section query

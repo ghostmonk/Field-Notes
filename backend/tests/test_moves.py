@@ -87,6 +87,65 @@ def _make_story(section_id, overrides=None):
 AUTH_HEADERS = {"Authorization": "Bearer valid_token"}
 
 
+class TestMoveContentValidation:
+    """Input validation tests for PUT /content/{content_type}/{content_id}/move"""
+
+    @pytest.mark.asyncio
+    async def test_move_content_invalid_content_type_400(self, mock_db, moves_client):
+        fake_id = str(ObjectId())
+        response = await moves_client.put(
+            f"/content/podcast/{fake_id}/move",
+            json={"target_section_id": str(ObjectId())},
+            headers=AUTH_HEADERS,
+        )
+        assert response.status_code == 400
+        assert "Invalid content_type" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_move_content_invalid_content_id_400(self, mock_db, moves_client):
+        response = await moves_client.put(
+            "/content/story/not-an-objectid/move",
+            json={"target_section_id": str(ObjectId())},
+            headers=AUTH_HEADERS,
+        )
+        assert response.status_code == 400
+        assert "Invalid content ID" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_move_content_missing_target_section_400(self, mock_db, moves_client):
+        fake_id = str(ObjectId())
+        response = await moves_client.put(
+            f"/content/story/{fake_id}/move",
+            json={},
+            headers=AUTH_HEADERS,
+        )
+        assert response.status_code == 400
+        assert "target_section_id" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_move_content_invalid_target_section_400(self, mock_db, moves_client):
+        fake_id = str(ObjectId())
+        response = await moves_client.put(
+            f"/content/story/{fake_id}/move",
+            json={"target_section_id": "bad-id"},
+            headers=AUTH_HEADERS,
+        )
+        assert response.status_code == 400
+        assert "target_section_id" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_move_content_not_found_404(self, mock_db, moves_client):
+        fake_id = str(ObjectId())
+        target_id = str(ObjectId())
+        response = await moves_client.put(
+            f"/content/story/{fake_id}/move",
+            json={"target_section_id": target_id},
+            headers=AUTH_HEADERS,
+        )
+        assert response.status_code == 404
+        assert "not found" in response.json()["detail"].lower()
+
+
 class TestMoveContent:
     """Tests for PUT /content/{content_type}/{content_id}/move"""
 
@@ -200,6 +259,86 @@ class TestMoveContent:
         assert redirect_b["new_path"] == "archive/my-post"
 
 
+class TestMoveSectionValidation:
+    """Input validation tests for PUT /sections/{section_id}/move"""
+
+    @pytest.mark.asyncio
+    async def test_move_section_invalid_id_400(self, mock_db, moves_client):
+        response = await moves_client.put(
+            "/sections/not-an-objectid/move",
+            json={"target_parent_id": None},
+            headers=AUTH_HEADERS,
+        )
+        assert response.status_code == 400
+        assert "Invalid section ID" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_move_section_not_found_404(self, mock_db, moves_client):
+        fake_id = str(ObjectId())
+        response = await moves_client.put(
+            f"/sections/{fake_id}/move",
+            json={"target_parent_id": None},
+            headers=AUTH_HEADERS,
+        )
+        assert response.status_code == 404
+        assert "not found" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_move_section_same_parent_noop(self, mock_db, moves_client):
+        parent = _make_section({"title": "Parent", "slug": "parent", "path": "parent"})
+        child = _make_section(
+            {
+                "title": "Child",
+                "slug": "child",
+                "path": "parent/child",
+                "parent_id": str(parent["_id"]),
+            }
+        )
+        await mock_db["sections"].insert_many([parent, child])
+
+        response = await moves_client.put(
+            f"/sections/{child['_id']}/move",
+            json={"target_parent_id": str(parent["_id"])},
+            headers=AUTH_HEADERS,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["parent_id"] == str(parent["_id"])
+        assert data["path"] == "parent/child"
+
+        # No redirect should be created
+        redirect = await mock_db["redirects"].find_one({"old_path": "parent/child"})
+        assert redirect is None
+
+    @pytest.mark.asyncio
+    async def test_move_section_invalid_target_parent_400(self, mock_db, moves_client):
+        section = _make_section({"title": "Blog", "slug": "blog", "path": "blog"})
+        await mock_db["sections"].insert_one(section)
+
+        response = await moves_client.put(
+            f"/sections/{section['_id']}/move",
+            json={"target_parent_id": "bad-id"},
+            headers=AUTH_HEADERS,
+        )
+        assert response.status_code == 400
+        assert "target_parent_id" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_move_section_target_parent_not_found_404(self, mock_db, moves_client):
+        section = _make_section({"title": "Blog", "slug": "blog", "path": "blog"})
+        await mock_db["sections"].insert_one(section)
+        fake_parent = str(ObjectId())
+
+        response = await moves_client.put(
+            f"/sections/{section['_id']}/move",
+            json={"target_parent_id": fake_parent},
+            headers=AUTH_HEADERS,
+        )
+        assert response.status_code == 404
+        assert "not found" in response.json()["detail"].lower()
+
+
 class TestMoveSection:
     """Tests for PUT /sections/{section_id}/move"""
 
@@ -276,6 +415,37 @@ class TestMoveSection:
         )
         assert content_redirect is not None
         assert content_redirect["new_path"] == "archive/photos/sunset"
+
+    @pytest.mark.asyncio
+    async def test_move_section_slug_collision_409(self, mock_db, moves_client):
+        parent_a = _make_section({"title": "Creative", "slug": "creative", "path": "creative"})
+        parent_b = _make_section({"title": "Archive", "slug": "archive", "path": "archive"})
+        child_a = _make_section(
+            {
+                "title": "Photos",
+                "slug": "photos",
+                "path": "creative/photos",
+                "parent_id": str(parent_a["_id"]),
+            }
+        )
+        child_b = _make_section(
+            {
+                "title": "Photos",
+                "slug": "photos",
+                "path": "archive/photos",
+                "parent_id": str(parent_b["_id"]),
+            }
+        )
+        await mock_db["sections"].insert_many([parent_a, parent_b, child_a, child_b])
+
+        response = await moves_client.put(
+            f"/sections/{child_a['_id']}/move",
+            json={"target_parent_id": str(parent_b["_id"])},
+            headers=AUTH_HEADERS,
+        )
+
+        assert response.status_code == 409
+        assert "photos" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_cycle_detection(self, mock_db, moves_client):

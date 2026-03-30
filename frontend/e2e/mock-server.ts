@@ -308,6 +308,11 @@ app.post('/engagement/bulk/counts', (req: Request, res: Response) => {
 const sections = [...sampleSections];
 const allSectionsList = [...allSections];
 
+// Mock redirects for testing path redirect following
+const mockRedirects = [
+  { old_path: 'old-blog/my-published-story', new_path: 'blog/my-published-story' },
+];
+
 // GET /sections/resolve-path/:path(*) - Resolve path to section or content
 app.get('/sections/resolve-path/{*path}', (req: Request, res: Response) => {
   const rawPath = req.params.path;
@@ -375,6 +380,13 @@ app.get('/sections/resolve-path/{*path}', (req: Request, res: Response) => {
         return;
       }
     }
+  }
+
+  // Check redirects
+  const redirect = mockRedirects.find((r) => r.old_path === fullPath);
+  if (redirect) {
+    res.redirect(301, `/${redirect.new_path}`);
+    return;
   }
 
   res.status(404).json({ detail: 'Path not found' });

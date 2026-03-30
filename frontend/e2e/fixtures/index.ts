@@ -9,6 +9,7 @@ export { createMockStory, createMockStoriesResponse, sampleStories, setupApiMock
 export {
   TEST_STORY_IDS,
   TEST_STORY_SLUGS,
+  TEST_PROJECT_SLUGS,
   TEST_SECTION_IDS,
   TEST_COMMENT_IDS,
   sampleSections,
