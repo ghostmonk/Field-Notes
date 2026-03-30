@@ -22,6 +22,8 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
+    "@headless-tree/core": "^1.6.3",
+    "@headless-tree/react": "^1.6.3",
     "@react-pdf/renderer": "^4.3.2",
     "@tiptap/core": "^3.14.0",
     "@tiptap/extension-image": "^3.14.0",
