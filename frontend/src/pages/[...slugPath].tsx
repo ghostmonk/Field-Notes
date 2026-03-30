@@ -453,51 +453,31 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
 
         const resolved = await resolveRes.json();
 
-        // Content item detail view
+        // Content item detail view — resolve-path already returns the full document
         if (resolved.type === 'content') {
             const section = resolved.section as Section;
             const contentItem = resolved.content_item;
             const contentType = contentItem.content_type;
 
-            let detailItem: Story | Project | PhotoEssay | null = null;
             let ogImage: string | undefined;
             let excerpt: string | undefined;
 
             if (contentType === 'story') {
-                const storyRes = await fetch(`${API_BASE_URL}/stories/slug/${contentItem.slug}`);
-                if (storyRes.ok) {
-                    const story: Story = await storyRes.json();
-                    detailItem = story;
-                    const ssrData = await processStoryDataSSR(story);
-                    ogImage = ssrData.ogImage;
-                    excerpt = ssrData.excerpt;
-                }
+                const ssrData = await processStoryDataSSR(contentItem as Story);
+                ogImage = ssrData.ogImage;
+                excerpt = ssrData.excerpt;
             } else if (contentType === 'project') {
-                const projectRes = await fetch(`${API_BASE_URL}/projects/slug/${contentItem.slug}`);
-                if (projectRes.ok) {
-                    const project: Project = await projectRes.json();
-                    detailItem = project;
-                    excerpt = project.summary;
-                }
+                excerpt = contentItem.summary;
             } else if (contentType === 'photo_essay') {
-                const essayRes = await fetch(`${API_BASE_URL}/photo-essays/${contentItem.id || contentItem.slug}`);
-                if (essayRes.ok) {
-                    const essay: PhotoEssay = await essayRes.json();
-                    detailItem = essay;
-                    ogImage = essay.cover_image_url;
-                    excerpt = essay.description;
-                }
-            }
-
-            if (!detailItem) {
-                return { notFound: true };
+                ogImage = contentItem.cover_image_url;
+                excerpt = contentItem.description;
             }
 
             return {
                 props: {
                     section: { ...section, content_type: contentType } as Section,
                     view: 'detail',
-                    detailItem,
+                    detailItem: contentItem,
                     ogImage: ogImage || `${getBaseUrl()}/images/default-og.png`,
                     excerpt: excerpt || '',
                 },
