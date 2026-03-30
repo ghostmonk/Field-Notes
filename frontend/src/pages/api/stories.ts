@@ -8,7 +8,7 @@ import {
     setCache,
     invalidateStoryCache,
 } from '@/shared/lib/story-cache';
-import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Start logging the request
@@ -55,8 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             invalidateStoryCache();
         }
 
-        const backendUrl = getBackendUrl();
-        let apiUrl = `${backendUrl}/stories`;
+        let backendPath = '/stories';
 
         if (req.method === 'GET' && req.query) {
             const params = new URLSearchParams();
@@ -78,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             if (params.toString()) {
-                apiUrl += `?${params.toString()}`;
+                backendPath += `?${params.toString()}`;
             }
         }
 
@@ -90,17 +89,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${accessToken}`;
         }
 
-        const requestBody = req.method !== 'GET' ? req.body : undefined;
-        console.log(`Backend request: ${req.method} ${apiUrl}`, {
-            method: req.method,
-            hasToken: !!accessToken,
-            bodyPreview: requestBody ? JSON.stringify(requestBody).substring(0, 150) + '...' : undefined
-        });
-
-        const response = await fetch(apiUrl, {
+        const response = await fetchBackend(backendPath, {
             method: req.method,
             headers,
-            signal: AbortSignal.timeout(10000),
             ...(req.method !== 'GET' && { body: JSON.stringify(req.body) }),
         });
 
@@ -122,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             console.error('Backend API error:', {
                 status: response.status,
                 statusText: response.statusText,
-                url: apiUrl,
+                url: backendPath,
                 errorData,
                 responseText: responseText?.substring(0, 500),
                 headers: Object.fromEntries(response.headers.entries())
@@ -132,7 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 detail: errorData.detail || `Error: ${response.statusText}`,
                 status: response.status,
                 error: errorData,
-                url: apiUrl
+                url: backendPath
             });
         }
 

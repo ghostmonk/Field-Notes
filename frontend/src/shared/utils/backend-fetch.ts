@@ -1,6 +1,7 @@
 import { getToken } from 'next-auth/jwt';
 
 const TIMEOUT_MS = 10000;
+const SLOW_THRESHOLD_MS = 500;
 
 export function getBackendUrl(): string {
   const url = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
@@ -17,10 +18,16 @@ export async function fetchBackend(
   init?: RequestInit
 ): Promise<Response> {
   const url = `${getBackendUrl()}${path}`;
-  return fetch(url, {
+  const start = Date.now();
+  const response = await fetch(url, {
     ...init,
     signal: init?.signal ?? AbortSignal.timeout(TIMEOUT_MS),
   });
+  const elapsed = Date.now() - start;
+  if (elapsed > SLOW_THRESHOLD_MS) {
+    console.warn(`[fetchBackend SLOW] ${init?.method || 'GET'} ${path} ${response.status} ${elapsed}ms`);
+  }
+  return response;
 }
 
 export function sanitizeFilename(filename: string): string {
