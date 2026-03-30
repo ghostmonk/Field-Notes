@@ -47,7 +47,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit })
                 {project.summary}
             </p>
 
-            {project.technologies.length > 0 && (
+            {project.technologies?.length > 0 && (
                 <div className="tech-tags mb-xl">
                     {project.technologies.map((tech) => (
                         <span key={tech} className="tech-tag tech-tag--lg">

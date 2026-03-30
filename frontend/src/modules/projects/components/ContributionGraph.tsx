@@ -164,7 +164,7 @@ export function ContributionGraph() {
                     <div className="contrib-graph__grid">
                         {data.weeks.map((week, wi) => (
                             <div key={wi} className="contrib-graph__column">
-                                {week.contributionDays.map((day) => (
+                                {(week.contributionDays ?? []).map((day) => (
                                     <div
                                         key={day.date}
                                         className={`contrib-graph__cell ${LEVEL_CLASS[day.contributionLevel] || LEVEL_CLASS.NONE}`}

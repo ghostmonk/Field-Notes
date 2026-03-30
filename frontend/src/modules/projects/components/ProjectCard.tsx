@@ -36,7 +36,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, basePath }) =
                     {project.summary}
                 </p>
 
-                {project.technologies.length > 0 && (
+                {project.technologies?.length > 0 && (
                     <div className="tech-tags">
                         {project.technologies.map((tech) => (
                             <span key={tech} className="tech-tag">
