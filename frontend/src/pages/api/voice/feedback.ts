@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { apiLogger } from '@/shared/utils/logger';
-import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,21 +19,17 @@ export default async function handler(
       return res.status(401).json({ detail: 'Not authenticated' });
     }
 
-    const url = new URL(`${getBackendUrl()}/voice/feedback`);
+    let backendPath = '/voice/feedback';
     if (req.method === 'GET' && req.query.feedback_type) {
-      url.searchParams.set(
-        'feedback_type',
-        req.query.feedback_type as string
-      );
+      backendPath += `?feedback_type=${encodeURIComponent(req.query.feedback_type as string)}`;
     }
 
-    const response = await fetch(url.toString(), {
+    const response = await fetchBackend(backendPath, {
       method: req.method,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
-      signal: AbortSignal.timeout(10000),
       ...(req.method === 'POST' && { body: JSON.stringify(req.body) }),
     });
 

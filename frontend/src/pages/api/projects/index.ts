@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { apiLogger } from '@/shared/utils/logger';
-import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 // Simple in-memory cache for projects
 const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
@@ -75,9 +75,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             invalidateCache('projects');
         }
 
-        let apiUrl = `${getBackendUrl()}/projects`;
+        let backendPath = '/projects';
 
-        // Build query params for GET
         if (req.method === 'GET' && req.query) {
             const params = new URLSearchParams();
 
@@ -98,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             if (params.toString()) {
-                apiUrl += `?${params.toString()}`;
+                backendPath += `?${params.toString()}`;
             }
         }
 
@@ -110,10 +109,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${accessToken}`;
         }
 
-        const response = await fetch(apiUrl, {
+        const response = await fetchBackend(backendPath, {
             method: req.method,
             headers,
-            signal: AbortSignal.timeout(10000),
             ...(req.method !== 'GET' && { body: JSON.stringify(req.body) }),
         });
 

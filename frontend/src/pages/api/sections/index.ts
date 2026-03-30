@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getAccessToken, getBackendUrl, fetchBackend } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -13,17 +13,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         if (req.method === 'GET') {
-            const url = new URL(`${getBackendUrl()}/sections`);
+            const params = new URLSearchParams();
             for (const [key, value] of Object.entries(req.query)) {
                 if (typeof value === 'string') {
-                    url.searchParams.set(key, value);
+                    params.set(key, value);
                 }
             }
-
-            const response = await fetch(url.toString(), {
-                headers,
-                signal: AbortSignal.timeout(10000),
-            });
+            const qs = params.toString();
+            const response = await fetchBackend(`/sections${qs ? `?${qs}` : ''}`, { headers });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));

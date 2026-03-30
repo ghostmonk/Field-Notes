@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { apiLogger } from '@/shared/utils/logger';
-import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { path } = req.query;
@@ -32,23 +32,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${accessToken}`;
         }
 
-        const backendUrl = getBackendUrl();
-        const apiUrl = `${backendUrl}${backendPath}`;
-
         // Forward query parameters for GET requests
-        let finalUrl = apiUrl;
+        let finalPath = backendPath;
         if (req.method === 'GET' && req.url) {
-            const urlObj = new URL(req.url, `http://localhost`);
+            const urlObj = new URL(req.url, 'http://localhost');
             const queryString = urlObj.search;
             if (queryString) {
-                finalUrl = `${apiUrl}${queryString}`;
+                finalPath = `${backendPath}${queryString}`;
             }
         }
 
-        const response = await fetch(finalUrl, {
+        const response = await fetchBackend(finalPath, {
             method: req.method,
             headers,
-            signal: AbortSignal.timeout(10000),
             ...(req.method !== 'GET' && req.method !== 'DELETE' && req.body && {
                 body: JSON.stringify(req.body)
             }),

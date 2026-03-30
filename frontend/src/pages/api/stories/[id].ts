@@ -1,10 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { invalidateStoryCache } from '@/shared/lib/story-cache';
-import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const backendUrl = getBackendUrl();
-
     const { id } = req.query;
 
     if (!id || typeof id !== 'string') {
@@ -21,33 +19,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${accessToken}`;
         }
 
-        // Check if the ID is a MongoDB ObjectID or a slug
-        // MongoDB ObjectIDs are 24 hex characters
         const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
-
-        let apiUrl: string;
-        if (isObjectId) {
-            apiUrl = `${backendUrl}/stories/${id}`;
-        } else {
-            // Treat as a slug
-            apiUrl = `${backendUrl}/stories/slug/${id}`;
-        }
+        const backendPath = isObjectId ? `/stories/${id}` : `/stories/slug/${id}`;
 
         if (req.method === 'DELETE') {
             if (!accessToken) {
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
 
-            // Only allow deletion by ID, not by slug
             if (!isObjectId) {
                 return res.status(400).json({ detail: 'Cannot delete by slug, ID required', error: 'Invalid request' });
             }
 
-            const response = await fetch(apiUrl, {
-                method: 'DELETE',
-                headers,
-                signal: AbortSignal.timeout(10000),
-            });
+            const response = await fetchBackend(backendPath, { method: 'DELETE', headers });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
@@ -65,15 +49,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(401).json({ detail: 'Authentication required', error: 'Unauthorized' });
             }
 
-            // Only allow updates by ID, not by slug
             if (!isObjectId) {
                 return res.status(400).json({ detail: 'Cannot update by slug, ID required', error: 'Invalid request' });
             }
 
-            const response = await fetch(apiUrl, {
+            const response = await fetchBackend(backendPath, {
                 method: 'PUT',
                 headers,
-                signal: AbortSignal.timeout(10000),
                 body: JSON.stringify(req.body),
             });
 
@@ -90,10 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             try { await res.revalidate('/'); } catch { /* non-fatal */ }
             return res.status(200).json(data);
         } else if (req.method === 'GET') {
-            const response = await fetch(apiUrl, {
-                headers,
-                signal: AbortSignal.timeout(10000),
-            });
+            const response = await fetchBackend(backendPath, { headers });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));

@@ -7,7 +7,7 @@ import {
     setCache,
     invalidatePhotoEssayCache,
 } from '@/shared/lib/photo-essay-cache';
-import { getAccessToken, getBackendUrl } from '@/shared/utils/backend-fetch';
+import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     apiLogger.logApiRequest(req, res);
@@ -40,8 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             invalidatePhotoEssayCache();
         }
 
-        // Build URL — GET lists use /photo-essays/section/{section_id}
-        let apiUrl: string;
+        let backendPath: string;
         if (req.method === 'GET' && req.query.section_id) {
             const sectionId = req.query.section_id.toString();
             if (!/^[a-f0-9]{24}$/i.test(sectionId)) {
@@ -50,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     error: 'section_id must be a 24-character hex string'
                 });
             }
-            apiUrl = `${getBackendUrl()}/photo-essays/section/${sectionId}`;
+            backendPath = `/photo-essays/section/${sectionId}`;
             const params = new URLSearchParams();
 
             if (req.query.limit) {
@@ -64,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             if (params.toString()) {
-                apiUrl += `?${params.toString()}`;
+                backendPath += `?${params.toString()}`;
             }
         } else if (req.method === 'GET') {
             return res.status(400).json({
@@ -72,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 error: 'Missing required parameter'
             });
         } else {
-            apiUrl = `${getBackendUrl()}/photo-essays`;
+            backendPath = '/photo-essays';
         }
 
         const headers: HeadersInit = {
@@ -83,10 +82,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers.Authorization = `Bearer ${accessToken}`;
         }
 
-        const response = await fetch(apiUrl, {
+        const response = await fetchBackend(backendPath, {
             method: req.method,
             headers,
-            signal: AbortSignal.timeout(10000),
             ...(req.method !== 'GET' && { body: JSON.stringify(req.body) }),
         });
 
