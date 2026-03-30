@@ -4,6 +4,8 @@ import {
   selectionFeature,
   hotkeysCoreFeature,
   dragAndDropFeature,
+  ItemInstance,
+  DragTarget,
 } from "@headless-tree/core";
 import { SectionTreeData, SectionTreeItem } from "../hooks/useSectionTree";
 import { ChevronRight, ChevronDown, Plus, Settings, Trash2 } from "lucide-react";
@@ -20,6 +22,10 @@ interface SectionTreeProps {
   data: SectionTreeData;
   selectedSectionId: string | null;
   onSelectSection: (id: string | null) => void;
+  onDrop?: (
+    items: ItemInstance<SectionTreeItem>[],
+    target: DragTarget<SectionTreeItem>
+  ) => void | Promise<void>;
   filter?: string;
 }
 
@@ -27,6 +33,7 @@ export function SectionTree({
   data,
   selectedSectionId,
   onSelectSection,
+  onDrop,
   filter = "",
 }: SectionTreeProps) {
   const tree = useTree<SectionTreeItem>({
@@ -34,6 +41,7 @@ export function SectionTree({
     getItemName: (item) => item.getItemData().title,
     isItemFolder: (item) => item.getItemData().childrenIds.length > 0,
     canReorder: true,
+    onDrop,
     onPrimaryAction: (item) => {
       const id = item.getId();
       onSelectSection(id === "root" ? null : id);
