@@ -421,6 +421,8 @@ function SectionPageContent({ section, view, initialListData, detailItem, pageCo
 
 export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (context) => {
     const { slugPath } = context.params || {};
+    const timings: string[] = [];
+    const ssrStart = Date.now();
 
     if (!slugPath || !Array.isArray(slugPath) || slugPath.length === 0) {
         return { notFound: true };
@@ -430,9 +432,11 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
 
     try {
         // Resolve the path — uses fetchBackend for connection reuse
+        const t0 = Date.now();
         const resolveRes = await fetchBackend(`/sections/resolve-path/${fullPath}`, {
             redirect: 'manual',
         });
+        timings.push(`resolve;dur=${Date.now() - t0}`);
 
         // Handle redirects
         if (resolveRes.status === 301) {
@@ -469,6 +473,9 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
                 excerpt = contentItem.description;
             }
 
+            timings.push(`total;dur=${Date.now() - ssrStart}`);
+            context.res.setHeader('Server-Timing', timings.join(', '));
+
             return {
                 props: {
                     section: { ...section, content_type: contentType } as Section,
@@ -503,6 +510,7 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
         try {
             let initialListData: PaginatedResponse<any> | undefined;
             const contentType = section.content_type;
+            const t1 = Date.now();
 
             if (contentType === 'story') {
                 const listRes = await fetchBackend(`/stories?limit=10&offset=0&section_id=${section.id}`);
@@ -524,6 +532,9 @@ export const getServerSideProps: GetServerSideProps<SectionPageProps> = async (c
                     initialListData = childrenData;
                 }
             }
+            timings.push(`content;dur=${Date.now() - t1}`);
+            timings.push(`total;dur=${Date.now() - ssrStart}`);
+            context.res.setHeader('Server-Timing', timings.join(', '));
 
             return {
                 props: {
