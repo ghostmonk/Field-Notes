@@ -72,11 +72,12 @@ function SectionListView({ section, initialListData }: { section: Section; initi
     const { showToast } = useToast();
     const [engagementCounts, setEngagementCounts] = useState<BulkCountsResponse['counts']>({});
 
-    const { items, loading, error, hasMore, loadMore, reset } = useFetchContent({
+    const { items: rawItems, loading, error, hasMore, loadMore, reset } = useFetchContent({
         contentType,
         sectionId: section.id,
         initialData: initialListData,
     });
+    const items = rawItems ?? [];
 
     // Fetch engagement counts only for newly loaded stories
     useEffect(() => {

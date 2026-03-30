@@ -4,10 +4,11 @@ import { Grid, Button } from '@/components/ui';
 
 const PAGE_SIZE = 12;
 
-export function CardGridDisplay<T>({ items, renderItem }: CardGridDisplayProps<T>) {
+export function CardGridDisplay<T>({ items = [] as unknown as T[], renderItem }: CardGridDisplayProps<T>) {
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-    const visibleItems = items.slice(0, visibleCount);
-    const hasMore = visibleCount < items.length;
+    const safeItems = items ?? [];
+    const visibleItems = safeItems.slice(0, visibleCount);
+    const hasMore = visibleCount < safeItems.length;
 
     return (
         <>
@@ -26,7 +27,7 @@ export function CardGridDisplay<T>({ items, renderItem }: CardGridDisplayProps<T
                         variant="secondary"
                         data-testid="show-more-button"
                     >
-                        Show More ({items.length - visibleCount} remaining)
+                        Show More ({safeItems.length - visibleCount} remaining)
                     </Button>
                 </div>
             )}

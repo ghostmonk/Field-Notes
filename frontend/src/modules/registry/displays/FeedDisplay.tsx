@@ -4,7 +4,8 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import type { FeedDisplayProps } from '../types';
 import { Button } from '@/components/ui';
 
-export function FeedDisplay<T>({ items, renderItem, onLoadMore, hasMore, keyExtractor = (_item: T, index: number) => String(index) }: FeedDisplayProps<T>) {
+export function FeedDisplay<T>({ items: rawItems, renderItem, onLoadMore, hasMore, keyExtractor = (_item: T, index: number) => String(index) }: FeedDisplayProps<T>) {
+    const items = rawItems ?? [];
     const skipTargetId = useId();
     const [loadError, setLoadError] = useState(false);
 
