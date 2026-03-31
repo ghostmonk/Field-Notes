@@ -1,15 +1,29 @@
 import { AdminDesktopGate } from "./AdminDesktopGate";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminDetailPanel } from "./AdminDetailPanel";
-import { useEffect, useMemo } from "react";
+import { AddSectionDialog } from "./AddSectionDialog";
+import { DeleteSectionDialog } from "./DeleteSectionDialog";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { applyStoredTheme } from "@/lib/theme";
 import { useSectionTree } from "../hooks/useSectionTree";
+import { useSectionMutations } from "@/modules/sections/hooks/useSectionMutations";
+import { CreateSectionRequest } from "@/shared/types/api";
 
 export function AdminLayout() {
   const router = useRouter();
   const selectedSectionId = (router.query.section as string) ?? null;
   const { treeData, loading, refetch } = useSectionTree();
+  const { createSection, deleteSection } = useSectionMutations();
+
+  const [activeTab, setActiveTab] = useState<string | undefined>();
+  const [addSectionParentId, setAddSectionParentId] = useState<
+    string | null | undefined
+  >(undefined);
+  const [deleteSectionTarget, setDeleteSectionTarget] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
 
   useEffect(() => {
     applyStoredTheme();
@@ -20,10 +34,79 @@ export function AdminLayout() {
     [selectedSectionId, treeData]
   );
 
-  const handleSelectSection = (id: string | null) => {
-    const query = id ? { section: id } : {};
-    router.replace({ pathname: "/admin", query }, undefined, { shallow: true });
-  };
+  const handleSelectSection = useCallback(
+    (id: string | null) => {
+      const query = id ? { section: id } : {};
+      router.replace({ pathname: "/admin", query }, undefined, {
+        shallow: true,
+      });
+    },
+    [router]
+  );
+
+  const handleAddContent = useCallback(
+    (sectionId: string) => {
+      router.push(`/editor?section_id=${sectionId}`);
+    },
+    [router]
+  );
+
+  const handleAddChildSection = useCallback((parentId: string) => {
+    setAddSectionParentId(parentId);
+  }, []);
+
+  const handleAddRootSection = useCallback(() => {
+    setAddSectionParentId(null);
+  }, []);
+
+  const handleEditSettings = useCallback(
+    (sectionId: string) => {
+      handleSelectSection(sectionId);
+      setActiveTab("settings");
+    },
+    [handleSelectSection]
+  );
+
+  const handleDeleteSection = useCallback(
+    (sectionId: string, sectionTitle: string) => {
+      setDeleteSectionTarget({ id: sectionId, title: sectionTitle });
+    },
+    []
+  );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteSectionTarget) return;
+    const success = await deleteSection(deleteSectionTarget.id);
+    if (success) {
+      if (selectedSectionId === deleteSectionTarget.id) {
+        handleSelectSection(null);
+      }
+      refetch();
+    }
+    setDeleteSectionTarget(null);
+  }, [
+    deleteSectionTarget,
+    deleteSection,
+    selectedSectionId,
+    handleSelectSection,
+    refetch,
+  ]);
+
+  const handleCreateSection = useCallback(
+    async (data: CreateSectionRequest) => {
+      await createSection(data);
+      refetch();
+      setAddSectionParentId(undefined);
+    },
+    [createSection, refetch]
+  );
+
+  const deleteTargetHasChildren = useMemo(() => {
+    if (!deleteSectionTarget) return false;
+    return Object.values(treeData).some(
+      (s) => s.parent_id === deleteSectionTarget.id
+    );
+  }, [deleteSectionTarget, treeData]);
 
   return (
     <AdminDesktopGate>
@@ -37,14 +120,36 @@ export function AdminLayout() {
           treeData={treeData}
           loading={loading}
           onRefetch={refetch}
+          onAddContent={handleAddContent}
+          onAddChildSection={handleAddChildSection}
+          onEditSettings={handleEditSettings}
+          onDeleteSection={handleDeleteSection}
+          onAddRootSection={handleAddRootSection}
         />
         <AdminDetailPanel
           section={selectedSection}
           treeData={treeData}
           onSelectSection={handleSelectSection}
           onRefetchTree={refetch}
+          activeTab={activeTab}
+          onTabChange={() => setActiveTab(undefined)}
         />
       </div>
+      <AddSectionDialog
+        open={addSectionParentId !== undefined}
+        parentId={addSectionParentId ?? null}
+        onSubmit={handleCreateSection}
+        onClose={() => setAddSectionParentId(undefined)}
+      />
+      {deleteSectionTarget && (
+        <DeleteSectionDialog
+          open
+          sectionTitle={deleteSectionTarget.title}
+          hasChildren={deleteTargetHasChildren}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteSectionTarget(null)}
+        />
+      )}
     </AdminDesktopGate>
   );
 }
