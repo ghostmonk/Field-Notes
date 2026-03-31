@@ -1,6 +1,8 @@
-import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { PhotoEssayCard as PhotoEssayCardType } from '@/shared/types/api';
+import { AdminEditButton } from '@/components/AdminEditButton';
+import { AdminDraftBadge } from '@/components/AdminDraftBadge';
 
 interface Props {
     essay: PhotoEssayCardType;
@@ -8,8 +10,21 @@ interface Props {
 }
 
 export function PhotoEssayCard({ essay, basePath }: Props) {
+    const router = useRouter();
+
     return (
         <Link href={`${basePath}/${essay.slug || essay.id}`} className="gallery-card" data-testid="photo-essay-card">
+            <div className="story-header__actions" style={{ position: 'absolute', top: 'var(--space-sm)', right: 'var(--space-sm)', zIndex: 2 }}>
+                <AdminDraftBadge isPublished={essay.is_published} />
+                <AdminEditButton
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        router.push({ pathname: '/editor', query: { id: essay.id, section_id: essay.section_id } });
+                    }}
+                    data-testid={`photo-essay-edit-${essay.id}`}
+                />
+            </div>
             {essay.cover_image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
