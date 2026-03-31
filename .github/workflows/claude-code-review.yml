@@ -57,5 +57,5 @@ jobs:
             Use `gh pr diff ${{ github.event.pull_request.number }}` to get the diff, then `gh pr comment` to post findings.
 
           model: claude-haiku-4-5-20251001
-          claude_args: '--max-turns 6 --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
+          claude_args: '--max-turns 12 --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
 
