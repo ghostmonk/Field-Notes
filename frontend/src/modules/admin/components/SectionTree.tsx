@@ -38,7 +38,7 @@ export function SectionTree({
   const tree = useTree<SectionTreeItem>({
     rootItemId: "root",
     getItemName: (item) => item.getItemData().title,
-    isItemFolder: (item) => item.getItemData().childrenIds.length > 0,
+    isItemFolder: () => true,
     canReorder: true,
     onDrop,
     onPrimaryAction: (item) => {
