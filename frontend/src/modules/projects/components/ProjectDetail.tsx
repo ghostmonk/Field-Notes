@@ -3,6 +3,7 @@ import Image from 'next/image';
 import DOMPurify from 'isomorphic-dompurify';
 import { Project } from '@/shared/types/api';
 import { Card, Badge, Button } from '@/components/ui';
+import { AdminEditButton } from '@/components/AdminEditButton';
 
 interface ProjectDetailProps {
     project: Project;
@@ -32,14 +33,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit })
                     )}
                 </h1>
                 {onEdit && (
-                    <Button
+                    <AdminEditButton
                         onClick={onEdit}
-                        variant="secondary"
-                        size="sm"
                         data-testid="project-edit-button"
-                    >
-                        Edit
-                    </Button>
+                    />
                 )}
             </div>
 
