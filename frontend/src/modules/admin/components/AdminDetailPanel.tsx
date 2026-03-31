@@ -58,8 +58,8 @@ export function AdminDetailPanel({
   }
 
   return (
-    <div className="flex flex-1 flex-col" data-testid="admin-detail-panel">
-      <Tabs defaultValue="content" className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col overflow-hidden" data-testid="admin-detail-panel">
+      <Tabs defaultValue="content" className="flex flex-1 flex-col overflow-hidden">
         <div className="border-b border-border px-6 pt-4">
           <TabsList>
             <TabsTrigger value="content" data-testid="admin-tab-content">
