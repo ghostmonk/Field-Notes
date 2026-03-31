@@ -114,7 +114,7 @@ export function SectionTree({
                 {...item.getProps()}
                 ref={item.registerElement}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                  "flex w-full items-center gap-2 rounded-md pr-2 py-1.5 text-sm transition-colors",
                   "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   isSelected &&
