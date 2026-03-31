@@ -20,7 +20,7 @@ interface AdminDetailPanelProps {
   onSelectSection: (id: string) => void;
   onRefetchTree: () => void;
   activeTab?: string;
-  onTabChange?: (tab: string) => void;
+  onActiveTabConsumed?: () => void;
 }
 
 export function AdminDetailPanel({
@@ -29,7 +29,7 @@ export function AdminDetailPanel({
   onSelectSection,
   onRefetchTree,
   activeTab,
-  onTabChange,
+  onActiveTabConsumed,
 }: AdminDetailPanelProps) {
   const [tab, setTab] = useState("content");
   const { updateSection } = useSectionMutations();
@@ -39,15 +39,13 @@ export function AdminDetailPanel({
   );
 
   useEffect(() => {
-    setTab("content");
-  }, [section?.id]);
-
-  useEffect(() => {
     if (activeTab) {
       setTab(activeTab);
-      onTabChange?.(activeTab);
+      onActiveTabConsumed?.();
+    } else {
+      setTab("content");
     }
-  }, [activeTab, onTabChange]);
+  }, [section?.id, activeTab, onActiveTabConsumed]);
 
   const handleUpdateSection = async (data: UpdateSectionRequest) => {
     if (!section) return;

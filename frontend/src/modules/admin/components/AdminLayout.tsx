@@ -101,12 +101,9 @@ export function AdminLayout() {
     [createSection, refetch]
   );
 
-  const deleteTargetHasChildren = useMemo(() => {
-    if (!deleteSectionTarget) return false;
-    return Object.values(treeData).some(
-      (s) => s.parent_id === deleteSectionTarget.id
-    );
-  }, [deleteSectionTarget, treeData]);
+  const deleteTargetHasChildren = deleteSectionTarget
+    ? (treeData[deleteSectionTarget.id]?.childrenIds.length ?? 0) > 0
+    : false;
 
   return (
     <AdminDesktopGate>
@@ -132,7 +129,7 @@ export function AdminLayout() {
           onSelectSection={handleSelectSection}
           onRefetchTree={refetch}
           activeTab={activeTab}
-          onTabChange={() => setActiveTab(undefined)}
+          onActiveTabConsumed={() => setActiveTab(undefined)}
         />
       </div>
       <AddSectionDialog

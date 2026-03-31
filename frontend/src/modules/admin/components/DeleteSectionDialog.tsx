@@ -1,13 +1,4 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/admin-ui/alert-dialog";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 
 interface DeleteSectionDialogProps {
   sectionTitle: string;
@@ -24,28 +15,18 @@ export function DeleteSectionDialog({
   onConfirm,
   onCancel,
 }: DeleteSectionDialogProps) {
+  const description = hasChildren
+    ? `This will permanently delete "${sectionTitle}" and all its child sections. Content in deleted sections will become orphaned.`
+    : `This will permanently delete "${sectionTitle}".`;
+
   return (
-    <AlertDialog open={open} onOpenChange={(o) => !o && onCancel()}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Section</AlertDialogTitle>
-          <AlertDialogDescription>
-            {hasChildren
-              ? `This will permanently delete "${sectionTitle}" and all its child sections. Content in deleted sections will become orphaned.`
-              : `This will permanently delete "${sectionTitle}".`}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive text-white hover:bg-destructive/90"
-            data-testid="confirm-delete-section"
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDeleteDialog
+      open={open}
+      title="Delete Section"
+      description={description}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+      confirmTestId="confirm-delete-section"
+    />
   );
 }
