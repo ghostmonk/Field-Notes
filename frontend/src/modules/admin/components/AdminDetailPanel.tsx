@@ -5,11 +5,7 @@ import {
   TabsTrigger,
 } from "@/components/admin-ui/tabs";
 import { ScrollArea } from "@/components/admin-ui/scroll-area";
-import {
-  Section,
-  SectionContentType,
-  UpdateSectionRequest,
-} from "@/shared/types/api";
+import { Section, UpdateSectionRequest } from "@/shared/types/api";
 import { useSectionMutations } from "@/modules/sections/hooks/useSectionMutations";
 import { SectionTreeData } from "../hooks/useSectionTree";
 import { useSectionAssets } from "../hooks/useSectionAssets";
@@ -33,11 +29,12 @@ export function AdminDetailPanel({
   const { updateSection } = useSectionMutations();
   const { assets, loading: assetsLoading } = useSectionAssets(
     section?.id ?? null,
-    section?.content_type as SectionContentType | undefined
+    section?.content_type
   );
 
   const handleUpdateSection = async (data: UpdateSectionRequest) => {
-    await updateSection(section!.id, data);
+    if (!section) return;
+    await updateSection(section.id, data);
     onRefetchTree();
   };
 

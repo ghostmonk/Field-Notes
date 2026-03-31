@@ -18,6 +18,10 @@ export const CONTENT_TYPE_LABELS: Record<string, string> = Object.fromEntries(
   CONTENT_TYPE_OPTIONS.map((t) => [t.value, t.label])
 );
 
+export const DISPLAY_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  DISPLAY_TYPE_OPTIONS.map((t) => [t.value, t.label])
+);
+
 export const CONTENT_TYPE_DISPLAYS: Record<SectionContentType, DisplayType[]> = {
   story: ["feed", "card-grid"],
   project: ["feed", "card-grid"],

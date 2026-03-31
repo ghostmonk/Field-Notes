@@ -35,6 +35,7 @@ export function AssetsGrid({ assets }: AssetsGridProps) {
           data-testid="asset-card"
         >
           {asset.type === "image" ? (
+            // eslint-disable-next-line @next/next/no-img-element -- admin thumbnails from arbitrary user-uploaded URLs
             <img
               src={asset.url}
               alt=""

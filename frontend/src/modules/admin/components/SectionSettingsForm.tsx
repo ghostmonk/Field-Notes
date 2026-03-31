@@ -21,6 +21,7 @@ import {
 import {
   CONTENT_TYPE_DISPLAYS,
   CONTENT_TYPE_LABELS,
+  DISPLAY_TYPE_LABELS,
   DISPLAY_TYPE_OPTIONS,
   NAV_VISIBILITY_OPTIONS,
 } from "@/shared/constants/sectionTypes";
@@ -141,7 +142,7 @@ export function SectionSettingsForm({
             <SelectContent position="popper">
               {validDisplayTypes.map((dt) => (
                 <SelectItem key={dt} value={dt}>
-                  {DISPLAY_TYPE_OPTIONS.find((o) => o.value === dt)?.label ?? dt}
+                  {DISPLAY_TYPE_LABELS[dt] ?? dt}
                 </SelectItem>
               ))}
             </SelectContent>
