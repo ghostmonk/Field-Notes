@@ -33,8 +33,6 @@ export function AssetsGrid({ assets }: AssetsGridProps) {
         <a
           key={asset.url}
           href={asset.url}
-          target="_blank"
-          rel="noopener noreferrer"
           className="rounded-lg border border-border overflow-hidden bg-muted/30 hover:border-primary transition-colors"
           data-testid="asset-card"
         >
