@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Tabs,
   TabsContent,
@@ -18,6 +19,8 @@ interface AdminDetailPanelProps {
   treeData: SectionTreeData;
   onSelectSection: (id: string) => void;
   onRefetchTree: () => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 export function AdminDetailPanel({
@@ -25,12 +28,26 @@ export function AdminDetailPanel({
   treeData,
   onSelectSection,
   onRefetchTree,
+  activeTab,
+  onTabChange,
 }: AdminDetailPanelProps) {
+  const [tab, setTab] = useState("content");
   const { updateSection } = useSectionMutations();
   const { assets, loading: assetsLoading } = useSectionAssets(
     section?.id ?? null,
     section?.content_type
   );
+
+  useEffect(() => {
+    setTab("content");
+  }, [section?.id]);
+
+  useEffect(() => {
+    if (activeTab) {
+      setTab(activeTab);
+      onTabChange?.(activeTab);
+    }
+  }, [activeTab, onTabChange]);
 
   const handleUpdateSection = async (data: UpdateSectionRequest) => {
     if (!section) return;
@@ -59,7 +76,7 @@ export function AdminDetailPanel({
 
   return (
     <div className="flex flex-1 flex-col min-h-0" data-testid="admin-detail-panel">
-      <Tabs defaultValue="content" className="flex flex-1 flex-col min-h-0">
+      <Tabs value={tab} onValueChange={setTab} className="flex flex-1 flex-col min-h-0">
         <div className="border-b border-border px-6 pt-4">
           <TabsList>
             <TabsTrigger value="content" data-testid="admin-tab-content">
