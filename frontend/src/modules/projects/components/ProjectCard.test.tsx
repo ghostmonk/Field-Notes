@@ -17,9 +17,12 @@ const mockProject = {
   summary: 'A test project',
   technologies: ['React', 'Node'],
   is_featured: false,
+  is_published: true,
   image_url: '',
   github_url: '',
   live_url: '',
+  createdDate: '2026-01-01T00:00:00Z',
+  updatedDate: '2026-01-01T00:00:00Z',
 };
 
 afterEach(cleanup);

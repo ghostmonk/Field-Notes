@@ -5,15 +5,24 @@ import {
   TabsTrigger,
 } from "@/components/admin-ui/tabs";
 import { ScrollArea } from "@/components/admin-ui/scroll-area";
+import { Section } from "@/shared/types/api";
+import { SectionTreeData } from "../hooks/useSectionTree";
+import { ContentTab } from "./ContentTab";
 
 interface AdminDetailPanelProps {
-  selectedSectionId: string | null;
+  section: Section | null;
+  treeData: SectionTreeData;
+  onSelectSection: (id: string) => void;
+  onRefetchTree: () => void;
 }
 
 export function AdminDetailPanel({
-  selectedSectionId,
+  section,
+  treeData,
+  onSelectSection,
+  onRefetchTree,
 }: AdminDetailPanelProps) {
-  if (!selectedSectionId) {
+  if (!section) {
     return (
       <div
         className="flex flex-1 items-center justify-center"
@@ -50,12 +59,12 @@ export function AdminDetailPanel({
         </div>
         <ScrollArea className="flex-1">
           <TabsContent value="content" className="p-6 mt-0">
-            <p
-              className="text-muted-foreground"
-              data-testid="admin-content-placeholder"
-            >
-              Content list will render here
-            </p>
+            <ContentTab
+              section={section}
+              treeData={treeData}
+              onSelectSection={onSelectSection}
+              onRefetchTree={onRefetchTree}
+            />
           </TabsContent>
           <TabsContent value="assets" className="p-6 mt-0">
             <p
