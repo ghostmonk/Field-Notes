@@ -73,7 +73,7 @@ export function AdminDetailPanel({
             </TabsTrigger>
           </TabsList>
         </div>
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 overflow-hidden">
           <TabsContent value="content" className="p-6 mt-0">
             <ContentTab
               section={section}
