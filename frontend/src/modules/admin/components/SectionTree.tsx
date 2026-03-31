@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTree } from "@headless-tree/react";
 import {
   syncDataLoaderFeature,
@@ -71,9 +71,26 @@ export function SectionTree({
     }
   }, [filter, tree]);
 
-  if (!data["root"]) return null;
+  const visibleIds = useMemo(() => {
+    const normalized = filter.toLowerCase();
+    if (!normalized || !data["root"]) return null;
 
-  const normalizedFilter = filter.toLowerCase();
+    const ids = new Set<string>();
+    for (const [id, item] of Object.entries(data)) {
+      if (id === "root") continue;
+      if (item.title.toLowerCase().includes(normalized)) {
+        ids.add(id);
+        let parentId = item.parent_id;
+        while (parentId && parentId !== "root") {
+          ids.add(parentId);
+          parentId = data[parentId]?.parent_id ?? null;
+        }
+      }
+    }
+    return ids;
+  }, [filter, data]);
+
+  if (!data["root"]) return null;
 
   return (
     <div
@@ -83,14 +100,8 @@ export function SectionTree({
     >
       {tree.getItems().map((item) => {
         if (item.getId() === "root") return null;
+        if (visibleIds && !visibleIds.has(item.getId())) return null;
         const itemData = item.getItemData();
-
-        if (
-          normalizedFilter &&
-          !itemData.title.toLowerCase().includes(normalizedFilter)
-        ) {
-          return null;
-        }
 
         const level = item.getItemMeta().level - 1;
         const isSelected = item.getId() === selectedSectionId;
