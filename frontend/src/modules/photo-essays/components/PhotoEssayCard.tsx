@@ -14,7 +14,7 @@ export function PhotoEssayCard({ essay, basePath }: Props) {
 
     return (
         <Link href={`${basePath}/${essay.slug || essay.id}`} className="gallery-card" data-testid="photo-essay-card">
-            <div className="story-header__actions" style={{ position: 'absolute', top: 'var(--space-sm)', right: 'var(--space-sm)', zIndex: 2 }}>
+            <div className="card__admin-actions card__admin-actions--overlay">
                 <AdminDraftBadge isPublished={essay.is_published} />
                 <AdminEditButton
                     onClick={(e) => {

@@ -18,7 +18,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, basePath }) =
     return (
         <Link href={`${basePath || '/projects'}/${project.slug}`} className="card--link">
             <Card hoverable>
-                <div className="story-header__actions">
+                <div className="card__admin-actions">
                     <AdminDraftBadge isPublished={project.is_published} />
                     <AdminEditButton
                         onClick={(e) => {

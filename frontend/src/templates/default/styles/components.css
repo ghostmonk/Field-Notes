@@ -722,12 +722,19 @@ button.btn--primary:hover:not(:disabled) {
   margin-bottom: var(--space-lg);
 }
 
-.story-header__actions {
+.story-header__actions,
+.card__admin-actions {
   position: absolute;
   top: 0;
   right: 0;
   display: flex;
   gap: var(--space-sm);
+}
+
+.card__admin-actions--overlay {
+  top: var(--space-sm);
+  right: var(--space-sm);
+  z-index: 2;
 }
 
 .story-title {
@@ -855,7 +862,8 @@ button.btn--primary:hover:not(:disabled) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .story-header__actions {
+  .story-header__actions,
+  .card__admin-actions {
     position: static;
     margin-top: var(--space-md);
   }

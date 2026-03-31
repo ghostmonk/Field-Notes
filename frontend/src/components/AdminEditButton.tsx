@@ -1,8 +1,7 @@
-import React from "react";
 import { useSession } from "next-auth/react";
 
 interface AdminEditButtonProps {
-  onClick: ((e: React.MouseEvent<HTMLButtonElement>) => void) | (() => void);
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
   label?: string;
   className?: string;
   "data-testid"?: string;
@@ -19,7 +18,7 @@ export function AdminEditButton({
 
   return (
     <button
-      onClick={onClick as React.MouseEventHandler<HTMLButtonElement>}
+      onClick={onClick}
       className={`btn btn--secondary btn--sm ${className}`.trim()}
       data-testid={testId}
     >
