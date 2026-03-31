@@ -5,9 +5,11 @@ import {
   TabsTrigger,
 } from "@/components/admin-ui/tabs";
 import { ScrollArea } from "@/components/admin-ui/scroll-area";
-import { Section } from "@/shared/types/api";
+import { Section, UpdateSectionRequest } from "@/shared/types/api";
+import { useSectionMutations } from "@/modules/sections/hooks/useSectionMutations";
 import { SectionTreeData } from "../hooks/useSectionTree";
 import { ContentTab } from "./ContentTab";
+import { SectionSettingsForm } from "./SectionSettingsForm";
 
 interface AdminDetailPanelProps {
   section: Section | null;
@@ -22,6 +24,13 @@ export function AdminDetailPanel({
   onSelectSection,
   onRefetchTree,
 }: AdminDetailPanelProps) {
+  const { updateSection } = useSectionMutations();
+
+  const handleUpdateSection = async (data: UpdateSectionRequest) => {
+    await updateSection(section!.id, data);
+    onRefetchTree();
+  };
+
   if (!section) {
     return (
       <div
@@ -75,12 +84,11 @@ export function AdminDetailPanel({
             </p>
           </TabsContent>
           <TabsContent value="settings" className="p-6 mt-0">
-            <p
-              className="text-muted-foreground"
-              data-testid="admin-settings-placeholder"
-            >
-              Section settings will render here
-            </p>
+            <SectionSettingsForm
+              key={section.id}
+              section={section}
+              onSubmit={handleUpdateSection}
+            />
           </TabsContent>
         </ScrollArea>
       </Tabs>
