@@ -11,15 +11,11 @@ import { useToast } from '@/components/Toast';
 import IconPicker from '@/components/IconPicker';
 import { SectionIcon, iconMap } from '@/shared/lib/navIcons';
 import { Button, Input, Select } from '@/components/ui';
-
-const CONTENT_TYPE_DISPLAYS: Record<SectionContentType, DisplayType[]> = {
-  story: ['feed', 'card-grid'],
-  project: ['feed', 'card-grid'],
-  page: ['static-page'],
-  photo_essay: ['gallery'],
-};
-const CONTENT_TYPES: SectionContentType[] = ['story', 'project', 'page', 'photo_essay'];
-const NAV_VISIBILITIES: NavVisibility[] = ['main', 'secondary', 'hidden'];
+import {
+  CONTENT_TYPE_DISPLAYS,
+  CONTENT_TYPE_OPTIONS,
+  NAV_VISIBILITY_OPTIONS,
+} from '@/shared/constants/sectionTypes';
 
 export default function AdminSectionsPage() {
   const { data: session, status } = useSession();
@@ -185,7 +181,7 @@ function SectionCreateForm({
         <div>
           <label htmlFor="new-section-content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Content Type</label>
           <Select id="new-section-content" value={contentType} onChange={e => handleContentTypeChange(e.target.value as SectionContentType)} className="mt-1 w-full" disabled={disabled} data-testid="section-content-type-select">
-            {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            {CONTENT_TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </Select>
         </div>
         {validDisplayTypes.length > 1 && (
@@ -199,7 +195,7 @@ function SectionCreateForm({
         <div>
           <label htmlFor="new-section-nav" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nav Visibility</label>
           <Select id="new-section-nav" value={navVisibility} onChange={e => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 w-full" disabled={disabled} data-testid="section-nav-visibility-select">
-            {NAV_VISIBILITIES.map(t => <option key={t} value={t}>{t}</option>)}
+            {NAV_VISIBILITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </Select>
         </div>
       </div>
@@ -320,7 +316,7 @@ function SectionEditForm({
         <div>
           <label htmlFor={`edit-content-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Content Type</label>
           <Select id={`edit-content-${section.id}`} value={contentType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleContentTypeChange(e.target.value as SectionContentType)} className="mt-1 w-full" disabled={disabled}>
-            {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            {CONTENT_TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </Select>
         </div>
         {validDisplayTypes.length > 1 && (
@@ -334,7 +330,7 @@ function SectionEditForm({
         <div>
           <label htmlFor={`edit-nav-${section.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nav Visibility</label>
           <Select id={`edit-nav-${section.id}`} value={navVisibility} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNavVisibility(e.target.value as NavVisibility)} className="mt-1 w-full" disabled={disabled}>
-            {NAV_VISIBILITIES.map(t => <option key={t} value={t}>{t}</option>)}
+            {NAV_VISIBILITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </Select>
         </div>
       </div>

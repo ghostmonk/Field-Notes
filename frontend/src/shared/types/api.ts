@@ -256,7 +256,7 @@ export interface CreateSectionRequest {
     icon?: string;
 }
 
-export type UpdateSectionRequest = Partial<CreateSectionRequest>;
+export type UpdateSectionRequest = Partial<CreateSectionRequest> & { slug?: string };
 
 /**
  * Engagement types for reactions and comments
