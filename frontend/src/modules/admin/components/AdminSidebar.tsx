@@ -14,6 +14,11 @@ interface AdminSidebarProps {
   treeData: SectionTreeData;
   loading: boolean;
   onRefetch: () => void;
+  onAddContent: (sectionId: string) => void;
+  onAddChildSection: (parentId: string) => void;
+  onEditSettings: (sectionId: string) => void;
+  onDeleteSection: (sectionId: string, sectionTitle: string) => void;
+  onAddRootSection: () => void;
 }
 
 export function AdminSidebar({
@@ -22,6 +27,11 @@ export function AdminSidebar({
   treeData,
   loading,
   onRefetch,
+  onAddContent,
+  onAddChildSection,
+  onEditSettings,
+  onDeleteSection,
+  onAddRootSection,
 }: AdminSidebarProps) {
   const [filter, setFilter] = useState("");
 
@@ -60,6 +70,10 @@ export function AdminSidebar({
             onSelectSection={onSelectSection}
             onRefetch={onRefetch}
             filter={filter}
+            onAddContent={onAddContent}
+            onAddChildSection={onAddChildSection}
+            onEditSettings={onEditSettings}
+            onDeleteSection={onDeleteSection}
           />
         )}
       </ScrollArea>
@@ -69,6 +83,7 @@ export function AdminSidebar({
           variant="outline"
           size="sm"
           className="w-full"
+          onClick={onAddRootSection}
           data-testid="admin-add-root-section"
         >
           <Plus className="mr-2 h-4 w-4" />

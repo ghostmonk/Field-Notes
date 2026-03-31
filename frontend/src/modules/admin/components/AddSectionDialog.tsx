@@ -27,7 +27,7 @@ import {
 
 interface AddSectionDialogProps {
   open: boolean;
-  parentId: string;
+  parentId: string | null;
   onSubmit: (data: CreateSectionRequest) => Promise<void>;
   onClose: () => void;
 }
@@ -51,7 +51,7 @@ export function AddSectionDialog({
         title: title.trim(),
         content_type: contentType,
         display_type: displayType,
-        parent_id: parentId,
+        ...(parentId ? { parent_id: parentId } : {}),
       });
       setTitle("");
       setContentType("story");
@@ -66,7 +66,9 @@ export function AddSectionDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>Add Child Section</DialogTitle>
+          <DialogTitle>
+            {parentId ? "Add Child Section" : "Add Section"}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
