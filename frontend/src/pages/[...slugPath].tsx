@@ -363,10 +363,12 @@ function SectionPageContent({ section, view, initialListData, detailItem, pageCo
                     <link rel="canonical" href={canonicalUrl} />
                 </Head>
                 <StaticDisplay content={pageContent.content} title={pageContent.title} />
-                <AdminEditButton
-                    onClick={() => router.push({ pathname: '/editor', query: { section_id: section.id } })}
-                    data-testid="page-edit-button"
-                />
+                <div className="page-container flex justify-end mt-4">
+                    <AdminEditButton
+                        onClick={() => router.push({ pathname: '/editor', query: { section_id: section.id } })}
+                        data-testid="page-edit-button"
+                    />
+                </div>
                 {section.slug === 'contact' && (
                     <div className="page-container mt-6">
                         <ContactForm />

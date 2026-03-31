@@ -25,7 +25,10 @@ const mockStory = {
   updatedDate: '2025-01-01T00:00:00Z',
 } as Story;
 
-afterEach(cleanup);
+afterEach(() => {
+  vi.mocked(useSession).mockReturnValue({ data: null } as any);
+  cleanup();
+});
 
 describe('StoryDetail', () => {
   it('renders story title', () => {
@@ -41,7 +44,6 @@ describe('StoryDetail', () => {
     expect(btn).toBeInTheDocument();
     fireEvent.click(btn);
     expect(onEdit).toHaveBeenCalledOnce();
-    vi.mocked(useSession).mockReturnValue({ data: null } as any);
   });
 
   it('hides edit button when onEdit not provided', () => {
