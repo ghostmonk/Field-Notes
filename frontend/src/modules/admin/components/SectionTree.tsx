@@ -25,6 +25,10 @@ interface SectionTreeProps {
   onSelectSection: (id: string | null) => void;
   onRefetch: () => void;
   filter?: string;
+  onAddContent?: (sectionId: string) => void;
+  onAddChildSection?: (parentId: string) => void;
+  onEditSettings?: (sectionId: string) => void;
+  onDeleteSection?: (sectionId: string, sectionTitle: string) => void;
 }
 
 export function SectionTree({
@@ -33,6 +37,10 @@ export function SectionTree({
   onSelectSection,
   onRefetch,
   filter = "",
+  onAddContent,
+  onAddChildSection,
+  onEditSettings,
+  onDeleteSection,
 }: SectionTreeProps) {
   const { onDrop } = useSectionReorder(onRefetch);
   const tree = useTree<SectionTreeItem>({
@@ -144,18 +152,21 @@ export function SectionTree({
             </ContextMenuTrigger>
             <ContextMenuContent>
               <ContextMenuItem
+                onClick={() => onAddContent?.(item.getId())}
                 data-testid={`ctx-add-content-${itemData.slug}`}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Content
               </ContextMenuItem>
               <ContextMenuItem
+                onClick={() => onAddChildSection?.(item.getId())}
                 data-testid={`ctx-add-child-${itemData.slug}`}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Child Section
               </ContextMenuItem>
               <ContextMenuItem
+                onClick={() => onEditSettings?.(item.getId())}
                 data-testid={`ctx-edit-settings-${itemData.slug}`}
               >
                 <Settings className="mr-2 h-4 w-4" />
@@ -164,6 +175,7 @@ export function SectionTree({
               <ContextMenuSeparator />
               <ContextMenuItem
                 variant="destructive"
+                onClick={() => onDeleteSection?.(item.getId(), itemData.title)}
                 data-testid={`ctx-delete-${itemData.slug}`}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
