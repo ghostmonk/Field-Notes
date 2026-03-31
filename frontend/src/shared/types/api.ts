@@ -78,6 +78,9 @@ export interface ProjectCard {
     github_url: string | null;
     live_url: string | null;
     is_featured: boolean;
+    is_published: boolean;
+    createdDate: string;
+    updatedDate: string;
     user_id?: string;
     section_id?: string;
 }

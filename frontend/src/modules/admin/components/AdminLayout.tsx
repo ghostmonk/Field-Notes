@@ -1,7 +1,7 @@
 import { AdminDesktopGate } from "./AdminDesktopGate";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminDetailPanel } from "./AdminDetailPanel";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import { applyStoredTheme } from "@/lib/theme";
 import { useSectionTree } from "../hooks/useSectionTree";
@@ -14,6 +14,11 @@ export function AdminLayout() {
   useEffect(() => {
     applyStoredTheme();
   }, []);
+
+  const selectedSection = useMemo(
+    () => (selectedSectionId ? treeData[selectedSectionId] ?? null : null),
+    [selectedSectionId, treeData]
+  );
 
   const handleSelectSection = (id: string | null) => {
     const query = id ? { section: id } : {};
@@ -33,7 +38,12 @@ export function AdminLayout() {
           loading={loading}
           onRefetch={refetch}
         />
-        <AdminDetailPanel selectedSectionId={selectedSectionId} />
+        <AdminDetailPanel
+          section={selectedSection}
+          treeData={treeData}
+          onSelectSection={handleSelectSection}
+          onRefetchTree={refetch}
+        />
       </div>
     </AdminDesktopGate>
   );
