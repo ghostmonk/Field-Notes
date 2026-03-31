@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-03-31-editor-command-center-phase4': 'Editor Command Center Phase 4',
   '2026-03-30-editor-command-center-phase3': 'Editor Command Center Phase 3',
   '2026-03-30-editor-command-center-phase2': 'Editor Command Center Phase 2',
   '2026-03-30-editor-command-center': 'Editor Command Center',
