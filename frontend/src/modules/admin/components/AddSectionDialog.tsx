@@ -88,7 +88,7 @@ export function AddSectionDialog({
               <SelectTrigger data-testid="add-section-content-type">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 {CONTENT_TYPE_OPTIONS.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
@@ -106,7 +106,7 @@ export function AddSectionDialog({
               <SelectTrigger data-testid="add-section-display-type">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 {DISPLAY_TYPE_OPTIONS.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
