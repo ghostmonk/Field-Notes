@@ -32,29 +32,21 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
+            You have exactly 2 steps. Do not deviate.
 
-            Review ONLY the diff of this PR. Do not read files outside the diff unless needed to verify a specific concern.
+            STEP 1: Run this exact command to get the diff (excluding lock files and generated code):
+            gh pr diff ${{ github.event.pull_request.number }} -- ':(exclude)*.lock' ':(exclude)package-lock.json' ':(exclude)frontend/src/components/admin-ui/*' ':(exclude)frontend/src/components/ui/*' ':(exclude)docs-site/*'
 
-            Report a MAXIMUM of 5 findings. Only report issues you are confident are real bugs or security vulnerabilities:
+            STEP 2: Review the diff for ONLY these issues (max 5 findings):
             - Security vulnerabilities (XSS, injection, auth bypass, secrets in code)
             - Bugs that will cause runtime errors, data loss, or incorrect behavior
             - Breaking API contract changes (missing migrations, mismatched types)
 
-            Do NOT review:
-            - Documentation, markdown, README, or comment changes
-            - Style, naming, formatting, or import ordering
-            - Test files (unless a test is asserting wrong behavior)
-            - Suggestions for features not in the PR scope
+            Skip: docs, style, formatting, tests, suggestions outside PR scope.
 
-            Rules:
-            - Each finding: one sentence + file:line reference. No elaboration.
-            - Do not summarize the PR.
-            - Do not repeat findings across categories.
-            - If nothing worth flagging, say "No issues found." and stop.
-
-            Use `gh pr diff ${{ github.event.pull_request.number }}` to get the diff, then `gh pr comment` to post findings.
+            Then post findings with: gh pr comment ${{ github.event.pull_request.number }} --body "<your findings>"
+            Format: one sentence + file:line per finding. No summary. No preamble.
+            If nothing found, post "No issues found."
 
           model: claude-haiku-4-5-20251001
           claude_args: '--max-turns 12 --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'

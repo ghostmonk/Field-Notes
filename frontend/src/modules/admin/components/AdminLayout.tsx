@@ -4,10 +4,12 @@ import { AdminDetailPanel } from "./AdminDetailPanel";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { applyStoredTheme } from "@/lib/theme";
+import { useSectionTree } from "../hooks/useSectionTree";
 
 export function AdminLayout() {
   const router = useRouter();
   const selectedSectionId = (router.query.section as string) ?? null;
+  const { treeData, loading, refetch } = useSectionTree();
 
   useEffect(() => {
     applyStoredTheme();
@@ -27,6 +29,9 @@ export function AdminLayout() {
         <AdminSidebar
           selectedSectionId={selectedSectionId}
           onSelectSection={handleSelectSection}
+          treeData={treeData}
+          loading={loading}
+          onRefetch={refetch}
         />
         <AdminDetailPanel selectedSectionId={selectedSectionId} />
       </div>
