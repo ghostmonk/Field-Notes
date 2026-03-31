@@ -61,7 +61,7 @@ export function useSectionContent(
     try {
       const params: Record<string, string | number> = {
         section_id: sectionId,
-        limit: 100,
+        limit: 50,
         offset: 0,
         [config.draftParam]: 1,
       };
