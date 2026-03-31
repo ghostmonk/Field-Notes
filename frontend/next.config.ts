@@ -20,6 +20,15 @@ const nextConfig: NextConfig = {
     // Note: ESLint runs separately via `npm run lint`, not during Next.js build
     // (Next.js 16 removed the eslint config option)
 
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'storage.googleapis.com',
+            },
+        ],
+    },
+
     experimental: {
         serverActions: {
             bodySizeLimit: '4mb'

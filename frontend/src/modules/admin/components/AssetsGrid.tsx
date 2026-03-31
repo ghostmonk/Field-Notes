@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Film } from "lucide-react";
 import { AssetInfo } from "../hooks/useSectionAssets";
 
@@ -35,13 +36,15 @@ export function AssetsGrid({ assets }: AssetsGridProps) {
           data-testid="asset-card"
         >
           {asset.type === "image" ? (
-            // eslint-disable-next-line @next/next/no-img-element -- admin thumbnails from arbitrary user-uploaded URLs
-            <img
-              src={asset.url}
-              alt=""
-              className="w-full h-32 object-cover"
-              loading="lazy"
-            />
+            <div className="relative w-full h-32">
+              <Image
+                src={asset.url}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              />
+            </div>
           ) : (
             <div className="w-full h-32 flex items-center justify-center bg-muted">
               <Film className="h-8 w-8 text-muted-foreground" />
