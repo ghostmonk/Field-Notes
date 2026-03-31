@@ -30,9 +30,12 @@ export function AssetsGrid({ assets }: AssetsGridProps) {
       data-testid="assets-grid"
     >
       {assets.map((asset) => (
-        <div
+        <a
           key={asset.url}
-          className="rounded-lg border border-border overflow-hidden bg-muted/30"
+          href={asset.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-lg border border-border overflow-hidden bg-muted/30 hover:border-primary transition-colors"
           data-testid="asset-card"
         >
           {asset.type === "image" ? (
@@ -58,7 +61,7 @@ export function AssetsGrid({ assets }: AssetsGridProps) {
               {asset.fromContentTitle}
             </p>
           </div>
-        </div>
+        </a>
       ))}
     </div>
   );

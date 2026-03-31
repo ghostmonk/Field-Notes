@@ -9,7 +9,7 @@ export interface AssetInfo {
   fromContentTitle: string;
 }
 
-function extractAssets(html: string, contentTitle: string): AssetInfo[] {
+function extractAssetsFromHtml(html: string, contentTitle: string): AssetInfo[] {
   const assets: AssetInfo[] = [];
   const imgRegex = /<img[^>]+src="([^"]+)"/g;
   const videoRegex = /<(?:source|video)[^>]+src="([^"]+)"/g;
@@ -21,6 +21,74 @@ function extractAssets(html: string, contentTitle: string): AssetInfo[] {
   while ((match = videoRegex.exec(html)) !== null) {
     assets.push({ url: match[1], type: "video", fromContentTitle: contentTitle });
   }
+  return assets;
+}
+
+function dedupe(assets: AssetInfo[]): AssetInfo[] {
+  const seen = new Set<string>();
+  return assets.filter((a) => {
+    if (seen.has(a.url)) return false;
+    seen.add(a.url);
+    return true;
+  });
+}
+
+async function fetchStoryAssets(
+  sectionId: string,
+  token: string
+): Promise<AssetInfo[]> {
+  const response = await apiClient.stories.list(token, {
+    section_id: sectionId,
+    limit: 50,
+    offset: 0,
+    include_drafts: true,
+  });
+
+  const assets: AssetInfo[] = [];
+  for (const story of response.items) {
+    if (story.content) {
+      assets.push(...extractAssetsFromHtml(story.content, story.title));
+    }
+  }
+  return assets;
+}
+
+async function fetchPhotoEssayAssets(
+  sectionId: string
+): Promise<AssetInfo[]> {
+  const listResponse = await apiClient.photoEssays.list({
+    section_id: sectionId,
+    limit: 50,
+    offset: 0,
+  });
+
+  const assets: AssetInfo[] = [];
+
+  // Cover images from list response
+  for (const card of listResponse.items) {
+    if (card.cover_image_url) {
+      assets.push({
+        url: card.cover_image_url,
+        type: "image",
+        fromContentTitle: card.title,
+      });
+    }
+  }
+
+  // Fetch each essay's full photos in parallel
+  const details = await Promise.all(
+    listResponse.items.map((card) => apiClient.photoEssays.getById(card.id))
+  );
+  for (const essay of details) {
+    for (const photo of essay.photos) {
+      assets.push({
+        url: photo.url,
+        type: "image",
+        fromContentTitle: essay.title,
+      });
+    }
+  }
+
   return assets;
 }
 
@@ -40,7 +108,8 @@ export function useSectionAssets(
   const [error, setError] = useState<string | null>(null);
 
   const fetchAssets = useCallback(async () => {
-    if (!sectionId || contentType !== "story" || !session?.accessToken) {
+    const supported = contentType === "story" || contentType === "photo_essay";
+    if (!sectionId || !supported || !session?.accessToken) {
       setAssets([]);
       return;
     }
@@ -49,28 +118,13 @@ export function useSectionAssets(
     setError(null);
 
     try {
-      const response = await apiClient.stories.list(session.accessToken, {
-        section_id: sectionId,
-        limit: 50,
-        offset: 0,
-        include_drafts: true,
-      });
-
-      const allAssets: AssetInfo[] = [];
-      for (const story of response.items) {
-        if (story.content) {
-          allAssets.push(...extractAssets(story.content, story.title));
-        }
+      let allAssets: AssetInfo[];
+      if (contentType === "story") {
+        allAssets = await fetchStoryAssets(sectionId, session.accessToken);
+      } else {
+        allAssets = await fetchPhotoEssayAssets(sectionId);
       }
-
-      const seen = new Set<string>();
-      const deduped = allAssets.filter((a) => {
-        if (seen.has(a.url)) return false;
-        seen.add(a.url);
-        return true;
-      });
-
-      setAssets(deduped);
+      setAssets(dedupe(allAssets));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch assets");
     } finally {
