@@ -5,11 +5,17 @@ import {
   TabsTrigger,
 } from "@/components/admin-ui/tabs";
 import { ScrollArea } from "@/components/admin-ui/scroll-area";
-import { Section, UpdateSectionRequest } from "@/shared/types/api";
+import {
+  Section,
+  SectionContentType,
+  UpdateSectionRequest,
+} from "@/shared/types/api";
 import { useSectionMutations } from "@/modules/sections/hooks/useSectionMutations";
 import { SectionTreeData } from "../hooks/useSectionTree";
+import { useSectionAssets } from "../hooks/useSectionAssets";
 import { ContentTab } from "./ContentTab";
 import { SectionSettingsForm } from "./SectionSettingsForm";
+import { AssetsGrid } from "./AssetsGrid";
 
 interface AdminDetailPanelProps {
   section: Section | null;
@@ -25,6 +31,10 @@ export function AdminDetailPanel({
   onRefetchTree,
 }: AdminDetailPanelProps) {
   const { updateSection } = useSectionMutations();
+  const { assets, loading: assetsLoading } = useSectionAssets(
+    section?.id ?? null,
+    section?.content_type as SectionContentType | undefined
+  );
 
   const handleUpdateSection = async (data: UpdateSectionRequest) => {
     await updateSection(section!.id, data);
@@ -76,12 +86,11 @@ export function AdminDetailPanel({
             />
           </TabsContent>
           <TabsContent value="assets" className="p-6 mt-0">
-            <p
-              className="text-muted-foreground"
-              data-testid="admin-assets-placeholder"
-            >
-              Assets grid will render here
-            </p>
+            {assetsLoading ? (
+              <p className="text-muted-foreground text-sm">Loading...</p>
+            ) : (
+              <AssetsGrid assets={assets} />
+            )}
           </TabsContent>
           <TabsContent value="settings" className="p-6 mt-0">
             <SectionSettingsForm
