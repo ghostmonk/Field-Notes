@@ -85,7 +85,7 @@ export function AddSectionDialog({
               value={contentType}
               onValueChange={(v) => setContentType(v as SectionContentType)}
             >
-              <SelectTrigger data-testid="add-section-content-type">
+              <SelectTrigger className="w-full" data-testid="add-section-content-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper">
@@ -103,7 +103,7 @@ export function AddSectionDialog({
               value={displayType}
               onValueChange={(v) => setDisplayType(v as DisplayType)}
             >
-              <SelectTrigger data-testid="add-section-display-type">
+              <SelectTrigger className="w-full" data-testid="add-section-display-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper">
