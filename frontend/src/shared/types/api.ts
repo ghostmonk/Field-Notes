@@ -88,24 +88,10 @@ export interface ProjectCard {
 /**
  * Represents a full project with all details
  */
-export interface Project {
-    id: string;
-    title: string;
-    slug: string;
-    summary: string;
+export interface Project extends ProjectCard {
     content: string;
-    technologies: string[];
-    github_url: string | null;
-    live_url: string | null;
-    image_url: string | null;
-    is_published: boolean;
-    is_featured: boolean;
     sort_order: number;
     tags: string[];
-    createdDate: string;
-    updatedDate: string;
-    user_id?: string;
-    section_id?: string;
 }
 
 /**

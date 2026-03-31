@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import apiClient from "@/shared/lib/api-client";
-import { SectionContentType } from "@/shared/types/api";
+import { PaginatedResponse, SectionContentType } from "@/shared/types/api";
 import { ContentRow } from "../types";
 
 interface UseSectionContentReturn {
@@ -10,6 +10,29 @@ interface UseSectionContentReturn {
   error: string | null;
   refetch: () => void;
 }
+
+interface ContentFetchConfig {
+  draftParam: string;
+  fetch: (
+    token: string,
+    params: Record<string, string | number>
+  ) => Promise<PaginatedResponse<{ id: string; title: string; is_published: boolean; updatedDate: string; slug?: string }>>;
+}
+
+const FETCH_CONFIG: Partial<Record<SectionContentType, ContentFetchConfig>> = {
+  story: {
+    draftParam: "include_drafts",
+    fetch: (token, params) => apiClient.stories.list(token, params),
+  },
+  project: {
+    draftParam: "include_unpublished",
+    fetch: (_token, params) => apiClient.projects.list(params),
+  },
+  photo_essay: {
+    draftParam: "include_unpublished",
+    fetch: (_token, params) => apiClient.photoEssays.list(params),
+  },
+};
 
 export function useSectionContent(
   sectionId: string | null,
@@ -26,7 +49,8 @@ export function useSectionContent(
       return;
     }
 
-    if (contentType === "page") {
+    const config = FETCH_CONFIG[contentType];
+    if (!config) {
       setRows([]);
       return;
     }
@@ -39,50 +63,19 @@ export function useSectionContent(
         section_id: sectionId,
         limit: 100,
         offset: 0,
+        [config.draftParam]: 1,
       };
 
-      let items: ContentRow[] = [];
-
-      if (contentType === "story") {
-        params.include_drafts = 1;
-        const response = await apiClient.stories.list(
-          session.accessToken,
-          params
-        );
-        items = response.items.map((s) => ({
-          id: s.id,
-          title: s.title,
-          kind: "content" as const,
-          contentType: "story" as const,
-          isPublished: s.is_published,
-          updatedDate: s.updatedDate,
-          slug: s.slug,
-        }));
-      } else if (contentType === "project") {
-        params.include_unpublished = 1;
-        const response = await apiClient.projects.list(params);
-        items = response.items.map((p) => ({
-          id: p.id,
-          title: p.title,
-          kind: "content" as const,
-          contentType: "project" as const,
-          isPublished: p.is_published,
-          updatedDate: p.updatedDate,
-          slug: p.slug,
-        }));
-      } else if (contentType === "photo_essay") {
-        params.include_unpublished = 1;
-        const response = await apiClient.photoEssays.list(params);
-        items = response.items.map((pe) => ({
-          id: pe.id,
-          title: pe.title,
-          kind: "content" as const,
-          contentType: "photo_essay" as const,
-          isPublished: pe.is_published,
-          updatedDate: pe.updatedDate,
-          slug: pe.slug ?? "",
-        }));
-      }
+      const response = await config.fetch(session.accessToken, params);
+      const items: ContentRow[] = response.items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        kind: "content" as const,
+        contentType,
+        isPublished: item.is_published,
+        updatedDate: item.updatedDate,
+        slug: item.slug ?? "",
+      }));
 
       setRows(items);
     } catch (err) {

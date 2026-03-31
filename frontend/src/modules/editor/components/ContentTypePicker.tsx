@@ -1,13 +1,8 @@
+import { CONTENT_TYPE_OPTIONS } from "@/shared/constants/sectionTypes";
+
 interface ContentTypePickerProps {
     onSelect: (contentType: string) => void;
 }
-
-const CONTENT_TYPES = [
-    { value: 'story', label: 'Story' },
-    { value: 'project', label: 'Project' },
-    { value: 'photo_essay', label: 'Photo Essay' },
-    { value: 'page', label: 'Page' },
-];
 
 export function ContentTypePicker({
     onSelect,
@@ -17,7 +12,7 @@ export function ContentTypePicker({
             className="grid grid-cols-2 gap-4 p-4"
             data-testid="content-type-picker"
         >
-            {CONTENT_TYPES.map((ct) => (
+            {CONTENT_TYPE_OPTIONS.map((ct) => (
                 <button
                     key={ct.value}
                     onClick={() => onSelect(ct.value)}

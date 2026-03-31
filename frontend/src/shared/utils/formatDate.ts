@@ -12,6 +12,16 @@ export const formatDate = (date: string | Date): string => {
     });
 };
 
+export const formatDateShort = (date: string | Date): string => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+    });
+};
+
 export function formatRelativeDate(date: string | Date): string {
     const d = new Date(date);
     const now = new Date();

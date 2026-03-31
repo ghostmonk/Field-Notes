@@ -7,6 +7,8 @@ import {
   TableRow,
 } from "@/components/admin-ui/table";
 import { Badge } from "@/components/admin-ui/badge";
+import { formatDateShort } from "@/shared/utils/formatDate";
+import { CONTENT_TYPE_LABELS } from "@/shared/constants/sectionTypes";
 import { ContentRow } from "../types";
 import { ContentActions } from "./ContentActions";
 
@@ -18,25 +20,11 @@ interface ContentTableProps {
   onSelectSection: (id: string) => void;
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "\u2014";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 function typeLabel(row: ContentRow): string {
   if (row.kind === "section") return "Section";
-  const labels: Record<string, string> = {
-    story: "Story",
-    project: "Project",
-    photo_essay: "Photo Essay",
-    page: "Page",
-  };
-  return row.contentType ? (labels[row.contentType] ?? row.contentType) : "\u2014";
+  return row.contentType
+    ? (CONTENT_TYPE_LABELS[row.contentType] ?? row.contentType)
+    : "\u2014";
 }
 
 export function ContentTable({
@@ -106,7 +94,7 @@ export function ContentTable({
               </Badge>
             </TableCell>
             <TableCell className="text-muted-foreground text-sm">
-              {formatDate(row.updatedDate)}
+              {row.updatedDate ? formatDateShort(row.updatedDate) : "\u2014"}
             </TableCell>
             <TableCell>
               <ContentActions

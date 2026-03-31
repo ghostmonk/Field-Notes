@@ -20,6 +20,10 @@ import {
   DisplayType,
   SectionContentType,
 } from "@/shared/types/api";
+import {
+  CONTENT_TYPE_OPTIONS,
+  DISPLAY_TYPE_OPTIONS,
+} from "@/shared/constants/sectionTypes";
 
 interface AddSectionDialogProps {
   open: boolean;
@@ -27,20 +31,6 @@ interface AddSectionDialogProps {
   onSubmit: (data: CreateSectionRequest) => Promise<void>;
   onClose: () => void;
 }
-
-const CONTENT_TYPES: { value: SectionContentType; label: string }[] = [
-  { value: "story", label: "Story" },
-  { value: "project", label: "Project" },
-  { value: "photo_essay", label: "Photo Essay" },
-  { value: "page", label: "Page" },
-];
-
-const DISPLAY_TYPES: { value: DisplayType; label: string }[] = [
-  { value: "feed", label: "Feed" },
-  { value: "card-grid", label: "Card Grid" },
-  { value: "static-page", label: "Static Page" },
-  { value: "gallery", label: "Gallery" },
-];
 
 export function AddSectionDialog({
   open,
@@ -99,7 +89,7 @@ export function AddSectionDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CONTENT_TYPES.map((t) => (
+                {CONTENT_TYPE_OPTIONS.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
                   </SelectItem>
@@ -117,7 +107,7 @@ export function AddSectionDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {DISPLAY_TYPES.map((t) => (
+                {DISPLAY_TYPE_OPTIONS.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
                   </SelectItem>
