@@ -36,20 +36,17 @@ function AssetPreview({
         Back
       </Button>
       {asset.type === "image" ? (
-        <div className="relative w-full aspect-video">
-          <Image
-            src={asset.url}
-            alt=""
-            fill
-            className="object-contain rounded-lg"
-            sizes="(max-width: 1024px) 100vw, 60vw"
-          />
-        </div>
+        // eslint-disable-next-line @next/next/no-img-element -- preview at original size, dimensions unknown
+        <img
+          src={asset.url}
+          alt=""
+          className="max-w-full h-auto rounded-lg"
+        />
       ) : (
         <video
           src={asset.url}
           controls
-          className="w-full rounded-lg"
+          className="max-w-full h-auto rounded-lg"
           data-testid="asset-preview-video"
         />
       )}
