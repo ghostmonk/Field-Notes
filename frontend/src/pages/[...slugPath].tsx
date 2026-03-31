@@ -16,7 +16,8 @@ import { PhotoEssayCard, PhotoEssayPage } from '@/modules/photo-essays';
 import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
-import { Button } from '@/components/ui';
+import { AdminEditButton } from '@/components/AdminEditButton';
+import { SectionAdminBar } from '@/components/SectionAdminBar';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { EmptyState } from '@/components/EmptyState';
 import { getBaseUrl, getCanonicalUrl } from '@/shared/utils/urls';
@@ -332,7 +333,6 @@ export default function SectionPage({ section, view, initialListData, detailItem
 
 function SectionPageContent({ section, view, initialListData, detailItem, pageContent, ogImage, excerpt, error }: SectionPageProps) {
     const canonicalUrl = getCanonicalUrl();
-    const { data: session } = useSession();
     const router = useRouter();
 
     if (error) {
@@ -363,18 +363,12 @@ function SectionPageContent({ section, view, initialListData, detailItem, pageCo
                     <link rel="canonical" href={canonicalUrl} />
                 </Head>
                 <StaticDisplay content={pageContent.content} title={pageContent.title} />
-                {session?.user?.role === 'admin' && (
-                    <div className="page-container flex justify-end mt-4">
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => router.push({ pathname: '/editor', query: { section_id: section.id } })}
-                            data-testid="page-edit-button"
-                        >
-                            Edit
-                        </Button>
-                    </div>
-                )}
+                <div className="page-container flex justify-end mt-4">
+                    <AdminEditButton
+                        onClick={() => router.push({ pathname: '/editor', query: { section_id: section.id } })}
+                        data-testid="page-edit-button"
+                    />
+                </div>
                 {section.slug === 'contact' && (
                     <div className="page-container mt-6">
                         <ContactForm />
@@ -413,6 +407,7 @@ function SectionPageContent({ section, view, initialListData, detailItem, pageCo
             </Head>
             <div className="page-container">
                 <h1 className="page-title">{section.title}</h1>
+                <SectionAdminBar sectionId={section.id} />
                 {section.content_type === 'project' && <ContributionGraph />}
                 <SectionListView section={section} initialListData={initialListData} />
             </div>
