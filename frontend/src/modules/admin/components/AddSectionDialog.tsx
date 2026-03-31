@@ -64,7 +64,7 @@ export function AddSectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Add Child Section</DialogTitle>
         </DialogHeader>
