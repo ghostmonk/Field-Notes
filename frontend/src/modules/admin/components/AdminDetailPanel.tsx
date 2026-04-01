@@ -19,6 +19,7 @@ import { ResumeBuilderPanel } from "./ResumeBuilderPanel";
 
 interface AdminDetailPanelProps {
   section: Section | null;
+  activeView: string | null;
   treeData: SectionTreeData;
   onSelectSection: (id: string) => void;
   onRefetchTree: () => void;
@@ -28,6 +29,7 @@ interface AdminDetailPanelProps {
 
 export function AdminDetailPanel({
   section,
+  activeView,
   treeData,
   onSelectSection,
   onRefetchTree,
@@ -57,11 +59,11 @@ export function AdminDetailPanel({
     onRefetchTree();
   };
 
-  if (!section) {
+  if (!section && activeView === "resume") {
     return (
       <div
         className="flex flex-1 flex-col min-h-0"
-        data-testid="admin-dashboard"
+        data-testid="admin-resume-panel"
       >
         <Tabs
           defaultValue="resume-tailor"
@@ -92,6 +94,25 @@ export function AdminDetailPanel({
             </TabsContent>
           </ScrollArea>
         </Tabs>
+      </div>
+    );
+  }
+
+  if (!section) {
+    return (
+      <div
+        className="flex flex-1 items-center justify-center"
+        data-testid="admin-dashboard"
+      >
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-semibold text-foreground">
+            Master Control
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Select a section to manage its content, or use the sidebar to access
+            tools.
+          </p>
+        </div>
       </div>
     );
   }
