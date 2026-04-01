@@ -15,7 +15,6 @@ export default function TopNav() {
                     <GhostmonkLogo height={42} />
                 </Link>
                 <div className="flex items-center gap-2">
-                    <ThemeToggle />
                     {session ? (
                         <button
                             onClick={() => signOut()}
@@ -33,6 +32,7 @@ export default function TopNav() {
                             Sign in
                         </button>
                     )}
+                    <ThemeToggle />
                 </div>
             </div>
         </nav>
