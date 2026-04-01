@@ -4,8 +4,12 @@ import re
 from datetime import datetime, timezone
 from typing import Optional
 
+from database import (
+    get_collection,
+    get_photo_essays_collection,
+    get_projects_collection,
+)
 from decorators.auth import requires_auth
-from database import get_collection, get_photo_essays_collection, get_projects_collection
 from fastapi import APIRouter, HTTPException, Request
 from glogger import logger
 
@@ -38,7 +42,9 @@ def parse_created_date(asset_id: str) -> Optional[str]:
 
 def _list_local_files(base_path: str, prefix: str) -> list[dict]:
     results = []
-    scan_dir = os.path.join(base_path, "uploads", prefix) if prefix else os.path.join(base_path, "uploads")
+    scan_dir = (
+        os.path.join(base_path, "uploads", prefix) if prefix else os.path.join(base_path, "uploads")
+    )
     if not os.path.isdir(scan_dir):
         return results
     for root, _dirs, files in os.walk(scan_dir):
@@ -54,8 +60,6 @@ def _list_local_files(base_path: str, prefix: str) -> list[dict]:
 
 
 def _list_gcs_files(prefix: str) -> list[dict]:
-    from google.cloud import storage as gcs_storage
-
     from handlers.uploads import get_gcs_bucket
 
     bucket = get_gcs_bucket()
@@ -64,10 +68,12 @@ def _list_gcs_files(prefix: str) -> list[dict]:
     results = []
     for blob in blobs:
         rel_path = blob.name.replace("uploads/", "", 1)
-        results.append({
-            "path": rel_path,
-            "size_bytes": blob.size or 0,
-        })
+        results.append(
+            {
+                "path": rel_path,
+                "size_bytes": blob.size or 0,
+            }
+        )
     return results
 
 
@@ -104,11 +110,13 @@ def _group_files_into_assets(files: list[dict]) -> list[dict]:
                 "created_date": parse_created_date(asset_id),
             }
 
-        asset_map[asset_id]["variants"].append({
-            "variant": variant,
-            "path": path,
-            "size_bytes": f["size_bytes"],
-        })
+        asset_map[asset_id]["variants"].append(
+            {
+                "variant": variant,
+                "path": path,
+                "size_bytes": f["size_bytes"],
+            }
+        )
         asset_map[asset_id]["total_size_bytes"] += f["size_bytes"]
 
     # Sort by created_date descending (newest first)
@@ -202,11 +210,13 @@ async def list_assets_by_section(
         async for story in stories_cursor:
             if story.get("content"):
                 for aid in extract_asset_ids_from_html(story["content"]):
-                    referenced_assets.setdefault(aid, []).append({
-                        "content_type": "story",
-                        "title": story.get("title", ""),
-                        "id": str(story["_id"]),
-                    })
+                    referenced_assets.setdefault(aid, []).append(
+                        {
+                            "content_type": "story",
+                            "title": story.get("title", ""),
+                            "id": str(story["_id"]),
+                        }
+                    )
 
         # Projects
         projects_cursor = projects_collection.find(
@@ -222,11 +232,13 @@ async def list_assets_by_section(
                 if img_id:
                     ids_found.add(img_id)
             for aid in ids_found:
-                referenced_assets.setdefault(aid, []).append({
-                    "content_type": "project",
-                    "title": project.get("title", ""),
-                    "id": str(project["_id"]),
-                })
+                referenced_assets.setdefault(aid, []).append(
+                    {
+                        "content_type": "project",
+                        "title": project.get("title", ""),
+                        "id": str(project["_id"]),
+                    }
+                )
 
         # Photo essays
         essays_cursor = photo_essays_collection.find(
@@ -244,11 +256,13 @@ async def list_assets_by_section(
                 if pid:
                     ids_found.add(pid)
             for aid in ids_found:
-                referenced_assets.setdefault(aid, []).append({
-                    "content_type": "photo_essay",
-                    "title": essay.get("title", ""),
-                    "id": str(essay["_id"]),
-                })
+                referenced_assets.setdefault(aid, []).append(
+                    {
+                        "content_type": "photo_essay",
+                        "title": essay.get("title", ""),
+                        "id": str(essay["_id"]),
+                    }
+                )
 
         if not referenced_assets:
             return {"items": [], "next_cursor": None, "total_count": 0}

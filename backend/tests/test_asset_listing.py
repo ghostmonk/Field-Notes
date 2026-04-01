@@ -3,17 +3,14 @@
 import os
 import tempfile
 
-import pytest
-
 from handlers.asset_listing import (
-    ASSET_ID_PATTERN,
+    _group_files_into_assets,
+    _list_local_files,
+    _paginate,
     extract_asset_id,
     extract_asset_ids_from_html,
     extract_asset_ids_from_url,
     parse_created_date,
-    _group_files_into_assets,
-    _list_local_files,
-    _paginate,
 )
 
 
@@ -22,7 +19,10 @@ class TestExtractAssetId:
         assert extract_asset_id("20260329_143022_a7f3b2c1.webp") == "20260329_143022_a7f3b2c1"
 
     def test_path_with_directories(self):
-        assert extract_asset_id("images/originals/20260329_143022_a7f3b2c1.webp") == "20260329_143022_a7f3b2c1"
+        assert (
+            extract_asset_id("images/originals/20260329_143022_a7f3b2c1.webp")
+            == "20260329_143022_a7f3b2c1"
+        )
 
     def test_no_match(self):
         assert extract_asset_id("random_file.jpg") is None
