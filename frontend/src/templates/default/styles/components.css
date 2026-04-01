@@ -670,6 +670,29 @@ button.btn--primary:hover:not(:disabled) {
   transition: var(--transition-colors);
 }
 
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-secondary);
+}
+
+.theme-toggle:active {
+  transform: scale(0.9);
+}
+
 .nav__container {
   display: grid;
   grid-template-columns: auto 1fr auto;

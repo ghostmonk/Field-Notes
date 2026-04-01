@@ -44,8 +44,7 @@ export default function ThemeToggle() {
     return (
         <button
             onClick={cycleTheme}
-            className="flex items-center justify-center w-8 h-8 rounded-md transition-colors"
-            style={{ color: 'var(--color-text-secondary)' }}
+            className="theme-toggle"
             aria-label={`Theme: ${label}. Click to cycle.`}
             title={label}
             data-testid="theme-toggle"
