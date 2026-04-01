@@ -500,6 +500,36 @@ export interface CreateTagRequest {
   name: string;
 }
 
+/**
+ * Asset listing types
+ */
+export interface AssetVariant {
+  variant: string;
+  path: string;
+  size_bytes: number;
+}
+
+export interface AssetContentRef {
+  content_type: string;
+  title: string;
+  id: string;
+}
+
+export interface AssetGroup {
+  asset_id: string;
+  type: 'image' | 'video';
+  variants: AssetVariant[];
+  total_size_bytes: number;
+  created_date: string | null;
+  referenced_by?: AssetContentRef[];
+}
+
+export interface AssetListResponse {
+  items: AssetGroup[];
+  next_cursor: string | null;
+  total_count: number;
+}
+
 export interface TaggedContentItem {
   id: string;
   title: string;

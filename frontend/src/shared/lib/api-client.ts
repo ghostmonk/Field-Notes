@@ -43,6 +43,7 @@ import {
   Tag,
   CreateTagRequest,
   TaggedContentResponse,
+  AssetListResponse,
 } from '@/shared/types/api';
 import { ApiRequestError } from '@/shared/types/error';
 
@@ -238,6 +239,10 @@ const apiRoutes = {
     create: () => '/api/tags',
     delete: (id: string) => `/api/tags/${id}`,
     content: (tagName: string) => `/api/tags/${encodeURIComponent(tagName)}/content`,
+  },
+  assets: {
+    list: () => '/api/assets/list',
+    bySection: (sectionId: string) => `/api/assets/by-section/${sectionId}`,
   },
 };
 
@@ -644,6 +649,20 @@ const apiClient = {
 
     getContent: (tagName: string) =>
       fetchApi<TaggedContentResponse>(apiRoutes.tags.content(tagName)),
+  },
+
+  assets: {
+    list: (token: string, params?: { prefix?: string; limit?: number; cursor?: string }) =>
+      fetchApi<AssetListResponse>(apiRoutes.assets.list(), {
+        token,
+        params: params as Record<string, string | number>,
+      }),
+
+    bySection: (sectionId: string, token: string, params?: { limit?: number; cursor?: string }) =>
+      fetchApi<AssetListResponse>(apiRoutes.assets.bySection(sectionId), {
+        token,
+        params: params as Record<string, string | number>,
+      }),
   },
 };
 
