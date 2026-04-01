@@ -9,6 +9,12 @@ vi.mock('next/image', () => ({
   // eslint-disable-next-line @next/next/no-img-element
   default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
 }));
+vi.mock('next/router', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: null }),
+}));
 
 const mockProject = {
   id: '1',

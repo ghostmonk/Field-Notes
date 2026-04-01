@@ -10,6 +10,9 @@ vi.mock('next/image', () => ({
 vi.mock('isomorphic-dompurify', () => ({
   default: { sanitize: (html: string) => html },
 }));
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: null }),
+}));
 
 const mockProject = {
   id: '1',

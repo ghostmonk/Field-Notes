@@ -49,5 +49,5 @@ jobs:
             If nothing found, post "No issues found."
 
           model: claude-haiku-4-5-20251001
-          claude_args: '--max-turns 12 --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
+          claude_args: '--max-turns 20 --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { formatDate, formatRelativeDate } from '@/shared/utils/formatDate';
 import { estimateReadingTime } from '@/shared/utils/readingTime';
 import { Story } from '@/shared/types/api';
-import { Button } from '@/components/ui';
+import { AdminEditButton } from '@/components/AdminEditButton';
 import { LazyStoryContent } from './LazyStoryContent';
 import { ReadingProgressBar } from '@/components/ReadingProgressBar';
 
@@ -18,16 +18,10 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({ story, onEdit, childre
             <ReadingProgressBar />
             <div className="flex items-center justify-between mb-2">
                 <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
-                {onEdit && (
-                    <Button
-                        onClick={onEdit}
-                        variant="secondary"
-                        size="sm"
-                        data-testid="story-edit-button"
-                    >
-                        Edit
-                    </Button>
-                )}
+                <AdminEditButton
+                    onClick={onEdit}
+                    data-testid="story-edit-button"
+                />
             </div>
 
             <div className="flex items-center text-sm mb-8">

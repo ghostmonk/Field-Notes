@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { PhotoEssay } from '@/shared/types/api';
+import { AdminEditButton } from '@/components/AdminEditButton';
 import { MasonryGrid } from './MasonryGrid';
 import { PhotoViewer } from './PhotoViewer';
 
@@ -26,11 +27,10 @@ export function PhotoEssayPage({ essay, onEdit, onDelete }: Props) {
                 )}
                 {(onEdit || onDelete) && (
                     <div className="photo-essay-page__actions">
-                        {onEdit && (
-                            <button className="btn btn--secondary btn--sm" onClick={onEdit} data-testid="photo-essay-edit-btn">
-                                Edit
-                            </button>
-                        )}
+                        <AdminEditButton
+                            onClick={onEdit}
+                            data-testid="photo-essay-edit-btn"
+                        />
                         {onDelete && (
                             <button className="btn btn--danger btn--sm" onClick={onDelete} data-testid="photo-essay-delete-btn">
                                 Delete
