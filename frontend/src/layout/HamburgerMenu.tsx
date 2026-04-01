@@ -142,11 +142,7 @@ export default function HamburgerMenu() {
                         </div>
                     )}
 
-                    <div className="menu-overlay__group">
-                        <div className="menu-overlay__links">
-                            <ThemeToggle />
-                        </div>
-                    </div>
+                    <ThemeToggle />
 
                     {/* Utility links */}
                     {config.footer.links.length > 0 && (

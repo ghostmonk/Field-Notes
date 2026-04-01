@@ -44,13 +44,13 @@ export default function ThemeToggle() {
     return (
         <button
             onClick={cycleTheme}
-            className="menu-overlay__link"
+            className="flex items-center justify-center w-8 h-8 rounded-md transition-colors"
+            style={{ color: 'var(--color-text-secondary)' }}
             aria-label={`Theme: ${label}. Click to cycle.`}
             title={label}
             data-testid="theme-toggle"
         >
-            <Icon className="menu-overlay__link-icon" aria-hidden="true" />
-            <span>{label}</span>
+            <Icon size={14} />
         </button>
     );
 }
