@@ -109,7 +109,7 @@ export function AdminLayout() {
     <AdminDesktopGate>
       <div
         className="admin-theme flex h-dvh bg-background text-foreground"
-        data-testid="admin-command-center"
+        data-testid="admin-master-control"
       >
         <AdminSidebar
           selectedSectionId={selectedSectionId}

@@ -132,11 +132,11 @@ export default function HamburgerMenu() {
                                 <Link
                                     href="/admin"
                                     className="menu-overlay__link"
-                                    data-testid="nav-command-center-link"
+                                    data-testid="nav-master-control-link"
                                     onClick={close}
                                 >
                                     <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
-                                    <span>Command Center</span>
+                                    <span>Master Control</span>
                                 </Link>
                             </div>
                         </div>

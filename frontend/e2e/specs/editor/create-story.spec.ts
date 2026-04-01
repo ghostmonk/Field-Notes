@@ -95,8 +95,8 @@ test.describe('Create Story', () => {
     // Start from home
     await mockAuthenticatedApiPage.goto('/');
 
-    // Click command center link
-    await editorPage.nav.goToCommandCenter();
+    // Click master control link
+    await editorPage.nav.goToMasterControl();
 
     // Should be on admin page
     expect(editorPage.url).toContain('/admin');

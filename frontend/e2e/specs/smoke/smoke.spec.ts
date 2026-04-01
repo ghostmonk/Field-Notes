@@ -63,15 +63,15 @@ test.describe('Smoke Tests', () => {
     await expect(homePage.nav.signInButton).not.toBeVisible();
   });
 
-  test('authenticated user sees Command Center link', async ({ mockAuthenticatedApiPage }) => {
+  test('authenticated user sees Master Control link', async ({ mockAuthenticatedApiPage }) => {
     const homePage = new HomePage(mockAuthenticatedApiPage);
 
     await homePage.goto();
     await homePage.waitForLoad();
 
-    // Verify Command Center link is visible (inside mobile menu overlay)
+    // Verify Master Control link is visible (inside mobile menu overlay)
     await homePage.nav.openMenu();
-    await expect(homePage.nav.commandCenterLink).toBeVisible();
+    await expect(homePage.nav.masterControlLink).toBeVisible();
   });
 
   test('navigation links work correctly', async ({ mockApiPage }) => {

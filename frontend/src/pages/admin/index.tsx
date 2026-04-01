@@ -31,7 +31,7 @@ const AdminPage: NextPageWithLayout = () => {
   return (
     <>
       <Head>
-        <title>Command Center</title>
+        <title>Master Control</title>
       </Head>
       <AdminLayout />
     </>
