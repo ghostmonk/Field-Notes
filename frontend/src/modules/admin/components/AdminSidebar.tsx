@@ -2,11 +2,11 @@ import { ScrollArea } from "@/components/admin-ui/scroll-area";
 import { Input } from "@/components/admin-ui/input";
 import { Button } from "@/components/admin-ui/button";
 import { Separator } from "@/components/admin-ui/separator";
-import { Plus, Search, FileText } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
+import { Plus, Search, FileText, Sun, Moon, Monitor } from "lucide-react";
 import { SectionTree } from "./SectionTree";
+import { type Theme, getEffectiveTheme, applyTheme } from "@/lib/theme";
 import { SectionTreeData } from "../hooks/useSectionTree";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface AdminSidebarProps {
   selectedSectionId: string | null;
@@ -38,6 +38,24 @@ export function AdminSidebar({
   onAddRootSection,
 }: AdminSidebarProps) {
   const [filter, setFilter] = useState("");
+  const [theme, setTheme] = useState<Theme>("system");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored && ["light", "dark", "system"].includes(stored)) {
+      setTheme(stored as Theme);
+    }
+  }, []);
+
+  const cycleTheme = () => {
+    const next: Theme = theme === "system" ? "light" : theme === "light" ? "dark" : "system";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    applyTheme(getEffectiveTheme(next));
+  };
+
+  const ThemeIcon = theme === "system" ? Monitor : theme === "light" ? Sun : Moon;
+  const themeLabel = theme === "system" ? `System (${getEffectiveTheme(theme)})` : theme;
 
   return (
     <div className="flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar-background">
@@ -52,7 +70,15 @@ export function AdminSidebar({
         >
           Master Control
         </button>
-        <ThemeToggle />
+        <button
+          onClick={cycleTheme}
+          className="flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+          aria-label={`Theme: ${themeLabel}. Click to cycle.`}
+          title={`Theme: ${themeLabel}`}
+          data-testid="admin-theme-toggle"
+        >
+          <ThemeIcon className="h-4 w-4" />
+        </button>
       </div>
       <div className="px-4 pb-3">
         <div className="relative">
