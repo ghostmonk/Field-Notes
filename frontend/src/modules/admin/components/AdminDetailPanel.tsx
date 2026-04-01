@@ -38,7 +38,7 @@ export function AdminDetailPanel({
   const [tab, setTab] = useState("content");
   const { updateSection } = useSectionMutations();
   const { assets, loading: assetsLoading } = useSectionAssets(
-    section?.id ?? null,
+    tab === "assets" ? (section?.id ?? null) : null,
     section?.content_type
   );
 
