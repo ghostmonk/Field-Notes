@@ -75,11 +75,17 @@ async function fetchPhotoEssayAssets(
     }
   }
 
-  // Fetch each essay's full photos in parallel
-  const details = await Promise.all(
-    listResponse.items.map((card) => apiClient.photoEssays.getById(card.id))
-  );
-  for (const essay of details) {
+  // Fetch essay details in batches to avoid overwhelming the backend
+  const BATCH_SIZE = 3;
+  const allDetails = [];
+  for (let i = 0; i < listResponse.items.length; i += BATCH_SIZE) {
+    const batch = listResponse.items.slice(i, i + BATCH_SIZE);
+    const details = await Promise.all(
+      batch.map((card) => apiClient.photoEssays.getById(card.id))
+    );
+    allDetails.push(...details);
+  }
+  for (const essay of allDetails) {
     for (const photo of essay.photos) {
       assets.push({
         url: photo.url,
