@@ -12,6 +12,7 @@ from database import (
 from decorators.auth import requires_auth
 from fastapi import APIRouter, HTTPException, Request
 from glogger import logger
+from handlers.uploads import get_gcs_bucket
 
 router = APIRouter()
 
@@ -20,9 +21,6 @@ GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
 
 # Asset ID pattern: YYYYMMDD_HHMMSS_8charhex
 ASSET_ID_PATTERN = re.compile(r"(\d{8}_\d{6}_[a-f0-9]{8})")
-
-IMAGE_VARIANT_DIRS = ["originals", "large", "medium", "thumbnails"]
-VIDEO_VARIANT_DIRS = ["originals", "processed", "thumbnails"]
 
 
 def extract_asset_id(filename: str) -> Optional[str]:
@@ -60,8 +58,6 @@ def _list_local_files(base_path: str, prefix: str) -> list[dict]:
 
 
 def _list_gcs_files(prefix: str) -> list[dict]:
-    from handlers.uploads import get_gcs_bucket
-
     bucket = get_gcs_bucket()
     blob_prefix = f"uploads/{prefix}" if prefix else "uploads/"
     blobs = bucket.list_blobs(prefix=blob_prefix)
@@ -86,18 +82,16 @@ def _group_files_into_assets(files: list[dict]) -> list[dict]:
         if not asset_id:
             continue
 
-        # Determine type and variant from path
-        # Paths look like: images/originals/ID.webp or video/originals/ID.mp4
         parts = path.split("/")
         if len(parts) < 2:
             continue
 
         if parts[0] == "images":
             asset_type = "image"
-            variant = parts[1] if len(parts) > 1 else "unknown"
+            variant = parts[1]
         elif parts[0] == "video":
             asset_type = "video"
-            variant = parts[1] if len(parts) > 1 else "unknown"
+            variant = parts[1]
         else:
             continue
 
@@ -119,7 +113,6 @@ def _group_files_into_assets(files: list[dict]) -> list[dict]:
         )
         asset_map[asset_id]["total_size_bytes"] += f["size_bytes"]
 
-    # Sort by created_date descending (newest first)
     assets = sorted(
         asset_map.values(),
         key=lambda a: a["created_date"] or "",
@@ -163,8 +156,6 @@ async def list_assets(
         raise HTTPException(status_code=500, detail="Failed to list assets")
 
 
-# --- Content association ---
-
 ASSET_URL_PATTERN = re.compile(r"/uploads/(?:images|video)/\w+/([\w]+)\.\w+")
 
 
@@ -186,6 +177,173 @@ def extract_asset_ids_from_url(url: str) -> Optional[str]:
     return None
 
 
+def _build_asset_from_known_id(asset_id: str, base_path: Optional[str]) -> Optional[dict]:
+    """Build an asset group by checking known variant paths for a single asset ID."""
+    image_variants = [
+        ("originals", ".webp"),
+        ("large", ".webp"),
+        ("medium", ".webp"),
+        ("thumbnails", ".webp"),
+    ]
+    video_variants = [
+        ("originals", ".mov"),
+        ("originals", ".mp4"),
+        ("originals", ".webm"),
+        ("processed", ".mp4"),
+        ("thumbnails", ".jpg"),
+    ]
+
+    found_variants = []
+    total_size = 0
+    asset_type = None
+
+    if base_path:
+        # Local filesystem: stat known paths directly
+        for variant, ext in image_variants:
+            fpath = os.path.join(base_path, "uploads", "images", variant, f"{asset_id}{ext}")
+            if os.path.isfile(fpath):
+                size = os.path.getsize(fpath)
+                found_variants.append(
+                    {
+                        "variant": variant,
+                        "path": f"images/{variant}/{asset_id}{ext}",
+                        "size_bytes": size,
+                    }
+                )
+                total_size += size
+                asset_type = "image"
+
+        for variant, ext in video_variants:
+            fpath = os.path.join(base_path, "uploads", "video", variant, f"{asset_id}{ext}")
+            if os.path.isfile(fpath):
+                size = os.path.getsize(fpath)
+                found_variants.append(
+                    {
+                        "variant": variant,
+                        "path": f"video/{variant}/{asset_id}{ext}",
+                        "size_bytes": size,
+                    }
+                )
+                total_size += size
+                asset_type = "video"
+    else:
+        # GCS: check blob existence
+        bucket = get_gcs_bucket()
+        for variant, ext in image_variants:
+            blob_path = f"uploads/images/{variant}/{asset_id}{ext}"
+            blob = bucket.blob(blob_path)
+            if blob.exists():
+                blob.reload()
+                size = blob.size or 0
+                found_variants.append(
+                    {
+                        "variant": variant,
+                        "path": f"images/{variant}/{asset_id}{ext}",
+                        "size_bytes": size,
+                    }
+                )
+                total_size += size
+                asset_type = "image"
+
+        for variant, ext in video_variants:
+            blob_path = f"uploads/video/{variant}/{asset_id}{ext}"
+            blob = bucket.blob(blob_path)
+            if blob.exists():
+                blob.reload()
+                size = blob.size or 0
+                found_variants.append(
+                    {
+                        "variant": variant,
+                        "path": f"video/{variant}/{asset_id}{ext}",
+                        "size_bytes": size,
+                    }
+                )
+                total_size += size
+                asset_type = "video"
+
+    if not found_variants:
+        return None
+
+    return {
+        "asset_id": asset_id,
+        "type": asset_type,
+        "variants": found_variants,
+        "total_size_bytes": total_size,
+        "created_date": parse_created_date(asset_id),
+    }
+
+
+async def _collect_story_refs(collection, section_id: str) -> dict[str, list[dict]]:
+    refs: dict[str, list[dict]] = {}
+    cursor = collection.find(
+        {"section_id": section_id},
+        {"title": 1, "content": 1},
+    )
+    async for doc in cursor:
+        if doc.get("content"):
+            for aid in extract_asset_ids_from_html(doc["content"]):
+                refs.setdefault(aid, []).append(
+                    {
+                        "content_type": "story",
+                        "title": doc.get("title", ""),
+                        "id": str(doc["_id"]),
+                    }
+                )
+    return refs
+
+
+async def _collect_project_refs(collection, section_id: str) -> dict[str, list[dict]]:
+    refs: dict[str, list[dict]] = {}
+    cursor = collection.find(
+        {"section_id": section_id},
+        {"title": 1, "content": 1, "image_url": 1},
+    )
+    async for doc in cursor:
+        ids_found: set[str] = set()
+        if doc.get("content"):
+            ids_found.update(extract_asset_ids_from_html(doc["content"]))
+        if doc.get("image_url"):
+            img_id = extract_asset_ids_from_url(doc["image_url"])
+            if img_id:
+                ids_found.add(img_id)
+        for aid in ids_found:
+            refs.setdefault(aid, []).append(
+                {
+                    "content_type": "project",
+                    "title": doc.get("title", ""),
+                    "id": str(doc["_id"]),
+                }
+            )
+    return refs
+
+
+async def _collect_essay_refs(collection, section_id: str) -> dict[str, list[dict]]:
+    refs: dict[str, list[dict]] = {}
+    cursor = collection.find(
+        {"section_id": section_id},
+        {"title": 1, "cover_image_url": 1, "photos": 1},
+    )
+    async for doc in cursor:
+        ids_found: set[str] = set()
+        if doc.get("cover_image_url"):
+            cid = extract_asset_ids_from_url(doc["cover_image_url"])
+            if cid:
+                ids_found.add(cid)
+        for photo in doc.get("photos", []):
+            pid = extract_asset_ids_from_url(photo.get("url", ""))
+            if pid:
+                ids_found.add(pid)
+        for aid in ids_found:
+            refs.setdefault(aid, []).append(
+                {
+                    "content_type": "photo_essay",
+                    "title": doc.get("title", ""),
+                    "id": str(doc["_id"]),
+                }
+            )
+    return refs
+
+
 @router.get("/assets/by-section/{section_id}")
 @requires_auth
 async def list_assets_by_section(
@@ -195,90 +353,40 @@ async def list_assets_by_section(
     cursor: Optional[str] = None,
 ):
     try:
-        # Fetch content for this section and extract referenced asset IDs
         stories_collection = await get_collection()
         projects_collection = await get_projects_collection()
         photo_essays_collection = await get_photo_essays_collection()
 
-        referenced_assets: dict[str, list[dict]] = {}  # asset_id -> [{content_type, title, id}]
-
-        # Stories
-        stories_cursor = stories_collection.find(
-            {"section_id": section_id},
-            {"title": 1, "content": 1},
+        # Run all three content scans concurrently
+        story_refs, project_refs, essay_refs = await asyncio.gather(
+            _collect_story_refs(stories_collection, section_id),
+            _collect_project_refs(projects_collection, section_id),
+            _collect_essay_refs(photo_essays_collection, section_id),
         )
-        async for story in stories_cursor:
-            if story.get("content"):
-                for aid in extract_asset_ids_from_html(story["content"]):
-                    referenced_assets.setdefault(aid, []).append(
-                        {
-                            "content_type": "story",
-                            "title": story.get("title", ""),
-                            "id": str(story["_id"]),
-                        }
-                    )
 
-        # Projects
-        projects_cursor = projects_collection.find(
-            {"section_id": section_id},
-            {"title": 1, "content": 1, "image_url": 1},
-        )
-        async for project in projects_cursor:
-            ids_found: set[str] = set()
-            if project.get("content"):
-                ids_found.update(extract_asset_ids_from_html(project["content"]))
-            if project.get("image_url"):
-                img_id = extract_asset_ids_from_url(project["image_url"])
-                if img_id:
-                    ids_found.add(img_id)
-            for aid in ids_found:
-                referenced_assets.setdefault(aid, []).append(
-                    {
-                        "content_type": "project",
-                        "title": project.get("title", ""),
-                        "id": str(project["_id"]),
-                    }
-                )
-
-        # Photo essays
-        essays_cursor = photo_essays_collection.find(
-            {"section_id": section_id},
-            {"title": 1, "cover_image_url": 1, "photos": 1},
-        )
-        async for essay in essays_cursor:
-            ids_found = set()
-            if essay.get("cover_image_url"):
-                cid = extract_asset_ids_from_url(essay["cover_image_url"])
-                if cid:
-                    ids_found.add(cid)
-            for photo in essay.get("photos", []):
-                pid = extract_asset_ids_from_url(photo.get("url", ""))
-                if pid:
-                    ids_found.add(pid)
-            for aid in ids_found:
-                referenced_assets.setdefault(aid, []).append(
-                    {
-                        "content_type": "photo_essay",
-                        "title": essay.get("title", ""),
-                        "id": str(essay["_id"]),
-                    }
-                )
+        # Merge references
+        referenced_assets: dict[str, list[dict]] = {}
+        for refs in (story_refs, project_refs, essay_refs):
+            for aid, ref_list in refs.items():
+                referenced_assets.setdefault(aid, []).extend(ref_list)
 
         if not referenced_assets:
             return {"items": [], "next_cursor": None, "total_count": 0}
 
-        # List all storage files and filter to referenced assets
-        if LOCAL_STORAGE_PATH:
-            files = await asyncio.to_thread(_list_local_files, LOCAL_STORAGE_PATH, "")
-        else:
-            files = await asyncio.to_thread(_list_gcs_files, "")
+        # Build asset groups by probing known paths instead of scanning all files
+        base_path = LOCAL_STORAGE_PATH if LOCAL_STORAGE_PATH else None
 
-        all_assets = _group_files_into_assets(files)
-        filtered = []
-        for asset in all_assets:
-            if asset["asset_id"] in referenced_assets:
-                asset["referenced_by"] = referenced_assets[asset["asset_id"]]
-                filtered.append(asset)
+        async def build_asset(aid: str) -> Optional[dict]:
+            asset = await asyncio.to_thread(_build_asset_from_known_id, aid, base_path)
+            if asset:
+                asset["referenced_by"] = referenced_assets[aid]
+            return asset
+
+        results = await asyncio.gather(*[build_asset(aid) for aid in referenced_assets])
+        filtered = [a for a in results if a is not None]
+
+        # Sort by date descending
+        filtered.sort(key=lambda a: a["created_date"] or "", reverse=True)
 
         page, next_cursor = _paginate(filtered, limit, cursor)
 

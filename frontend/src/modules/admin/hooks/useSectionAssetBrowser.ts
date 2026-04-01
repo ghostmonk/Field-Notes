@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import apiClient from "@/shared/lib/api-client";
 import { AssetGroup } from "@/shared/types/api";
@@ -20,19 +20,13 @@ export function useSectionAssetBrowser(
   const [items, setItems] = useState<AssetGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [initialized, setInitialized] = useState(false);
+  const cursorRef = useRef<string | null>(null);
 
   const fetchPage = useCallback(
     async (nextCursor?: string) => {
-      if (!sectionId || !session?.accessToken) {
-        setItems([]);
-        setHasMore(false);
-        setTotalCount(0);
-        return;
-      }
+      if (!sectionId || !session?.accessToken) return;
 
       setLoading(true);
       setError(null);
@@ -52,7 +46,7 @@ export function useSectionAssetBrowser(
         } else {
           setItems(response.items);
         }
-        setCursor(response.next_cursor);
+        cursorRef.current = response.next_cursor;
         setHasMore(response.next_cursor !== null);
         setTotalCount(response.total_count);
       } catch (err) {
@@ -64,29 +58,25 @@ export function useSectionAssetBrowser(
     [sectionId, session?.accessToken]
   );
 
-  // Auto-fetch on first render when sectionId is available
-  if (sectionId && session?.accessToken && !initialized && !loading) {
-    setInitialized(true);
+  // Fetch on mount and when sectionId changes
+  useEffect(() => {
+    if (!sectionId || !session?.accessToken) {
+      setItems([]);
+      cursorRef.current = null;
+      setHasMore(false);
+      setTotalCount(0);
+      return;
+    }
     fetchPage();
-  }
-
-  // Reset when section changes
-  if (!sectionId && initialized) {
-    setInitialized(false);
-    setItems([]);
-    setCursor(null);
-    setHasMore(false);
-    setTotalCount(0);
-  }
+  }, [sectionId, session?.accessToken, fetchPage]);
 
   const loadMore = useCallback(() => {
-    if (cursor && !loading) {
-      fetchPage(cursor);
+    if (cursorRef.current && !loading) {
+      fetchPage(cursorRef.current);
     }
-  }, [cursor, loading, fetchPage]);
+  }, [loading, fetchPage]);
 
   const refresh = useCallback(() => {
-    setCursor(null);
     fetchPage();
   }, [fetchPage]);
 
