@@ -1,7 +1,7 @@
 import { useSession } from "next-auth/react";
 
 interface AdminEditButtonProps {
-  onClick: React.MouseEventHandler<HTMLButtonElement>;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   label?: string;
   className?: string;
   "data-testid"?: string;
@@ -14,7 +14,7 @@ export function AdminEditButton({
   "data-testid": testId,
 }: AdminEditButtonProps) {
   const { data: session } = useSession();
-  if (session?.user?.role !== "admin") return null;
+  if (!onClick || session?.user?.role !== "admin") return null;
 
   return (
     <button

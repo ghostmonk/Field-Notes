@@ -18,12 +18,10 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({ story, onEdit, childre
             <ReadingProgressBar />
             <div className="flex items-center justify-between mb-2">
                 <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
-                {onEdit && (
-                    <AdminEditButton
-                        onClick={onEdit}
-                        data-testid="story-edit-button"
-                    />
-                )}
+                <AdminEditButton
+                    onClick={onEdit}
+                    data-testid="story-edit-button"
+                />
             </div>
 
             <div className="flex items-center text-sm mb-8">

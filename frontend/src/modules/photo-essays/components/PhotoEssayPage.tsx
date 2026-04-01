@@ -27,12 +27,10 @@ export function PhotoEssayPage({ essay, onEdit, onDelete }: Props) {
                 )}
                 {(onEdit || onDelete) && (
                     <div className="photo-essay-page__actions">
-                        {onEdit && (
-                            <AdminEditButton
-                                onClick={onEdit}
-                                data-testid="photo-essay-edit-btn"
-                            />
-                        )}
+                        <AdminEditButton
+                            onClick={onEdit}
+                            data-testid="photo-essay-edit-btn"
+                        />
                         {onDelete && (
                             <button className="btn btn--danger btn--sm" onClick={onDelete} data-testid="photo-essay-delete-btn">
                                 Delete

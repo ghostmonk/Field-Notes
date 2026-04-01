@@ -32,12 +32,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit })
                         </Badge>
                     )}
                 </h1>
-                {onEdit && (
-                    <AdminEditButton
-                        onClick={onEdit}
-                        data-testid="project-edit-button"
-                    />
-                )}
+                <AdminEditButton
+                    onClick={onEdit}
+                    data-testid="project-edit-button"
+                />
             </div>
 
             <p className="text-text-secondary text-lg mb-xl">
