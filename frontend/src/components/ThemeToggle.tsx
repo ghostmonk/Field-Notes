@@ -49,7 +49,7 @@ export default function ThemeToggle() {
             title={label}
             data-testid="theme-toggle"
         >
-            <Icon size={14} />
+            <Icon size={16} />
         </button>
     );
 }

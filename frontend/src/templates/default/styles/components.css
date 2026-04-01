@@ -674,14 +674,14 @@ button.btn--primary:hover:not(:disabled) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  padding: var(--space-sm);
   border-radius: var(--radius-md);
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
   cursor: pointer;
-  transition: color var(--transition-fast), background-color var(--transition-fast);
+  transition: color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .theme-toggle:hover {
