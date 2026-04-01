@@ -142,10 +142,10 @@ export default function HamburgerMenu() {
                         </div>
                     )}
 
-                    {/* Theme */}
                     <div className="menu-overlay__group">
-                        <h2 className="menu-overlay__heading">Theme</h2>
-                        <ThemeToggle />
+                        <div className="menu-overlay__links">
+                            <ThemeToggle />
+                        </div>
                     </div>
 
                     {/* Utility links */}
