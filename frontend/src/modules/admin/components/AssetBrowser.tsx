@@ -25,9 +25,13 @@ function CopyUrlButton({ path }: { path: string }) {
   const url = `/uploads/${path}`;
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard API unavailable (iframe, permissions denied)
+    }
   };
 
   return (

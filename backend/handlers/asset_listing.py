@@ -10,14 +10,15 @@ from database import (
     get_projects_collection,
 )
 from decorators.auth import requires_auth
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from glogger import logger
 from handlers.uploads import get_gcs_bucket
 
 router = APIRouter()
 
 LOCAL_STORAGE_PATH = os.environ.get("LOCAL_STORAGE_PATH")
-GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
+
+ALLOWED_PREFIXES = {"", "images", "video"}
 
 # Asset ID pattern: YYYYMMDD_HHMMSS_8charhex
 ASSET_ID_PATTERN = re.compile(r"(\d{8}_\d{6}_[a-f0-9]{8})")
@@ -122,7 +123,12 @@ def _group_files_into_assets(files: list[dict]) -> list[dict]:
 
 
 def _paginate(items: list, limit: int, cursor: Optional[str]) -> tuple[list, Optional[str]]:
-    offset = int(cursor) if cursor else 0
+    if cursor is not None:
+        if not cursor.isdigit():
+            raise HTTPException(status_code=400, detail="Invalid cursor")
+        offset = int(cursor)
+    else:
+        offset = 0
     page = items[offset : offset + limit]
     next_offset = offset + limit
     next_cursor = str(next_offset) if next_offset < len(items) else None
@@ -134,9 +140,11 @@ def _paginate(items: list, limit: int, cursor: Optional[str]) -> tuple[list, Opt
 async def list_assets(
     request: Request,
     prefix: str = "",
-    limit: int = 50,
+    limit: int = Query(default=50, le=100),
     cursor: Optional[str] = None,
 ):
+    if prefix not in ALLOWED_PREFIXES:
+        raise HTTPException(status_code=400, detail="Invalid prefix")
     try:
         if LOCAL_STORAGE_PATH:
             files = await asyncio.to_thread(_list_local_files, LOCAL_STORAGE_PATH, prefix)
@@ -349,7 +357,7 @@ async def _collect_essay_refs(collection, section_id: str) -> dict[str, list[dic
 async def list_assets_by_section(
     request: Request,
     section_id: str,
-    limit: int = 50,
+    limit: int = Query(default=50, le=100),
     cursor: Optional[str] = None,
 ):
     try:
