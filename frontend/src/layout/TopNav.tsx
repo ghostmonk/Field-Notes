@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import HamburgerMenu from "./HamburgerMenu";
 import GhostmonkLogo from "@/components/GhostmonkLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function TopNav() {
     const { data: session } = useSession();
@@ -13,7 +14,7 @@ export default function TopNav() {
                 <Link href="/" data-testid="nav-home-link" className="nav__link--home">
                     <GhostmonkLogo height={42} />
                 </Link>
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                     {session ? (
                         <button
                             onClick={() => signOut()}
@@ -31,6 +32,7 @@ export default function TopNav() {
                             Sign in
                         </button>
                     )}
+                    <ThemeToggle />
                 </div>
             </div>
         </nav>

@@ -95,10 +95,10 @@ test.describe('Create Story', () => {
     // Start from home
     await mockAuthenticatedApiPage.goto('/');
 
-    // Click new content link
-    await editorPage.nav.goToNewContent();
+    // Click master control link
+    await editorPage.nav.goToMasterControl();
 
-    // Should be on editor page
-    expect(editorPage.url).toContain('/editor');
+    // Should be on admin page
+    expect(editorPage.url).toContain('/admin');
   });
 });

@@ -13,6 +13,7 @@ import { CreateSectionRequest } from "@/shared/types/api";
 export function AdminLayout() {
   const router = useRouter();
   const selectedSectionId = (router.query.section as string) ?? null;
+  const activeView = (router.query.view as string) ?? null;
   const { treeData, loading, refetch } = useSectionTree();
   const { createSection, deleteSection } = useSectionMutations();
 
@@ -37,6 +38,16 @@ export function AdminLayout() {
   const handleSelectSection = useCallback(
     (id: string | null) => {
       const query = id ? { section: id } : {};
+      router.replace({ pathname: "/admin", query }, undefined, {
+        shallow: true,
+      });
+    },
+    [router]
+  );
+
+  const handleSelectView = useCallback(
+    (view: string | null) => {
+      const query = view ? { view } : {};
       router.replace({ pathname: "/admin", query }, undefined, {
         shallow: true,
       });
@@ -109,11 +120,13 @@ export function AdminLayout() {
     <AdminDesktopGate>
       <div
         className="admin-theme flex h-dvh bg-background text-foreground"
-        data-testid="admin-command-center"
+        data-testid="admin-master-control"
       >
         <AdminSidebar
           selectedSectionId={selectedSectionId}
+          activeView={activeView}
           onSelectSection={handleSelectSection}
+          onSelectView={handleSelectView}
           treeData={treeData}
           loading={loading}
           onRefetch={refetch}
@@ -125,6 +138,7 @@ export function AdminLayout() {
         />
         <AdminDetailPanel
           section={selectedSection}
+          activeView={activeView}
           treeData={treeData}
           onSelectSection={handleSelectSection}
           onRefetchTree={refetch}

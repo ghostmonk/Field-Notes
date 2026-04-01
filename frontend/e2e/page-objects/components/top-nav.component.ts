@@ -16,8 +16,7 @@ export class TopNavComponent {
   readonly contactLink: Locator;
 
   // Admin links (inside menu overlay)
-  readonly newContentLink: Locator;
-  readonly sectionsLink: Locator;
+  readonly masterControlLink: Locator;
 
   // Auth elements (in header)
   readonly signInButton: Locator;
@@ -39,8 +38,7 @@ export class TopNavComponent {
     this.contactLink = page.getByTestId('nav-contact-link');
 
     // Admin links
-    this.newContentLink = page.getByTestId('nav-new-content-link');
-    this.sectionsLink = page.getByTestId('nav-sections-link');
+    this.masterControlLink = page.getByTestId('nav-master-control-link');
 
     // Auth
     this.signInButton = page.getByTestId('signin-button');
@@ -95,19 +93,11 @@ export class TopNavComponent {
     ]);
   }
 
-  async goToNewContent() {
+  async goToMasterControl() {
     await this.openMenu();
     await Promise.all([
-      this.page.waitForURL('**/editor**'),
-      this.newContentLink.click(),
-    ]);
-  }
-
-  async goToSections() {
-    await this.openMenu();
-    await Promise.all([
-      this.page.waitForURL('**/admin/sections'),
-      this.sectionsLink.click(),
+      this.page.waitForURL('**/admin'),
+      this.masterControlLink.click(),
     ]);
   }
 

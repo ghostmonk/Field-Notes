@@ -670,6 +670,31 @@ button.btn--primary:hover:not(:disabled) {
   transition: var(--transition-colors);
 }
 
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-tertiary);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .nav__container {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -723,11 +748,18 @@ button.btn--primary:hover:not(:disabled) {
   margin-bottom: var(--space-lg);
 }
 
-.story-header__actions,
-.card__admin-actions {
+.story-header__actions {
   position: absolute;
   top: 0;
   right: 0;
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.card__admin-actions {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
   display: flex;
   gap: var(--space-sm);
 }
@@ -863,7 +895,11 @@ button.btn--primary:hover:not(:disabled) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .story-header__actions,
+  .story-header__actions {
+    position: static;
+    margin-top: var(--space-md);
+  }
+
   .card__admin-actions {
     position: static;
     margin-top: var(--space-md);

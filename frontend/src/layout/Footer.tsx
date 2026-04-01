@@ -3,10 +3,8 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { getSiteConfig } from '@/config';
 import { useNavSections } from '@/hooks/useNavSections';
-import { useActiveSection } from '@/hooks/useActiveSection';
-import { useCurrentSection } from '@/contexts/SectionContext';
 import { iconMap } from '@/shared/lib/navIcons';
-import { HiPlusSm, HiCog, HiSearch, HiDocumentText } from 'react-icons/hi';
+import { HiCog, HiSearch } from 'react-icons/hi';
 import { FaGithub, FaLinkedinIn, FaInstagram, FaXTwitter, FaTiktok, FaYoutube, FaSpotify } from 'react-icons/fa6';
 import GhostmonkLogo from '@/components/GhostmonkLogo';
 
@@ -26,9 +24,6 @@ const Footer: React.FC = () => {
     const copyright = config.site.copyright.replace('{year}', String(new Date().getFullYear()));
     const { data: session } = useSession();
     const sections = useNavSections();
-    const activeSlug = useActiveSection(sections);
-    const currentSection = useCurrentSection();
-    const activeSectionId = currentSection?.id || sections.find(s => s.slug === activeSlug)?.id;
 
     return (
         <footer className="site-footer" data-testid="site-footer">
@@ -74,12 +69,6 @@ const Footer: React.FC = () => {
                                     </Link>
                                 </li>
                             ))}
-                            <li>
-                                <Link href="/resume" className="site-footer__link">
-                                    <HiDocumentText className="site-footer__link-icon" aria-hidden="true" />
-                                    Resume
-                                </Link>
-                            </li>
                         </ul>
                     </div>
                 )}
@@ -108,31 +97,9 @@ const Footer: React.FC = () => {
                         <h3 className="site-footer__heading">Admin</h3>
                         <ul className="site-footer__list">
                             <li>
-                                <Link
-                                    href={activeSectionId ? `/editor?section_id=${activeSectionId}` : '/editor'}
-                                    className="site-footer__link"
-                                    data-testid="footer-new-content-link"
-                                >
-                                    <HiPlusSm className="site-footer__link-icon" aria-hidden="true" />
-                                    New
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/admin/sections" className="site-footer__link" data-testid="footer-sections-link">
+                                <Link href="/admin" className="site-footer__link" data-testid="footer-master-control-link">
                                     <HiCog className="site-footer__link-icon" aria-hidden="true" />
-                                    Sections
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/admin/resume" className="site-footer__link" data-testid="footer-resume-builder-link">
-                                    <HiDocumentText className="site-footer__link-icon" aria-hidden="true" />
-                                    Resume Builder
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/admin/tailor" className="site-footer__link" data-testid="footer-resume-tailor-link">
-                                    <HiDocumentText className="site-footer__link-icon" aria-hidden="true" />
-                                    Resume Tailor
+                                    Master Control
                                 </Link>
                             </li>
                         </ul>

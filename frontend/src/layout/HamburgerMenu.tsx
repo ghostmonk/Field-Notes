@@ -3,11 +3,10 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
-import { useCurrentSection } from "@/contexts/SectionContext";
 import { iconMap } from "@/shared/lib/navIcons";
-import { HiPlusSm, HiCog, HiSearch, HiDocumentText } from "react-icons/hi";
+import { HiCog, HiSearch } from "react-icons/hi";
 import { getSiteConfig } from "@/config";
-import ThemeToggle from "@/components/ThemeToggle";
+
 
 const config = getSiteConfig();
 
@@ -16,8 +15,6 @@ export default function HamburgerMenu() {
     const { data: session } = useSession();
     const sections = useNavSections();
     const activeSlug = useActiveSection(sections);
-    const currentSection = useCurrentSection();
-    const activeSectionId = currentSection?.id || sections.find(s => s.slug === activeSlug)?.id;
     const overlayRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const hasMounted = useRef(false);
@@ -133,41 +130,17 @@ export default function HamburgerMenu() {
                             <h2 className="menu-overlay__heading">Admin</h2>
                             <div className="menu-overlay__links">
                                 <Link
-                                    href={activeSectionId ? `/editor?section_id=${activeSectionId}` : "/editor"}
+                                    href="/admin"
                                     className="menu-overlay__link"
-                                    data-testid="nav-new-content-link"
-                                    onClick={close}
-                                >
-                                    <HiPlusSm className="menu-overlay__link-icon" aria-hidden="true" />
-                                    <span>New</span>
-                                </Link>
-                                <Link
-                                    href="/admin/sections"
-                                    className="menu-overlay__link"
-                                    data-testid="nav-sections-link"
+                                    data-testid="nav-master-control-link"
                                     onClick={close}
                                 >
                                     <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
-                                    <span>Sections</span>
-                                </Link>
-                                <Link
-                                    href="/admin/tailor"
-                                    className="menu-overlay__link"
-                                    data-testid="nav-tailor-link"
-                                    onClick={close}
-                                >
-                                    <HiDocumentText className="menu-overlay__link-icon" aria-hidden="true" />
-                                    <span>Resume Tailor</span>
+                                    <span>Master Control</span>
                                 </Link>
                             </div>
                         </div>
                     )}
-
-                    {/* Theme */}
-                    <div className="menu-overlay__group">
-                        <h2 className="menu-overlay__heading">Theme</h2>
-                        <ThemeToggle />
-                    </div>
 
                     {/* Utility links */}
                     {config.footer.links.length > 0 && (

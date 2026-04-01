@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import {
   Tabs,
   TabsContent,
@@ -13,9 +14,12 @@ import { useSectionAssets } from "../hooks/useSectionAssets";
 import { ContentTab } from "./ContentTab";
 import { SectionSettingsForm } from "./SectionSettingsForm";
 import { AssetsGrid } from "./AssetsGrid";
+import { ResumeTailorPanel } from "./ResumeTailorPanel";
+import { ResumeBuilderPanel } from "./ResumeBuilderPanel";
 
 interface AdminDetailPanelProps {
   section: Section | null;
+  activeView: string | null;
   treeData: SectionTreeData;
   onSelectSection: (id: string) => void;
   onRefetchTree: () => void;
@@ -25,16 +29,18 @@ interface AdminDetailPanelProps {
 
 export function AdminDetailPanel({
   section,
+  activeView,
   treeData,
   onSelectSection,
   onRefetchTree,
   activeTab,
   onActiveTabConsumed,
 }: AdminDetailPanelProps) {
+  const { data: session } = useSession();
   const [tab, setTab] = useState("content");
   const { updateSection } = useSectionMutations();
   const { assets, loading: assetsLoading } = useSectionAssets(
-    section?.id ?? null,
+    tab === "assets" ? (section?.id ?? null) : null,
     section?.content_type
   );
 
@@ -53,6 +59,45 @@ export function AdminDetailPanel({
     onRefetchTree();
   };
 
+  if (!section && activeView === "resume") {
+    return (
+      <div
+        className="flex flex-1 flex-col min-h-0"
+        data-testid="admin-resume-panel"
+      >
+        <Tabs
+          defaultValue="resume-tailor"
+          className="flex flex-1 flex-col min-h-0"
+        >
+          <div className="border-b border-border px-6 pt-4">
+            <TabsList>
+              <TabsTrigger
+                value="resume-tailor"
+                data-testid="admin-tab-resume-tailor"
+              >
+                Resume Tailor
+              </TabsTrigger>
+              <TabsTrigger
+                value="resume-builder"
+                data-testid="admin-tab-resume-builder"
+              >
+                Resume Builder
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          <ScrollArea className="flex-1 overflow-hidden">
+            <TabsContent value="resume-tailor" className="p-6 mt-0">
+              <ResumeTailorPanel token={session?.accessToken || ""} />
+            </TabsContent>
+            <TabsContent value="resume-builder" className="p-6 mt-0">
+              <ResumeBuilderPanel token={session?.accessToken || ""} />
+            </TabsContent>
+          </ScrollArea>
+        </Tabs>
+      </div>
+    );
+  }
+
   if (!section) {
     return (
       <div
@@ -61,11 +106,11 @@ export function AdminDetailPanel({
       >
         <div className="text-center space-y-4">
           <h1 className="text-3xl font-semibold text-foreground">
-            Command Center
+            Master Control
           </h1>
           <p className="text-lg text-muted-foreground">
-            Select a section to manage its content, or view site-wide stats
-            here.
+            Select a section to manage its content, or use the sidebar to access
+            tools.
           </p>
         </div>
       </div>

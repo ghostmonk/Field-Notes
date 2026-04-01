@@ -66,6 +66,7 @@ async def get_projects(
             "github_url": 1,
             "live_url": 1,
             "is_featured": 1,
+            "is_published": 1,
             "user_id": 1,
             "section_id": 1,
         }
