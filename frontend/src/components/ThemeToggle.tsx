@@ -7,9 +7,13 @@ export default function ThemeToggle() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const stored = localStorage.getItem("theme");
-        if (stored && ["light", "dark", "system"].includes(stored)) {
-            setTheme(stored as Theme);
+        try {
+            const stored = localStorage.getItem("theme");
+            if (stored && ["light", "dark", "system"].includes(stored)) {
+                setTheme(stored as Theme);
+            }
+        } catch {
+            // localStorage unavailable (Safari private browsing)
         }
         setIsLoading(false);
     }, []);
@@ -34,7 +38,7 @@ export default function ThemeToggle() {
     const cycleTheme = () => {
         const next: Theme = theme === "system" ? "light" : theme === "light" ? "dark" : "system";
         setTheme(next);
-        localStorage.setItem("theme", next);
+        try { localStorage.setItem("theme", next); } catch { /* storage unavailable */ }
     };
 
     const Icon = theme === "system" ? FaDesktop : theme === "light" ? FaSun : FaMoon;

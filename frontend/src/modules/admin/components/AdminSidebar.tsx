@@ -44,10 +44,7 @@ export function AdminSidebar({
       <div className="flex items-center justify-between p-4">
         <button
           className="text-lg font-semibold text-sidebar-foreground hover:text-sidebar-accent-foreground transition-colors cursor-pointer bg-transparent border-none p-0"
-          onClick={() => {
-            onSelectSection(null);
-            onSelectView(null);
-          }}
+          onClick={() => onSelectView(null)}
           data-testid="admin-home-link"
         >
           Master Control
@@ -91,13 +88,10 @@ export function AdminSidebar({
       <Separator />
       <div className="p-3">
         <Button
-          variant={activeView === "resume" ? "secondary" : "ghost"}
+          variant={activeView === "resume" && !selectedSectionId ? "secondary" : "ghost"}
           size="sm"
           className="w-full justify-start"
-          onClick={() => {
-            onSelectSection(null);
-            onSelectView("resume");
-          }}
+          onClick={() => onSelectView("resume")}
           data-testid="admin-resume-nav"
         >
           <FileText className="mr-2 h-4 w-4" />
