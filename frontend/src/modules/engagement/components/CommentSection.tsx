@@ -3,12 +3,14 @@ import { useSession } from 'next-auth/react';
 import { Comment } from '@/shared/types/api';
 import { CommentThread } from './CommentThread';
 import { Button, Textarea } from '@/components/ui';
+import { InlineError } from '@/components/ErrorDisplay';
 
 interface CommentSectionProps {
   comments: Comment[];
   onAddComment: (content: string, parentId?: string | null) => Promise<void>;
   onDeleteComment: (commentId: string) => Promise<void>;
   isLoading?: boolean;
+  error?: Error | null;
 }
 
 export function CommentSection({
@@ -16,17 +18,22 @@ export function CommentSection({
   onAddComment,
   onDeleteComment,
   isLoading = false,
+  error = null,
 }: CommentSectionProps) {
   const { data: session } = useSession();
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       await onAddComment(newComment);
       setNewComment('');
+    } catch {
+      setSubmitError('Failed to post comment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -52,6 +59,8 @@ export function CommentSection({
         Comments {totalComments > 0 && `(${totalComments})`}
       </h3>
 
+      <InlineError error={error ? "Failed to load comments. Please refresh the page." : null} />
+
       {/* New comment input */}
       {session ? (
         <div className="space-y-2">
@@ -69,6 +78,7 @@ export function CommentSection({
           >
             {isSubmitting ? 'Posting...' : 'Post Comment'}
           </Button>
+          <InlineError error={submitError} />
         </div>
       ) : (
         <p className="text-gray-500">Sign in to leave a comment</p>

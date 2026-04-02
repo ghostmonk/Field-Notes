@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { ReactionCounts, ReactionTag } from '@/shared/types/api';
 import { engagementConfig } from '@/config/engagement.config';
+import { InlineError } from '@/components/ErrorDisplay';
 
 interface ReactionBarProps {
   reactions: ReactionCounts | null;
@@ -16,12 +17,23 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
   const { data: session } = useSession();
   const [showPicker, setShowPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [toggleError, setToggleError] = useState(false);
+  const errorTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    return () => { if (errorTimerRef.current) clearTimeout(errorTimerRef.current); };
+  }, []);
 
   const handleToggle = async (tag: ReactionTag) => {
     if (!session) return;
     setIsLoading(true);
+    setToggleError(false);
     try {
       await onToggle(tag);
+    } catch {
+      setToggleError(true);
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+      errorTimerRef.current = setTimeout(() => setToggleError(false), 3000);
     } finally {
       setIsLoading(false);
       setShowPicker(false);
@@ -113,6 +125,7 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
           )}
         </div>
       )}
+      <InlineError error={toggleError ? "Failed" : null} />
     </div>
   );
 }

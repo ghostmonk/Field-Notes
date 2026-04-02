@@ -53,6 +53,13 @@ class ReactionCounts(BaseModel):
     details: dict[str, list[dict[str, str]]] = Field(default_factory=dict)
 
 
+class ToggleReactionResponse(BaseModel):
+    """Response model for toggling a reaction."""
+
+    added: bool
+    reaction_tag: str
+
+
 class BulkCountsRequest(BaseModel):
     """Request model for bulk counts endpoint."""
 
