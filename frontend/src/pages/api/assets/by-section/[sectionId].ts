@@ -1,6 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { fetchBackend, getAccessToken } from '@/shared/utils/backend-fetch';
 
+function firstString(val: string | string[] | undefined): string | undefined {
+  if (Array.isArray(val)) return val[0];
+  return val;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ detail: 'Method not allowed' });
@@ -11,14 +16,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ detail: 'Authentication required' });
   }
 
-  const { sectionId } = req.query;
-  if (!sectionId || typeof sectionId !== 'string' || !/^[a-f0-9]{24}$/.test(sectionId)) {
+  const sectionId = firstString(req.query.sectionId);
+  if (!sectionId || !/^[a-f0-9]{24}$/.test(sectionId)) {
     return res.status(400).json({ detail: 'Invalid sectionId' });
   }
 
   const params = new URLSearchParams();
-  if (req.query.limit) params.append('limit', req.query.limit.toString());
-  if (req.query.cursor) params.append('cursor', req.query.cursor.toString());
+  const limit = firstString(req.query.limit);
+  const cursor = firstString(req.query.cursor);
+  if (limit) params.append('limit', limit);
+  if (cursor) params.append('cursor', cursor);
 
   const qs = params.toString();
   const path = qs
@@ -35,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     console.error(`Error in GET /api/assets/by-section/${sectionId}:`, error);
     return res.status(500).json({
-      detail: error instanceof Error ? error.message : 'Internal server error',
+      detail: 'Internal server error',
     });
   }
 }

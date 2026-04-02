@@ -61,7 +61,7 @@ def _list_local_files(base_path: str, prefix: str) -> list[dict]:
 
 def _list_gcs_files(prefix: str) -> list[dict]:
     bucket = get_gcs_bucket()
-    blob_prefix = f"uploads/{prefix}" if prefix else "uploads/"
+    blob_prefix = f"uploads/{prefix}/" if prefix else "uploads/"
     blobs = bucket.list_blobs(prefix=blob_prefix)
     results = []
     for blob in blobs:
