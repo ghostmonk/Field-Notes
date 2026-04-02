@@ -37,6 +37,7 @@ from fastapi.testclient import TestClient
 
 # Create a test app without lifespan to avoid DB connections during startup
 # Import routers directly to avoid the lifespan event
+from handlers.asset_listing import router as asset_listing_router
 from handlers.children import router as children_router
 from handlers.contact import router as contact_router
 from handlers.content import router as content_router
@@ -83,6 +84,7 @@ app_fixture.include_router(contact_router)
 app_fixture.include_router(moves_router)
 app_fixture.include_router(path_resolution_router)
 app_fixture.include_router(children_router)
+app_fixture.include_router(asset_listing_router)
 
 
 @pytest.fixture

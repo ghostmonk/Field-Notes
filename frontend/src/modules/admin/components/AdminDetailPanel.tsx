@@ -10,10 +10,9 @@ import { ScrollArea } from "@/components/admin-ui/scroll-area";
 import { Section, UpdateSectionRequest } from "@/shared/types/api";
 import { useSectionMutations } from "@/modules/sections/hooks/useSectionMutations";
 import { SectionTreeData } from "../hooks/useSectionTree";
-import { useSectionAssets } from "../hooks/useSectionAssets";
 import { ContentTab } from "./ContentTab";
 import { SectionSettingsForm } from "./SectionSettingsForm";
-import { AssetsGrid } from "./AssetsGrid";
+import { AssetBrowser } from "./AssetBrowser";
 import { ResumeTailorPanel } from "./ResumeTailorPanel";
 import { ResumeBuilderPanel } from "./ResumeBuilderPanel";
 
@@ -39,10 +38,6 @@ export function AdminDetailPanel({
   const { data: session } = useSession();
   const [tab, setTab] = useState("content");
   const { updateSection } = useSectionMutations();
-  const { assets, loading: assetsLoading } = useSectionAssets(
-    tab === "assets" ? (section?.id ?? null) : null,
-    section?.content_type
-  );
 
   useEffect(() => {
     if (activeTab) {
@@ -143,10 +138,8 @@ export function AdminDetailPanel({
             />
           </TabsContent>
           <TabsContent value="assets" className="p-6 mt-0">
-            {assetsLoading ? (
-              <p className="text-muted-foreground text-sm">Loading...</p>
-            ) : (
-              <AssetsGrid assets={assets} />
+            {tab === "assets" && (
+              <AssetBrowser sectionId={section.id} />
             )}
           </TabsContent>
           <TabsContent value="settings" className="p-6 mt-0">

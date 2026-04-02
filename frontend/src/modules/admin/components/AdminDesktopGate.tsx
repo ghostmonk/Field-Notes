@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 
-const DESKTOP_MIN_WIDTH = 1024;
+function isMobileDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+    navigator.userAgent
+  );
+}
 
 export function AdminDesktopGate({ children }: { children: React.ReactNode }) {
-  const [isDesktop, setIsDesktop] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsDesktop(window.innerWidth >= DESKTOP_MIN_WIDTH);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    setIsMobile(isMobileDevice());
   }, []);
 
-  if (!isDesktop) {
+  if (isMobile) {
     return (
       <div className="admin-theme flex h-dvh items-center justify-center bg-background text-foreground p-8 text-center">
         <div className="max-w-md space-y-4">

@@ -9,6 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from glogger import logger
+from handlers.asset_listing import router as asset_listing_router
 from handlers.backfill import backfill_published_flag
 from handlers.children import router as children_router
 from handlers.contact import router as contact_router
@@ -262,6 +263,7 @@ app.include_router(tags_router)
 app.include_router(moves_router)
 app.include_router(path_resolution_router)
 app.include_router(children_router)
+app.include_router(asset_listing_router)
 
 if __name__ == "__main__":
     import uvicorn
