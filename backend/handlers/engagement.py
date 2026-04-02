@@ -227,8 +227,8 @@ async def get_comments(
             "user_avatar": comment.get("user_avatar"),
             "content": comment["content"],
             "mentions": comment.get("mentions", []),
-            "created_at": comment["created_at"].isoformat(),
-            "updated_at": comment["updated_at"].isoformat(),
+            "created_at": comment["created_at"],
+            "updated_at": comment["updated_at"],
             "deleted_at": None,
             "replies": [],
         }
@@ -323,8 +323,8 @@ async def create_comment(
         "user_avatar": created.get("user_avatar"),
         "content": created["content"],
         "mentions": created.get("mentions", []),
-        "created_at": created["created_at"].isoformat(),
-        "updated_at": created["updated_at"].isoformat(),
+        "created_at": created["created_at"],
+        "updated_at": created["updated_at"],
         "deleted_at": None,
         "replies": [],
     }

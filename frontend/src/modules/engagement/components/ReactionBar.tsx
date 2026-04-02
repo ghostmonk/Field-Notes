@@ -32,6 +32,7 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
       await onToggle(tag);
     } catch {
       setToggleError(true);
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
       errorTimerRef.current = setTimeout(() => setToggleError(false), 3000);
     } finally {
       setIsLoading(false);
