@@ -3,7 +3,14 @@
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from config.engagement import ENGAGEMENT_ENABLED_TYPES
+from config.engagement import (
+    COMMENT_CREATE_RATE_LIMIT,
+    COMMENT_DELETE_RATE_LIMIT,
+    ENGAGEMENT_ENABLED_TYPES,
+    MAX_COMMENTS_PER_QUERY,
+    MAX_REACTIONS_PER_QUERY,
+    REACTION_RATE_LIMIT,
+)
 from database import (
     get_collection,
     get_comments_collection,
@@ -14,12 +21,13 @@ from decorators.auth import requires_auth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from glogger import logger
 from middleware.rate_limit import limiter
-from models.comment import CommentCreate
+from models.comment import CommentCreate, CommentResponse, CommentsListResponse
 from models.reaction import (
     BulkCountsRequest,
     BulkCountsResponse,
     ReactionCounts,
     ReactionCreate,
+    ToggleReactionResponse,
 )
 from models.user import UserInfo
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -93,7 +101,7 @@ async def get_reactions(
 
     # Get all reactions for this target
     cursor = reactions_collection.find({"target_type": target_type, "target_id": target_id})
-    reactions = await cursor.to_list(length=1000)
+    reactions = await cursor.to_list(length=MAX_REACTIONS_PER_QUERY)
 
     # Build counts and details
     counts: dict[str, int] = {}
@@ -120,8 +128,8 @@ async def get_reactions(
     return ReactionCounts(counts=counts, user_reactions=user_reactions, details=details)
 
 
-@router.post("/{target_type}/{target_id}/reactions")
-@limiter.limit("10/minute")
+@router.post("/{target_type}/{target_id}/reactions", response_model=ToggleReactionResponse)
+@limiter.limit(REACTION_RATE_LIMIT)
 @requires_auth
 async def toggle_reaction(
     request: Request,
@@ -129,7 +137,7 @@ async def toggle_reaction(
     target_id: str,
     reaction: ReactionCreate,
     reactions_collection: AsyncIOMotorCollection = Depends(get_reactions_collection),
-) -> dict:
+):
     """Toggle a reaction (add if missing, remove if exists). Requires auth."""
     validate_target_type(target_type, "reactions")
     validate_object_id(target_id, "target ID")
@@ -177,13 +185,13 @@ async def toggle_reaction(
         return {"added": True, "reaction_tag": reaction.reaction_tag}
 
 
-@router.get("/{target_type}/{target_id}/comments")
+@router.get("/{target_type}/{target_id}/comments", response_model=CommentsListResponse)
 async def get_comments(
     request: Request,
     target_type: str,
     target_id: str,
     comments_collection: AsyncIOMotorCollection = Depends(get_comments_collection),
-) -> dict:
+):
     """Get comments for a target with nested replies. Public endpoint."""
     validate_target_type(target_type, "comments")
     validate_object_id(target_id, "target ID")
@@ -202,7 +210,7 @@ async def get_comments(
         }
     ).sort("created_at", 1)
 
-    all_comments = await cursor.to_list(length=1000)
+    all_comments = await cursor.to_list(length=MAX_COMMENTS_PER_QUERY)
 
     # Build nested structure
     comments_by_id: dict[str, dict] = {}
@@ -238,8 +246,12 @@ async def get_comments(
     return {"comments": top_level}
 
 
-@router.post("/{target_type}/{target_id}/comments", status_code=201)
-@limiter.limit("3/minute")
+@router.post(
+    "/{target_type}/{target_id}/comments",
+    status_code=201,
+    response_model=CommentResponse,
+)
+@limiter.limit(COMMENT_CREATE_RATE_LIMIT)
 @requires_auth
 async def create_comment(
     request: Request,
@@ -247,7 +259,7 @@ async def create_comment(
     target_id: str,
     comment: CommentCreate,
     comments_collection: AsyncIOMotorCollection = Depends(get_comments_collection),
-) -> dict:
+):
     """Create a new comment. Requires auth."""
     validate_target_type(target_type, "comments")
     validate_object_id(target_id, "target ID")
@@ -319,7 +331,7 @@ async def create_comment(
 
 
 @router.delete("/comments/{comment_id}", status_code=204)
-@limiter.limit("10/minute")
+@limiter.limit(COMMENT_DELETE_RATE_LIMIT)
 @requires_auth
 async def delete_comment(
     request: Request,

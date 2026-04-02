@@ -16,12 +16,17 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
   const { data: session } = useSession();
   const [showPicker, setShowPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [toggleError, setToggleError] = useState(false);
 
   const handleToggle = async (tag: ReactionTag) => {
     if (!session) return;
     setIsLoading(true);
+    setToggleError(false);
     try {
       await onToggle(tag);
+    } catch {
+      setToggleError(true);
+      setTimeout(() => setToggleError(false), 3000);
     } finally {
       setIsLoading(false);
       setShowPicker(false);
@@ -112,6 +117,9 @@ export function ReactionBar({ reactions, onToggle, compact = false }: ReactionBa
             </div>
           )}
         </div>
+      )}
+      {toggleError && (
+        <span className="text-xs text-red-600 dark:text-red-400">Failed</span>
       )}
     </div>
   );

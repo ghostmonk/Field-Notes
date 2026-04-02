@@ -48,5 +48,12 @@ class CommentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class CommentsListResponse(BaseModel):
+    """Response model for listing comments."""
+
+    comments: list[CommentResponse]
+
+
 # Enable forward reference for nested replies
 CommentResponse.model_rebuild()
+CommentsListResponse.model_rebuild()

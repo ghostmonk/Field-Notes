@@ -41,7 +41,7 @@ interface SectionPageProps {
 }
 
 function StoryEngagement() {
-    const { reactions, comments, isLoading, toggleReaction, addComment, deleteComment } = useEngagementContext();
+    const { reactions, comments, isLoading, error, toggleReaction, addComment, deleteComment } = useEngagementContext();
 
     return (
         <>
@@ -57,6 +57,7 @@ function StoryEngagement() {
                     onAddComment={addComment}
                     onDeleteComment={deleteComment}
                     isLoading={isLoading}
+                    error={error}
                 />
             </div>
         </>

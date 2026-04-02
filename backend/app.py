@@ -204,14 +204,13 @@ async def general_exception_handler(request: Request, exc: Exception):
         },
     )
 
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": "Internal Server Error",
-            "error_type": type(exc).__name__,
-            "message": str(exc),
-        },
-    )
+    is_dev = os.environ.get("ALLOW_DEV_AUTH") == "true"
+    content: dict = {"detail": "Internal Server Error"}
+    if is_dev:
+        content["error_type"] = type(exc).__name__
+        content["message"] = str(exc)
+
+    return JSONResponse(status_code=500, content=content)
 
 
 @app.get("/health")
