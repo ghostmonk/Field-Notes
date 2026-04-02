@@ -10,7 +10,6 @@ interface UseSectionAssetBrowserReturn {
   hasMore: boolean;
   totalCount: number;
   loadMore: () => void;
-  refresh: () => void;
 }
 
 export function useSectionAssetBrowser(
@@ -76,9 +75,5 @@ export function useSectionAssetBrowser(
     }
   }, [loading, fetchPage]);
 
-  const refresh = useCallback(() => {
-    fetchPage();
-  }, [fetchPage]);
-
-  return { items, loading, error, hasMore, totalCount, loadMore, refresh };
+  return { items, loading, error, hasMore, totalCount, loadMore };
 }

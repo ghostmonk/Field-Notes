@@ -13,6 +13,7 @@ from decorators.auth import requires_auth
 from fastapi import APIRouter, HTTPException, Query, Request
 from glogger import logger
 from handlers.uploads import get_gcs_bucket
+from models.asset import AssetListResponse
 
 router = APIRouter()
 
@@ -135,7 +136,7 @@ def _paginate(items: list, limit: int, cursor: Optional[str]) -> tuple[list, Opt
     return page, next_cursor
 
 
-@router.get("/assets/list")
+@router.get("/assets/list", response_model=AssetListResponse)
 @requires_auth
 async def list_assets(
     request: Request,
@@ -159,6 +160,8 @@ async def list_assets(
             "next_cursor": next_cursor,
             "total_count": len(assets),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error listing assets: {e}")
         raise HTTPException(status_code=500, detail="Failed to list assets")
@@ -352,7 +355,7 @@ async def _collect_essay_refs(collection, section_id: str) -> dict[str, list[dic
     return refs
 
 
-@router.get("/assets/by-section/{section_id}")
+@router.get("/assets/by-section/{section_id}", response_model=AssetListResponse)
 @requires_auth
 async def list_assets_by_section(
     request: Request,
@@ -403,6 +406,8 @@ async def list_assets_by_section(
             "next_cursor": next_cursor,
             "total_count": len(filtered),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error listing assets by section: {e}")
         raise HTTPException(status_code=500, detail="Failed to list section assets")
