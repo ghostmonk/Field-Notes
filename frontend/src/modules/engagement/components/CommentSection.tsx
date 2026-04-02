@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { Comment } from '@/shared/types/api';
 import { CommentThread } from './CommentThread';
 import { Button, Textarea } from '@/components/ui';
+import { InlineError } from '@/components/ErrorDisplay';
 
 interface CommentSectionProps {
   comments: Comment[];
@@ -58,11 +59,7 @@ export function CommentSection({
         Comments {totalComments > 0 && `(${totalComments})`}
       </h3>
 
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">
-          Failed to load comments. Please refresh the page.
-        </p>
-      )}
+      <InlineError error={error ? "Failed to load comments. Please refresh the page." : null} />
 
       {/* New comment input */}
       {session ? (
@@ -81,9 +78,7 @@ export function CommentSection({
           >
             {isSubmitting ? 'Posting...' : 'Post Comment'}
           </Button>
-          {submitError && (
-            <p className="text-sm text-red-600 dark:text-red-400">{submitError}</p>
-          )}
+          <InlineError error={submitError} />
         </div>
       ) : (
         <p className="text-gray-500">Sign in to leave a comment</p>
