@@ -12,8 +12,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { sectionId } = req.query;
-  if (!sectionId || typeof sectionId !== 'string') {
-    return res.status(400).json({ detail: 'Missing sectionId' });
+  if (!sectionId || typeof sectionId !== 'string' || !/^[a-f0-9]{24}$/.test(sectionId)) {
+    return res.status(400).json({ detail: 'Invalid sectionId' });
   }
 
   const params = new URLSearchParams();
