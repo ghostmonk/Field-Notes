@@ -1,5 +1,4 @@
 import asyncio
-import base64
 import io
 import json
 import mimetypes
@@ -446,25 +445,9 @@ def resize_image(content: bytes, target_width: int, exif_corrected: bool = False
 
 def get_gcs_bucket():
     try:
-        # Check for base64 encoded JSON credentials first
-        credentials_json_b64 = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON_B64")
         credentials_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 
-        if credentials_json_b64:
-            logger.info("Using base64 encoded service account JSON from environment variable")
-            try:
-                # Decode base64 to get the JSON
-                credentials_json = base64.b64decode(credentials_json_b64).decode("utf-8")
-                credentials_info = json.loads(credentials_json)
-                credentials = service_account.Credentials.from_service_account_info(
-                    credentials_info
-                )
-                storage_client = storage.Client(credentials=credentials)
-                logger.info("Successfully created GCS client with base64 decoded JSON credentials")
-            except (base64.binascii.Error, json.JSONDecodeError) as e:
-                logger.error(f"Failed to decode/parse base64 JSON credentials: {str(e)}")
-                raise HTTPException(status_code=500, detail="Storage configuration error")
-        elif credentials_json:
+        if credentials_json:
             logger.info("Using service account JSON from environment variable")
             try:
                 credentials_info = json.loads(credentials_json)
@@ -477,7 +460,7 @@ def get_gcs_bucket():
                 logger.error(f"Failed to parse JSON credentials: {str(e)}")
                 raise HTTPException(status_code=500, detail="Storage configuration error")
         else:
-            # Check for file-based credentials
+            # Check for file-based credentials (local dev with mounted key file)
             credentials_file = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
             if credentials_file and os.path.exists(credentials_file):
                 logger.info(f"Using service account file: {credentials_file}")
@@ -486,6 +469,9 @@ def get_gcs_bucket():
                 )
                 storage_client = storage.Client(credentials=credentials)
             else:
+                # Production path: Application Default Credentials via Workload Identity.
+                # Cloud Run uses the service account attached via --service-account
+                # and obtains tokens from the metadata server — no secrets in env vars.
                 logger.info("Using default credentials (Application Default Credentials)")
                 storage_client = storage.Client()
 
