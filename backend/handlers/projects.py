@@ -108,11 +108,7 @@ async def get_projects(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while fetching projects",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while fetching projects",
         )
 
 
@@ -157,11 +153,7 @@ async def get_project_by_slug(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while fetching the project",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while fetching the project",
         )
 
 
@@ -211,11 +203,7 @@ async def get_project(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while fetching the project",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while fetching the project",
         )
 
 
@@ -313,11 +301,7 @@ async def create_project(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while creating the project",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while creating the project",
         )
 
 
@@ -456,11 +440,7 @@ async def update_project(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while updating the project",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while updating the project",
         )
 
 
@@ -541,9 +521,5 @@ async def delete_project(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while deleting the project",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while deleting the project",
         )

@@ -161,11 +161,7 @@ async def get_sections(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while fetching sections",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while fetching sections",
         )
 
 
@@ -210,11 +206,7 @@ async def get_section_by_slug(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while fetching the section",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while fetching the section",
         )
 
 
@@ -263,11 +255,7 @@ async def get_section(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while fetching the section",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while fetching the section",
         )
 
 
@@ -380,11 +368,7 @@ async def create_section(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while creating the section",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while creating the section",
         )
 
 
@@ -566,11 +550,7 @@ async def update_section(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while updating the section",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while updating the section",
         )
 
 
@@ -662,9 +642,5 @@ async def delete_section(
 
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "An error occurred while deleting the section",
-                "error_type": type(e).__name__,
-                "error_details": str(e),
-            },
+            detail="An error occurred while deleting the section",
         )
