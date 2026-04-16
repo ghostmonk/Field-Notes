@@ -86,6 +86,9 @@ ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/avi"
 MAX_FILE_SIZE = 5 * 1024 * 1024
 MAX_VIDEO_SIZE = 100 * 1024 * 1024
 MAX_IMAGE_LENGTH = 2048
+# Cap Range header length to prevent ReDoS / abuse via crafted headers.
+MAX_RANGE_HEADER_LENGTH = 128
+RANGE_HEADER_PATTERN = re.compile(r"^bytes=(\d{1,19})-(\d{0,19})$")
 IMAGE_SIZES = [2048, 1536, 768, 400]
 MAX_IMAGE_SIZE = max(IMAGE_SIZES)
 OUTPUT_FORMAT = "webp"
@@ -169,8 +172,8 @@ async def get_media(request: Request, filename: str, size: int | None = None):
         file_size = blob.size or 0
 
         range_header = request.headers.get("range")
-        if range_header and file_size:
-            range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
+        if range_header and file_size and len(range_header) <= MAX_RANGE_HEADER_LENGTH:
+            range_match = RANGE_HEADER_PATTERN.match(range_header)
             if range_match:
                 start = int(range_match.group(1))
                 end = int(range_match.group(2)) if range_match.group(2) else file_size - 1
@@ -460,9 +463,7 @@ def get_gcs_bucket():
                 logger.info("Successfully created GCS client with base64 decoded JSON credentials")
             except (base64.binascii.Error, json.JSONDecodeError) as e:
                 logger.error(f"Failed to decode/parse base64 JSON credentials: {str(e)}")
-                raise HTTPException(
-                    status_code=500, detail=f"Invalid base64 JSON credentials: {str(e)}"
-                )
+                raise HTTPException(status_code=500, detail="Storage configuration error")
         elif credentials_json:
             logger.info("Using service account JSON from environment variable")
             try:
@@ -474,7 +475,7 @@ def get_gcs_bucket():
                 logger.info("Successfully created GCS client with JSON credentials")
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse JSON credentials: {str(e)}")
-                raise HTTPException(status_code=500, detail=f"Invalid JSON credentials: {str(e)}")
+                raise HTTPException(status_code=500, detail="Storage configuration error")
         else:
             # Check for file-based credentials
             credentials_file = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
@@ -493,7 +494,7 @@ def get_gcs_bucket():
         raise
     except Exception as e:
         logger.error(f"Failed to initialize GCS client: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Storage configuration error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Storage configuration error")
 
     return storage_client.bucket(GCS_BUCKET_NAME)
 
