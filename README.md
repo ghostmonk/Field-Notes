@@ -137,7 +137,8 @@ The application requires the following environment variables:
 - `MONGO_HOST`: MongoDB host address
 - `MONGO_DB_NAME`: MongoDB database name
 - `GCS_BUCKET_NAME`: Google Cloud Storage bucket name for uploads (production)
-- `GOOGLE_APPLICATION_CREDENTIALS`: Path to GCP service account credentials file (production)
+- `GOOGLE_APPLICATION_CREDENTIALS`: Path to GCP service account key file (local dev only; production uses Workload Identity via the Cloud Run `--service-account`)
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON`: Raw service account JSON (local dev alternative to the file path)
 - `LOCAL_STORAGE_PATH`: Local filesystem path for uploads (development, set instead of GCS vars)
 
 #### Frontend
