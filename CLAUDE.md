@@ -88,14 +88,15 @@ make test-frontend-ui    # Run Playwright e2e tests (interactive UI)
 
 Required environment variables in `.env`:
 - MongoDB connection (`MONGO_USER`, `MONGO_PASSWORD`, etc.)
-- Google Cloud Storage (`GCS_BUCKET_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`) — production only
+- Google Cloud Storage (`GCS_BUCKET_NAME`) — production only; auth comes from Workload Identity via the Cloud Run `--service-account` (no key material in env vars)
+- Service account key (`GOOGLE_APPLICATION_CREDENTIALS` file path or `GOOGLE_APPLICATION_CREDENTIALS_JSON` raw JSON) — local dev only, if targeting real GCS
 - Local uploads (`LOCAL_STORAGE_PATH`) — development only, set instead of GCS vars
 - Google OAuth (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
 - NextAuth (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`)
 - Vector search (`VOYAGE_API_KEY`, `QDRANT_URL`, `QDRANT_API_KEY`) — required for resume tailoring; Qdrant runs locally via Docker, Voyage AI requires an API key
 - LLM pipeline (`ANTHROPIC_API_KEY`) — required for resume tailoring `/tailor` endpoint; powers job analysis, resume generation, and evaluation
 
-Place `gcp-credentials.json` in project root (production only). Docker Compose sets `LOCAL_STORAGE_PATH=/app/local-uploads` automatically.
+`gcp-credentials.json` in the project root is a local-dev convenience for targeting real GCS. Production authenticates via Workload Identity (Cloud Run attached service account) and does not read a key file. Docker Compose sets `LOCAL_STORAGE_PATH=/app/local-uploads` automatically.
 
 ### Dev Authentication
 

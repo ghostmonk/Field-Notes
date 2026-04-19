@@ -460,7 +460,6 @@ def get_gcs_bucket():
                 logger.error(f"Failed to parse JSON credentials: {str(e)}")
                 raise HTTPException(status_code=500, detail="Storage configuration error")
         else:
-            # Check for file-based credentials (local dev with mounted key file)
             credentials_file = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
             if credentials_file and os.path.exists(credentials_file):
                 logger.info(f"Using service account file: {credentials_file}")
@@ -469,14 +468,10 @@ def get_gcs_bucket():
                 )
                 storage_client = storage.Client(credentials=credentials)
             else:
-                # Production path: Application Default Credentials via Workload Identity.
-                # Cloud Run uses the service account attached via --service-account
-                # and obtains tokens from the metadata server — no secrets in env vars.
                 logger.info("Using default credentials (Application Default Credentials)")
                 storage_client = storage.Client()
 
     except HTTPException:
-        # Re-raise HTTP exceptions
         raise
     except Exception as e:
         logger.error(f"Failed to initialize GCS client: {str(e)}")

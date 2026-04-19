@@ -27,10 +27,7 @@ jobs:
       - name: Deploy Backend
         run: |
           gcloud builds submit ./backend --tag gcr.io/${{ vars.GCP_PROJECT_ID }}/turbulent-service
-          
-          # Encode the JSON to base64 to avoid parsing issues
-          GCP_CREDS_B64=$(echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' | base64 -w 0)
-          
+
           gcloud run deploy turbulent-service \
             --image gcr.io/${{ vars.GCP_PROJECT_ID }}/turbulent-service \
             --platform managed \
@@ -38,7 +35,6 @@ jobs:
             --allow-unauthenticated \
             --service-account=${{ vars.GCP_SERVICE_ACCOUNT_NAME }} \
             --set-env-vars "MONGO_USER=${{ secrets.MONGO_USER }},MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }},MONGO_CLUSTER=${{ vars.MONGO_CLUSTER }},MONGO_APP_NAME=${{ vars.MONGO_APP_NAME }},MONGO_HOST=${{ vars.MONGO_HOST }},GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }},MONGO_DB_NAME=${{ vars.MONGO_DB_NAME }},GCS_BUCKET_NAME=${{ vars.GCS_BUCKET_NAME }}" \
-            --set-env-vars "GOOGLE_APPLICATION_CREDENTIALS_JSON_B64=${GCP_CREDS_B64}" \
             --timeout=600s
 
   # Deploy frontend service  

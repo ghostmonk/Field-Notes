@@ -158,9 +158,6 @@ jobs:
           gcloud builds submit . \
             --config backend/cloudbuild.yaml
 
-          # Credentials are provided via Workload Identity: the Cloud Run service
-          # runs as --service-account and obtains tokens from the metadata server.
-          # Do not inject service account JSON via environment variables.
           gcloud run deploy turbulent-service \
             --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/turbulent-service \
             --platform managed \
