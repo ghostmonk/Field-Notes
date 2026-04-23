@@ -7,7 +7,11 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from database import get_sections_collection
-from decorators.auth import check_write_permission, requires_auth, verify_auth
+from decorators.auth import (
+    check_write_permission,
+    requires_auth,
+    verify_auth_and_get_user,
+)
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from glogger import logger
 from middleware.rate_limit import limiter
@@ -88,13 +92,15 @@ async def get_sections(
         include_unpublished: Include unpublished sections (requires auth)
     """
     try:
-        # Require authentication to view unpublished sections
+        user: UserInfo | None = None
         if include_unpublished:
-            await verify_auth(request)
+            user = await verify_auth_and_get_user(request)
 
         query = {"deleted": {"$ne": True}}
         if not include_unpublished:
             query["is_published"] = True
+        elif user is not None and user.role != "admin":
+            query["user_id"] = user.id
         if parent_id is not None:
             if parent_id != "null" and not ObjectId.is_valid(parent_id):
                 raise HTTPException(status_code=400, detail="Invalid parent_id format")

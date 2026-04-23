@@ -30,6 +30,7 @@ from handlers.stories import router as stories_router
 from handlers.tags import router as tags_router
 from handlers.tailor import router as tailor_router
 from handlers.uploads import router as uploads_router
+from handlers.uploads import validate_storage_config
 from handlers.users import router as users_router
 from handlers.versions import router as versions_router
 from handlers.video_processing import router as video_processing_router
@@ -68,6 +69,10 @@ async def lifespan(app: FastAPI):
         )
     if google_creds_file:
         logger.info(f"GOOGLE_APPLICATION_CREDENTIALS file path: {google_creds_file}")
+
+    validate_storage_config()
+    logger.info("Storage configuration validated")
+
     updated_count = await backfill_published_flag()
     logger.info(f"Startup complete. Backfilled {updated_count} stories.")
 
