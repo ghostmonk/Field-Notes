@@ -30,18 +30,22 @@ async def get_stories(
     collection: AsyncIOMotorCollection = Depends(get_collection),
 ):
     try:
-        # Only allow include_drafts for authenticated admin users
         drafts_allowed = False
+        draft_owner_filter: str | None = None
         if include_drafts:
             try:
                 user = await verify_auth_and_get_user(request)
-                drafts_allowed = user.role == "admin"
+                drafts_allowed = True
+                if user.role != "admin":
+                    draft_owner_filter = user.id
             except HTTPException:
                 drafts_allowed = False
 
         query = {"deleted": {"$ne": True}}
         if not drafts_allowed:
             query["is_published"] = True
+        elif draft_owner_filter is not None:
+            query["user_id"] = draft_owner_filter
         if section_id:
             query["section_id"] = section_id
         sort = {"createdDate": -1}

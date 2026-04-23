@@ -103,6 +103,38 @@ if not LOCAL_STORAGE_PATH:
     from google.cloud import storage
     from google.oauth2 import service_account
 
+
+def validate_storage_config() -> None:
+    """Validate storage configuration at startup.
+
+    Ensures credentials resolve to a working GCS auth source before the app
+    accepts traffic. Workload Identity (no credential env vars set) is
+    treated as valid when GCS_BUCKET_NAME is set — Cloud Run supplies the
+    service account identity via the metadata server.
+
+    Raises RuntimeError if GOOGLE_APPLICATION_CREDENTIALS_JSON is set but
+    invalid JSON, or GOOGLE_APPLICATION_CREDENTIALS points to a missing
+    file, or no storage backend is configured at all.
+    """
+    if LOCAL_STORAGE_PATH:
+        return
+    if not GCS_BUCKET_NAME:
+        raise RuntimeError(
+            "Storage misconfigured: set GCS_BUCKET_NAME (GCS) or LOCAL_STORAGE_PATH (local dev)."
+        )
+    creds_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    if creds_json:
+        try:
+            json.loads(creds_json)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(
+                f"GOOGLE_APPLICATION_CREDENTIALS_JSON is not valid JSON: {exc}"
+            ) from exc
+    creds_file = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if creds_file and not os.path.isfile(creds_file):
+        raise RuntimeError(f"GOOGLE_APPLICATION_CREDENTIALS points to a missing file: {creds_file}")
+
+
 # Allowed origins for CORS
 ALLOWED_ORIGINS = [
     "https://ghostmonk.com",
