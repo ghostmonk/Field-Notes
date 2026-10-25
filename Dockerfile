@@ -47,14 +47,12 @@ COPY --from=python-deps /usr/local/bin /usr/local/bin
 
 # Backend application code
 COPY backend/ ./backend/
-COPY shared/python/ ./shared/python/
 
 # Next.js standalone output
 COPY --from=node-build /app/.next/standalone ./frontend/
 COPY --from=node-build /app/.next/static ./frontend/.next/static
 COPY --from=node-build /app/public ./frontend/public
 
-# Entrypoint script (created in Task 2)
 COPY entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
