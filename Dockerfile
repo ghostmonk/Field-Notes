@@ -39,8 +39,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y --no-install-recommends nodejs && \
-    apt-get purge -y curl && \
-    apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Python packages from deps stage
