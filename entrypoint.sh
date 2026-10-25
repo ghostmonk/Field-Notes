@@ -1,10 +1,13 @@
 #!/bin/bash
 set -uo pipefail
 
+BACKEND_PID=""
+FRONTEND_PID=""
+
 cleanup() {
     echo "[entrypoint] Shutting down"
-    kill $BACKEND_PID 2>/dev/null || true
-    kill $FRONTEND_PID 2>/dev/null || true
+    [ -n "$BACKEND_PID" ] && kill $BACKEND_PID 2>/dev/null || true
+    [ -n "$FRONTEND_PID" ] && kill $FRONTEND_PID 2>/dev/null || true
     wait
 }
 trap cleanup SIGTERM SIGINT
@@ -12,9 +15,7 @@ trap cleanup SIGTERM SIGINT
 MIGRATE_URI="${MONGO_URI:-mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_CLUSTER}.${MONGO_HOST}/${MONGO_DB_NAME:-ghostmonk}?retryWrites=true&w=majority&appName=${MONGO_APP_NAME}}"
 
 echo "[entrypoint] Running database migrations"
-cd /app/backend && pymongo-migrate migrate -u "$MIGRATE_URI" -m migrations || {
-    echo "[entrypoint] Migration failed, starting without migration"
-}
+cd /app/backend && pymongo-migrate migrate -u "$MIGRATE_URI" -m migrations
 cd /app
 
 echo "[entrypoint] Starting FastAPI on :5001"
@@ -54,4 +55,5 @@ EXIT_CODE=$?
 echo "[entrypoint] Process exited with code $EXIT_CODE, shutting down"
 kill $BACKEND_PID 2>/dev/null || true
 kill $FRONTEND_PID 2>/dev/null || true
+wait
 exit $EXIT_CODE

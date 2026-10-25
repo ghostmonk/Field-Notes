@@ -7,3 +7,6 @@ backend/.pytest_cache
 docs-site
 test-results
 *.pyc
+.env
+.env.*
+gcp-credentials.json
