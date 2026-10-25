@@ -260,17 +260,18 @@ When told to "release", "ship", or "merge" a PR, execute this sequence:
 
 ## Deployment Architecture
 
-Three Cloud Run services deployed via GitHub Actions (`.github/workflows/deploy.yml`):
-- `turbulent-service` (backend), `turbulent-frontend`, `video-processor`
+Two Cloud Run services deployed via GitHub Actions (`.github/workflows/deploy.yml`):
+- `turbulent-app` (combined frontend + backend in one container), `video-processor`
 - Auto-deploys on push to main with path-based change detection
-- Cloud Build for Docker images, GCR for image registry
+- Cloud Build for Docker images, Artifact Registry for image storage
 - CI runs on PRs and non-main branches (pytest, eslint, tsc)
-- Service names still use "turbulent" prefix in GCP
+- Combined container: `Dockerfile` at repo root, `entrypoint.sh` runs migrations then starts both FastAPI (:5001) and Next.js (:PORT) in parallel
+- `--min-instances=1` eliminates cold starts (~$2-3/month with CPU throttling)
 
 **Environment differences:**
-- Local: `LOCAL_STORAGE_PATH` for file uploads, no GCS credentials needed, containerized MongoDB
-- Production: GCS bucket, MongoDB Atlas, Google Cloud Logging
-- `BACKEND_URL`: Docker = `http://backend:5001`, local frontend = `http://localhost:5001`, production = Cloud Run backend URL
+- Local: `LOCAL_STORAGE_PATH` for file uploads, no GCS credentials needed, containerized MongoDB, separate frontend/backend containers via Docker Compose
+- Production: GCS bucket, MongoDB Atlas, Google Cloud Logging, single combined container
+- `BACKEND_URL`: Docker Compose = `http://backend:5001`, local frontend = `http://localhost:5001`, production = `http://localhost:5001` (set by entrypoint, SSR calls stay in-container)
 
 ## Security Requirements
 
