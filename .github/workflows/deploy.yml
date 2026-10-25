@@ -6,12 +6,8 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      deploy-backend:
-        description: 'Deploy Backend'
-        type: boolean
-        default: false
-      deploy-frontend:
-        description: 'Deploy Frontend'
+      deploy-app:
+        description: 'Deploy App (frontend + backend)'
         type: boolean
         default: false
       deploy-video-function:
@@ -24,19 +20,17 @@ on:
         default: false
 
 jobs:
-  # Detect what changed (for push) or manual selection (for workflow_dispatch)
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      backend: ${{ steps.determine-deploy.outputs.backend }}
-      frontend: ${{ steps.determine-deploy.outputs.frontend }}
+      app: ${{ steps.determine-deploy.outputs.app }}
       video-function: ${{ steps.determine-deploy.outputs.video-function }}
     steps:
       - name: Checkout code
         if: github.event_name == 'push'
         uses: actions/checkout@v3
         with:
-          fetch-depth: 2  # Need at least 2 commits to compare
+          fetch-depth: 2
 
       - name: Detect file changes
         if: github.event_name == 'push'
@@ -44,12 +38,13 @@ jobs:
         id: detect-changes
         with:
           filters: |
-            backend:
+            app:
               - 'backend/**'
-              - 'shared/python/**'
-              - '.github/workflows/deploy*.yml'
-            frontend:
               - 'frontend/**'
+              - 'shared/python/**'
+              - 'Dockerfile'
+              - 'entrypoint.sh'
+              - 'cloudbuild.yaml'
               - '.github/workflows/deploy*.yml'
             video-function:
               - 'cloud-functions/**'
@@ -61,75 +56,49 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "Manual deployment triggered"
-            
-            # Check deploy-all first
             if [ "${{ github.event.inputs.deploy-all }}" == "true" ]; then
-              echo "backend=true" >> $GITHUB_OUTPUT
-              echo "frontend=true" >> $GITHUB_OUTPUT
+              echo "app=true" >> $GITHUB_OUTPUT
               echo "video-function=true" >> $GITHUB_OUTPUT
-              echo "🚀 Manual: Deploying ALL components"
             else
-              # Individual selections
-              echo "backend=${{ github.event.inputs.deploy-backend }}" >> $GITHUB_OUTPUT
-              echo "frontend=${{ github.event.inputs.deploy-frontend }}" >> $GITHUB_OUTPUT
+              echo "app=${{ github.event.inputs.deploy-app }}" >> $GITHUB_OUTPUT
               echo "video-function=${{ github.event.inputs.deploy-video-function }}" >> $GITHUB_OUTPUT
-              echo "🎯 Manual: Backend=${{ github.event.inputs.deploy-backend }}, Frontend=${{ github.event.inputs.deploy-frontend }}, Video=${{ github.event.inputs.deploy-video-function }}"
             fi
           else
             echo "Automatic deployment based on file changes"
-            # Use the path detection results
-            echo "backend=${{ steps.detect-changes.outputs.backend }}" >> $GITHUB_OUTPUT
-            echo "frontend=${{ steps.detect-changes.outputs.frontend }}" >> $GITHUB_OUTPUT
+            echo "app=${{ steps.detect-changes.outputs.app }}" >> $GITHUB_OUTPUT
             echo "video-function=${{ steps.detect-changes.outputs.video-function }}" >> $GITHUB_OUTPUT
-            echo "📁 Auto: Backend=${{ steps.detect-changes.outputs.backend }}, Frontend=${{ steps.detect-changes.outputs.frontend }}, Video=${{ steps.detect-changes.outputs.video-function }}"
           fi
 
-  # Smart deployment with matrix strategy
   deploy:
     runs-on: ubuntu-latest
     needs: detect-changes
     if: |
-      needs.detect-changes.outputs.backend == 'true' ||
-      needs.detect-changes.outputs.frontend == 'true' ||
+      needs.detect-changes.outputs.app == 'true' ||
       needs.detect-changes.outputs.video-function == 'true'
     strategy:
       fail-fast: false
       matrix:
         include:
-          - component: backend
-          - component: frontend  
+          - component: app
           - component: video-function
-    
+
     steps:
       - name: Check if component should deploy
         id: should-deploy
         run: |
           case "${{ matrix.component }}" in
-            "backend")
-              if [ "${{ needs.detect-changes.outputs.backend }}" == "true" ]; then
+            "app")
+              if [ "${{ needs.detect-changes.outputs.app }}" == "true" ]; then
                 echo "deploy=true" >> $GITHUB_OUTPUT
-                echo "✅ Backend has changes - will deploy"
               else
                 echo "deploy=false" >> $GITHUB_OUTPUT
-                echo "⏭️ Backend has no changes - will skip"
-              fi
-              ;;
-            "frontend")
-              if [ "${{ needs.detect-changes.outputs.frontend }}" == "true" ]; then
-                echo "deploy=true" >> $GITHUB_OUTPUT
-                echo "✅ Frontend has changes - will deploy"
-              else
-                echo "deploy=false" >> $GITHUB_OUTPUT
-                echo "⏭️ Frontend has no changes - will skip"
               fi
               ;;
             "video-function")
               if [ "${{ needs.detect-changes.outputs.video-function }}" == "true" ]; then
                 echo "deploy=true" >> $GITHUB_OUTPUT
-                echo "✅ Video Function has changes - will deploy"
               else
                 echo "deploy=false" >> $GITHUB_OUTPUT
-                echo "⏭️ Video Function has no changes - will skip"
               fi
               ;;
           esac
@@ -147,49 +116,36 @@ jobs:
       - name: Install Google Cloud CLI
         if: steps.should-deploy.outputs.deploy == 'true'
         run: |
-          echo "Installing Google Cloud CLI..."
           sudo apt-get update
           sudo apt-get install -y google-cloud-cli
 
-      - name: Deploy Backend
-        if: matrix.component == 'backend' && steps.should-deploy.outputs.deploy == 'true'
+      - name: Deploy App
+        if: matrix.component == 'app' && steps.should-deploy.outputs.deploy == 'true'
         run: |
-          echo "🚀 Deploying Backend (files changed)"
           gcloud builds submit . \
-            --config backend/cloudbuild.yaml
+            --config cloudbuild.yaml \
+            --project=${{ vars.GCP_PROJECT_ID }} \
+            --substitutions=_NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},_NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
 
-          gcloud run deploy turbulent-service \
-            --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/turbulent-service \
+          gcloud run deploy turbulent-app \
+            --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/turbulent-app \
             --platform managed \
             --region us-central1 \
+            --project=${{ vars.GCP_PROJECT_ID }} \
             --allow-unauthenticated \
             --service-account=${{ vars.GCP_SERVICE_ACCOUNT_NAME }} \
-            --set-env-vars "MONGO_USER=${{ secrets.MONGO_USER }},MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }},MONGO_CLUSTER=${{ vars.MONGO_CLUSTER }},MONGO_APP_NAME=${{ vars.MONGO_APP_NAME }},MONGO_HOST=${{ vars.MONGO_HOST }},GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }},MONGO_DB_NAME=${{ vars.MONGO_DB_NAME }},GCS_BUCKET_NAME=${{ vars.GCS_BUCKET_NAME }},ADMIN_EMAIL=${{ vars.ADMIN_EMAIL }},GH_TOKEN=${{ secrets.GH_TOKEN }},GH_USERNAME=${{ vars.GH_USERNAME }}" \
+            --memory=512Mi \
+            --min-instances=1 \
+            --startup-cpu-boost \
+            --set-env-vars "MONGO_USER=${{ secrets.MONGO_USER }},MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }},MONGO_CLUSTER=${{ vars.MONGO_CLUSTER }},MONGO_APP_NAME=${{ vars.MONGO_APP_NAME }},MONGO_HOST=${{ vars.MONGO_HOST }},MONGO_DB_NAME=${{ vars.MONGO_DB_NAME }}" \
+            --set-env-vars "GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }},GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }},GCS_BUCKET_NAME=${{ vars.GCS_BUCKET_NAME }},ADMIN_EMAIL=${{ vars.ADMIN_EMAIL }}" \
+            --set-env-vars "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }},NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }},NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},NEXTAUTH_DEBUG=${{ vars.NEXTAUTH_DEBUG }}" \
+            --set-env-vars "GH_TOKEN=${{ secrets.GH_TOKEN }},GH_USERNAME=${{ vars.GH_USERNAME }}" \
             --set-env-vars "QDRANT_URL=${{ vars.QDRANT_URL }},QDRANT_API_KEY=${{ secrets.QDRANT_API_KEY }},VOYAGE_API_KEY=${{ secrets.VOYAGE_API_KEY }},ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" \
             --set-env-vars "TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY }},SMTP_USER=${{ secrets.SMTP_USER }},SMTP_APP_PASSWORD=${{ secrets.SMTP_APP_PASSWORD }},CONTACT_NOTIFY_EMAIL=${{ vars.CONTACT_NOTIFY_EMAIL }}" \
             --timeout=600s
 
-      - name: Deploy Frontend
-        if: matrix.component == 'frontend' && steps.should-deploy.outputs.deploy == 'true'
-        run: |
-          echo "🚀 Deploying Frontend (files changed)"
-          gcloud builds submit ./frontend \
-            --config frontend/cloudbuild.yaml \
-            --project=${{ vars.GCP_PROJECT_ID }} \
-            --substitutions=_NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},_NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
-          gcloud run deploy turbulent-frontend \
-            --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/turbulent-frontend \
-            --platform managed \
-            --region us-central1 \
-            --project=${{ vars.GCP_PROJECT_ID }} \
-            --allow-unauthenticated \
-            --set-env-vars GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }},GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }},NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }},NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }},NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},NEXTAUTH_DEBUG=${{ vars.NEXTAUTH_DEBUG }},BACKEND_URL=${{ vars.BACKEND_URL }} \
-            --timeout=600s
-
-      - name: Make Frontend Public
-        if: matrix.component == 'frontend' && steps.should-deploy.outputs.deploy == 'true'
-        run: |
-          gcloud run services add-iam-policy-binding turbulent-frontend \
+          gcloud run services add-iam-policy-binding turbulent-app \
             --region us-central1 \
             --project=${{ vars.GCP_PROJECT_ID }} \
             --member="allUsers" \
@@ -199,16 +155,11 @@ jobs:
       - name: Deploy Video Processing Function
         if: matrix.component == 'video-function' && steps.should-deploy.outputs.deploy == 'true'
         run: |
-          echo "🚀 Deploying Video Function (files changed)"
-
-          # Build the container image with Cloud Build (includes shared/python)
           gcloud builds submit . \
             --config cloud-functions/video-processor/cloudbuild.yaml
 
-          # Build MongoDB URI from secrets/vars
           MONGODB_URI="mongodb+srv://${{ secrets.MONGO_USER }}:${{ secrets.MONGO_PASSWORD }}@${{ vars.MONGO_CLUSTER }}.${{ vars.MONGO_HOST }}/${{ vars.MONGO_DB_NAME }}?retryWrites=true&w=majority&appName=${{ vars.MONGO_APP_NAME }}"
 
-          # Deploy as Cloud Run service (Gen2 functions don't support --image flag)
           gcloud run deploy video-processor \
             --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/video-processor \
             --platform managed \
@@ -222,7 +173,6 @@ jobs:
             --max-instances=5 \
             --cpu=1
 
-          # Create Eventarc trigger for GCS object finalized events
           gcloud eventarc triggers describe video-processor-trigger \
             --location=us-central1 \
             --project=${{ vars.GCP_PROJECT_ID }} 2>/dev/null || \
@@ -235,7 +185,6 @@ jobs:
             --event-filters="bucket=${{ vars.GCS_BUCKET_NAME }}" \
             --service-account="${{ vars.GCP_SERVICE_ACCOUNT_NAME }}"
 
-  # Summary job to show what was deployed
   deployment-summary:
     runs-on: ubuntu-latest
     needs: [detect-changes, deploy]
@@ -243,25 +192,6 @@ jobs:
     steps:
       - name: Deployment Summary
         run: |
-          echo "## Deployment Summary 📋"
-          echo "Backend Changed: ${{ needs.detect-changes.outputs.backend }}"
-          echo "Frontend Changed: ${{ needs.detect-changes.outputs.frontend }}"
-          echo "Video Function Changed: ${{ needs.detect-changes.outputs.video-function }}"
-          echo ""
-          if [ "${{ needs.detect-changes.outputs.backend }}" == "true" ]; then
-            echo "✅ Backend deployed"
-          else
-            echo "⏭️ Backend skipped (no changes)"
-          fi
-          
-          if [ "${{ needs.detect-changes.outputs.frontend }}" == "true" ]; then
-            echo "✅ Frontend deployed"
-          else
-            echo "⏭️ Frontend skipped (no changes)"
-          fi
-          
-          if [ "${{ needs.detect-changes.outputs.video-function }}" == "true" ]; then
-            echo "✅ Video Function deployed"
-          else
-            echo "⏭️ Video Function skipped (no changes)"
-          fi
+          echo "## Deployment Summary"
+          echo "App: ${{ needs.detect-changes.outputs.app }}"
+          echo "Video Function: ${{ needs.detect-changes.outputs.video-function }}"
