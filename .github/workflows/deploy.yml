@@ -136,7 +136,7 @@ jobs:
             --service-account=${{ vars.GCP_SERVICE_ACCOUNT_NAME }} \
             --memory=1Gi \
             --min-instances=1 \
-            --startup-cpu-boost \
+            --cpu-boost \
             --set-env-vars "MONGO_USER=${{ secrets.MONGO_USER }},MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }},MONGO_CLUSTER=${{ vars.MONGO_CLUSTER }},MONGO_APP_NAME=${{ vars.MONGO_APP_NAME }},MONGO_HOST=${{ vars.MONGO_HOST }},MONGO_DB_NAME=${{ vars.MONGO_DB_NAME }}" \
             --set-env-vars "GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }},GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }},GCS_BUCKET_NAME=${{ vars.GCS_BUCKET_NAME }},ADMIN_EMAIL=${{ vars.ADMIN_EMAIL }}" \
             --set-env-vars "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }},NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }},NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},NEXTAUTH_DEBUG=${{ vars.NEXTAUTH_DEBUG }}" \
