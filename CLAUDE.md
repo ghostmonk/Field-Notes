@@ -38,17 +38,11 @@ Field Notes is a reusable content management system with a Next.js frontend and 
 
 ### Development
 ```bash
-# Recommended: Docker backend/mongo + local frontend (hot reload, no rebuild)
-make dev-local          # Start backend/mongo in Docker, frontend locally
+# Combined container (mirrors production) + Docker mongo/qdrant
+make dev-local          # Build + start combined app container, mongo, qdrant
+make dev                # Alias for dev-local
 
-# Full stack in Docker (slower, requires rebuild for frontend changes)
-make dev                # Build + migrate + start all services
-
-# Individual services
-make dev-backend        # Start FastAPI server on port 5001
-make dev-frontend       # Start Next.js on port 3000
-
-# Virtual environment (backend)
+# Virtual environment (backend, for running tests and formatting)
 make venv              # Create/update Python venv
 source ~/Documents/venvs/field-notes/bin/activate  # Activate venv
 ```
@@ -71,7 +65,7 @@ make test-frontend       # Run Playwright e2e tests (headless)
 make test-frontend-ui    # Run Playwright e2e tests (interactive UI)
 ```
 
-**E2E test prerequisites**: Stop the Docker frontend before running e2e tests (`docker compose stop frontend`). Playwright starts its own Next.js dev server with `BACKEND_URL` pointing to a mock Express server on port 5555. If Docker's frontend is running on port 3000, Playwright's `reuseExistingServer` will connect to it instead, causing SSR to hit the real backend rather than test data.
+**E2E test prerequisites**: Stop the Docker app container before running e2e tests (`docker compose stop app`). Playwright starts its own Next.js dev server with `BACKEND_URL` pointing to a mock Express server on port 5555. If the Docker app is running on port 3000, Playwright's `reuseExistingServer` will connect to it instead, causing SSR to hit the real backend rather than test data.
 
 **E2E architecture**: Two-layer mocking — an Express mock server (`frontend/e2e/mock-server.ts`) handles SSR requests from `getServerSideProps`, and Playwright `page.route()` fixtures handle client-side API calls. Both use shared test data from `frontend/e2e/test-data.ts`.
 
@@ -151,7 +145,7 @@ Assume all work happens in a worktree unless the user explicitly says to work on
 
 - **Worktree location**: `.worktrees/<descriptive-name>` (e.g., `.worktrees/video-upload-fix`)
 - **Branch naming**: `ghostmonk/{issue#}_descriptive_title` when an issue exists, `ghostmonk/descriptive_title` otherwise (e.g., `ghostmonk/142_video-upload-fix`, `ghostmonk/development-optimization`)
-- **Setup**: symlink `.env` and `gcp-credentials.json` from main repo (also symlink `gcp-credentials.json` into `backend/` — migrations run from that cwd), run `cd frontend && npm install`
+- **Setup**: symlink `.env` and `gcp-credentials.json` from main repo (also symlink `gcp-credentials.json` into `backend/` — migrations run from that cwd). `cd frontend && npm install` only needed for running tests locally; `make dev-local` builds the Docker image.
 - **Port isolation**: When running multiple worktrees simultaneously, create `.env.local` in the worktree with offset ports to avoid conflicts:
   ```
   FRONTEND_PORT=3010
@@ -269,9 +263,9 @@ Two Cloud Run services deployed via GitHub Actions (`.github/workflows/deploy.ym
 - `--min-instances=1` eliminates cold starts (~$2-3/month with CPU throttling)
 
 **Environment differences:**
-- Local: `LOCAL_STORAGE_PATH` for file uploads, no GCS credentials needed, containerized MongoDB, separate frontend/backend containers via Docker Compose
+- Local: `LOCAL_STORAGE_PATH` for file uploads, no GCS credentials needed, containerized MongoDB, combined container via Docker Compose (mirrors production)
 - Production: GCS bucket, MongoDB Atlas, Google Cloud Logging, single combined container
-- `BACKEND_URL`: Docker Compose = `http://backend:5001`, local frontend = `http://localhost:5001`, production = `http://localhost:5001` (set by entrypoint, SSR calls stay in-container)
+- `BACKEND_URL`: `http://localhost:5001` everywhere — both local Docker Compose and production (entrypoint sets it; SSR calls stay in-container)
 
 ## Security Requirements
 
