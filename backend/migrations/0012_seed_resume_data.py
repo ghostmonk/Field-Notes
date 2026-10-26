@@ -275,9 +275,8 @@ RESUME_DATA = {
 
 
 def upgrade(db: "pymongo.database.Database"):
-    mongo_uri = os.getenv("MONGO_URI", "")
-    if "localhost" not in mongo_uri and "127.0.0.1" not in mongo_uri:
-        print("Skipping resume seed data (not a local database)")
+    if os.getenv("ALLOW_DEV_AUTH") != "true":
+        print("Skipping resume seed data (ALLOW_DEV_AUTH not set)")
         return
 
     users_coll = db["users"]
@@ -312,9 +311,8 @@ def upgrade(db: "pymongo.database.Database"):
 
 
 def downgrade(db: "pymongo.database.Database"):
-    mongo_uri = os.getenv("MONGO_URI", "")
-    if "localhost" not in mongo_uri and "127.0.0.1" not in mongo_uri:
-        print("Skipping resume seed data rollback (not a local database)")
+    if os.getenv("ALLOW_DEV_AUTH") != "true":
+        print("Skipping resume seed data rollback (ALLOW_DEV_AUTH not set)")
         return
 
     users_coll = db["users"]
