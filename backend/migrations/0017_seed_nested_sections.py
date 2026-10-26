@@ -144,9 +144,8 @@ def _find_section_by_path(db, path):
 
 
 def upgrade(db: "pymongo.database.Database"):
-    mongo_uri = os.getenv("MONGO_URI", "")
-    if "localhost" not in mongo_uri and "127.0.0.1" not in mongo_uri:
-        print("Skipping nested section seed (not a local database)")
+    if os.getenv("ALLOW_DEV_AUTH") != "true":
+        print("Skipping nested section seed (ALLOW_DEV_AUTH not set)")
         return
 
     sections = db["sections"]
@@ -287,9 +286,8 @@ def upgrade(db: "pymongo.database.Database"):
 
 
 def downgrade(db: "pymongo.database.Database"):
-    mongo_uri = os.getenv("MONGO_URI", "")
-    if "localhost" not in mongo_uri and "127.0.0.1" not in mongo_uri:
-        print("Skipping nested section seed rollback (not a local database)")
+    if os.getenv("ALLOW_DEV_AUTH") != "true":
+        print("Skipping nested section seed rollback (ALLOW_DEV_AUTH not set)")
         return
 
     # Remove child sections (by path)

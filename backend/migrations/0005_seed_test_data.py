@@ -104,9 +104,8 @@ PAGES = [
 
 
 def upgrade(db: "pymongo.database.Database"):
-    mongo_uri = os.getenv("MONGO_URI", "")
-    if "localhost" not in mongo_uri and "127.0.0.1" not in mongo_uri:
-        print("Skipping test seed data (not a local database)")
+    if os.getenv("ALLOW_DEV_AUTH") != "true":
+        print("Skipping test seed data (ALLOW_DEV_AUTH not set)")
         return
 
     sections = db["sections"]
@@ -180,9 +179,8 @@ def upgrade(db: "pymongo.database.Database"):
 
 
 def downgrade(db: "pymongo.database.Database"):
-    mongo_uri = os.getenv("MONGO_URI", "")
-    if "localhost" not in mongo_uri and "127.0.0.1" not in mongo_uri:
-        print("Skipping test seed data rollback (not a local database)")
+    if os.getenv("ALLOW_DEV_AUTH") != "true":
+        print("Skipping test seed data rollback (ALLOW_DEV_AUTH not set)")
         return
 
     story_slugs = [_slugify(s["title"]) for s in STORIES]
