@@ -261,7 +261,7 @@ When told to "release", "ship", or "merge" a PR, execute this sequence:
 ## Deployment Architecture
 
 Two Cloud Run services deployed via GitHub Actions (`.github/workflows/deploy.yml`):
-- `turbulent-app` (combined frontend + backend in one container), `video-processor`
+- `field-notes-app` (combined frontend + backend in one container), `video-processor`
 - Auto-deploys on push to main with path-based change detection
 - Cloud Build for Docker images, Artifact Registry for image storage
 - CI runs on PRs and non-main branches (pytest, eslint, tsc)

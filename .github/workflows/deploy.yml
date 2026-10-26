@@ -127,8 +127,8 @@ jobs:
             --project=${{ vars.GCP_PROJECT_ID }} \
             --substitutions=_NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }},_NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
 
-          gcloud run deploy turbulent-app \
-            --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/turbulent-app \
+          gcloud run deploy field-notes-app \
+            --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/field-notes/field-notes-app \
             --platform managed \
             --region us-central1 \
             --project=${{ vars.GCP_PROJECT_ID }} \
@@ -145,7 +145,7 @@ jobs:
             --set-env-vars "TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY }},SMTP_USER=${{ secrets.SMTP_USER }},SMTP_APP_PASSWORD=${{ secrets.SMTP_APP_PASSWORD }},CONTACT_NOTIFY_EMAIL=${{ vars.CONTACT_NOTIFY_EMAIL }}" \
             --timeout=600s
 
-          gcloud run services add-iam-policy-binding turbulent-app \
+          gcloud run services add-iam-policy-binding field-notes-app \
             --region us-central1 \
             --project=${{ vars.GCP_PROJECT_ID }} \
             --member="allUsers" \

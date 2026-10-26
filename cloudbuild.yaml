@@ -7,10 +7,10 @@ steps:
       - '--build-arg'
       - 'NEXT_PUBLIC_TURNSTILE_SITE_KEY=${_NEXT_PUBLIC_TURNSTILE_SITE_KEY}'
       - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/field-notes/turbulent-app'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/field-notes/field-notes-app'
       - '.'
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/field-notes/turbulent-app'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/field-notes/field-notes-app'
 substitutions:
   _NEXT_PUBLIC_API_URL: ''
   _NEXT_PUBLIC_TURNSTILE_SITE_KEY: ''
