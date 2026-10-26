@@ -1,5 +1,6 @@
 export default {
   index: 'Overview',
+  '2026-10-25-single-container-merge': 'Single Container Merge',
   '2026-03-31-editor-command-center-phase8': 'Editor Command Center Phase 8',
   '2026-03-31-editor-command-center-phase7': 'Editor Command Center Phase 7',
   '2026-03-31-editor-command-center-phase6': 'Editor Command Center Phase 6',

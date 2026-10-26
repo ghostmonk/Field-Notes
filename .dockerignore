@@ -1,0 +1,12 @@
+frontend/node_modules
+frontend/.next
+backend/__pycache__
+backend/.pytest_cache
+.worktrees
+.git
+docs-site
+test-results
+*.pyc
+.env
+.env.*
+gcp-credentials.json

@@ -25,7 +25,7 @@ export default function TopNav() {
                         </button>
                     ) : (
                         <button
-                            onClick={() => process.env.NODE_ENV === 'development' ? signIn() : signIn("google")}
+                            onClick={() => process.env.NEXT_PUBLIC_DEV_AUTH === 'true' ? signIn() : signIn("google")}
                             className="btn btn--primary"
                             data-testid="signin-button"
                         >
