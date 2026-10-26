@@ -1,4 +1,4 @@
-.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui test-frontend-unit clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-backend dev-frontend install-frontend migrate migrate-status migrate-down
+.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui test-frontend-unit clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-local install-frontend migrate migrate-status migrate-down
 
 # Port configuration (override in .env.local for worktree isolation)
 FRONTEND_PORT ?= 3000
@@ -190,57 +190,19 @@ down:
 logs:
 	docker compose logs -f
 
-# Development: build, migrate, and start all services in Docker
-dev:
-	@echo "Starting development environment..."
-	@echo "Building containers..."
-	docker compose build
-	@echo "Starting MongoDB and Qdrant..."
-	docker compose up mongo qdrant -d
-	@echo "Running migrations..."
-	$(MAKE) migrate
-	@echo "Starting all services..."
-	docker compose up -d
+# Alias for dev-local
+dev: dev-local
+
+# Development: Combined container (mirrors production) + Docker mongo/qdrant
+dev-local:
+	@echo "Building and starting combined app + MongoDB + Qdrant..."
+	docker compose up --build -d
 	@echo ""
-	@echo "Frontend: http://localhost:3000"
-	@echo "Backend:  http://localhost:5001"
-	@echo "MongoDB:  localhost:27017"
-	@echo "Qdrant:   localhost:6333"
+	@echo "App:      http://localhost:$(FRONTEND_PORT)"
+	@echo "MongoDB:  localhost:$(MONGO_PORT)"
+	@echo "Qdrant:   localhost:$(QDRANT_PORT)"
 	@echo ""
 	@echo "Run 'make logs' to tail output, 'make down' to stop."
-
-# Development: Docker backend/mongo/qdrant + local frontend (hot reload, no rebuild)
-dev-local:
-	@echo "Starting backend, MongoDB, and Qdrant in Docker..."
-	docker compose up mongo qdrant backend -d
-	@echo "Running migrations..."
-	$(MAKE) migrate
-	@echo "Starting local frontend with hot reload..."
-	@echo ""
-	@echo "Frontend: http://localhost:$(FRONTEND_PORT) (local, hot reload)"
-	@echo "Backend:  http://localhost:$(BACKEND_PORT) (Docker)"
-	@echo "MongoDB:  localhost:$(MONGO_PORT) (Docker)"
-	@echo "Qdrant:   localhost:6333 (Docker)"
-	@echo ""
-	$(MAKE) dev-frontend
-# 
-# dev-backend: Start Python backend server on port 5001
-# - Activates virtual environment 
-# - Loads all .env variables (excluding comments and empty lines)
-# - Runs uvicorn with hot reload for development
-dev-backend:
-	. $(VENV_ACTIVATE) && export $$(cat .env | grep -v '^#' | grep -v '^$$' | xargs) && \
-	if [ -f .env.local ]; then export $$(cat .env.local | grep -v '^#' | grep -v '^$$' | xargs); fi && \
-	cd backend && uvicorn app:app --reload --port $(BACKEND_PORT)
-
-# dev-frontend: Start Next.js frontend server on port 3000
-# - Loads .env variables, then .env.local overrides (if exists)
-# - Excludes PORT to avoid conflicts
-# - Explicitly sets PORT=3000 to prevent frontend from using backend's port (5001)
-dev-frontend:
-	export $$(cat .env | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs) && \
-	if [ -f .env.local ]; then export $$(cat .env.local | grep -v '^#' | grep -v '^$$' | grep -v PORT | xargs); fi && \
-	cd frontend && BACKEND_URL=http://localhost:$(BACKEND_PORT) PORT=$(FRONTEND_PORT) npx next dev -H 0.0.0.0
 
 # Cleanup
 clean:
@@ -291,10 +253,8 @@ help:
 	@echo "  docker-up        - Start Docker containers"
 	@echo "  docker-down      - Stop Docker containers"
 	@echo "  docker-logs      - Show Docker container logs"
-	@echo "  dev              - Start full stack in Docker (build + migrate + up)"
-	@echo "  dev-local        - Docker backend/mongo + local frontend (hot reload)"
-	@echo "  dev-backend      - Start backend development server"
-	@echo "  dev-frontend     - Start frontend development server"
+	@echo "  dev              - Alias for dev-local"
+	@echo "  dev-local        - Build and run combined container + mongo + qdrant (mirrors production)"
 	@echo "  clean            - Clean up Python cache files and build artifacts"
 	@echo "  clean-frontend   - Remove frontend node_modules and .next cache"
 	@echo "  docker-nuke      - Nuke all Docker resources for a clean slate"
