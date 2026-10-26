@@ -16,7 +16,7 @@ from .setup import auto_configure_logging
 
 # Auto-configure logging and create default logger
 _factory = auto_configure_logging()
-logger = _factory.create_logger("turbulence")
+logger = _factory.create_logger("field-notes")
 
 
 def get_component_logger(component: str, **default_context):
