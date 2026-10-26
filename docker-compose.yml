@@ -6,6 +6,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-5001}
         NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-dummy}
+        NEXT_PUBLIC_DEV_AUTH: "true"
     ports:
       - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
     env_file:

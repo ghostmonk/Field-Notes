@@ -70,7 +70,7 @@ const providers: NextAuthOptions["providers"] = [
     }),
 ];
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env.ALLOW_DEV_AUTH === 'true') {
     providers.push(
         CredentialsProvider({
             id: "dev-credentials",
@@ -203,8 +203,8 @@ export const authOptions: NextAuthOptions = {
                 httpOnly: true,
                 sameSite: 'lax',
                 path: '/',
-                secure: process.env.NODE_ENV === 'production',
-                domain: process.env.NODE_ENV === 'production' ? '.ghostmonk.com' : undefined,
+                secure: process.env.ALLOW_DEV_AUTH !== 'true',
+                domain: process.env.ALLOW_DEV_AUTH !== 'true' ? '.ghostmonk.com' : undefined,
                 maxAge: 900,
             },
         },
@@ -214,8 +214,8 @@ export const authOptions: NextAuthOptions = {
                 httpOnly: true,
                 sameSite: 'lax',
                 path: '/',
-                secure: process.env.NODE_ENV === 'production',
-                domain: process.env.NODE_ENV === 'production' ? '.ghostmonk.com' : undefined,
+                secure: process.env.ALLOW_DEV_AUTH !== 'true',
+                domain: process.env.ALLOW_DEV_AUTH !== 'true' ? '.ghostmonk.com' : undefined,
                 maxAge: 900,
             },
         },
