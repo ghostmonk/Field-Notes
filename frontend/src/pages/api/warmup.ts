@@ -15,6 +15,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const data = await response.json();
+
+    try {
+      await res.revalidate('/');
+    } catch {
+      // non-fatal: ISR revalidation may fail on first startup
+    }
+
     return res.status(response.status).json(data);
   } catch (error) {
     console.error('Warmup proxy error:', error);

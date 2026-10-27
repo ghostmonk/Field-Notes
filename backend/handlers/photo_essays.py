@@ -29,6 +29,67 @@ from utils import find_many_and_convert, find_one_and_convert, generate_unique_s
 router = APIRouter()
 
 
+@router.get("/photo-essays")
+async def list_photo_essays(
+    request: Request,
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    include_unpublished: bool = Query(False),
+    collection: AsyncIOMotorCollection = Depends(get_photo_essays_collection),
+):
+    """List all photo essays across all sections."""
+    try:
+        if include_unpublished:
+            await verify_auth_and_get_user(request)
+
+        query = {"deleted": {"$ne": True}}
+        if not include_unpublished:
+            query["is_published"] = True
+        sort = [("createdDate", -1)]
+
+        total = await collection.count_documents(query)
+
+        projection = {
+            "_id": 1,
+            "slug": 1,
+            "title": 1,
+            "description": 1,
+            "cover_image_url": 1,
+            "cover_image_srcset": 1,
+            "cover_image_position": 1,
+            "is_published": 1,
+            "section_id": 1,
+            "createdDate": 1,
+            "updatedDate": 1,
+            "photo_count": 1,
+        }
+
+        essays = await find_many_and_convert(
+            collection,
+            query,
+            PhotoEssayCard,
+            sort,
+            limit=limit,
+            skip=offset,
+            projection=projection,
+        )
+
+        return {"items": essays, "total": total, "limit": limit, "offset": offset}
+
+    except Exception as e:
+        logger.exception_with_context(
+            "Error listing photo essays",
+            {
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+            },
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while fetching photo essays",
+        )
+
+
 @router.get("/photo-essays/section/{section_id}")
 async def get_photo_essays_by_section(
     request: Request,

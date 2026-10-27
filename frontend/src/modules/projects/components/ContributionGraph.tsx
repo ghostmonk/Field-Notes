@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FaGithub } from 'react-icons/fa6';
 import { getSiteConfig } from '@/config';
 
 function useDragScroll() {
@@ -98,17 +97,7 @@ export function ContributionGraph() {
     if (!data) {
         return (
             <div className="contrib-graph animate-pulse" data-testid="contribution-graph-skeleton">
-                <div className="contrib-graph__header">
-                    <div>
-                        <div className="h-4 w-48 bg-gray-300 dark:bg-gray-600 rounded mb-2" />
-                        <div className="h-3 w-64 bg-gray-200 dark:bg-gray-700 rounded" />
-                    </div>
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
-                </div>
-                <div className="h-[86px] w-full bg-gray-200 dark:bg-gray-700 rounded mt-2" />
-                <div className="contrib-graph__footer">
-                    <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
-                </div>
+                <div className="h-[86px] w-full bg-gray-200 dark:bg-gray-700 rounded" />
             </div>
         );
     }
@@ -116,23 +105,7 @@ export function ContributionGraph() {
     const monthLabels = getMonthLabels(data.weeks);
 
     return (
-        <div
-            className="contrib-graph"
-            data-testid="contribution-graph"
-        >
-            <div className="contrib-graph__header">
-                <span className="contrib-graph__total">
-                    {data.totalContributions.toLocaleString()} contributions in the last year
-                    <br />
-                    <em className="contrib-graph__subtitle">Some of my contributions are no longer reportable through GitHub</em>
-                </span>
-                <a
-                    href={github.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="contrib-graph__profile"
-                ><FaGithub />{github.username}</a>
-            </div>
+        <div className="contrib-graph" data-testid="contribution-graph">
 
             <div className="contrib-graph__grid-wrapper">
                 <div className="contrib-graph__day-labels">

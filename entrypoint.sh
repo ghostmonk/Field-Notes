@@ -49,6 +49,17 @@ echo "[entrypoint] Starting Next.js on :${NEXT_PORT}"
 HOSTNAME=0.0.0.0 PORT=$NEXT_PORT node /app/frontend/server.js &
 FRONTEND_PID=$!
 
+# Wait for Next.js to be ready, then prime ISR cache
+echo "[entrypoint] Waiting for Next.js to start"
+for i in $(seq 1 30); do
+    if curl -sf http://localhost:${NEXT_PORT}/ > /dev/null 2>&1; then
+        echo "[entrypoint] Next.js ready, triggering ISR revalidation"
+        curl -s http://localhost:${NEXT_PORT}/api/warmup > /dev/null 2>&1
+        break
+    fi
+    sleep 1
+done
+
 wait -n $BACKEND_PID $FRONTEND_PID
 EXIT_CODE=$?
 
