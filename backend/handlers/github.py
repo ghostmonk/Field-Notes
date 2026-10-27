@@ -131,7 +131,11 @@ async def _fetch_languages(token: str, username: str):
     if total_size == 0:
         return []
     return [
-        {"name": lang["name"], "color": lang["color"], "percentage": round(lang["size"] / total_size * 100, 1)}
+        {
+            "name": lang["name"],
+            "color": lang["color"],
+            "percentage": round(lang["size"] / total_size * 100, 1),
+        }
         for lang in sorted_langs[:8]
     ]
 

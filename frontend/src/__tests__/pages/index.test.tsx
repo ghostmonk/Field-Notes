@@ -23,7 +23,7 @@ vi.mock('@/modules/homepage', () => ({
     Homepage: () => null,
 }));
 
-import { getStaticProps } from './index';
+import { getStaticProps } from '@/pages/index';
 
 function makeStory(id: string, title: string, published = true) {
     return {
