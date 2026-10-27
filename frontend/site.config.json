@@ -11,8 +11,10 @@
   "hero": {
     "showOnHome": true,
     "name": "Nicholas Hillier",
-    "byline": "Building, writing, and photographing at the intersection of technology and craft.",
-    "roles": ["Writer", "Photographer", "Engineer", "Reader", "Guitarist", "Fitness Enthusiast", "Boxer", "Hiker", "Saunist"]
+    "headline": "builds things that",
+    "headlineEmphasis": "last",
+    "byline": "Craftsmanship is a journey that lasts a lifetime.",
+    "roles": ["Engineer", "Writer", "Photographer", "Reader", "Guitarist", "Boxer", "Bodybuilder", "Hiker", "Philosophy", "Politics", "Shokunin Kishitsu"]
   },
   "fonts": {
     "heading": "Space Grotesk",

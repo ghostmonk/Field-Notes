@@ -1084,11 +1084,11 @@
 
 .identity-hero__name {
   font-family: var(--font-family-heading);
-  font-size: var(--font-size-4xl);
+  font-size: clamp(2.5rem, 5vw + 1rem, 5rem);
   font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-tight);
+  line-height: 1.1;
   margin: 0 0 var(--space-xl);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .identity-hero__name em {

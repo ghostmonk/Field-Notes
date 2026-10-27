@@ -122,7 +122,7 @@ export function ContributionGraph() {
         >
             <div className="contrib-graph__header">
                 <span className="contrib-graph__total">
-                    {data.totalContributions.toLocaleString()} contributions this year
+                    {data.totalContributions.toLocaleString()} contributions in the last year
                     <br />
                     <em className="contrib-graph__subtitle">Some of my contributions are no longer reportable through GitHub</em>
                 </span>

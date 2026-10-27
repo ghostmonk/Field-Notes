@@ -10,6 +10,8 @@ const CYCLE_MS = 2500;
 export function IdentityHero(_props: HomepageBlockProps) {
     const roles = config.hero.roles ?? DEFAULT_ROLES;
     const name = config.hero.name ?? config.site.author;
+    const headline = config.hero.headline ?? 'builds things that';
+    const headlineEmphasis = config.hero.headlineEmphasis ?? 'last';
     const byline = config.hero.byline ?? config.site.tagline;
 
     const [activeIndex, setActiveIndex] = useState(0);
@@ -22,18 +24,18 @@ export function IdentityHero(_props: HomepageBlockProps) {
         return () => clearInterval(intervalRef.current);
     }, [roles.length]);
 
-    const [firstName, ...rest] = name.split(' ');
-    const lastName = rest.join(' ');
+    const activeRole = roles[activeIndex];
 
     return (
         <section className="identity-hero" data-testid="identity-hero">
             <div className="identity-hero__eyebrow">
                 <span className="identity-hero__line" />
-                <span>ghostmonk.com</span>
+                <span data-testid="eyebrow-role">{activeRole}</span>
             </div>
 
             <h1 className="identity-hero__name">
-                {firstName} <em>{lastName}</em>
+                {name}<br />
+                {headline} <em>{headlineEmphasis}</em>
             </h1>
 
             <p className="identity-hero__sub">{byline}</p>

@@ -3,7 +3,7 @@ API handler for GitHub contribution data with MongoDB caching.
 """
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import httpx
 from database import get_db
@@ -17,9 +17,9 @@ GITHUB_GRAPHQL_URL = "https://api.github.com/graphql"
 CACHE_TTL_SECONDS = 3600
 
 CONTRIBUTIONS_QUERY = """
-query($login: String!) {
+query($login: String!, $from: DateTime!, $to: DateTime!) {
   user(login: $login) {
-    contributionsCollection {
+    contributionsCollection(from: $from, to: $to) {
       contributionCalendar {
         totalContributions
         weeks {
@@ -50,10 +50,16 @@ async def _get_cached(db: AsyncIOMotorDatabase):
 
 
 async def _fetch_from_github(token: str, username: str):
+    now = datetime.now(timezone.utc)
+    date_from = (now - timedelta(days=365)).isoformat()
+    date_to = now.isoformat()
     async with httpx.AsyncClient() as client:
         response = await client.post(
             GITHUB_GRAPHQL_URL,
-            json={"query": CONTRIBUTIONS_QUERY, "variables": {"login": username}},
+            json={
+                "query": CONTRIBUTIONS_QUERY,
+                "variables": {"login": username, "from": date_from, "to": date_to},
+            },
             headers={
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json",

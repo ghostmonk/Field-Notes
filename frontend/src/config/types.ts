@@ -1,6 +1,8 @@
 export interface HeroConfig {
   showOnHome: boolean;
   name?: string;
+  headline?: string;
+  headlineEmphasis?: string;
   byline?: string;
   roles?: string[];
 }

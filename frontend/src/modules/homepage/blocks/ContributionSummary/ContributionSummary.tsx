@@ -5,7 +5,7 @@ import { SectionHeader } from '../SectionHeader';
 export function ContributionSummary(_props: HomepageBlockProps) {
     return (
         <div data-testid="contribution-summary-block">
-            <SectionHeader label="GitHub" annotation="this year" />
+            <SectionHeader label="GitHub" annotation="last 365 days" />
             <ContributionGraph />
         </div>
     );
