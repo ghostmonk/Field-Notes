@@ -1,0 +1,1 @@
+export { PhotoStrip } from './PhotoStrip';

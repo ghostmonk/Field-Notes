@@ -17,6 +17,16 @@
     "serif": "Instrument Serif",
     "mono": "JetBrains Mono"
   },
+  "homepage": {
+    "blocks": [
+      { "type": "identity-hero", "id": "hero" },
+      { "type": "photo-strip", "id": "photos" },
+      { "type": "featured-story", "id": "featured" },
+      { "type": "recent-writing", "id": "writing" },
+      { "type": "project-showcase", "id": "projects" },
+      { "type": "contribution-graph", "id": "github" }
+    ]
+  },
   "github": {
     "username": "ghostmonk",
     "url": "https://github.com/ghostmonk"

@@ -6,6 +6,12 @@ export interface TemplateConfig {
   active: string;
 }
 
+export interface HomepageBlockConfig {
+  type: string;
+  id: string;
+  props?: Record<string, unknown>;
+}
+
 export interface SiteConfig {
   site: {
     title: string;
@@ -20,6 +26,9 @@ export interface SiteConfig {
     body: string;
     serif?: string;
     mono?: string;
+  };
+  homepage?: {
+    blocks: HomepageBlockConfig[];
   };
   github?: {
     username: string;

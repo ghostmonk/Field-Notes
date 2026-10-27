@@ -1,0 +1,1 @@
+export { IdentityHero } from './IdentityHero';
