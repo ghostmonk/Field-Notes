@@ -318,8 +318,8 @@ local-uploads/
 *.tsbuildinfo
 seed-resume.py
 seed-content.py
-.saguaro/cache/
-.saguaro/history/
+.vscode/
+.cursor/
 .claude/settings.local.json
 .mcp.json
 .gstack/
