@@ -30,7 +30,7 @@ export function FeaturedStory({ data }: HomepageBlockProps) {
             <Link href={href} className="featured" data-testid="featured-story-link">
                 <div className="featured__content">
                     <div className="featured__meta">
-                        <span>{formatDate(featuredStory.date)}</span>
+                        <span>{formatDate(featuredStory.date || featuredStory.createdDate)}</span>
                         <span className="featured__dot" />
                         <span>{readMin} min read</span>
                     </div>

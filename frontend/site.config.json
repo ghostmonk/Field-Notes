@@ -9,7 +9,10 @@
     "active": "ghostmonk"
   },
   "hero": {
-    "showOnHome": true
+    "showOnHome": true,
+    "name": "Nicholas Hillier",
+    "byline": "Building, writing, and photographing at the intersection of technology and craft.",
+    "roles": ["Writer", "Photographer", "Engineer", "Reader", "Guitarist", "Fitness Enthusiast", "Boxer", "Hiker", "Saunist"]
   },
   "fonts": {
     "heading": "Space Grotesk",

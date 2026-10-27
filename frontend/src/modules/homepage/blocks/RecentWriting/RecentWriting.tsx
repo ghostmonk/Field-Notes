@@ -31,7 +31,7 @@ export function RecentWriting({ data }: HomepageBlockProps) {
                             data-testid={`recent-story-${story.id}`}
                         >
                             <span className="recent-writing__title">{story.title}</span>
-                            <span className="recent-writing__date">{formatDate(story.date)}</span>
+                            <span className="recent-writing__date">{formatDate(story.date || story.createdDate)}</span>
                         </Link>
                     );
                 })}

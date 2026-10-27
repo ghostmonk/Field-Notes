@@ -1,29 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
+import { getSiteConfig } from '@/config';
 import type { HomepageBlockProps } from '../../types';
 
-const ROLES = [
-    'Writer',
-    'Photographer',
-    'Engineer',
-    'Reader',
-    'Guitarist',
-    'Bodybuilder',
-    'Boxer',
-    'Hiker',
-];
+const config = getSiteConfig();
 
+const DEFAULT_ROLES = ['Writer', 'Photographer', 'Engineer'];
 const CYCLE_MS = 2500;
 
 export function IdentityHero(_props: HomepageBlockProps) {
+    const roles = config.hero.roles ?? DEFAULT_ROLES;
+    const name = config.hero.name ?? config.site.author;
+    const byline = config.hero.byline ?? config.site.tagline;
+
     const [activeIndex, setActiveIndex] = useState(0);
     const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
     useEffect(() => {
         intervalRef.current = setInterval(() => {
-            setActiveIndex((i) => (i + 1) % ROLES.length);
+            setActiveIndex((i) => (i + 1) % roles.length);
         }, CYCLE_MS);
         return () => clearInterval(intervalRef.current);
-    }, []);
+    }, [roles.length]);
+
+    const [firstName, ...rest] = name.split(' ');
+    const lastName = rest.join(' ');
 
     return (
         <section className="identity-hero" data-testid="identity-hero">
@@ -33,16 +33,13 @@ export function IdentityHero(_props: HomepageBlockProps) {
             </div>
 
             <h1 className="identity-hero__name">
-                Nicholas <em>Hillier</em>
+                {firstName} <em>{lastName}</em>
             </h1>
 
-            <p className="identity-hero__sub">
-                Building, writing, and photographing at the intersection of
-                technology and craft.
-            </p>
+            <p className="identity-hero__sub">{byline}</p>
 
             <div className="identity-hero__roles" data-testid="role-ticker">
-                {ROLES.map((role, i) => (
+                {roles.map((role, i) => (
                     <span
                         key={role}
                         className={`identity-hero__role${i === activeIndex ? ' identity-hero__role--active' : ''}`}

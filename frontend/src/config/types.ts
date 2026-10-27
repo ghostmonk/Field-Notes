@@ -1,5 +1,8 @@
 export interface HeroConfig {
   showOnHome: boolean;
+  name?: string;
+  byline?: string;
+  roles?: string[];
 }
 
 export interface TemplateConfig {
