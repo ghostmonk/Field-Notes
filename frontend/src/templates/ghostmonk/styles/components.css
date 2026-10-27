@@ -1406,6 +1406,77 @@
   color: var(--color-text-tertiary);
 }
 
+/* --- Skull Avatar --- */
+.skull-avatar {
+  position: fixed;
+  bottom: -20px;
+  right: max(24px, env(safe-area-inset-right, 0px));
+  z-index: 45;
+  width: 120px;
+  transform: translateY(100%);
+  animation: skull-avatar-enter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 2s forwards;
+  cursor: pointer;
+}
+@keyframes skull-avatar-enter {
+  to { transform: translateY(0); }
+}
+.skull-avatar__figure {
+  width: 120px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.skull-avatar__figure:hover {
+  transform: scale(1.05) translateY(-4px);
+}
+.skull-avatar__figure svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+.skull-avatar__speech {
+  position: absolute;
+  bottom: 100%;
+  right: 20px;
+  background: var(--color-surface-tertiary);
+  border: 1px solid var(--color-brand-primary);
+  border-radius: 8px 8px 0 8px;
+  padding: 10px 14px;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(8px) scale(0.95);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.skull-avatar__speech::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  right: 16px;
+  width: 12px;
+  height: 6px;
+  background: var(--color-surface-tertiary);
+  border-right: 1px solid var(--color-brand-primary);
+  border-bottom: 1px solid var(--color-brand-primary);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+.skull-avatar--speaking .skull-avatar__speech {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+@keyframes skull-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(20deg); }
+  50% { transform: rotate(-10deg); }
+  75% { transform: rotate(15deg); }
+}
+.skull-avatar__hand-wave {
+  transform-origin: 85px 80px;
+  animation: skull-wave 1.2s ease-in-out 2.8s 2;
+}
+
 /* --- Responsive --- */
 @media (max-width: 1024px) {
   .grid--3-cols { grid-template-columns: repeat(2, 1fr); }

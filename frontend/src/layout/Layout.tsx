@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import TopNav from "./TopNav";
 import Footer from "./Footer";
+import { SkullAvatar } from "@/components/SkullAvatar";
 
 interface LayoutProps {
     children: ReactNode;
@@ -25,6 +26,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {children}
             </main>
             <Footer />
+            <SkullAvatar />
         </div>
     );
 };
