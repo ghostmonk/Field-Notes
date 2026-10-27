@@ -8,11 +8,12 @@ const DEFAULT_ROLES = ['Writer', 'Photographer', 'Engineer'];
 const CYCLE_MS = 2500;
 
 export function IdentityHero(_props: HomepageBlockProps) {
-    const roles = config.hero.roles ?? DEFAULT_ROLES;
-    const name = config.hero.name ?? config.site.author;
-    const headline = config.hero.headline ?? 'builds things that';
-    const headlineEmphasis = config.hero.headlineEmphasis ?? 'last';
-    const byline = config.hero.byline ?? config.site.tagline;
+    const hero = config.hero ?? {};
+    const roles = hero.roles ?? DEFAULT_ROLES;
+    const name = hero.name ?? config.site.author;
+    const headline = hero.headline ?? 'builds things that';
+    const headlineEmphasis = hero.headlineEmphasis ?? 'last';
+    const byline = hero.byline ?? config.site.tagline;
 
     const [activeIndex, setActiveIndex] = useState(0);
     const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);

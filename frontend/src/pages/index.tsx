@@ -84,10 +84,10 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
     ]);
 
     const allStories = stories?.items ?? [];
-    const featuredStory = allStories.find((s) => s.is_published) ?? null;
+    const featuredStory = allStories[0] ?? null;
     const recentStories = featuredStory
-        ? allStories.filter((s) => s.id !== featuredStory.id && s.is_published).slice(0, 5)
-        : allStories.filter((s) => s.is_published).slice(0, 5);
+        ? allStories.filter((s) => s.id !== featuredStory.id).slice(0, 5)
+        : allStories.slice(0, 5);
 
     return {
         props: {
@@ -130,14 +130,19 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 async function fetchSectionPathMap(backendUrl: string): Promise<Record<string, string>> {
     const map: Record<string, string> = {};
     try {
-        const res = await fetch(`${backendUrl}/sections?limit=100`, {
-            signal: AbortSignal.timeout(10000),
-        });
-        if (res.ok) {
+        let offset = 0;
+        const limit = 100;
+        while (true) {
+            const res = await fetch(`${backendUrl}/sections?limit=${limit}&offset=${offset}`, {
+                signal: AbortSignal.timeout(10000),
+            });
+            if (!res.ok) break;
             const data = await res.json();
             for (const s of data.items) {
                 map[s.id] = s.path || s.slug;
             }
+            if (data.items.length < limit) break;
+            offset += limit;
         }
     } catch {
         // Non-fatal

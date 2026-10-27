@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { getSiteConfig } from '@/config';
+import { useGitHubContributions, type ContributionData } from '../hooks/useGitHubContributions';
 
 function useDragScroll() {
     const ref = useRef<HTMLDivElement>(null);
@@ -27,21 +28,6 @@ function useDragScroll() {
     return { ref, onMouseDown, onMouseUp, onMouseLeave: onMouseUp, onMouseMove };
 }
 
-interface ContributionDay {
-    date: string;
-    contributionCount: number;
-    contributionLevel: string;
-}
-
-interface ContributionWeek {
-    contributionDays: ContributionDay[];
-}
-
-interface ContributionData {
-    totalContributions: number;
-    weeks: ContributionWeek[];
-}
-
 const LEVEL_CLASS: Record<string, string> = {
     NONE: 'contrib-graph__cell--none',
     FIRST_QUARTILE: 'contrib-graph__cell--first',
@@ -52,7 +38,7 @@ const LEVEL_CLASS: Record<string, string> = {
 
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
-function getMonthLabels(weeks: ContributionWeek[]) {
+function getMonthLabels(weeks: ContributionData['weeks']) {
     const months: { label: string; col: number }[] = [];
     const formatter = new Intl.DateTimeFormat('en-US', { month: 'short' });
     let lastMonth = -1;
@@ -73,22 +59,7 @@ function getMonthLabels(weeks: ContributionWeek[]) {
 const github = getSiteConfig().github;
 
 export function ContributionGraph() {
-    const [data, setData] = useState<ContributionData | null>(null);
-    const [error, setError] = useState(false);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        fetch('/api/github/contributions', { signal: controller.signal })
-            .then((res) => {
-                if (!res.ok) throw new Error(`${res.status}`);
-                return res.json();
-            })
-            .then(setData)
-            .catch((err) => {
-                if (err.name !== 'AbortError') setError(true);
-            });
-        return () => controller.abort();
-    }, []);
+    const { data, error } = useGitHubContributions();
 
     const drag = useDragScroll();
 

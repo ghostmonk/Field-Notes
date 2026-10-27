@@ -7,7 +7,7 @@ export type HomepageBlockType =
     | 'featured-story'
     | 'recent-writing'
     | 'project-showcase'
-    | 'contribution-graph';
+    | 'contribution-summary';
 
 export interface HomepageBlockConfig {
     type: HomepageBlockType;

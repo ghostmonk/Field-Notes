@@ -12,5 +12,5 @@ export const blockRegistry: Record<HomepageBlockType, HomepageBlockComponent> = 
     'featured-story': FeaturedStory,
     'recent-writing': RecentWriting,
     'project-showcase': ProjectShowcase,
-    'contribution-graph': ContributionSummary,
+    'contribution-summary': ContributionSummary,
 };

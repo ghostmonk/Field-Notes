@@ -7,7 +7,7 @@ vi.mock('./blockRegistry', () => ({
     blockRegistry: {
         'identity-hero': () => <div data-testid="block-hero">hero</div>,
         'recent-writing': () => <div data-testid="block-writing">writing</div>,
-        'contribution-graph': () => <div data-testid="block-github">github</div>,
+        'contribution-summary': () => <div data-testid="block-github">github</div>,
     },
 }));
 
@@ -26,7 +26,7 @@ describe('Homepage', () => {
         const blocks: HomepageBlockConfig[] = [
             { type: 'identity-hero', id: 'hero' },
             { type: 'recent-writing', id: 'writing' },
-            { type: 'contribution-graph', id: 'github' },
+            { type: 'contribution-summary', id: 'github' },
         ];
         render(<Homepage blocks={blocks} data={mockData} />);
 

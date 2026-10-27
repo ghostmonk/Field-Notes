@@ -9,6 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const response = await fetchBackend('/github/languages');
     const data = await response.json();
+    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=7200');
     return res.status(response.status).json(data);
   } catch (error) {
     console.error('GitHub languages proxy error:', error);

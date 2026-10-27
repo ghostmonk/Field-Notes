@@ -1,16 +1,8 @@
 import Link from 'next/link';
 import type { HomepageBlockProps } from '../../types';
 import { SectionHeader } from '../SectionHeader';
-
-function formatDate(dateStr: string): string {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function estimateReadTime(content: string): number {
-    const words = content.split(/\s+/).length;
-    return Math.max(1, Math.round(words / 250));
-}
+import { formatDateShort } from '@/shared/utils/formatDate';
+import { estimateReadingTime } from '@/shared/utils/readingTime';
 
 export function FeaturedStory({ data }: HomepageBlockProps) {
     const { featuredStory, sectionPathMap } = data;
@@ -22,7 +14,6 @@ export function FeaturedStory({ data }: HomepageBlockProps) {
     const href = sectionPath
         ? `/${sectionPath}/${featuredStory.slug}`
         : `/stories/${featuredStory.slug}`;
-    const readMin = estimateReadTime(featuredStory.content);
 
     return (
         <div data-testid="featured-story-block">
@@ -30,9 +21,9 @@ export function FeaturedStory({ data }: HomepageBlockProps) {
             <Link href={href} className="featured" data-testid="featured-story-link">
                 <div className="featured__content">
                     <div className="featured__meta">
-                        <span>{formatDate(featuredStory.date || featuredStory.createdDate)}</span>
+                        <span>{formatDateShort(featuredStory.date || featuredStory.createdDate)}</span>
                         <span className="featured__dot" />
-                        <span>{readMin} min read</span>
+                        <span>{estimateReadingTime(featuredStory.content)}</span>
                     </div>
                     <h2 className="featured__title">{featuredStory.title}</h2>
                     {featuredStory.tags.length > 0 && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FaGithub } from 'react-icons/fa6';
 import { getSiteConfig } from '@/config';
+import { useGitHubContributions } from '../hooks/useGitHubContributions';
 
 interface LanguageData {
     name: string;
@@ -68,6 +69,18 @@ const github = getSiteConfig().github;
 export function LanguageBreakdown() {
     const [languages, setLanguages] = useState<LanguageData[]>([]);
     const [stats, setStats] = useState<ContributionStats | null>(null);
+    const { data: contributionData } = useGitHubContributions();
+
+    useEffect(() => {
+        if (contributionData) {
+            const s = computeStreak(contributionData.weeks);
+            setStats({
+                totalContributions: contributionData.totalContributions,
+                currentStreak: s.current,
+                longestStreak: s.longest,
+            });
+        }
+    }, [contributionData]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -78,21 +91,6 @@ export function LanguageBreakdown() {
                 return res.json();
             })
             .then(setLanguages)
-            .catch(() => {});
-
-        fetch('/api/github/contributions', { signal: controller.signal })
-            .then((res) => {
-                if (!res.ok) throw new Error(`${res.status}`);
-                return res.json();
-            })
-            .then((data) => {
-                const s = computeStreak(data.weeks);
-                setStats({
-                    totalContributions: data.totalContributions,
-                    currentStreak: s.current,
-                    longestStreak: s.longest,
-                });
-            })
             .catch(() => {});
 
         return () => controller.abort();

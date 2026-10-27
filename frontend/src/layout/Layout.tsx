@@ -1,8 +1,6 @@
 import React, { ReactNode } from "react";
 import TopNav from "./TopNav";
 import Footer from "./Footer";
-import { FlowField } from "@/components/FlowField";
-import { Ruler } from "@/components/Ruler";
 
 interface LayoutProps {
     children: ReactNode;
@@ -11,8 +9,6 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
         <div className="layout-wrapper min-h-dvh transition-colors duration-300" style={{ backgroundColor: 'var(--color-surface-primary)', color: 'var(--color-text-primary)' }}>
-            <FlowField />
-            <Ruler />
             <a
                 href="#main-content"
                 className="skip-to-content"

@@ -1,11 +1,7 @@
 import Link from 'next/link';
 import type { HomepageBlockProps } from '../../types';
 import { SectionHeader } from '../SectionHeader';
-
-function formatDate(dateStr: string): string {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
+import { formatDateCompact } from '@/shared/utils/formatDate';
 
 export function RecentWriting({ data }: HomepageBlockProps) {
     const { stories, sectionPathMap } = data;
@@ -31,7 +27,7 @@ export function RecentWriting({ data }: HomepageBlockProps) {
                             data-testid={`recent-story-${story.id}`}
                         >
                             <span className="recent-writing__title">{story.title}</span>
-                            <span className="recent-writing__date">{formatDate(story.date || story.createdDate)}</span>
+                            <span className="recent-writing__date">{formatDateCompact(story.date || story.createdDate)}</span>
                         </Link>
                     );
                 })}
