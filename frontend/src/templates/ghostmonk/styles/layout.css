@@ -1,0 +1,6 @@
+:root {
+  --layout-nav-height: 56px;
+  --layout-container-max-width: 72rem;
+  --layout-content-padding: 1.5rem;
+  --layout-page-content-max-width: 740px;
+}
