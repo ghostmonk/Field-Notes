@@ -1,0 +1,170 @@
+:root {
+  /* Surface */
+  --color-surface-primary: #0a0a0c;
+  --color-surface-secondary: #111114;
+  --color-surface-tertiary: #16161a;
+  --color-surface-inverse: #f0ede8;
+
+  /* Brand */
+  --color-brand-primary: #34d399;
+  --color-brand-primary-hover: #6ee7b7;
+  --color-brand-secondary: #059669;
+
+  /* Text */
+  --color-text-primary: #e0ddd8;
+  --color-text-secondary: #8a8580;
+  --color-text-tertiary: #4a4540;
+  --color-text-inverse: #0a0a0c;
+  --color-text-brand: #34d399;
+  --color-text-link: #34d399;
+  --color-text-link-hover: #6ee7b7;
+
+  /* Border */
+  --color-border-primary: #1e1e22;
+  --color-border-secondary: #2a2a2e;
+  --color-border-focus: #34d399;
+
+  /* Status */
+  --color-status-success: #34d399;
+  --color-status-warning: #fbbf24;
+  --color-status-error: #f87171;
+  --color-status-info: #60a5fa;
+
+  /* Code */
+  --color-code-bg: #0d0d10;
+  --color-code-text: #e0ddd8;
+
+  /* Shadows */
+  --color-shadow-light: rgba(0, 0, 0, 0.3);
+  --color-shadow-medium: rgba(0, 0, 0, 0.5);
+  --color-shadow-dark: rgba(0, 0, 0, 0.7);
+
+  /* Focus */
+  --color-focus-ring: rgba(52, 211, 153, 0.2);
+  --color-focus-ring-error: rgba(248, 113, 113, 0.2);
+
+  /* Draft */
+  --color-surface-draft: rgba(120, 113, 108, 0.15);
+  --color-border-draft: rgb(133 77 14);
+
+  --color-text-on-status: #0a0a0c;
+
+  /* Contribution graph */
+  --color-contrib-none: #111114;
+  --color-contrib-first: #064e3b;
+  --color-contrib-second: #059669;
+  --color-contrib-third: #34d399;
+  --color-contrib-fourth: #6ee7b7;
+
+  /* Ghostmonk-specific accent tokens */
+  --color-accent-dim: rgba(52, 211, 153, 0.12);
+  --color-accent-glow: rgba(52, 211, 153, 0.06);
+  --color-grid: rgba(255, 255, 255, 0.04);
+  --color-grid-strong: rgba(255, 255, 255, 0.08);
+  --color-tick: rgba(255, 255, 255, 0.15);
+
+  /* Fonts */
+  --font-family-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-serif: 'Instrument Serif', Georgia, serif;
+  --font-family-mono: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace;
+  --font-family-heading: var(--font-family-sans);
+  --font-family-body: var(--font-family-sans);
+
+  /* Type scale — minor third (1.2) for tighter engineering feel */
+  --font-size-xs: clamp(0.7rem, 0.65rem + 0.2vw, 0.75rem);
+  --font-size-sm: clamp(0.8rem, 0.75rem + 0.2vw, 0.875rem);
+  --font-size-base: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);
+  --font-size-lg: clamp(1.08rem, 1rem + 0.35vw, 1.2rem);
+  --font-size-xl: clamp(1.296rem, 1.15rem + 0.5vw, 1.44rem);
+  --font-size-2xl: clamp(1.555rem, 1.35rem + 0.8vw, 1.728rem);
+  --font-size-3xl: clamp(1.866rem, 1.6rem + 1.1vw, 2.074rem);
+  --font-size-4xl: clamp(2.24rem, 1.9rem + 1.4vw, 2.488rem);
+
+  /* Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+  --space-2xl: 2rem;
+  --space-3xl: 3rem;
+  --space-4xl: 4rem;
+  --space-5xl: 6rem;
+
+  /* Radii — minimal, sharp aesthetic (gm- prefix avoids Tailwind @theme collision) */
+  --gm-radius-sm: 1px;
+  --gm-radius-md: 2px;
+  --gm-radius-lg: 4px;
+  --gm-radius-xl: 6px;
+  --gm-radius-2xl: 8px;
+  --gm-radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+  --transition-colors: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+/* Light overrides via .dark toggle (inverted: removing .dark = light) */
+:root:not(.dark) {
+  --color-surface-primary: #f0ede8;
+  --color-surface-secondary: #e8e5e0;
+  --color-surface-tertiary: #ebe8e2;
+  --color-surface-inverse: #0a0a0c;
+
+  --color-brand-primary: #059669;
+  --color-brand-primary-hover: #047857;
+  --color-brand-secondary: #34d399;
+
+  --color-text-primary: #1a1815;
+  --color-text-secondary: #706b65;
+  --color-text-tertiary: #a5a09a;
+  --color-text-inverse: #e0ddd8;
+  --color-text-brand: #059669;
+  --color-text-link: #059669;
+  --color-text-link-hover: #047857;
+
+  --color-border-primary: #d5d0ca;
+  --color-border-secondary: #c5c0ba;
+  --color-border-focus: #059669;
+
+  --color-code-bg: #1a1815;
+  --color-code-text: #e0ddd8;
+
+  --color-shadow-light: rgba(0, 0, 0, 0.08);
+  --color-shadow-medium: rgba(0, 0, 0, 0.12);
+  --color-shadow-dark: rgba(0, 0, 0, 0.2);
+
+  --color-focus-ring: rgba(5, 150, 105, 0.15);
+  --color-focus-ring-error: rgba(239, 68, 68, 0.15);
+
+  --color-surface-draft: rgb(254 252 232);
+  --color-border-draft: rgb(254 240 138);
+
+  --color-text-on-status: #ffffff;
+
+  --color-contrib-none: #e8e5e0;
+  --color-contrib-first: #a7f3d0;
+  --color-contrib-second: #34d399;
+  --color-contrib-third: #059669;
+  --color-contrib-fourth: #047857;
+
+  --color-accent-dim: rgba(5, 150, 105, 0.1);
+  --color-accent-glow: rgba(5, 150, 105, 0.05);
+  --color-grid: rgba(0, 0, 0, 0.04);
+  --color-grid-strong: rgba(0, 0, 0, 0.08);
+  --color-tick: rgba(0, 0, 0, 0.15);
+}
