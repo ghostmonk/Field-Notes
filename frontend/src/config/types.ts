@@ -1,9 +1,20 @@
 export interface HeroConfig {
   showOnHome: boolean;
+  name?: string;
+  headline?: string;
+  headlineEmphasis?: string;
+  byline?: string;
+  roles?: string[];
 }
 
 export interface TemplateConfig {
   active: string;
+}
+
+export interface HomepageBlockConfig {
+  type: string;
+  id: string;
+  props?: Record<string, unknown>;
 }
 
 export interface SiteConfig {
@@ -20,6 +31,9 @@ export interface SiteConfig {
     body: string;
     serif?: string;
     mono?: string;
+  };
+  homepage?: {
+    blocks: HomepageBlockConfig[];
   };
   github?: {
     username: string;

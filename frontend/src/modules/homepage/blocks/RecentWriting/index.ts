@@ -1,0 +1,1 @@
+export { RecentWriting } from './RecentWriting';

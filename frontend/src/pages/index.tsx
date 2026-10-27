@@ -1,100 +1,153 @@
 import React from 'react';
 import Head from 'next/head';
 import { GetStaticProps } from 'next';
-import { StoryList } from '@/modules/stories';
-import { SkeletonShowcase } from '@/components/LoadingSkeletons';
-import { Story, PaginatedResponse } from '@/shared/types/api';
+import { Story, ProjectCard, PhotoEssayCard, PaginatedResponse } from '@/shared/types/api';
 import { getSiteConfig } from '@/config';
+import { Homepage } from '@/modules/homepage';
+import type { HomepageBlockConfig, HomepageData } from '@/modules/homepage';
+
+const DEFAULT_BLOCKS: HomepageBlockConfig[] = [
+    { type: 'identity-hero', id: 'hero' },
+    { type: 'featured-story', id: 'featured' },
+    { type: 'recent-writing', id: 'writing' },
+];
 
 interface HomeProps {
-    initialStories?: PaginatedResponse<Story>;
-    sectionPathMap?: Record<string, string>;
+    blocks: HomepageBlockConfig[];
+    data: HomepageData;
     error?: string;
 }
 
 const config = getSiteConfig();
 
-const Home: React.FC<HomeProps> = ({ initialStories, sectionPathMap, error }) => {
+const Home: React.FC<HomeProps> = ({ blocks, data, error }) => {
+    if (error) {
+        return (
+            <>
+                <Head>
+                    <title>{config.site.title}</title>
+                </Head>
+                <div className="homepage">
+                    <div className="error-state">
+                        <h3 className="error-state__title">Unable to load content</h3>
+                        <p className="error-state__message">{error}</p>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
             <Head>
                 <title>{config.site.title}</title>
-                <meta name="description" content={config.site.tagline}/>
-                <meta name="keywords" content={`${config.site.title}, blog, stories, projects`}/>
+                <meta name="description" content={config.site.tagline} />
+                <meta name="keywords" content={`${config.site.title}, blog, stories, projects, photography`} />
             </Head>
-
-            {/* Skeleton showcase for testing - add ?skeleton=test to URL */}
-            <SkeletonShowcase />
-
-            <div style={{margin: '0 auto', maxWidth: '800px', padding: '0 1rem'}}>
-                {config.hero.showOnHome && (
-                    <header className="hero">
-                        <p className="hero__subtitle">{config.site.tagline}</p>
-                    </header>
-                )}
-                <StoryList initialData={initialStories} initialError={error} sectionPathMap={sectionPathMap} featureFirst />
+            <div className="homepage-container">
+                <Homepage blocks={blocks} data={data} />
             </div>
         </>
     );
 };
 
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
-    try {
-        const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
+    const blocks: HomepageBlockConfig[] =
+        (config.homepage?.blocks as HomepageBlockConfig[] | undefined) ?? DEFAULT_BLOCKS;
 
-        if (!backendUrl) {
-            return {
-                props: {
-                    error: 'Backend URL not configured'
-                },
-                revalidate: 60,
-            };
-        }
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
 
-        // Fetch initial stories for ISR
-        const response = await fetch(`${backendUrl}/stories?limit=5&offset=0&include_drafts=false`, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch stories: ${response.status}`);
-        }
-
-        const data: PaginatedResponse<Story> = await response.json();
-
-        // Build section path lookup so each story links to its own section
-        const sectionPathMap: Record<string, string> = {};
-        try {
-            const sectionsRes = await fetch(`${backendUrl}/sections?limit=100`);
-            if (sectionsRes.ok) {
-                const sectionsData = await sectionsRes.json();
-                for (const s of sectionsData.items) {
-                    sectionPathMap[s.id] = s.path || s.slug;
-                }
-            }
-        } catch {
-            // Non-fatal — links will fall back to /stories
-        }
-
+    if (!backendUrl) {
         return {
             props: {
-                initialStories: data,
-                sectionPathMap,
-            },
-            revalidate: 300,
-        };
-    } catch (error) {
-        console.error('Error in getStaticProps:', error);
-
-        return {
-            props: {
-                error: error instanceof Error ? error.message : 'Failed to load stories'
+                blocks,
+                data: emptyData(),
+                error: 'Backend URL not configured',
             },
             revalidate: 60,
         };
     }
+
+    const blockTypes = new Set(blocks.map((b) => b.type));
+
+    const [stories, projects, photoEssays, sectionPathMap] = await Promise.all([
+        blockTypes.has('featured-story') || blockTypes.has('recent-writing')
+            ? fetchJson<PaginatedResponse<Story>>(`${backendUrl}/stories?limit=6&offset=0&include_drafts=false`)
+            : Promise.resolve(null),
+        blockTypes.has('project-showcase')
+            ? fetchJson<PaginatedResponse<ProjectCard>>(`${backendUrl}/projects?limit=6&offset=0`)
+            : Promise.resolve(null),
+        blockTypes.has('photo-strip')
+            ? fetchJson<PaginatedResponse<PhotoEssayCard>>(`${backendUrl}/photo-essays?limit=5&offset=0`)
+            : Promise.resolve(null),
+        fetchSectionPathMap(backendUrl),
+    ]);
+
+    const allStories = stories?.items ?? [];
+    const featuredStory = allStories[0] ?? null;
+    const recentStories = featuredStory
+        ? allStories.filter((s) => s.id !== featuredStory.id).slice(0, 5)
+        : allStories.slice(0, 5);
+
+    return {
+        props: {
+            blocks,
+            data: {
+                stories: recentStories,
+                featuredStory,
+                projects: (projects?.items ?? []).filter((p) => p.is_published),
+                photoEssays: (photoEssays?.items ?? []).filter((pe) => pe.is_published),
+                sectionPathMap,
+            },
+        },
+        revalidate: 300,
+    };
 };
+
+function emptyData(): HomepageData {
+    return {
+        stories: [],
+        featuredStory: null,
+        projects: [],
+        photoEssays: [],
+        sectionPathMap: {},
+    };
+}
+
+async function fetchJson<T>(url: string): Promise<T | null> {
+    try {
+        const res = await fetch(url, {
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(10000),
+        });
+        if (!res.ok) return null;
+        return await res.json();
+    } catch {
+        return null;
+    }
+}
+
+async function fetchSectionPathMap(backendUrl: string): Promise<Record<string, string>> {
+    const map: Record<string, string> = {};
+    try {
+        let offset = 0;
+        const limit = 100;
+        while (true) {
+            const res = await fetch(`${backendUrl}/sections?limit=${limit}&offset=${offset}`, {
+                signal: AbortSignal.timeout(10000),
+            });
+            if (!res.ok) break;
+            const data = await res.json();
+            for (const s of data.items) {
+                map[s.id] = s.path || s.slug;
+            }
+            if (data.items.length < limit) break;
+            offset += limit;
+        }
+    } catch {
+        // Non-fatal
+    }
+    return map;
+}
 
 export default Home;

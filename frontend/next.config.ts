@@ -26,6 +26,14 @@ const nextConfig: NextConfig = {
                 protocol: 'https',
                 hostname: 'storage.googleapis.com',
             },
+            {
+                protocol: 'https',
+                hostname: 'picsum.photos',
+            },
+            {
+                protocol: 'https',
+                hostname: 'fastly.picsum.photos',
+            },
         ],
     },
 
@@ -80,7 +88,7 @@ const nextConfig: NextConfig = {
                             default-src 'self';
                             script-src ${scriptSrc};
                             style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-                            img-src 'self' data: blob: ${apiUrl} ${devSources} https://storage.googleapis.com https://authjs.dev;
+                            img-src 'self' data: blob: ${apiUrl} ${devSources} https://storage.googleapis.com https://authjs.dev https://picsum.photos https://fastly.picsum.photos;
                             media-src 'self' data: blob: ${apiUrl} ${devSources} https://storage.googleapis.com;
                             connect-src 'self' data: ${apiUrl} ${devSources} https://accounts.google.com https://*.googleapis.com https://www.google.com https://challenges.cloudflare.com;
                             font-src 'self' https://fonts.gstatic.com;

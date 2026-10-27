@@ -101,6 +101,7 @@ class ProjectCard(BaseModel):
     github_url: Optional[str]
     live_url: Optional[str]
     is_featured: bool
+    is_published: bool = True
     tags: List[str] = Field(default_factory=list)
     user_id: str | None = None
     section_id: str | None = None

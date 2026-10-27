@@ -9,13 +9,28 @@
     "active": "ghostmonk"
   },
   "hero": {
-    "showOnHome": true
+    "showOnHome": true,
+    "name": "Nicholas Hillier",
+    "headline": "Shokunin Kishitsu",
+    "headlineEmphasis": "職人",
+    "byline": "Craftsmanship is a journey that lasts a lifetime.",
+    "roles": ["Engineer", "Writer", "Photographer", "Reader", "Guitarist", "Boxer", "Gym Rat", "Hiker", "Philosophy", "Politics"]
   },
   "fonts": {
     "heading": "Space Grotesk",
     "body": "Space Grotesk",
     "serif": "Instrument Serif",
     "mono": "JetBrains Mono"
+  },
+  "homepage": {
+    "blocks": [
+      { "type": "identity-hero", "id": "hero" },
+      { "type": "photo-strip", "id": "photos" },
+      { "type": "featured-story", "id": "featured" },
+      { "type": "recent-writing", "id": "writing" },
+      { "type": "project-showcase", "id": "projects" },
+      { "type": "contribution-summary", "id": "github" }
+    ]
   },
   "github": {
     "username": "ghostmonk",

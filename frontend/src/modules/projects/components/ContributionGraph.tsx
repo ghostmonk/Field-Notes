@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { FaGithub } from 'react-icons/fa6';
+import { useCallback, useRef } from 'react';
 import { getSiteConfig } from '@/config';
+import { useGitHubContributions, type ContributionData } from '../hooks/useGitHubContributions';
 
 function useDragScroll() {
     const ref = useRef<HTMLDivElement>(null);
@@ -28,21 +28,6 @@ function useDragScroll() {
     return { ref, onMouseDown, onMouseUp, onMouseLeave: onMouseUp, onMouseMove };
 }
 
-interface ContributionDay {
-    date: string;
-    contributionCount: number;
-    contributionLevel: string;
-}
-
-interface ContributionWeek {
-    contributionDays: ContributionDay[];
-}
-
-interface ContributionData {
-    totalContributions: number;
-    weeks: ContributionWeek[];
-}
-
 const LEVEL_CLASS: Record<string, string> = {
     NONE: 'contrib-graph__cell--none',
     FIRST_QUARTILE: 'contrib-graph__cell--first',
@@ -53,7 +38,7 @@ const LEVEL_CLASS: Record<string, string> = {
 
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
-function getMonthLabels(weeks: ContributionWeek[]) {
+function getMonthLabels(weeks: ContributionData['weeks']) {
     const months: { label: string; col: number }[] = [];
     const formatter = new Intl.DateTimeFormat('en-US', { month: 'short' });
     let lastMonth = -1;
@@ -74,22 +59,7 @@ function getMonthLabels(weeks: ContributionWeek[]) {
 const github = getSiteConfig().github;
 
 export function ContributionGraph() {
-    const [data, setData] = useState<ContributionData | null>(null);
-    const [error, setError] = useState(false);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        fetch('/api/github/contributions', { signal: controller.signal })
-            .then((res) => {
-                if (!res.ok) throw new Error(`${res.status}`);
-                return res.json();
-            })
-            .then(setData)
-            .catch((err) => {
-                if (err.name !== 'AbortError') setError(true);
-            });
-        return () => controller.abort();
-    }, []);
+    const { data, error } = useGitHubContributions();
 
     const drag = useDragScroll();
 
@@ -98,17 +68,7 @@ export function ContributionGraph() {
     if (!data) {
         return (
             <div className="contrib-graph animate-pulse" data-testid="contribution-graph-skeleton">
-                <div className="contrib-graph__header">
-                    <div>
-                        <div className="h-4 w-48 bg-gray-300 dark:bg-gray-600 rounded mb-2" />
-                        <div className="h-3 w-64 bg-gray-200 dark:bg-gray-700 rounded" />
-                    </div>
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
-                </div>
-                <div className="h-[86px] w-full bg-gray-200 dark:bg-gray-700 rounded mt-2" />
-                <div className="contrib-graph__footer">
-                    <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
-                </div>
+                <div className="h-[86px] w-full bg-gray-200 dark:bg-gray-700 rounded" />
             </div>
         );
     }
@@ -116,23 +76,7 @@ export function ContributionGraph() {
     const monthLabels = getMonthLabels(data.weeks);
 
     return (
-        <div
-            className="contrib-graph"
-            data-testid="contribution-graph"
-        >
-            <div className="contrib-graph__header">
-                <span className="contrib-graph__total">
-                    {data.totalContributions.toLocaleString()} contributions this year
-                    <br />
-                    <em className="contrib-graph__subtitle">Some of my contributions are no longer reportable through GitHub</em>
-                </span>
-                <a
-                    href={github.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="contrib-graph__profile"
-                ><FaGithub />{github.username}</a>
-            </div>
+        <div className="contrib-graph" data-testid="contribution-graph">
 
             <div className="contrib-graph__grid-wrapper">
                 <div className="contrib-graph__day-labels">

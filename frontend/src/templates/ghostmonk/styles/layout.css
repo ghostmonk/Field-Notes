@@ -4,3 +4,28 @@
   --layout-content-padding: 1.5rem;
   --layout-page-content-max-width: 740px;
 }
+
+/* Engineering grid overlay — fixed behind content, above flow field */
+.layout-wrapper::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--color-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid) 1px, transparent 1px),
+    linear-gradient(var(--color-grid-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid-strong) 1px, transparent 1px);
+  background-size:
+    40px 40px,
+    40px 40px,
+    200px 200px,
+    200px 200px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout-wrapper::before {
+    display: none;
+  }
+}

@@ -232,11 +232,122 @@ Light-mode users see a dark flash on every page load because `_document.tsx` sen
 
 ---
 
-## Phase 2: Flow Field Component
+## Phase 2: Homepage / Landing Page
 
-The Perlin noise flow field with boid flocking, rendered on a fixed canvas behind all content.
+The current homepage is a simple story feed. The mockup has a compositional layout: hero with identity cycling, photography strip, featured story, recent writing, project cards, GitHub heatmap. This is what users see first — build it before the decorative background effects.
 
-### Task 6: Create FlowField React component
+### Task 6: Create homepage hero section
+
+**Files:**
+- Modify: `frontend/src/pages/index.tsx`
+- Create: `frontend/src/components/IdentityHero.tsx`
+
+The hero from the mockup:
+- "Nicholas Hillier" in large Space Grotesk
+- Subtitle cycles through identity facets with a highlighted tag
+- Role ticker showing all facets
+- Section header with coordinates annotation
+
+**Step 1: Create IdentityHero component**
+
+- Cycling text with `setInterval` rotating through roles
+- Tags for each facet, active one highlighted in accent
+- Mono coordinate annotations on section headers
+
+**Step 2: Replace current hero in index.tsx**
+
+Remove the simple `hero__subtitle` tagline. Replace with `<IdentityHero />`.
+
+**Step 3: Verify animation cycles, responsive at mobile**
+
+**Step 4: Commit**
+
+```bash
+git add frontend/src/components/IdentityHero.tsx frontend/src/pages/index.tsx
+git commit -m "feat: add identity-cycling hero section"
+```
+
+---
+
+### Task 7: Create homepage sections layout
+
+**Files:**
+- Modify: `frontend/src/pages/index.tsx`
+
+The mockup's homepage has distinct sections below the hero:
+
+1. **Photography strip** — horizontal scroll of recent photos with EXIF metadata overlay
+2. **Featured story** — large card with cover image, Instrument Serif title, excerpt
+3. **Recent writing** — scannable list (title + date + section, no cards)
+4. **Projects** — card grid with status badges and tech stack tags
+5. **GitHub contributions** — heatmap component (already referenced in site.config.json)
+
+Each section has a header with:
+- Mono label (e.g., "PHOTOGRAPHY")
+- Horizontal rule
+- Coordinates annotation (e.g., "5 recent")
+
+**Step 1: Create section header component**
+
+Reusable `<SectionHeader label="Photography" annotation="5 recent" />`
+
+**Step 2: Update getStaticProps to fetch data for all sections**
+
+Currently fetches only stories. Add: recent photos (from gallery section), projects, and GitHub contribution data.
+
+**Step 3: Build each homepage section as a sub-component**
+
+- `HomepagePhotoStrip`
+- `HomepageFeaturedStory`
+- `HomepageRecentWriting`
+- `HomepageProjects`
+- `HomepageGitHub`
+
+**Step 4: Compose in index.tsx**
+
+**Step 5: Test all sections render, responsive layout works**
+
+**Step 6: Commit**
+
+```bash
+git add frontend/src/pages/index.tsx frontend/src/components/
+git commit -m "feat: redesign homepage with compositional section layout"
+```
+
+---
+
+### Task 8: Create avatar component
+
+**Files:**
+- Create: `frontend/src/components/SkullAvatar.tsx`
+
+The mockup's skull with beard, glasses, emerald pupils that track cursor, waving hand, speech bubble with cycling messages on click. This is a placeholder that works now; it can be replaced later with the AI personality avatar.
+
+**Step 1: Port the SVG skull from the mockup into a React component**
+
+- Eye tracking via `onMouseMove` on document, calculate angle to each pupil center
+- Click handler cycles speech bubble messages
+- Wave animation on initial load (3.2s delay)
+- CSS animations for speech bubble appear/disappear
+
+**Step 2: Position in the homepage hero area**
+
+**Step 3: Test eye tracking, click interaction, responsive sizing**
+
+**Step 4: Commit**
+
+```bash
+git add frontend/src/components/SkullAvatar.tsx
+git commit -m "feat: add interactive skull avatar with eye tracking"
+```
+
+---
+
+## Phase 3: Flow Field & Background Effects
+
+The Perlin noise flow field with boid flocking, ruler ticks, and engineering grid overlay. Decorative background layer behind all content.
+
+### Task 9: Create FlowField React component
 
 **Files:**
 - Create: `frontend/src/components/FlowField.tsx`
@@ -296,7 +407,7 @@ git commit -m "feat: add Perlin noise flow field with boid flocking"
 
 ---
 
-### Task 7: Create Ruler component
+### Task 10: Create Ruler component
 
 **Files:**
 - Create: `frontend/src/components/Ruler.tsx`
@@ -325,7 +436,7 @@ git commit -m "feat: add precision ruler tick marks"
 
 ---
 
-### Task 8: Create GridOverlay component
+### Task 11: Create GridOverlay component
 
 **Files:**
 - Create: `frontend/src/components/GridOverlay.tsx`
@@ -347,117 +458,6 @@ Recommendation: Pure CSS in the template's layout.css, applied to the layout wra
 ```bash
 git add frontend/src/templates/ghostmonk/styles/layout.css
 git commit -m "feat: add engineering grid overlay"
-```
-
----
-
-## Phase 3: Homepage Redesign
-
-The current homepage is a simple story feed. The mockup has a compositional layout: hero with identity cycling, photography strip, featured story, recent writing, project cards, GitHub heatmap.
-
-### Task 9: Create homepage hero section
-
-**Files:**
-- Modify: `frontend/src/pages/index.tsx`
-- Create: `frontend/src/components/IdentityHero.tsx`
-
-The hero from the mockup:
-- "Nicholas Hillier" in large Space Grotesk
-- Subtitle cycles through identity facets with a highlighted tag
-- Role ticker showing all facets
-- Section header with coordinates annotation
-
-**Step 1: Create IdentityHero component**
-
-- Cycling text with `setInterval` rotating through roles
-- Tags for each facet, active one highlighted in accent
-- Mono coordinate annotations on section headers
-
-**Step 2: Replace current hero in index.tsx**
-
-Remove the simple `hero__subtitle` tagline. Replace with `<IdentityHero />`.
-
-**Step 3: Verify animation cycles, responsive at mobile**
-
-**Step 4: Commit**
-
-```bash
-git add frontend/src/components/IdentityHero.tsx frontend/src/pages/index.tsx
-git commit -m "feat: add identity-cycling hero section"
-```
-
----
-
-### Task 10: Create homepage sections layout
-
-**Files:**
-- Modify: `frontend/src/pages/index.tsx`
-
-The mockup's homepage has distinct sections below the hero:
-
-1. **Photography strip** — horizontal scroll of recent photos with EXIF metadata overlay
-2. **Featured story** — large card with cover image, Instrument Serif title, excerpt
-3. **Recent writing** — scannable list (title + date + section, no cards)
-4. **Projects** — card grid with status badges and tech stack tags
-5. **GitHub contributions** — heatmap component (already referenced in site.config.json)
-
-Each section has a header with:
-- Mono label (e.g., "PHOTOGRAPHY")
-- Horizontal rule
-- Coordinates annotation (e.g., "5 recent")
-
-**Step 1: Create section header component**
-
-Reusable `<SectionHeader label="Photography" annotation="5 recent" />`
-
-**Step 2: Update getStaticProps to fetch data for all sections**
-
-Currently fetches only stories. Add: recent photos (from gallery section), projects, and GitHub contribution data.
-
-**Step 3: Build each homepage section as a sub-component**
-
-- `HomepagePhotoStrip`
-- `HomepageFeaturedStory`
-- `HomepageRecentWriting`
-- `HomepageProjects`
-- `HomepageGitHub`
-
-**Step 4: Compose in index.tsx**
-
-**Step 5: Test all sections render, responsive layout works**
-
-**Step 6: Commit**
-
-```bash
-git add frontend/src/pages/index.tsx frontend/src/components/
-git commit -m "feat: redesign homepage with compositional section layout"
-```
-
----
-
-### Task 11: Create avatar component
-
-**Files:**
-- Create: `frontend/src/components/SkullAvatar.tsx`
-
-The mockup's skull with beard, glasses, emerald pupils that track cursor, waving hand, speech bubble with cycling messages on click. This is a placeholder that works now; it can be replaced later with the AI personality avatar.
-
-**Step 1: Port the SVG skull from the mockup into a React component**
-
-- Eye tracking via `onMouseMove` on document, calculate angle to each pupil center
-- Click handler cycles speech bubble messages
-- Wave animation on initial load (3.2s delay)
-- CSS animations for speech bubble appear/disappear
-
-**Step 2: Position in the homepage hero area**
-
-**Step 3: Test eye tracking, click interaction, responsive sizing**
-
-**Step 4: Commit**
-
-```bash
-git add frontend/src/components/SkullAvatar.tsx
-git commit -m "feat: add interactive skull avatar with eye tracking"
 ```
 
 ---
@@ -704,14 +704,14 @@ The dependency graph:
 
 ```
 Phase 1 (Tasks 1-5): Template CSS
-  └─> Phase 2 (Tasks 6-8): Flow field, ruler, grid
-      └─> Phase 3 (Tasks 9-11): Homepage redesign
+  └─> Phase 2 (Tasks 6-8): Homepage / landing page
+      └─> Phase 3 (Tasks 9-11): Flow field, ruler, grid
           └─> Phase 4 (Tasks 12-15): Section page styles
               └─> Phase 5 (Tasks 16-17): Config & identity
                   └─> Phase 6 (Tasks 18-22): Polish & validation
                       └─> Phase 7 (Task 23): E2E tests
 ```
 
-Phases 1 and 2 can partially overlap — flow field component doesn't depend on template CSS being complete, just on the color tokens.
+Phases 2 and 3 can partially overlap — flow field is decorative and doesn't block homepage content work.
 
 Estimated scope: ~23 tasks, each 15-45 minutes with Claude Code. Full implementation: one focused session or two shorter ones.
