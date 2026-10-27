@@ -210,8 +210,8 @@ export function FlowField(props: FlowFieldProps) {
         const perm = buildPermTable();
         const noise = createNoise3D(perm);
 
-        const w = window.innerWidth;
-        const h = window.innerHeight;
+        let w = window.innerWidth;
+        let h = window.innerHeight;
 
         const particles: Particle[] = [];
         for (let i = 0; i < count; i++) {
@@ -223,7 +223,15 @@ export function FlowField(props: FlowFieldProps) {
             });
         }
 
-        const spatialHash = new SpatialHash(config.flockRadius, w);
+        let spatialHash = new SpatialHash(config.flockRadius, w);
+
+        const onResize = () => {
+            handleResize();
+            w = window.innerWidth;
+            h = window.innerHeight;
+            spatialHash = new SpatialHash(config.flockRadius, w);
+        };
+        window.addEventListener('resize', onResize);
         let time = 0;
 
         if (prefersReduced) {
@@ -328,11 +336,9 @@ export function FlowField(props: FlowFieldProps) {
 
         animFrameRef.current = requestAnimationFrame(animate);
 
-        window.addEventListener('resize', handleResize);
-
         return () => {
             cancelAnimationFrame(animFrameRef.current);
-            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('resize', onResize);
         };
     }, [config.particleCount, config.noiseScale, config.maxSpeed, config.fadeAlpha, config.flockRadius, config.separationRadius, config.alignWeight, config.cohesionWeight, config.separationWeight, config.noiseWeight, config.timeStep, config.noiseOctaves, handleResize]);
 
@@ -340,6 +346,7 @@ export function FlowField(props: FlowFieldProps) {
         <canvas
             ref={canvasRef}
             data-testid="flow-field"
+            aria-hidden="true"
             style={{
                 position: 'fixed',
                 inset: 0,

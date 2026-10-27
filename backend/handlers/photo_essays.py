@@ -76,6 +76,8 @@ async def list_photo_essays(
 
         return {"items": essays, "total": total, "limit": limit, "offset": offset}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception_with_context(
             "Error listing photo essays",

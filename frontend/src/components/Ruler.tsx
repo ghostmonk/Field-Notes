@@ -13,8 +13,8 @@ export function Ruler() {
     useEffect(() => {
         measure();
         window.addEventListener('resize', measure);
-        const observer = new MutationObserver(measure);
-        observer.observe(document.body, { childList: true, subtree: true });
+        const observer = new ResizeObserver(measure);
+        observer.observe(document.body);
         return () => {
             window.removeEventListener('resize', measure);
             observer.disconnect();

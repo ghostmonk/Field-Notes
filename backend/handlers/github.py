@@ -54,16 +54,7 @@ query($login: String!) {
 
 
 async def _get_cached(db: AsyncIOMotorDatabase):
-    doc = await db["github_cache"].find_one({"key": "contributions"})
-    if not doc:
-        return None
-    fetched_at = doc["fetched_at"]
-    if fetched_at.tzinfo is None:
-        fetched_at = fetched_at.replace(tzinfo=timezone.utc)
-    elapsed = (datetime.now(timezone.utc) - fetched_at).total_seconds()
-    if elapsed > CACHE_TTL_SECONDS:
-        return None
-    return doc["data"]
+    return await _get_cached_by_key(db, "contributions")
 
 
 async def _fetch_from_github(token: str, username: str):

@@ -5,6 +5,7 @@ import type { HomepageData } from '../../types';
 
 vi.mock('@/modules/projects', () => ({
     ContributionGraph: () => <div data-testid="contribution-graph-mock">Graph</div>,
+    LanguageBreakdown: () => <div data-testid="language-breakdown-mock">Languages</div>,
 }));
 
 const mockData: HomepageData = {
