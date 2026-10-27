@@ -2,7 +2,7 @@ import '../styles/globals.css';
 import '../styles/editor.css';
 // Template CSS — must match template.active in site.config.json
 // To switch templates: change the import path AND the config value, then rebuild
-import '../templates/default/index.css';
+import '../templates/ghostmonk/index.css';
 import { AppProps } from 'next/app';
 import { SessionProvider } from "next-auth/react";
 import { Layout } from "@/layout";

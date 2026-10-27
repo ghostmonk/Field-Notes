@@ -18,6 +18,8 @@ export interface SiteConfig {
   fonts: {
     heading: string;
     body: string;
+    serif?: string;
+    mono?: string;
   };
   github?: {
     username: string;

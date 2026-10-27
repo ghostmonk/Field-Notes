@@ -3,7 +3,8 @@ import { getSiteConfig } from '@/config';
 
 const config = getSiteConfig();
 
-const fontFamilies = [...new Set([config.fonts.heading, config.fonts.body])]
+const allFonts = [config.fonts.heading, config.fonts.body, config.fonts.serif, config.fonts.mono].filter((f): f is string => Boolean(f));
+const fontFamilies = [...new Set(allFonts)]
     .map(f => `${f.replace(/ /g, '+')}:wght@300;400;500;600;700`)
     .join('&family=');
 
@@ -11,7 +12,7 @@ const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamilies}&displa
 
 export default function Document() {
     return (
-        <Html lang="en" className="dark" data-theme="dark" data-scroll-behavior="smooth" style={{backgroundColor: '#0f172a'}}>
+        <Html lang="en" className="dark" data-theme="dark" data-scroll-behavior="smooth" style={{backgroundColor: '#0a0a0c'}}>
             <Head>
                 {/* Meta tags */}
                 <meta charSet="utf-8" />
@@ -29,7 +30,7 @@ export default function Document() {
                 <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
                 <meta name="referrer-policy" content="strict-origin-when-cross-origin"/>
             </Head>
-            <body style={{backgroundColor: '#0f172a'}} className="text-foreground">
+            <body style={{backgroundColor: '#0a0a0c'}} className="text-foreground">
             <Main/>
             <NextScript/>
             </body>

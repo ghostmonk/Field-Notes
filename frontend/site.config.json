@@ -6,14 +6,16 @@
     "copyright": "© {year} Ghostmonk"
   },
   "template": {
-    "active": "default"
+    "active": "ghostmonk"
   },
   "hero": {
     "showOnHome": true
   },
   "fonts": {
-    "heading": "Roboto Slab",
-    "body": "Poppins"
+    "heading": "Space Grotesk",
+    "body": "Space Grotesk",
+    "serif": "Instrument Serif",
+    "mono": "JetBrains Mono"
   },
   "github": {
     "username": "ghostmonk",
