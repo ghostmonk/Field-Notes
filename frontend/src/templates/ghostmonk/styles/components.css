@@ -1098,6 +1098,11 @@
   color: var(--color-brand-primary);
 }
 
+.identity-hero__name em:lang(ja) {
+  font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  font-style: normal;
+}
+
 .identity-hero__sub {
   font-size: var(--font-size-lg);
   color: var(--color-text-secondary);

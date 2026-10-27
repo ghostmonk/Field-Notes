@@ -31,8 +31,8 @@ describe('IdentityHero', () => {
         render(<IdentityHero data={mockData} />);
         const heading = screen.getByRole('heading', { level: 1 });
         expect(heading).toHaveTextContent('Nicholas Hillier');
-        expect(heading).toHaveTextContent('builds things that');
-        expect(heading.querySelector('em')).toHaveTextContent('last');
+        expect(heading).toHaveTextContent('Shokunin Kishitsu');
+        expect(heading.querySelector('em')).toHaveTextContent('職人気質');
     });
 
     it('shows active role in eyebrow', () => {

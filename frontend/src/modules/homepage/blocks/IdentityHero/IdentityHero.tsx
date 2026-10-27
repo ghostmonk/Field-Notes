@@ -35,7 +35,7 @@ export function IdentityHero(_props: HomepageBlockProps) {
 
             <h1 className="identity-hero__name">
                 {name}<br />
-                {headline} <em>{headlineEmphasis}</em>
+                {headline} <em lang={/[　-鿿]/.test(headlineEmphasis) ? 'ja' : undefined}>{headlineEmphasis}</em>
             </h1>
 
             <p className="identity-hero__sub">{byline}</p>
