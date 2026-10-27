@@ -103,13 +103,13 @@
   --space-4xl: 4rem;
   --space-5xl: 6rem;
 
-  /* Radii — minimal, sharp aesthetic */
-  --radius-sm: 1px;
-  --radius-md: 2px;
-  --radius-lg: 4px;
-  --radius-xl: 6px;
-  --radius-2xl: 8px;
-  --radius-full: 9999px;
+  /* Radii — minimal, sharp aesthetic (gm- prefix avoids Tailwind @theme collision) */
+  --gm-radius-sm: 1px;
+  --gm-radius-md: 2px;
+  --gm-radius-lg: 4px;
+  --gm-radius-xl: 6px;
+  --gm-radius-2xl: 8px;
+  --gm-radius-full: 9999px;
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -167,54 +167,4 @@
   --color-grid: rgba(0, 0, 0, 0.04);
   --color-grid-strong: rgba(0, 0, 0, 0.08);
   --color-tick: rgba(0, 0, 0, 0.15);
-}
-
-.dark {
-  --color-surface-primary: #0a0a0c;
-  --color-surface-secondary: #111114;
-  --color-surface-tertiary: #16161a;
-  --color-surface-inverse: #f0ede8;
-
-  --color-brand-primary: #34d399;
-  --color-brand-primary-hover: #6ee7b7;
-  --color-brand-secondary: #059669;
-
-  --color-text-primary: #e0ddd8;
-  --color-text-secondary: #8a8580;
-  --color-text-tertiary: #4a4540;
-  --color-text-inverse: #0a0a0c;
-  --color-text-brand: #34d399;
-  --color-text-link: #34d399;
-  --color-text-link-hover: #6ee7b7;
-
-  --color-border-primary: #1e1e22;
-  --color-border-secondary: #2a2a2e;
-  --color-border-focus: #34d399;
-
-  --color-code-bg: #0d0d10;
-  --color-code-text: #e0ddd8;
-
-  --color-shadow-light: rgba(0, 0, 0, 0.3);
-  --color-shadow-medium: rgba(0, 0, 0, 0.5);
-  --color-shadow-dark: rgba(0, 0, 0, 0.7);
-
-  --color-focus-ring: rgba(52, 211, 153, 0.2);
-  --color-focus-ring-error: rgba(248, 113, 113, 0.2);
-
-  --color-surface-draft: rgba(120, 113, 108, 0.15);
-  --color-border-draft: rgb(133 77 14);
-
-  --color-text-on-status: #0a0a0c;
-
-  --color-contrib-none: #111114;
-  --color-contrib-first: #064e3b;
-  --color-contrib-second: #059669;
-  --color-contrib-third: #34d399;
-  --color-contrib-fourth: #6ee7b7;
-
-  --color-accent-dim: rgba(52, 211, 153, 0.12);
-  --color-accent-glow: rgba(52, 211, 153, 0.06);
-  --color-grid: rgba(255, 255, 255, 0.04);
-  --color-grid-strong: rgba(255, 255, 255, 0.08);
-  --color-tick: rgba(255, 255, 255, 0.15);
 }

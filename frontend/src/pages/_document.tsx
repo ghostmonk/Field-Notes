@@ -3,9 +3,14 @@ import { getSiteConfig } from '@/config';
 
 const config = getSiteConfig();
 
-const allFonts = [config.fonts.heading, config.fonts.body, config.fonts.serif, config.fonts.mono].filter((f): f is string => Boolean(f));
-const fontFamilies = [...new Set(allFonts)]
-    .map(f => `${f.replace(/ /g, '+')}:wght@300;400;500;600;700`)
+const fontWeightMap: Record<string, string> = {};
+const primaryFonts = [config.fonts.heading, config.fonts.body].filter((f): f is string => Boolean(f));
+for (const f of primaryFonts) fontWeightMap[f] = '300;400;500;600;700';
+if (config.fonts.serif) fontWeightMap[config.fonts.serif] ??= '400';
+if (config.fonts.mono) fontWeightMap[config.fonts.mono] ??= '400;500';
+
+const fontFamilies = Object.entries(fontWeightMap)
+    .map(([name, weights]) => `${name.replace(/ /g, '+')}:wght@${weights}`)
     .join('&family=');
 
 const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamilies}&display=swap`;
@@ -30,7 +35,7 @@ export default function Document() {
                 <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
                 <meta name="referrer-policy" content="strict-origin-when-cross-origin"/>
             </Head>
-            <body style={{backgroundColor: '#0a0a0c'}} className="text-foreground">
+            <body className="text-foreground">
             <Main/>
             <NextScript/>
             </body>

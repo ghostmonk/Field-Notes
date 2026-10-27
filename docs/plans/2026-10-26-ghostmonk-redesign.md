@@ -226,6 +226,12 @@ git commit -m "feat: switch active template to ghostmonk"
 
 ---
 
+### Review Finding: FOUC blocking script (Phase 2)
+
+Light-mode users see a dark flash on every page load because `_document.tsx` sends `className="dark"` and a dark inline background on `<Html>`. A blocking `<script>` in `<Head>` should read localStorage theme preference and set the class + background before first paint (same pattern next-themes uses). Implement when the theme toggle ships in Phase 2.
+
+---
+
 ## Phase 2: Flow Field Component
 
 The Perlin noise flow field with boid flocking, rendered on a fixed canvas behind all content.
