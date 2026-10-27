@@ -65,11 +65,9 @@ def get_client() -> anthropic.Anthropic:
         with _client_lock:
             if _client is None:
                 api_key = os.getenv("ANTHROPIC_API_KEY")
-                if not api_key:
-                    raise ServiceNotConfiguredError(
-                        "ANTHROPIC_API_KEY environment variable is required"
-                    )
-                _client = anthropic.Anthropic(api_key=api_key)
+                if not api_key or not api_key.strip():
+                    raise ServiceNotConfiguredError("ANTHROPIC_API_KEY must be set and non-empty")
+                _client = anthropic.Anthropic(api_key=api_key.strip())
     return _client
 
 
