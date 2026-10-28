@@ -10,11 +10,10 @@ export default function TopNav() {
     return (
         <nav className="nav" data-testid="top-nav">
             <div className="nav__container">
-                <HamburgerMenu />
                 <Link href="/" data-testid="nav-home-link" className="nav__link--home">
-                    <GhostmonkLogo height={42} />
+                    <GhostmonkLogo height={28} />
                 </Link>
-                <div className="flex items-center gap-2">
+                <div className="nav__actions">
                     {session ? (
                         <button
                             onClick={() => signOut()}
@@ -33,6 +32,7 @@ export default function TopNav() {
                         </button>
                     )}
                     <ThemeToggle />
+                    <HamburgerMenu />
                 </div>
             </div>
         </nav>
