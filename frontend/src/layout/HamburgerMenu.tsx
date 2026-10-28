@@ -140,25 +140,7 @@ export default function HamburgerMenu() {
                         </div>
                     )}
 
-                    {/* Utility links */}
-                    {config.footer.links.length > 0 && (
-                        <div className="menu-overlay__group">
-                            <div className="menu-overlay__links">
-                                {config.footer.links.map((link) => (
-                                    <Link
-                                        key={link.href}
-                                        href={link.href}
-                                        className="menu-overlay__link"
-                                        onClick={close}
-                                    >
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Account & Theme */}
+                    {/* Account, Theme & Utility links */}
                     <div className="menu-overlay__group">
                         <div className="menu-overlay__actions">
                             {session ? (
@@ -180,6 +162,20 @@ export default function HamburgerMenu() {
                             )}
                             <ThemeToggle />
                         </div>
+                        {config.footer.links.length > 0 && (
+                            <div className="menu-overlay__links">
+                                {config.footer.links.map((link) => (
+                                    <Link
+                                        key={link.href}
+                                        href={link.href}
+                                        className="menu-overlay__link"
+                                        onClick={close}
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </nav>
             </div>
