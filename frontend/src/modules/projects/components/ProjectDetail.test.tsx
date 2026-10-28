@@ -39,9 +39,9 @@ describe('ProjectDetail', () => {
     expect(screen.getByText('Test Project')).toBeInTheDocument();
   });
 
-  it('shows featured badge', () => {
+  it('shows active development status', () => {
     render(<ProjectDetail project={mockProject} />);
-    expect(screen.getByText('Featured')).toBeInTheDocument();
+    expect(screen.getByText('Active Development')).toBeInTheDocument();
   });
 
   it('renders technology tags', () => {
@@ -51,13 +51,13 @@ describe('ProjectDetail', () => {
 
   it('shows GitHub and Live Demo links', () => {
     render(<ProjectDetail project={mockProject} />);
-    const githubLink = screen.getByText('View on GitHub');
+    const githubLink = screen.getByText('GitHub');
     const liveLink = screen.getByText('Live Demo');
     expect(githubLink.closest('a')).toHaveAttribute('href', 'https://github.com/test');
     expect(liveLink.closest('a')).toHaveAttribute('href', 'https://test.com');
   });
 
-  it('renders content in Card', () => {
+  it('renders content', () => {
     render(<ProjectDetail project={mockProject} />);
     expect(screen.getByText('Content')).toBeInTheDocument();
   });
