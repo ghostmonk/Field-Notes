@@ -441,33 +441,33 @@
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn--primary, button.btn--primary {
-  background-color: transparent;
-  color: var(--color-text-tertiary);
-  border-color: var(--color-border-primary);
+  background: var(--color-accent-dim);
+  color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
   font-family: var(--font-family-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 .btn--primary:hover:not(:disabled), button.btn--primary:hover:not(:disabled) {
-  border-color: var(--color-brand-primary);
-  color: var(--color-brand-primary);
-  background: var(--color-accent-dim);
+  background: var(--color-accent-dim-hover);
+  color: var(--color-brand-primary-hover);
+  border-color: var(--color-brand-primary-hover);
 }
 
 .btn--secondary {
-  background-color: transparent;
-  color: var(--color-text-tertiary);
-  border-color: var(--color-border-primary);
+  background: var(--color-accent-dim);
+  color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
   font-family: var(--font-family-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 .btn--secondary:hover:not(:disabled) {
-  border-color: var(--color-brand-primary);
-  color: var(--color-brand-primary);
-  background: var(--color-accent-dim);
+  background: var(--color-accent-dim-hover);
+  color: var(--color-brand-primary-hover);
+  border-color: var(--color-brand-primary-hover);
 }
 
 .btn--danger {
@@ -1734,7 +1734,7 @@
 .homepage-container {
   max-width: 1100px;
   margin: 0 auto;
-  padding-left: 24px;
+  padding: 0 24px;
 }
 
 .homepage {

@@ -58,6 +58,7 @@
 
   /* Ghostmonk-specific accent tokens */
   --color-accent-dim: rgba(52, 211, 153, 0.12);
+  --color-accent-dim-hover: rgba(52, 211, 153, 0.22);
   --color-accent-glow: rgba(52, 211, 153, 0.06);
   --color-grid: rgba(255, 255, 255, 0.04);
   --color-grid-strong: rgba(255, 255, 255, 0.08);
@@ -162,6 +163,7 @@
   --color-contrib-fourth: #047857;
 
   --color-accent-dim: rgba(5, 150, 105, 0.1);
+  --color-accent-dim-hover: rgba(5, 150, 105, 0.2);
   --color-accent-glow: rgba(5, 150, 105, 0.05);
   --color-grid: rgba(0, 0, 0, 0.04);
   --color-grid-strong: rgba(0, 0, 0, 0.08);
