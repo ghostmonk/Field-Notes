@@ -47,7 +47,7 @@ export default function SearchPage({ results, query, total }: SearchPageProps) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search..."
-            className="search-bar__input search-bar__input--large"
+            className="input"
             aria-label="Search content"
             autoFocus
           />

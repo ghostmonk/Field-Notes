@@ -441,22 +441,33 @@
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn--primary, button.btn--primary {
-  background-color: var(--color-brand-primary);
-  color: var(--color-text-on-status) !important;
+  background-color: transparent;
+  color: var(--color-text-tertiary);
+  border-color: var(--color-border-primary);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 .btn--primary:hover:not(:disabled), button.btn--primary:hover:not(:disabled) {
-  background-color: var(--color-brand-primary-hover);
-  color: var(--color-text-on-status) !important;
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  background: var(--color-accent-dim);
 }
 
 .btn--secondary {
-  background-color: var(--color-surface-tertiary);
-  color: var(--color-text-primary);
+  background-color: transparent;
+  color: var(--color-text-tertiary);
   border-color: var(--color-border-primary);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 .btn--secondary:hover:not(:disabled) {
-  background-color: var(--color-surface-inverse);
-  color: var(--color-text-inverse) !important;
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  background: var(--color-accent-dim);
 }
 
 .btn--danger {
