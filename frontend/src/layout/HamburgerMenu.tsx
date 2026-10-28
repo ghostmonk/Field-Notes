@@ -104,12 +104,6 @@ export default function HamburgerMenu() {
                                     </Link>
                                 );
                             })}
-                        </div>
-                    </div>
-
-                    {/* Search */}
-                    <div className="menu-overlay__group">
-                        <div className="menu-overlay__links">
                             <Link
                                 href="/search"
                                 className="menu-overlay__link"
@@ -119,14 +113,7 @@ export default function HamburgerMenu() {
                                 <HiSearch className="menu-overlay__link-icon" aria-hidden="true" />
                                 <span>Search</span>
                             </Link>
-                        </div>
-                    </div>
-
-                    {/* Admin */}
-                    {session?.user?.role === "admin" && (
-                        <div className="menu-overlay__group">
-                            <h2 className="menu-overlay__heading">Admin</h2>
-                            <div className="menu-overlay__links">
+                            {session?.user?.role === "admin" && (
                                 <Link
                                     href="/admin"
                                     className="menu-overlay__link"
@@ -136,9 +123,9 @@ export default function HamburgerMenu() {
                                     <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
                                     <span>Master Control</span>
                                 </Link>
-                            </div>
+                            )}
                         </div>
-                    )}
+                    </div>
 
                     {/* Account, Theme & Utility links */}
                     <div className="menu-overlay__group">
