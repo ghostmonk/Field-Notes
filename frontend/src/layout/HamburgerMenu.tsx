@@ -97,94 +97,94 @@ export default function HamburgerMenu() {
                 aria-hidden={!isOpen}
             >
                 <nav className="menu-overlay__content" role="navigation" aria-label="Main menu">
-                    {/* Sections */}
-                    <div className="menu-overlay__group">
-                        <h2 className="menu-overlay__heading">Sections</h2>
-                        <div className="menu-overlay__links">
-                            {sections.map((section) => {
-                                const Icon = iconMap[section.icon];
-                                const isActive = activeSlug === section.slug;
-                                return (
-                                    <Link
-                                        key={section.slug}
-                                        href={section.path}
-                                        className={`menu-overlay__link ${isActive ? "menu-overlay__link--active" : ""}`}
-                                        data-testid={`nav-${section.slug}-link`}
-                                        aria-current={isActive ? "page" : undefined}
-                                        onClick={close}
-                                    >
-                                        <Icon className="menu-overlay__link-icon" aria-hidden="true" />
-                                        <span>{section.label}</span>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    {/* Search bar — full width above the columns */}
+                    <form onSubmit={handleMenuSearch} className="menu-overlay__search" role="search">
+                        <input
+                            type="search"
+                            value={menuSearch}
+                            onChange={(e) => setMenuSearch(e.target.value)}
+                            placeholder="Search..."
+                            className="input"
+                            aria-label="Search content"
+                        />
+                    </form>
 
-                    {/* Search + Admin */}
-                    <div className="menu-overlay__group">
-                        <form onSubmit={handleMenuSearch} className="menu-overlay__search" role="search">
-                            <input
-                                type="search"
-                                value={menuSearch}
-                                onChange={(e) => setMenuSearch(e.target.value)}
-                                placeholder="Search..."
-                                className="input"
-                                aria-label="Search content"
-                            />
-                            <button type="submit" className="btn btn--primary">Search</button>
-                        </form>
-                        {session?.user?.role === "admin" && (
+                    {/* Column grid */}
+                    <div className="menu-overlay__columns">
+                        {/* Sections */}
+                        <div className="menu-overlay__group">
+                            <h2 className="menu-overlay__heading">Sections</h2>
                             <div className="menu-overlay__links">
-                                <Link
-                                    href="/admin"
-                                    className="menu-overlay__link"
-                                    data-testid="nav-master-control-link"
-                                    onClick={close}
-                                >
-                                    <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
-                                    <span>Master Control</span>
-                                </Link>
+                                {sections.map((section) => {
+                                    const Icon = iconMap[section.icon];
+                                    const isActive = activeSlug === section.slug;
+                                    return (
+                                        <Link
+                                            key={section.slug}
+                                            href={section.path}
+                                            className={`menu-overlay__link ${isActive ? "menu-overlay__link--active" : ""}`}
+                                            data-testid={`nav-${section.slug}-link`}
+                                            aria-current={isActive ? "page" : undefined}
+                                            onClick={close}
+                                        >
+                                            <Icon className="menu-overlay__link-icon" aria-hidden="true" />
+                                            <span>{section.label}</span>
+                                        </Link>
+                                    );
+                                })}
                             </div>
-                        )}
-                    </div>
-
-                    {/* Account, Theme & Utility links */}
-                    <div className="menu-overlay__group">
-                        <div className="menu-overlay__actions">
-                            {session ? (
-                                <button
-                                    onClick={() => signOut()}
-                                    className="btn btn--secondary"
-                                    data-testid="logout-button"
-                                >
-                                    Logout
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => process.env.NEXT_PUBLIC_DEV_AUTH === 'true' ? signIn() : signIn("google")}
-                                    className="btn btn--primary"
-                                    data-testid="signin-button"
-                                >
-                                    Sign in
-                                </button>
-                            )}
-                            <ThemeToggle />
                         </div>
-                        {config.footer.links.length > 0 && (
-                            <div className="menu-overlay__links">
-                                {config.footer.links.map((link) => (
+
+                        {/* Links & Account */}
+                        <div className="menu-overlay__group">
+                            <div className="menu-overlay__actions">
+                                {session ? (
+                                    <button
+                                        onClick={() => signOut()}
+                                        className="btn btn--secondary"
+                                        data-testid="logout-button"
+                                    >
+                                        Logout
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => process.env.NEXT_PUBLIC_DEV_AUTH === 'true' ? signIn() : signIn("google")}
+                                        className="btn btn--primary"
+                                        data-testid="signin-button"
+                                    >
+                                        Sign in
+                                    </button>
+                                )}
+                                <ThemeToggle />
+                            </div>
+                            {session?.user?.role === "admin" && (
+                                <div className="menu-overlay__links">
                                     <Link
-                                        key={link.href}
-                                        href={link.href}
+                                        href="/admin"
                                         className="menu-overlay__link"
+                                        data-testid="nav-master-control-link"
                                         onClick={close}
                                     >
-                                        {link.label}
+                                        <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
+                                        <span>Master Control</span>
                                     </Link>
-                                ))}
-                            </div>
-                        )}
+                                </div>
+                            )}
+                            {config.footer.links.length > 0 && (
+                                <div className="menu-overlay__links">
+                                    {config.footer.links.map((link) => (
+                                        <Link
+                                            key={link.href}
+                                            href={link.href}
+                                            className="menu-overlay__link"
+                                            onClick={close}
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </nav>
             </div>

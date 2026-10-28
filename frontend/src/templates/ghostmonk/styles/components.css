@@ -941,14 +941,19 @@
   max-width: 1100px;
   margin: 0 auto;
   padding: var(--space-2xl) 24px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+@media (min-width: 768px) {
+  .menu-overlay__content { padding: var(--space-3xl) 24px; }
+}
+.menu-overlay__columns {
   display: grid;
   gap: var(--space-2xl);
 }
 @media (min-width: 768px) {
-  .menu-overlay__content { grid-template-columns: repeat(2, 1fr); padding: var(--space-3xl) 24px; }
-}
-@media (min-width: 1024px) {
-  .menu-overlay__content { grid-template-columns: repeat(3, 1fr); }
+  .menu-overlay__columns { grid-template-columns: 1fr 1fr; }
 }
 
 .menu-overlay__group { display: flex; flex-direction: column; gap: var(--space-md); }
