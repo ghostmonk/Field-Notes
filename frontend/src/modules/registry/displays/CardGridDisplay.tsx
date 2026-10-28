@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { CardGridDisplayProps } from '../types';
-import { Grid, Button } from '@/components/ui';
 
 const PAGE_SIZE = 12;
 
@@ -12,23 +11,23 @@ export function CardGridDisplay<T>({ items = [] as unknown as T[], renderItem }:
 
     return (
         <>
-            <Grid variant="responsive">
+            <div className="project-list" data-testid="card-grid-display">
                 {visibleItems.map((item, index) => (
-                    <React.Fragment key={index}>
+                    <div key={index}>
                         {renderItem(item)}
-                    </React.Fragment>
+                    </div>
                 ))}
-            </Grid>
+            </div>
             {hasMore && (
-                <div className="text-center py-6">
-                    <Button
+                <div className="project-list__more">
+                    <button
                         type="button"
                         onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
-                        variant="secondary"
+                        className="project-list__more-btn"
                         data-testid="show-more-button"
                     >
                         Show More ({safeItems.length - visibleCount} remaining)
-                    </Button>
+                    </button>
                 </div>
             )}
         </>

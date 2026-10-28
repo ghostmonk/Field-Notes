@@ -39,15 +39,14 @@ describe('ProjectCard', () => {
     expect(screen.getByText('Test Project')).toBeInTheDocument();
   });
 
-  it('renders technologies as tags', () => {
+  it('renders technologies in tech line', () => {
     render(<ProjectCard project={mockProject} />);
-    expect(screen.getByText('React')).toBeInTheDocument();
-    expect(screen.getByText('Node')).toBeInTheDocument();
+    expect(screen.getByText(/React \+ Node/)).toBeInTheDocument();
   });
 
-  it('shows featured badge when is_featured is true', () => {
+  it('shows active status when is_featured is true', () => {
     render(<ProjectCard project={{ ...mockProject, is_featured: true }} />);
-    expect(screen.getByText('Featured')).toBeInTheDocument();
+    expect(screen.getByText('Active')).toBeInTheDocument();
   });
 
   it('links to correct project URL', () => {
@@ -67,11 +66,10 @@ describe('ProjectCard', () => {
   // <a> or Card as="a"), it still renders an anchor but loses SPA transitions
   // and prefetching. This test verifies the mock is wired up — if someone
   // removes the Link import, the mock stops matching and the test breaks.
-  it('wraps card in a navigable link with card--link styling', () => {
+  it('wraps card in a navigable link with project-card styling', () => {
     render(<ProjectCard project={mockProject} />);
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/projects/test-project');
-    // card--link on the anchor prevents default link styling (underline, blue text)
-    expect(link.className).toContain('card--link');
+    expect(link.className).toContain('project-card');
   });
 });

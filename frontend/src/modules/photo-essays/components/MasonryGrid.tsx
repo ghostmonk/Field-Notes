@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { PhotoItem } from '@/shared/types/api';
 import { useImageRetry } from '@/hooks/useImageRetry';
 
@@ -9,13 +9,28 @@ interface Props {
 
 export function MasonryGrid({ photos, onPhotoClick }: Props) {
     const { handleError, cleanup } = useImageRetry();
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [scrolledPastStart, setScrolledPastStart] = useState(false);
 
     useEffect(() => {
         return cleanup;
     }, [cleanup]);
 
+    const handleScroll = useCallback(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        setScrolledPastStart(el.scrollLeft > 40);
+    }, []);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        el.addEventListener('scroll', handleScroll, { passive: true });
+        return () => el.removeEventListener('scroll', handleScroll);
+    }, [handleScroll]);
+
     return (
-        <div className="masonry-grid" data-testid="masonry-grid">
+        <div className="masonry-grid" data-testid="masonry-grid" ref={containerRef}>
             {photos.map((photo, index) => (
                     <button
                         key={`${photo.url}-${index}`}
@@ -28,13 +43,10 @@ export function MasonryGrid({ photos, onPhotoClick }: Props) {
                         <img
                             src={photo.url}
                             srcSet={photo.srcset || undefined}
-                            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                            sizes="auto"
                             alt={photo.caption || ''}
-                            width={photo.width}
-                            height={photo.height}
                             loading="lazy"
                             decoding="async"
-                            style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
                             className="masonry-grid__image"
                             data-no-zoom="true"
                             onLoad={(e) => e.currentTarget.setAttribute('data-loaded', 'true')}
@@ -45,6 +57,14 @@ export function MasonryGrid({ photos, onPhotoClick }: Props) {
                         )}
                     </button>
                 ))}
+            <div className={`masonry-grid__scroll-hint ${scrolledPastStart ? 'masonry-grid__scroll-hint--hidden' : ''}`}>
+                <span className="masonry-grid__scroll-hint-label">
+                    {photos.length} photos
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                </span>
+            </div>
         </div>
     );
 }
