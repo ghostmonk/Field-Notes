@@ -7,6 +7,7 @@
 
 body {
   background-color: var(--color-surface-primary);
+  overflow-x: clip;
 }
 
 .layout-wrapper {
