@@ -1,4 +1,4 @@
-.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui test-frontend-unit clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-local install-frontend migrate migrate-status migrate-down
+.PHONY: format format-check lint-frontend test test-unit test-integration test-coverage test-ci test-frontend test-frontend-ui test-frontend-unit clean clean-frontend docker-build docker-up docker-down docker-logs install venv env venv-clean docker-nuke deps deps-dev deps-compile deps-upgrade dev dev-local install-frontend migrate migrate-status migrate-down services seed
 
 # Port configuration (override in .env.local for worktree isolation)
 FRONTEND_PORT ?= 3000
@@ -190,10 +190,24 @@ down:
 logs:
 	docker compose logs -f
 
-# Alias for dev-local
-dev: dev-local
+# Development: native backend + frontend with hot reload, Docker for infra only
+dev:
+	@scripts/dev.sh
 
-# Development: Combined container (mirrors production) + Docker mongo/qdrant
+# Infrastructure only: mongo + qdrant via Docker
+services:
+	docker compose up -d mongo qdrant
+	@echo ""
+	@echo "MongoDB:  localhost:$(MONGO_PORT)"
+	@echo "Qdrant:   localhost:$(QDRANT_PORT)"
+
+# Seed local database with representative content
+seed:
+	. $(VENV_ACTIVATE) && python scripts/seed.py \
+		--mongo-uri "mongodb://localhost:$(MONGO_PORT)" \
+		--db-name "$${MONGO_DB_NAME:-ghostmonk}"
+
+# Development: Combined Docker container (mirrors production, no hot reload)
 dev-local:
 	@echo "Building and starting combined app + MongoDB + Qdrant..."
 	docker compose up --build -d
@@ -253,8 +267,10 @@ help:
 	@echo "  docker-up        - Start Docker containers"
 	@echo "  docker-down      - Stop Docker containers"
 	@echo "  docker-logs      - Show Docker container logs"
-	@echo "  dev              - Alias for dev-local"
+	@echo "  dev              - Start full dev environment with hot reload (recommended)"
 	@echo "  dev-local        - Build and run combined container + mongo + qdrant (mirrors production)"
+	@echo "  services         - Start only mongo + qdrant via Docker"
+	@echo "  seed             - Seed local database with representative content"
 	@echo "  clean            - Clean up Python cache files and build artifacts"
 	@echo "  clean-frontend   - Remove frontend node_modules and .next cache"
 	@echo "  docker-nuke      - Nuke all Docker resources for a clean slate"
