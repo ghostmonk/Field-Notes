@@ -927,14 +927,14 @@
 .menu-overlay--open { transform: translateY(0); visibility: visible; }
 
 .menu-overlay__content {
-  max-width: var(--layout-container-max-width);
+  max-width: 1100px;
   margin: 0 auto;
-  padding: var(--space-2xl) var(--space-lg);
+  padding: var(--space-2xl) 24px;
   display: grid;
   gap: var(--space-2xl);
 }
 @media (min-width: 768px) {
-  .menu-overlay__content { grid-template-columns: repeat(2, 1fr); padding: var(--space-3xl) var(--space-lg); }
+  .menu-overlay__content { grid-template-columns: repeat(2, 1fr); padding: var(--space-3xl) 24px; }
 }
 @media (min-width: 1024px) {
   .menu-overlay__content { grid-template-columns: repeat(3, 1fr); }
