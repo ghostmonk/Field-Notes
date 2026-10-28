@@ -75,10 +75,10 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
             ? fetchJson<PaginatedResponse<Story>>(`${backendUrl}/stories?limit=6&offset=0&include_drafts=false`)
             : Promise.resolve(null),
         blockTypes.has('project-showcase')
-            ? fetchJson<PaginatedResponse<ProjectCard>>(`${backendUrl}/projects?limit=6&offset=0`)
+            ? fetchJson<PaginatedResponse<ProjectCard>>(`${backendUrl}/projects?limit=6&offset=0&include_drafts=false`)
             : Promise.resolve(null),
         blockTypes.has('photo-strip')
-            ? fetchJson<PaginatedResponse<PhotoEssayCard>>(`${backendUrl}/photo-essays?limit=5&offset=0`)
+            ? fetchJson<PaginatedResponse<PhotoEssayCard>>(`${backendUrl}/photo-essays?limit=5&offset=0&include_drafts=false`)
             : Promise.resolve(null),
         fetchSectionPathMap(backendUrl),
     ]);

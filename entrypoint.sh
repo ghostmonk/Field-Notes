@@ -54,7 +54,18 @@ echo "[entrypoint] Waiting for Next.js to start"
 for i in $(seq 1 30); do
     if curl -sf http://localhost:${NEXT_PORT}/ > /dev/null 2>&1; then
         echo "[entrypoint] Next.js ready, triggering ISR revalidation"
-        curl -s http://localhost:${NEXT_PORT}/api/warmup > /dev/null 2>&1
+        for attempt in 1 2 3; do
+            WARMUP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:${NEXT_PORT}/api/warmup)
+            if [ "$WARMUP_STATUS" = "200" ]; then
+                echo "[entrypoint] ISR warmup succeeded (attempt $attempt)"
+                break
+            fi
+            echo "[entrypoint] Warmup returned $WARMUP_STATUS (attempt $attempt), retrying in 2s..."
+            sleep 2
+        done
+        if [ "$WARMUP_STATUS" != "200" ]; then
+            echo "[entrypoint] ISR warmup failed after 3 attempts (last status: $WARMUP_STATUS), pages may serve stale content"
+        fi
         break
     fi
     sleep 1
