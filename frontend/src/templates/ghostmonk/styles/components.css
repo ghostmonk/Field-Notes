@@ -1052,11 +1052,11 @@
   margin: 0 auto;
   padding: var(--space-xl) 24px 0;
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-md);
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-sm);
 }
-.site-footer__social-bar .site-footer__heading { margin-bottom: 0; }
+.site-footer__socials { display: flex; gap: var(--space-md); flex-wrap: wrap; }
 .site-footer__social-icon { color: var(--color-text-secondary); font-size: 1.25rem; transition: color var(--transition-fast); }
 .site-footer__social-icon:hover { color: var(--color-text-link); }
 .site-footer__brand { text-align: center; margin-bottom: var(--space-2xl); max-width: 1100px; margin-left: auto; margin-right: auto; padding: 0 24px; }
