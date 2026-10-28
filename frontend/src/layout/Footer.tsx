@@ -91,6 +91,7 @@ const Footer: React.FC = () => {
             {/* Social icons — bottom right */}
             {config.socials && Object.values(config.socials).some(Boolean) && (
                 <div className="site-footer__social-bar">
+                    <h3 className="site-footer__heading">Social</h3>
                     {socialLinks.map(({ key, label, Icon }) => {
                         const url = config.socials?.[key];
                         if (!url) return null;
