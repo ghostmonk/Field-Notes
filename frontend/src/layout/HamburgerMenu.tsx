@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { iconMap } from "@/shared/lib/navIcons";
-import { HiCog, HiSearch } from "react-icons/hi";
+import { HiCog } from "react-icons/hi";
 import { getSiteConfig } from "@/config";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -20,8 +21,21 @@ export default function HamburgerMenu() {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const hasMounted = useRef(false);
 
+    const router = useRouter();
+    const [menuSearch, setMenuSearch] = useState("");
+
     const close = useCallback(() => setIsOpen(false), []);
     const toggle = useCallback(() => setIsOpen(prev => !prev), []);
+
+    const handleMenuSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        const trimmed = menuSearch.trim();
+        if (trimmed) {
+            close();
+            router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+            setMenuSearch("");
+        }
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -104,16 +118,24 @@ export default function HamburgerMenu() {
                                     </Link>
                                 );
                             })}
-                            <Link
-                                href="/search"
-                                className="menu-overlay__link"
-                                data-testid="nav-search-link"
-                                onClick={close}
-                            >
-                                <HiSearch className="menu-overlay__link-icon" aria-hidden="true" />
-                                <span>Search</span>
-                            </Link>
-                            {session?.user?.role === "admin" && (
+                        </div>
+                    </div>
+
+                    {/* Search + Admin */}
+                    <div className="menu-overlay__group">
+                        <form onSubmit={handleMenuSearch} className="menu-overlay__search" role="search">
+                            <input
+                                type="search"
+                                value={menuSearch}
+                                onChange={(e) => setMenuSearch(e.target.value)}
+                                placeholder="Search..."
+                                className="input"
+                                aria-label="Search content"
+                            />
+                            <button type="submit" className="btn btn--primary">Search</button>
+                        </form>
+                        {session?.user?.role === "admin" && (
+                            <div className="menu-overlay__links">
                                 <Link
                                     href="/admin"
                                     className="menu-overlay__link"
@@ -123,8 +145,8 @@ export default function HamburgerMenu() {
                                     <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
                                     <span>Master Control</span>
                                 </Link>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Account, Theme & Utility links */}

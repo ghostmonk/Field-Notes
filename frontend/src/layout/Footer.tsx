@@ -54,6 +54,14 @@ const Footer: React.FC = () => {
                                 Search
                             </Link>
                         </li>
+                        {session?.user?.role === 'admin' && (
+                            <li>
+                                <Link href="/admin" className="site-footer__link" data-testid="footer-master-control-link">
+                                    <HiCog className="site-footer__link-icon" aria-hidden="true" />
+                                    Master Control
+                                </Link>
+                            </li>
+                        )}
                     </ul>
                 </div>
 
@@ -88,21 +96,6 @@ const Footer: React.FC = () => {
                                 );
                             })}
                         </div>
-                    </div>
-                )}
-
-                {/* Admin column */}
-                {session?.user?.role === 'admin' && (
-                    <div className="site-footer__column">
-                        <h3 className="site-footer__heading">Admin</h3>
-                        <ul className="site-footer__list">
-                            <li>
-                                <Link href="/admin" className="site-footer__link" data-testid="footer-master-control-link">
-                                    <HiCog className="site-footer__link-icon" aria-hidden="true" />
-                                    Master Control
-                                </Link>
-                            </li>
-                        </ul>
                     </div>
                 )}
             </div>

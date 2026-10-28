@@ -977,6 +977,14 @@
 .menu-overlay__link--active { color: var(--color-brand-primary); }
 .dark .menu-overlay__link--active { color: var(--color-text-brand); }
 .menu-overlay__link-icon { width: 24px; height: 24px; flex-shrink: 0; }
+.menu-overlay__search {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+.menu-overlay__search .input {
+  flex: 1;
+}
 .menu-overlay__actions {
   display: flex;
   align-items: center;
