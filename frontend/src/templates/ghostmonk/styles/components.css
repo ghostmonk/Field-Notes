@@ -1248,6 +1248,53 @@
   padding: 0 var(--space-lg);
 }
 
+/* --- Static Page --- */
+.static-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: var(--space-2xl) 0;
+}
+
+.static-page__title {
+  font-family: var(--font-family-heading);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: var(--font-weight-normal);
+  font-style: italic;
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-lg) 0;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.static-page__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-3xl);
+}
+
+.static-page__admin {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-lg);
+}
+
+.static-page__contact {
+  margin-top: var(--space-2xl);
+}
+
+.static-page-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
 /* --- Editor toolbar --- */
 .editor-toolbar__btn { padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--gm-radius-sm); cursor: pointer; }
 .editor-toolbar__btn--active { background-color: var(--color-surface-tertiary); }
