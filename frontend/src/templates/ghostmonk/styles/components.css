@@ -1295,6 +1295,20 @@
   padding: 0 var(--space-lg);
 }
 
+/* --- Contact Form --- */
+.contact-form {
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--color-border-primary);
+}
+
+.contact-form .form-field label {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+}
+
 /* --- Editor toolbar --- */
 .editor-toolbar__btn { padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--gm-radius-sm); cursor: pointer; }
 .editor-toolbar__btn--active { background-color: var(--color-surface-tertiary); }
