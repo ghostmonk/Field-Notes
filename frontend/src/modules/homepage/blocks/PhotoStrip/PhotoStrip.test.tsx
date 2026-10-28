@@ -12,6 +12,7 @@ function makeEssay(overrides: Partial<PhotoEssayCard> = {}): PhotoEssayCard {
         cover_image_url: '/images/test.jpg',
         is_published: true,
         photo_count: 12,
+        tags: [],
         section_id: 'sec-photo',
         createdDate: '2026-10-01',
         updatedDate: '2026-10-20',

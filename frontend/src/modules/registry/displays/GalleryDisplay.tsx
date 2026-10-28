@@ -1,4 +1,3 @@
-import React from 'react';
 import type { GalleryDisplayProps } from '../types';
 
 function getItemKey<T>(item: T, index: number): string {
@@ -10,9 +9,9 @@ function getItemKey<T>(item: T, index: number): string {
 
 export function GalleryDisplay<T>({ items, renderItem }: GalleryDisplayProps<T>) {
     return (
-        <div className="gallery-landing" data-testid="gallery-display">
+        <div className="gallery-masonry" data-testid="gallery-display">
             {items.map((item, index) => (
-                <div key={getItemKey(item, index)} className="gallery-landing__item">
+                <div key={getItemKey(item, index)} className="gallery-masonry__item">
                     {renderItem(item)}
                 </div>
             ))}

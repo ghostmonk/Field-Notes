@@ -13,7 +13,7 @@ import { StoryCard, canEditStory } from '@/modules/stories';
 import { StoryFeedItem } from '@/modules/stories/components/StoryFeedItem';
 import { useStoryMutations } from '@/modules/stories';
 import { ContributionGraph, ProjectCard } from '@/modules/projects';
-import { PhotoEssayCard, PhotoEssayPage } from '@/modules/photo-essays';
+import { PhotoEssayCard, GalleryFilterBar, PhotoEssayPage } from '@/modules/photo-essays';
 import { ProjectDetail } from '@/modules/projects';
 import { StoryDetail } from '@/modules/stories';
 import { EngagementProvider, ReactionBar, CommentSection, useEngagementContext } from '@/modules/engagement';
@@ -74,6 +74,7 @@ function SectionListView({ section, initialListData }: { section: Section; initi
     const confirm = useConfirm();
     const { showToast } = useToast();
     const [engagementCounts, setEngagementCounts] = useState<BulkCountsResponse['counts']>({});
+    const [activeTag, setActiveTag] = useState<string | null>(null);
 
     const { items: rawItems, loading, error, hasMore, loadMore, reset } = useFetchContent({
         contentType,
@@ -214,11 +215,21 @@ function SectionListView({ section, initialListData }: { section: Section; initi
     const DisplayComponent = displayRegistry[displayType];
 
     if (displayType === 'gallery') {
+        const allTags = Array.from(new Set(
+            (items as PhotoEssayCardType[]).flatMap(e => e.tags ?? [])
+        )).sort();
+        const filteredItems = activeTag
+            ? items.filter(item => (item as PhotoEssayCardType).tags?.includes(activeTag))
+            : items;
+
         return (
-            <DisplayComponent
-                items={items}
-                renderItem={renderItem}
-            />
+            <>
+                <GalleryFilterBar tags={allTags} activeTag={activeTag} onTagChange={setActiveTag} />
+                <DisplayComponent
+                    items={filteredItems}
+                    renderItem={renderItem}
+                />
+            </>
         );
     }
 
