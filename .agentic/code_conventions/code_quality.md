@@ -66,14 +66,14 @@ Expose the minimum surface. Internal state is not part of the API.
 - TypeScript: export only what other modules consume. Use `private` / `readonly` on class members. Module internals stay unexported; don't export a helper just to test it — test through the public API.
 - Pydantic/data models are exempt: their fields are the public contract.
 
-## RightCurly
+## RightCurly (review)
 
-Closing-brace placement is owned by the formatter.
+Closing-brace placement follows a consistent style.
 
-- TypeScript: `}` closes on its own line, and `else`, `catch`, `finally` sit on the same line as the preceding `}` (`} else {`). eslint `--fix` and editor formatting enforce this; don't hand-format against it.
+- TypeScript: `}` closes on its own line, and `else`, `catch`, `finally` sit on the same line as the preceding `}` (`} else {`). No eslint rule enforces this; reviewers catch violations.
 - Python: no braces; the equivalent concern (closing brackets on multi-line calls and literals) is owned by black. Don't hand-align.
 
-## NeedBraces
+## NeedBraces (review)
 
 - TypeScript: every `if`, `else`, `for`, `while`, and `do` body uses braces, including one-liners. No `if (x) return;`. Early-return guards are written `if (x) { return; }` or split across lines.
 - Python: no single-line compound statements. `if x: return` on one line is forbidden; the body goes on its own indented line.
@@ -90,7 +90,7 @@ Closing-brace placement is owned by the formatter.
 
 ## MethodParamPad
 
-No whitespace between a function name and its opening parenthesis, in definitions or calls: `fetchStory(id)`, never `fetchStory (id)`. Same for `def`, constructors, and decorators. Formatter-enforced in both stacks; listed here so generated code doesn't introduce it.
+No whitespace between a function name and its opening parenthesis, in definitions or calls: `fetchStory(id)`, never `fetchStory (id)`. Same for `def`, constructors, and decorators. Python: enforced by black. TypeScript: no eslint rule; enforced in review.
 
 ## AvoidNestedBlocks
 
@@ -101,4 +101,4 @@ No whitespace between a function name and its opening parenthesis, in definition
 
 ## Enforcement
 
-Formatter-owned rules (LineLength, RightCurly, MethodParamPad) are covered by `make format`. All other rules are checked in review: the PR review bot and human reviewers flag violations against this file by rule name. When fixing a violation in touched code, fix only what the change touches; don't mix bulk cleanup into feature PRs.
+Formatter-owned rules (LineLength, MethodParamPad/Python) are covered by `make format`. All other rules — including NeedBraces, RightCurly, and MethodParamPad/TypeScript — are checked in review: the PR review bot and human reviewers flag violations against this file by rule name. When fixing a violation in touched code, fix only what the change touches; don't mix bulk cleanup into feature PRs.
