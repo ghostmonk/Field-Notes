@@ -1227,15 +1227,18 @@
 .featured__image {
   border-radius: var(--gm-radius-md);
   overflow: hidden;
+  max-height: 320px;
 }
 
 .featured__image-inner {
   display: block;
+  height: 100%;
 }
 
 .featured__image-inner img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
   border-radius: var(--gm-radius-md);
 }
