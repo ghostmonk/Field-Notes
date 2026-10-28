@@ -21,6 +21,7 @@ const mockStory = {
   slug: 'test-story',
   is_published: true,
   date: '2025-01-01',
+  tags: ['photography', 'architecture'],
   createdDate: '2025-01-01T00:00:00Z',
   updatedDate: '2025-01-01T00:00:00Z',
 } as Story;
@@ -60,12 +61,25 @@ describe('StoryDetail', () => {
     expect(screen.getByTestId('child')).toHaveTextContent('Child content');
   });
 
-  // -- Pattern: Semantic HTML element --
-  // StoryDetail must render as <article>, not <div>. Screen readers and
-  // structured-data parsers use this landmark for content navigation.
   it('renders as <article> for semantic HTML', () => {
     render(<StoryDetail story={mockStory} />);
     const el = screen.getByTestId('story-article');
     expect(el.tagName).toBe('ARTICLE');
+  });
+
+  it('renders tags when present', () => {
+    render(<StoryDetail story={mockStory} />);
+    expect(screen.getByText('photography')).toBeInTheDocument();
+    expect(screen.getByText('architecture')).toBeInTheDocument();
+  });
+
+  it('omits tags section when tags are empty', () => {
+    render(<StoryDetail story={{ ...mockStory, tags: [] }} />);
+    expect(screen.queryByText('photography')).not.toBeInTheDocument();
+  });
+
+  it('shows updated date when different from created', () => {
+    render(<StoryDetail story={{ ...mockStory, updatedDate: '2025-02-01T00:00:00Z' }} />);
+    expect(screen.getByText(/Updated/)).toBeInTheDocument();
   });
 });

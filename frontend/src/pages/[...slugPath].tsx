@@ -46,13 +46,13 @@ function StoryEngagement() {
 
     return (
         <>
-            <div className="mt-8 border-t pt-8">
+            <div className="story-detail__engagement">
                 <ReactionBar
                     reactions={reactions}
                     onToggle={toggleReaction}
                 />
             </div>
-            <div className="mt-8">
+            <div className="story-detail__comments">
                 <CommentSection
                     comments={comments}
                     onAddComment={addComment}
@@ -312,7 +312,7 @@ function SectionDetailView({ section, item }: { section: Section; item: Story | 
             ? () => router.push({ pathname: '/editor', query: { id: story.id, section_id: section.id } })
             : undefined;
         return (
-            <div className="detail-container">
+            <div className="story-detail-container">
                 <Breadcrumbs items={[
                     { label: section.title, href: getSectionPath(section) },
                     { label: story.title },

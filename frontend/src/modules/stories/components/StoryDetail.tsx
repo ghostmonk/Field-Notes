@@ -14,32 +14,49 @@ interface StoryDetailProps {
 
 export const StoryDetail: React.FC<StoryDetailProps> = ({ story, onEdit, children }) => {
     return (
-        <article className="card" data-testid="story-article">
+        <article className="story-detail" data-testid="story-article">
             <ReadingProgressBar />
-            <div className="flex items-center justify-between mb-2">
-                <h1 className="story-title" data-testid="story-page-title">{story.title}</h1>
-                <AdminEditButton
-                    onClick={onEdit}
-                    data-testid="story-edit-button"
-                />
-            </div>
-
-            <div className="flex items-center text-sm mb-8">
-                <span style={{ color: 'var(--color-text-tertiary)' }} title={formatDate(story.createdDate)}>{formatRelativeDate(story.createdDate)}</span>
-                {story.updatedDate !== story.createdDate && (
-                    <span className="text-xs ml-2 opacity-70" style={{ color: 'var(--color-text-tertiary)' }} title={formatDate(story.updatedDate)}>
-                        (Updated: {formatRelativeDate(story.updatedDate)})
-                    </span>
-                )}
-                <span className="mx-2" style={{ color: 'var(--color-text-tertiary)' }} aria-hidden="true">·</span>
-                <span style={{ color: 'var(--color-text-tertiary)' }}>{estimateReadingTime(story.content || '')}</span>
-            </div>
+            <header className="story-detail__header">
+                <div className="story-detail__admin">
+                    <AdminEditButton
+                        onClick={onEdit}
+                        data-testid="story-edit-button"
+                    />
+                </div>
+                <h1 className="story-detail__title" data-testid="story-page-title">{story.title}</h1>
+                <div className="story-detail__meta">
+                    <time
+                        className="story-detail__date"
+                        dateTime={story.createdDate}
+                        title={formatDate(story.createdDate)}
+                    >
+                        {formatRelativeDate(story.createdDate)}
+                    </time>
+                    {story.updatedDate !== story.createdDate && (
+                        <span className="story-detail__updated" title={formatDate(story.updatedDate)}>
+                            Updated {formatRelativeDate(story.updatedDate)}
+                        </span>
+                    )}
+                    <span className="story-detail__separator" aria-hidden="true">/</span>
+                    <span className="story-detail__reading-time">{estimateReadingTime(story.content || '')}</span>
+                </div>
+            </header>
 
             <LazyStoryContent
                 content={story.content}
-                className="prose--card lg:prose-lg dark:prose-invert"
+                className="prose"
                 data-testid="story-content"
             />
+
+            {story.tags?.length > 0 && (
+                <footer className="story-detail__footer">
+                    <div className="story-detail__tags">
+                        {story.tags.map((tag) => (
+                            <span key={tag} className="story-detail__tag">{tag}</span>
+                        ))}
+                    </div>
+                </footer>
+            )}
 
             {children}
         </article>
