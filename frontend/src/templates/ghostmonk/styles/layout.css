@@ -5,6 +5,10 @@
   --layout-page-content-max-width: 740px;
 }
 
+html {
+  background-color: var(--color-surface-primary);
+}
+
 body {
   background-color: var(--color-surface-primary);
   overflow-x: clip;
