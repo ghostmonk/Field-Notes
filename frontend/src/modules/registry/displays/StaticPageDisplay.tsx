@@ -4,13 +4,9 @@ import type { StaticPageDisplayProps } from '../types';
 
 export const StaticPageDisplay: React.FC<StaticPageDisplayProps> = ({ content, title }) => {
     return (
-        <div className="page-container">
-            {title && <h1 className="page-title">{title}</h1>}
-            <div className="card">
-                <div className="prose prose--card">
-                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
-                </div>
-            </div>
-        </div>
+        <article className="static-page">
+            {title && <h1 className="static-page__title">{title}</h1>}
+            <div className="prose" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
+        </article>
     );
 };
