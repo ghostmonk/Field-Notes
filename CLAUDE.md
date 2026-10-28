@@ -23,6 +23,7 @@ All project documentation lives in `.agentic/`. Consult the relevant files when 
 - `workflows/pr_review.md` — review bot rules, review loop, triage rules
 
 **Code Conventions**
+- `code_conventions/code_quality.md` — structural rules for all code: line length, parameters, naming, visibility, magic numbers, braces, nesting, switch defaults
 - `code_conventions/frontend_architecture.md` — server/client boundary, API routes, data fetching, module imports
 - `code_conventions/frontend_components.md` — UI primitives, confirmations, draft recovery, error display, uploads
 - `code_conventions/frontend_security.md` — HTML sanitization
