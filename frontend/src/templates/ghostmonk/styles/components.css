@@ -991,10 +991,17 @@
 .menu-overlay__search .input {
   flex: 1;
 }
-.menu-overlay__actions {
+.menu-overlay__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+.menu-overlay__toolbar .menu-overlay__search { flex: 1; min-width: 0; }
+.menu-overlay__controls {
   display: flex;
   align-items: center;
   gap: var(--space-md);
+  flex-shrink: 0;
 }
 
 /* --- Footer --- */

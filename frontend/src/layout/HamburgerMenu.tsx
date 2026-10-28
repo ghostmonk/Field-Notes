@@ -97,17 +97,50 @@ export default function HamburgerMenu() {
                 aria-hidden={!isOpen}
             >
                 <nav className="menu-overlay__content" role="navigation" aria-label="Main menu">
-                    {/* Search bar — full width above the columns */}
-                    <form onSubmit={handleMenuSearch} className="menu-overlay__search" role="search">
-                        <input
-                            type="search"
-                            value={menuSearch}
-                            onChange={(e) => setMenuSearch(e.target.value)}
-                            placeholder="Search..."
-                            className="input"
-                            aria-label="Search content"
-                        />
-                    </form>
+                    {/* Toolbar — search left, controls right */}
+                    <div className="menu-overlay__toolbar">
+                        <form onSubmit={handleMenuSearch} className="menu-overlay__search" role="search">
+                            <input
+                                type="search"
+                                value={menuSearch}
+                                onChange={(e) => setMenuSearch(e.target.value)}
+                                placeholder="Search..."
+                                className="input"
+                                aria-label="Search content"
+                            />
+                        </form>
+                        <div className="menu-overlay__controls">
+                            {session?.user?.role === "admin" && (
+                                <Link
+                                    href="/admin"
+                                    className="menu-overlay__link"
+                                    data-testid="nav-master-control-link"
+                                    onClick={close}
+                                >
+                                    <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
+                                    <span>Master Control</span>
+                                </Link>
+                            )}
+                            {session ? (
+                                <button
+                                    onClick={() => signOut()}
+                                    className="btn btn--secondary"
+                                    data-testid="logout-button"
+                                >
+                                    Logout
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => process.env.NEXT_PUBLIC_DEV_AUTH === 'true' ? signIn() : signIn("google")}
+                                    className="btn btn--primary"
+                                    data-testid="signin-button"
+                                >
+                                    Sign in
+                                </button>
+                            )}
+                            <ThemeToggle />
+                        </div>
+                    </div>
 
                     {/* Column grid */}
                     <div className="menu-overlay__columns">
@@ -135,41 +168,8 @@ export default function HamburgerMenu() {
                             </div>
                         </div>
 
-                        {/* Links & Account */}
+                        {/* Utility links */}
                         <div className="menu-overlay__group">
-                            <div className="menu-overlay__actions">
-                                {session ? (
-                                    <button
-                                        onClick={() => signOut()}
-                                        className="btn btn--secondary"
-                                        data-testid="logout-button"
-                                    >
-                                        Logout
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => process.env.NEXT_PUBLIC_DEV_AUTH === 'true' ? signIn() : signIn("google")}
-                                        className="btn btn--primary"
-                                        data-testid="signin-button"
-                                    >
-                                        Sign in
-                                    </button>
-                                )}
-                                <ThemeToggle />
-                            </div>
-                            {session?.user?.role === "admin" && (
-                                <div className="menu-overlay__links">
-                                    <Link
-                                        href="/admin"
-                                        className="menu-overlay__link"
-                                        data-testid="nav-master-control-link"
-                                        onClick={close}
-                                    >
-                                        <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
-                                        <span>Master Control</span>
-                                    </Link>
-                                </div>
-                            )}
                             {config.footer.links.length > 0 && (
                                 <div className="menu-overlay__links">
                                     {config.footer.links.map((link) => (
