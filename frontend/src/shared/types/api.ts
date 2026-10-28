@@ -211,6 +211,7 @@ export interface PhotoEssayCard {
     cover_image_position?: string;
     is_published: boolean;
     photo_count: number;
+    tags: string[];
     section_id?: string;
     createdDate: string;
     updatedDate: string;

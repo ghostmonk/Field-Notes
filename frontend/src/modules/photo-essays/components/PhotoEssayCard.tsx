@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { PhotoEssayCard as PhotoEssayCardType } from '@/shared/types/api';
 import { AdminEditButton } from '@/components/AdminEditButton';
 import { AdminDraftBadge } from '@/components/AdminDraftBadge';
+import { formatDateShort } from '@/shared/utils/formatDate';
 
 interface Props {
     essay: PhotoEssayCardType;
@@ -30,7 +31,7 @@ export function PhotoEssayCard({ essay, basePath }: Props) {
                 <img
                     src={essay.cover_image_url}
                     srcSet={essay.cover_image_srcset || undefined}
-                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                     alt={essay.title}
                     className="gallery-card__image"
                     loading="lazy"
@@ -42,16 +43,14 @@ export function PhotoEssayCard({ essay, basePath }: Props) {
             ) : null}
             <div className="gallery-card__overlay">
                 <h2 className="gallery-card__title">{essay.title}</h2>
-                {essay.description && (
-                    <p className="gallery-card__description">{essay.description}</p>
-                )}
-                <time className="gallery-card__date" dateTime={essay.createdDate}>
-                    {new Date(essay.createdDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                    })}
-                </time>
+                <div className="gallery-card__meta">
+                    <time className="gallery-card__date" dateTime={essay.createdDate}>
+                        {formatDateShort(essay.createdDate)}
+                    </time>
+                    {essay.photo_count > 0 && (
+                        <span className="gallery-card__count">{essay.photo_count} photos</span>
+                    )}
+                </div>
             </div>
         </Link>
     );

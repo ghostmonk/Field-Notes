@@ -106,6 +106,7 @@ class PhotoEssayCard(BaseModel):
     cover_image_position: Optional[str] = "50% 50%"
     is_published: bool
     photo_count: int = 0
+    tags: List[str] = Field(default_factory=list)
     section_id: Optional[str] = None
     createdDate: datetime
     updatedDate: datetime
