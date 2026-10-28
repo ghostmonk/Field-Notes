@@ -8,13 +8,25 @@ function getItemKey<T>(item: T, index: number): string {
 }
 
 export function GalleryDisplay<T>({ items, renderItem }: GalleryDisplayProps<T>) {
+    if (items.length === 0) return <div data-testid="gallery-display" />;
+
+    const [featured, ...remaining] = items;
+
     return (
-        <div className="gallery-masonry" data-testid="gallery-display">
-            {items.map((item, index) => (
-                <div key={getItemKey(item, index)} className="gallery-masonry__item">
-                    {renderItem(item)}
+        <div data-testid="gallery-display">
+            <div className="gallery-featured">
+                {renderItem(featured)}
+            </div>
+
+            {remaining.length > 0 && (
+                <div className="gallery-masonry">
+                    {remaining.map((item, index) => (
+                        <div key={getItemKey(item, index)} className="gallery-masonry__item">
+                            {renderItem(item)}
+                        </div>
+                    ))}
                 </div>
-            ))}
+            )}
         </div>
     );
 }
