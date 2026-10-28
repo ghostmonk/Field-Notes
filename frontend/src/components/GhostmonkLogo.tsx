@@ -32,7 +32,7 @@ const GhostmonkLogo: React.FC<GhostmonkLogoProps> = ({
             </g>
             {/* GHOSTMONK wordmark in Space Grotesk */}
             <text
-                x="45"
+                x="52"
                 y="30"
                 fill="currentColor"
                 fontFamily="'Space Grotesk', sans-serif"

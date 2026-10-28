@@ -1021,7 +1021,7 @@
   grid-template-columns: 1fr;
 }
 @media (min-width: 640px) {
-  .site-footer__grid { grid-template-columns: 1fr auto auto; }
+  .site-footer__grid { grid-template-columns: 1fr 1fr 1fr; }
 }
 .site-footer__column { display: flex; flex-direction: column; gap: var(--space-sm); }
 .site-footer__heading {
