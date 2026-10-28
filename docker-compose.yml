@@ -25,6 +25,7 @@ services:
       - VOYAGE_API_KEY=${VOYAGE_API_KEY:-}
     volumes:
       - ./local-uploads:/app/local-uploads
+      - ./gcp-credentials.json:/app/backend/gcp-credentials.json:ro
     depends_on:
       mongo:
         condition: service_started

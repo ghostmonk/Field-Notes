@@ -5,7 +5,15 @@
   --layout-page-content-max-width: 740px;
 }
 
-/* Engineering grid overlay — fixed behind content, above flow field */
+body {
+  background-color: var(--color-surface-primary);
+}
+
+.layout-wrapper {
+  isolation: isolate;
+}
+
+/* Engineering grid overlay — visible between body background and content */
 .layout-wrapper::before {
   content: '';
   position: fixed;

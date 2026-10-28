@@ -8,7 +8,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
-        <div className="layout-wrapper min-h-dvh transition-colors duration-300" style={{ backgroundColor: 'var(--color-surface-primary)', color: 'var(--color-text-primary)' }}>
+        <div className="layout-wrapper min-h-dvh transition-colors duration-300" style={{ color: 'var(--color-text-primary)' }}>
             <a
                 href="#main-content"
                 className="skip-to-content"

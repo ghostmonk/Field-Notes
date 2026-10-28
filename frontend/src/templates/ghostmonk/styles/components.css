@@ -1053,7 +1053,6 @@
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .transition-colors { transition: var(--transition-colors); }
 
-.dark body, html.dark { background-color: var(--color-surface-primary); }
 
 /* ===========================
    HOMEPAGE BLOCKS
@@ -1213,6 +1212,34 @@
   transition: border-color var(--transition-fast);
 }
 
+.featured--has-image {
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2xl);
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .featured--has-image {
+    grid-template-columns: 1fr;
+  }
+}
+
+.featured__image {
+  border-radius: var(--gm-radius-md);
+  overflow: hidden;
+}
+
+.featured__image-inner {
+  display: block;
+}
+
+.featured__image-inner img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--gm-radius-md);
+}
+
 .featured:hover {
   border-color: var(--color-brand-primary);
 }
@@ -1280,6 +1307,9 @@
 .recent-writing {
   display: flex;
   flex-direction: column;
+  background: color-mix(in srgb, var(--color-surface-tertiary) 50%, transparent);
+  border-radius: var(--gm-radius-lg);
+  padding: var(--space-sm) var(--space-lg);
 }
 
 .recent-writing__item {
@@ -1287,7 +1317,7 @@
   justify-content: space-between;
   align-items: baseline;
   padding: var(--space-md) 0;
-  border-bottom: 1px solid var(--color-border-primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-primary) 40%, transparent);
   text-decoration: none;
   color: inherit;
   gap: var(--space-lg);

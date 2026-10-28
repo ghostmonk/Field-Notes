@@ -25,8 +25,8 @@
   "homepage": {
     "blocks": [
       { "type": "identity-hero", "id": "hero" },
-      { "type": "photo-strip", "id": "photos" },
       { "type": "featured-story", "id": "featured" },
+      { "type": "photo-strip", "id": "photos" },
       { "type": "recent-writing", "id": "writing" },
       { "type": "project-showcase", "id": "projects" },
       { "type": "contribution-summary", "id": "github" }

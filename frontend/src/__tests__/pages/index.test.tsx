@@ -202,6 +202,15 @@ describe('getStaticProps', () => {
         expect(calls.some((u: string) => u.includes('/photo-essays'))).toBe(true);
     });
 
+    it('passes include_drafts=false for projects and photo-essays', async () => {
+        await getStaticProps({} as any);
+        const calls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0]);
+        const projectUrl = calls.find((u: string) => u.includes('/projects'));
+        const photoUrl = calls.find((u: string) => u.includes('/photo-essays'));
+        expect(projectUrl).toContain('include_drafts=false');
+        expect(photoUrl).toContain('include_drafts=false');
+    });
+
     it('handles empty stories gracefully', async () => {
         global.fetch = vi.fn().mockImplementation((url: string) => {
             if (url.includes('/stories')) {
