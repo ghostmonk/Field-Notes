@@ -957,6 +957,7 @@
 }
 
 .menu-overlay__group { display: flex; flex-direction: column; gap: var(--space-md); }
+.menu-overlay__columns > .menu-overlay__group:last-child { align-items: flex-end; }
 .menu-overlay__heading {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-xs);
