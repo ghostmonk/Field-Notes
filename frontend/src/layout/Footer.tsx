@@ -29,7 +29,7 @@ const Footer: React.FC = () => {
         <footer className="site-footer" data-testid="site-footer">
             <div className="site-footer__brand">
                 <div className="site-footer__divider">
-                    <GhostmonkLogo height={40} />
+                    <GhostmonkLogo height={28} />
                 </div>
             </div>
             <div className="site-footer__grid">
@@ -75,7 +75,7 @@ const Footer: React.FC = () => {
 
                 {/* Socials column */}
                 {config.socials && Object.values(config.socials).some(Boolean) && (
-                    <div className="site-footer__column">
+                    <div className="site-footer__column site-footer__column--social">
                         <h3 className="site-footer__heading">Social</h3>
                         <div className="site-footer__socials">
                             {socialLinks.map(({ key, label, Icon }) => {

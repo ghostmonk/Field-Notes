@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { iconMap } from "@/shared/lib/navIcons";
 import { HiCog, HiSearch } from "react-icons/hi";
 import { getSiteConfig } from "@/config";
+import ThemeToggle from "@/components/ThemeToggle";
 
 
 const config = getSiteConfig();
@@ -22,7 +23,6 @@ export default function HamburgerMenu() {
     const close = useCallback(() => setIsOpen(false), []);
     const toggle = useCallback(() => setIsOpen(prev => !prev), []);
 
-    // Lock body scroll when open
     useEffect(() => {
         if (isOpen) {
             document.documentElement.style.overflow = "hidden";
@@ -32,7 +32,6 @@ export default function HamburgerMenu() {
         return () => { document.documentElement.style.overflow = ""; };
     }, [isOpen]);
 
-    // Keyboard: Escape to close, Tab/Shift+Tab focus trap
     useEffect(() => {
         if (!isOpen) return;
         const handleKey = (e: KeyboardEvent) => {
@@ -60,7 +59,6 @@ export default function HamburgerMenu() {
         return () => window.removeEventListener("keydown", handleKey);
     }, [isOpen, close]);
 
-    // Focus management: move focus into overlay on open, return on close
     useEffect(() => {
         if (!hasMounted.current) {
             hasMounted.current = true;
@@ -159,6 +157,30 @@ export default function HamburgerMenu() {
                             </div>
                         </div>
                     )}
+
+                    {/* Account & Theme */}
+                    <div className="menu-overlay__group">
+                        <div className="menu-overlay__actions">
+                            {session ? (
+                                <button
+                                    onClick={() => signOut()}
+                                    className="btn btn--secondary"
+                                    data-testid="logout-button"
+                                >
+                                    Logout
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => process.env.NEXT_PUBLIC_DEV_AUTH === 'true' ? signIn() : signIn("google")}
+                                    className="btn btn--primary"
+                                    data-testid="signin-button"
+                                >
+                                    Sign in
+                                </button>
+                            )}
+                            <ThemeToggle />
+                        </div>
+                    </div>
                 </nav>
             </div>
 
