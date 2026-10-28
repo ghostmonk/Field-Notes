@@ -67,24 +67,6 @@ const Footer: React.FC = () => {
                     </div>
                 )}
 
-                {/* Socials column */}
-                {config.socials && Object.values(config.socials).some(Boolean) && (
-                    <div className="site-footer__column site-footer__column--social">
-                        <h3 className="site-footer__heading">Social</h3>
-                        <div className="site-footer__socials">
-                            {socialLinks.map(({ key, label, Icon }) => {
-                                const url = config.socials?.[key];
-                                if (!url) return null;
-                                return (
-                                    <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="site-footer__social-icon" aria-label={label}>
-                                        <Icon />
-                                    </a>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
                 {/* Tools column — right-aligned */}
                 <div className="site-footer__column site-footer__column--tools">
                     <ul className="site-footer__list">
@@ -105,6 +87,21 @@ const Footer: React.FC = () => {
                     </ul>
                 </div>
             </div>
+
+            {/* Social icons — bottom right */}
+            {config.socials && Object.values(config.socials).some(Boolean) && (
+                <div className="site-footer__social-bar">
+                    {socialLinks.map(({ key, label, Icon }) => {
+                        const url = config.socials?.[key];
+                        if (!url) return null;
+                        return (
+                            <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="site-footer__social-icon" aria-label={label}>
+                                <Icon />
+                            </a>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Open source CTA */}
             <div className="site-footer__open-source">
