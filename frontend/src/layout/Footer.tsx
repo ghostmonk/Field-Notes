@@ -48,20 +48,6 @@ const Footer: React.FC = () => {
                                 </li>
                             );
                         })}
-                        <li>
-                            <Link href="/search" className="site-footer__link" data-testid="footer-search-link">
-                                <HiSearch className="site-footer__link-icon" aria-hidden="true" />
-                                Search
-                            </Link>
-                        </li>
-                        {session?.user?.role === 'admin' && (
-                            <li>
-                                <Link href="/admin" className="site-footer__link" data-testid="footer-master-control-link">
-                                    <HiCog className="site-footer__link-icon" aria-hidden="true" />
-                                    Master Control
-                                </Link>
-                            </li>
-                        )}
                     </ul>
                 </div>
 
@@ -98,6 +84,26 @@ const Footer: React.FC = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Tools column — right-aligned */}
+                <div className="site-footer__column site-footer__column--tools">
+                    <ul className="site-footer__list">
+                        <li>
+                            <Link href="/search" className="site-footer__link" data-testid="footer-search-link">
+                                <HiSearch className="site-footer__link-icon" aria-hidden="true" />
+                                Search
+                            </Link>
+                        </li>
+                        {session?.user?.role === 'admin' && (
+                            <li>
+                                <Link href="/admin" className="site-footer__link" data-testid="footer-master-control-link">
+                                    <HiCog className="site-footer__link-icon" aria-hidden="true" />
+                                    Master Control
+                                </Link>
+                            </li>
+                        )}
+                    </ul>
+                </div>
             </div>
 
             {/* Open source CTA */}

@@ -1039,7 +1039,8 @@
 }
 .site-footer__link:hover { color: var(--color-text-link); }
 .site-footer__link-icon { width: 16px; height: 16px; flex-shrink: 0; }
-.site-footer__column--social { justify-content: flex-end; margin-left: auto; }
+.site-footer__column--social { margin-left: auto; }
+.site-footer__column--tools { align-items: flex-end; margin-left: auto; }
 .site-footer__socials { display: flex; gap: var(--space-md); flex-wrap: wrap; }
 .site-footer__social-icon { color: var(--color-text-secondary); font-size: 1.25rem; transition: color var(--transition-fast); }
 .site-footer__social-icon:hover { color: var(--color-text-link); }
