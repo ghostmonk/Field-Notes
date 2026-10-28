@@ -17,7 +17,7 @@ const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamilies}&displa
 
 export default function Document() {
     return (
-        <Html lang="en" className="dark" data-scroll-behavior="smooth" style={{backgroundColor: 'var(--color-surface-primary)'}}>
+        <Html lang="en" className="dark" data-scroll-behavior="smooth" style={{backgroundColor: '#0a0a0c'}}>
             <Head>
                 {/* Meta tags */}
                 <meta charSet="utf-8" />

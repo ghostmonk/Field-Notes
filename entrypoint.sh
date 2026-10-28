@@ -63,6 +63,9 @@ for i in $(seq 1 30); do
             echo "[entrypoint] Warmup returned $WARMUP_STATUS (attempt $attempt), retrying in 2s..."
             sleep 2
         done
+        if [ "$WARMUP_STATUS" != "200" ]; then
+            echo "[entrypoint] ISR warmup failed after 3 attempts (last status: $WARMUP_STATUS), pages may serve stale content"
+        fi
         break
     fi
     sleep 1
