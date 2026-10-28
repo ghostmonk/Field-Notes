@@ -10,6 +10,7 @@ import { Section, Story, Project, Page, PaginatedResponse, ProjectCard as Projec
 import { displayRegistry, useFetchContent } from '@/modules/registry';
 import type { ContentType, DisplayType } from '@/modules/registry';
 import { StoryCard, canEditStory } from '@/modules/stories';
+import { StoryFeedItem } from '@/modules/stories/components/StoryFeedItem';
 import { useStoryMutations } from '@/modules/stories';
 import { ContributionGraph, ProjectCard } from '@/modules/projects';
 import { PhotoEssayCard, PhotoEssayPage } from '@/modules/photo-essays';
@@ -133,6 +134,22 @@ function SectionListView({ section, initialListData }: { section: Section; initi
 
     const renderItem = useMemo(() => {
         if (contentType === 'story') {
+            if (displayType === 'feed') {
+                return (item: unknown) => {
+                    const story = item as Story;
+                    return (
+                        <StoryFeedItem
+                            key={story.id}
+                            story={story}
+                            session={session}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            deleteLoading={deleteLoading}
+                            basePath={basePath}
+                        />
+                    );
+                };
+            }
             return (item: unknown) => {
                 const story = item as Story;
                 return (
@@ -165,7 +182,7 @@ function SectionListView({ section, initialListData }: { section: Section; initi
             const data = item as { id: string; title: string };
             return <div key={data.id}>{data.title}</div>;
         };
-    }, [contentType, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath]);
+    }, [contentType, displayType, session, handleEdit, handleDelete, deleteLoading, engagementCounts, basePath]);
 
     if (error) {
         return (

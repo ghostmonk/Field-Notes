@@ -38,7 +38,7 @@ export function FeedDisplay<T>({ items: rawItems, renderItem, onLoadMore, hasMor
                     </div>
                 }
             >
-                <div className="flex flex-col space-y-6">
+                <div className="feed-list">
                     {items.map((item, index) => (
                         <React.Fragment key={keyExtractor(item, index)}>
                             {renderItem(item)}
