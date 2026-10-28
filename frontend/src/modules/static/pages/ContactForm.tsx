@@ -88,7 +88,7 @@ export function ContactForm() {
 
   if (formState === 'success') {
     return (
-      <div className="card" data-testid="contact-success">
+      <div className="contact-form" data-testid="contact-success">
         <p className="text-text-primary">
           Thank you for your message. I will get back to you soon.
         </p>
@@ -101,7 +101,7 @@ export function ContactForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="card"
+      className="contact-form"
       data-testid="contact-form"
       noValidate
     >
