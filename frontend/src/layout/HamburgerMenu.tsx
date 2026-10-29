@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { iconMap } from "@/shared/lib/navIcons";
-import { HiCog, HiSearch } from "react-icons/hi";
+import { HiCog } from "react-icons/hi";
 import { getSiteConfig } from "@/config";
+import ThemeToggle from "@/components/ThemeToggle";
 
 
 const config = getSiteConfig();
@@ -19,10 +21,22 @@ export default function HamburgerMenu() {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const hasMounted = useRef(false);
 
+    const router = useRouter();
+    const [menuSearch, setMenuSearch] = useState("");
+
     const close = useCallback(() => setIsOpen(false), []);
     const toggle = useCallback(() => setIsOpen(prev => !prev), []);
 
-    // Lock body scroll when open
+    const handleMenuSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        const trimmed = menuSearch.trim();
+        if (trimmed) {
+            close();
+            router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+            setMenuSearch("");
+        }
+    };
+
     useEffect(() => {
         if (isOpen) {
             document.documentElement.style.overflow = "hidden";
@@ -32,7 +46,6 @@ export default function HamburgerMenu() {
         return () => { document.documentElement.style.overflow = ""; };
     }, [isOpen]);
 
-    // Keyboard: Escape to close, Tab/Shift+Tab focus trap
     useEffect(() => {
         if (!isOpen) return;
         const handleKey = (e: KeyboardEvent) => {
@@ -60,7 +73,6 @@ export default function HamburgerMenu() {
         return () => window.removeEventListener("keydown", handleKey);
     }, [isOpen, close]);
 
-    // Focus management: move focus into overlay on open, return on close
     useEffect(() => {
         if (!hasMounted.current) {
             hasMounted.current = true;
@@ -85,50 +97,20 @@ export default function HamburgerMenu() {
                 aria-hidden={!isOpen}
             >
                 <nav className="menu-overlay__content" role="navigation" aria-label="Main menu">
-                    {/* Sections */}
-                    <div className="menu-overlay__group">
-                        <h2 className="menu-overlay__heading">Sections</h2>
-                        <div className="menu-overlay__links">
-                            {sections.map((section) => {
-                                const Icon = iconMap[section.icon];
-                                const isActive = activeSlug === section.slug;
-                                return (
-                                    <Link
-                                        key={section.slug}
-                                        href={section.path}
-                                        className={`menu-overlay__link ${isActive ? "menu-overlay__link--active" : ""}`}
-                                        data-testid={`nav-${section.slug}-link`}
-                                        aria-current={isActive ? "page" : undefined}
-                                        onClick={close}
-                                    >
-                                        <Icon className="menu-overlay__link-icon" aria-hidden="true" />
-                                        <span>{section.label}</span>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Search */}
-                    <div className="menu-overlay__group">
-                        <div className="menu-overlay__links">
-                            <Link
-                                href="/search"
-                                className="menu-overlay__link"
-                                data-testid="nav-search-link"
-                                onClick={close}
-                            >
-                                <HiSearch className="menu-overlay__link-icon" aria-hidden="true" />
-                                <span>Search</span>
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* Admin */}
-                    {session?.user?.role === "admin" && (
-                        <div className="menu-overlay__group">
-                            <h2 className="menu-overlay__heading">Admin</h2>
-                            <div className="menu-overlay__links">
+                    {/* Toolbar — search left, controls right */}
+                    <div className="menu-overlay__toolbar">
+                        <form onSubmit={handleMenuSearch} className="menu-overlay__search" role="search">
+                            <input
+                                type="search"
+                                value={menuSearch}
+                                onChange={(e) => setMenuSearch(e.target.value)}
+                                placeholder="Search..."
+                                className="input"
+                                aria-label="Search content"
+                            />
+                        </form>
+                        <div className="menu-overlay__controls">
+                            {session?.user?.role === "admin" && (
                                 <Link
                                     href="/admin"
                                     className="menu-overlay__link"
@@ -138,27 +120,72 @@ export default function HamburgerMenu() {
                                     <HiCog className="menu-overlay__link-icon" aria-hidden="true" />
                                     <span>Master Control</span>
                                 </Link>
-                            </div>
+                            )}
+                            {session ? (
+                                <button
+                                    onClick={() => signOut()}
+                                    className="btn btn--secondary"
+                                    data-testid="logout-button"
+                                >
+                                    Logout
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => process.env.NEXT_PUBLIC_DEV_AUTH === 'true' ? signIn() : signIn("google")}
+                                    className="btn btn--primary"
+                                    data-testid="signin-button"
+                                >
+                                    Sign in
+                                </button>
+                            )}
+                            <ThemeToggle />
                         </div>
-                    )}
+                    </div>
 
-                    {/* Utility links */}
-                    {config.footer.links.length > 0 && (
+                    {/* Column grid */}
+                    <div className="menu-overlay__columns">
+                        {/* Sections */}
                         <div className="menu-overlay__group">
+                            <h2 className="menu-overlay__heading">Sections</h2>
                             <div className="menu-overlay__links">
-                                {config.footer.links.map((link) => (
-                                    <Link
-                                        key={link.href}
-                                        href={link.href}
-                                        className="menu-overlay__link"
-                                        onClick={close}
-                                    >
-                                        {link.label}
-                                    </Link>
-                                ))}
+                                {sections.map((section) => {
+                                    const Icon = iconMap[section.icon];
+                                    const isActive = activeSlug === section.slug;
+                                    return (
+                                        <Link
+                                            key={section.slug}
+                                            href={section.path}
+                                            className={`menu-overlay__link ${isActive ? "menu-overlay__link--active" : ""}`}
+                                            data-testid={`nav-${section.slug}-link`}
+                                            aria-current={isActive ? "page" : undefined}
+                                            onClick={close}
+                                        >
+                                            <Icon className="menu-overlay__link-icon" aria-hidden="true" />
+                                            <span>{section.label}</span>
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </div>
-                    )}
+
+                        {/* Utility links */}
+                        {config.footer.links.length > 0 && (
+                            <div className="menu-overlay__group">
+                                <div className="menu-overlay__links">
+                                    {config.footer.links.map((link) => (
+                                        <Link
+                                            key={link.href}
+                                            href={link.href}
+                                            className="menu-overlay__link"
+                                            onClick={close}
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </nav>
             </div>
 

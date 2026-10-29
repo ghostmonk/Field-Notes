@@ -29,7 +29,7 @@ const Footer: React.FC = () => {
         <footer className="site-footer" data-testid="site-footer">
             <div className="site-footer__brand">
                 <div className="site-footer__divider">
-                    <GhostmonkLogo height={40} />
+                    <GhostmonkLogo height={28} />
                 </div>
             </div>
             <div className="site-footer__grid">
@@ -48,12 +48,6 @@ const Footer: React.FC = () => {
                                 </li>
                             );
                         })}
-                        <li>
-                            <Link href="/search" className="site-footer__link" data-testid="footer-search-link">
-                                <HiSearch className="site-footer__link-icon" aria-hidden="true" />
-                                Search
-                            </Link>
-                        </li>
                     </ul>
                 </div>
 
@@ -73,39 +67,44 @@ const Footer: React.FC = () => {
                     </div>
                 )}
 
-                {/* Socials column */}
-                {config.socials && Object.values(config.socials).some(Boolean) && (
-                    <div className="site-footer__column">
-                        <h3 className="site-footer__heading">Social</h3>
-                        <div className="site-footer__socials">
-                            {socialLinks.map(({ key, label, Icon }) => {
-                                const url = config.socials?.[key];
-                                if (!url) return null;
-                                return (
-                                    <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="site-footer__social-icon" aria-label={label}>
-                                        <Icon />
-                                    </a>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* Admin column */}
-                {session?.user?.role === 'admin' && (
-                    <div className="site-footer__column">
-                        <h3 className="site-footer__heading">Admin</h3>
-                        <ul className="site-footer__list">
+                {/* Tools column — right-aligned */}
+                <div className="site-footer__column site-footer__column--tools">
+                    <ul className="site-footer__list">
+                        <li>
+                            <Link href="/search" className="site-footer__link" data-testid="footer-search-link">
+                                <HiSearch className="site-footer__link-icon" aria-hidden="true" />
+                                Search
+                            </Link>
+                        </li>
+                        {session?.user?.role === 'admin' && (
                             <li>
                                 <Link href="/admin" className="site-footer__link" data-testid="footer-master-control-link">
                                     <HiCog className="site-footer__link-icon" aria-hidden="true" />
                                     Master Control
                                 </Link>
                             </li>
-                        </ul>
-                    </div>
-                )}
+                        )}
+                    </ul>
+                </div>
             </div>
+
+            {/* Social icons — bottom right */}
+            {config.socials && Object.values(config.socials).some(Boolean) && (
+                <div className="site-footer__social-bar">
+                    <h3 className="site-footer__heading">Social</h3>
+                    <div className="site-footer__socials">
+                        {socialLinks.map(({ key, label, Icon }) => {
+                            const url = config.socials?.[key];
+                            if (!url) return null;
+                            return (
+                                <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="site-footer__social-icon" aria-label={label}>
+                                    <Icon />
+                                </a>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Open source CTA */}
             <div className="site-footer__open-source">
