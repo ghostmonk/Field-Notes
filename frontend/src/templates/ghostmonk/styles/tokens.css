@@ -71,6 +71,7 @@
   --font-family-body: var(--font-family-sans);
 
   /* Type scale — minor third (1.2) for tighter engineering feel */
+  --font-size-2xs: 0.6875rem;
   --font-size-xs: clamp(0.7rem, 0.65rem + 0.2vw, 0.75rem);
   --font-size-sm: clamp(0.8rem, 0.75rem + 0.2vw, 0.875rem);
   --font-size-base: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);
@@ -102,6 +103,10 @@
   --space-3xl: 3rem;
   --space-4xl: 4rem;
   --space-5xl: 6rem;
+
+  /* Layout */
+  --layout-max-width: 1100px;
+  --layout-gutter: 24px;
 
   /* Radii — minimal, sharp aesthetic (gm- prefix avoids Tailwind @theme collision) */
   --gm-radius-sm: 1px;

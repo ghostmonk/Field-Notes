@@ -18,7 +18,7 @@ export class TopNavComponent {
   // Admin links (inside menu overlay)
   readonly masterControlLink: Locator;
 
-  // Auth elements (in header)
+  // Auth elements (inside menu overlay)
   readonly signInButton: Locator;
   readonly logoutButton: Locator;
 
@@ -109,14 +109,19 @@ export class TopNavComponent {
   }
 
   async clickSignIn() {
+    await this.openMenu();
     await this.signInButton.click();
   }
 
   async clickLogout() {
+    await this.openMenu();
     await this.logoutButton.click();
   }
 
   async isAuthenticated(): Promise<boolean> {
-    return this.logoutButton.isVisible();
+    await this.openMenu();
+    const visible = await this.logoutButton.isVisible();
+    await this.closeMenu();
+    return visible;
   }
 }

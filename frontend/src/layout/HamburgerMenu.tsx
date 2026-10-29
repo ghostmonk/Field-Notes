@@ -169,8 +169,8 @@ export default function HamburgerMenu() {
                         </div>
 
                         {/* Utility links */}
-                        <div className="menu-overlay__group">
-                            {config.footer.links.length > 0 && (
+                        {config.footer.links.length > 0 && (
+                            <div className="menu-overlay__group">
                                 <div className="menu-overlay__links">
                                     {config.footer.links.map((link) => (
                                         <Link
@@ -183,8 +183,8 @@ export default function HamburgerMenu() {
                                         </Link>
                                     ))}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </nav>
             </div>
