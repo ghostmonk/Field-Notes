@@ -24,7 +24,7 @@ BACKEND_PID=$!
 cd /app
 
 echo "[entrypoint] Waiting for backend health check"
-for i in $(seq 1 30); do
+for i in $(seq 1 60); do
     if curl -sf http://localhost:5001/health > /dev/null 2>&1; then
         echo "[entrypoint] Backend healthy"
         break
@@ -37,7 +37,7 @@ for i in $(seq 1 30); do
 done
 
 if ! curl -sf http://localhost:5001/health > /dev/null 2>&1; then
-    echo "[entrypoint] Backend failed to become healthy after 30s"
+    echo "[entrypoint] Backend failed to become healthy after 60s"
     kill $BACKEND_PID 2>/dev/null || true
     exit 1
 fi
