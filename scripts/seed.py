@@ -220,6 +220,8 @@ PROJECTS = [
         "technologies": ["Next.js", "FastAPI", "MongoDB", "Docker"],
         "is_featured": True,
         "sort_order": 0,
+        "github_url": "https://github.com/ghostmonk/ghostmonk.com",
+        "image_url": "https://picsum.photos/seed/ghostmonk-project1/1280/720",
     },
     {
         "title": "Particle Playground",
@@ -228,6 +230,8 @@ PROJECTS = [
         "technologies": ["WebGL", "TypeScript", "GLSL"],
         "is_featured": True,
         "sort_order": 1,
+        "github_url": "https://github.com/ghostmonk/particle-playground",
+        "image_url": "https://picsum.photos/seed/ghostmonk-project2/1280/720",
     },
     {
         "title": "Financial Tracker",
@@ -236,6 +240,7 @@ PROJECTS = [
         "technologies": ["Tauri", "Rust", "React", "SQLite"],
         "is_featured": False,
         "sort_order": 2,
+        "image_url": "https://picsum.photos/seed/ghostmonk-project3/1280/720",
     },
 ]
 
@@ -354,9 +359,9 @@ def seed(db):
         projects_coll.insert_one({
             **proj,
             "slug": slug,
-            "github_url": None,
-            "image_url": None,
-            "live_url": None,
+            "github_url": proj.get("github_url"),
+            "image_url": proj.get("image_url"),
+            "live_url": proj.get("live_url"),
             "is_published": True,
             "is_deleted": False,
             "user_id": user_id,

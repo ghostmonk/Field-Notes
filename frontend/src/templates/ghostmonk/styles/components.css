@@ -206,10 +206,13 @@
 }
 
 /* --- Project detail (two-column, content-left sidebar-right) --- */
+.page-container:has(.project-detail) {
+  max-width: var(--layout-max-width);
+}
 .project-detail__layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: var(--space-2xl);
+  gap: 32px;
   align-items: start;
 }
 .project-detail__main {
@@ -219,7 +222,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
+  margin-bottom: 8px;
 }
 .project-detail__title {
   font-family: var(--font-family-sans);
@@ -235,19 +238,19 @@
   color: var(--color-brand-primary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: var(--space-lg);
+  margin-bottom: 20px;
 }
 .project-detail__summary {
   font-size: 15px;
   color: var(--color-text-secondary);
   line-height: 1.7;
-  margin: 0 0 var(--space-xl);
+  margin: 0 0 24px;
 }
 .project-detail__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xl);
+  gap: 8px;
+  margin-bottom: 24px;
 }
 .project-detail__tag {
   font-family: var(--font-family-mono);
@@ -262,7 +265,7 @@
   aspect-ratio: 16/9;
   object-fit: cover;
   border-radius: 4px;
-  margin-bottom: var(--space-xl);
+  margin-bottom: 24px;
 }
 .project-detail__content {
   min-width: 0;
@@ -271,7 +274,7 @@
   min-width: 0;
 }
 .project-detail__sidebar-section {
-  margin-bottom: var(--space-xl);
+  margin-bottom: 24px;
 }
 .project-detail__sidebar-label {
   font-family: var(--font-family-mono);
@@ -285,6 +288,7 @@
 }
 .project-detail__meta-table {
   font-size: 13px;
+  margin-bottom: 16px;
 }
 .project-detail__meta-row {
   display: flex;
@@ -2165,6 +2169,34 @@
 
 @media (max-width: 500px) {
   .photo-strip { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* --- Image upload field --- */
+.image-upload-field__input { display: none; }
+
+.image-upload-field__preview {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.image-upload-field__img {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+}
+.image-upload-field__actions {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--color-surface-elevated);
+}
+
+.image-upload-field__error {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-status-error);
 }
 
 /* --- Reduced motion --- */
