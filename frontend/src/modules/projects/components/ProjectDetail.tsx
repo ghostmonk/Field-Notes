@@ -9,7 +9,16 @@ interface ProjectDetailProps {
     onEdit?: () => void;
 }
 
+function buildStatusLine(project: Project): string | null {
+    const parts: string[] = [];
+    if (project.github_url) parts.push('Open Source');
+    if (project.is_featured) parts.push('Active Development');
+    return parts.length > 0 ? parts.join(' · ') : null;
+}
+
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit }) => {
+    const statusLine = buildStatusLine(project);
+
     return (
         <article className="project-detail">
             <div className="project-detail__layout">
@@ -21,8 +30,8 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit })
                             data-testid="project-edit-button"
                         />
                     </div>
-                    {project.is_featured && (
-                        <div className="project-detail__status-line">Active Development</div>
+                    {statusLine && (
+                        <div className="project-detail__status-line">{statusLine}</div>
                     )}
                     <p className="project-detail__summary">{project.summary}</p>
                     {project.technologies?.length > 0 && (
@@ -41,9 +50,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit })
                             loading="eager"
                         />
                     )}
-                    <div className="project-detail__content">
-                        <div className="prose" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.content) }} />
-                    </div>
+                    {project.content && (
+                        <div className="project-detail__content">
+                            <div className="prose" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.content) }} />
+                        </div>
+                    )}
                 </div>
                 <aside className="project-detail__sidebar">
                     <div className="project-detail__sidebar-section">
@@ -56,7 +67,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit })
                                 </div>
                             )}
                             <div className="project-detail__meta-row">
-                                <span className="project-detail__meta-key">Created</span>
+                                <span className="project-detail__meta-key">Started</span>
                                 <span className="project-detail__meta-val">{formatDateShort(project.createdDate)}</span>
                             </div>
                             {project.github_url && (
@@ -68,7 +79,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit })
                                         rel="noopener noreferrer"
                                         className="project-detail__meta-val project-detail__meta-val--link"
                                     >
-                                        GitHub
+                                        GitHub &rarr;
                                     </a>
                                 </div>
                             )}
@@ -81,7 +92,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onEdit })
                                         rel="noopener noreferrer"
                                         className="project-detail__meta-val project-detail__meta-val--link"
                                     >
-                                        Live Demo
+                                        Live Demo &rarr;
                                     </a>
                                 </div>
                             )}

@@ -89,14 +89,14 @@ export function ImageUploadField({ value, onChange, sectionId, disabled, ...prop
           </div>
         </div>
       ) : (
-        <button
+        <Button
           type="button"
-          className="image-upload-field__dropzone"
+          variant="secondary"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || uploading}
         >
-          {uploading ? 'Uploading...' : 'Click to upload project image'}
-        </button>
+          {uploading ? 'Uploading...' : 'Upload Project Image'}
+        </Button>
       )}
 
       <input
