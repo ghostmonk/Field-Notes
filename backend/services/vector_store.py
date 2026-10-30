@@ -33,7 +33,7 @@ def _get_client() -> QdrantClient:
                 api_key = os.getenv("QDRANT_API_KEY")
                 if not url:
                     raise ValueError("QDRANT_URL environment variable is required")
-                _client = QdrantClient(url=url, api_key=api_key)
+                _client = QdrantClient(url=url, api_key=api_key, timeout=10)
     return _client
 
 
