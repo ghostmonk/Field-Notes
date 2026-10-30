@@ -9,7 +9,7 @@ import { useConfirm } from '@/components/ConfirmDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ErrorService } from '@/services/errorService';
 import { VersionHistory } from '@/modules/versions/components/VersionHistory';
-import { Button, Input, Checkbox, Badge, FormField, Textarea, TagInput } from '@/components/ui';
+import { Button, Input, Checkbox, Badge, FormField, Textarea, TagInput, ImageUploadField } from '@/components/ui';
 
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false });
 
@@ -220,7 +220,7 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
           </FormField>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField label="GitHub URL" htmlFor="github_url">
             <Input
               type="url"
@@ -243,18 +243,17 @@ export function ProjectEditorForm({ section }: ProjectEditorFormProps) {
               data-testid="editor-live-url-input"
             />
           </FormField>
-          <FormField label="Image URL" htmlFor="image_url">
-            <Input
-              type="url"
-              id="image_url"
-              value={project.image_url || ''}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setField('image_url', e.target.value || null)}
-              placeholder="https://..."
-              disabled={isSaving}
-              data-testid="editor-image-url-input"
-            />
-          </FormField>
         </div>
+
+        <FormField label="Project Image" htmlFor="image_url">
+          <ImageUploadField
+            value={project.image_url || null}
+            onChange={(url) => setField('image_url', url)}
+            sectionId={section.id}
+            disabled={isSaving}
+            data-testid="editor-image-upload"
+          />
+        </FormField>
       </form>
 
       {project.id && (

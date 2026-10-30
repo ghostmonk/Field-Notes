@@ -12,3 +12,4 @@ export { Tabs } from './Tabs';
 export { TurnstileWidget } from './TurnstileWidget';
 export { HoneypotField } from './HoneypotField';
 export { TagInput } from './TagInput';
+export { ImageUploadField } from './ImageUploadField';

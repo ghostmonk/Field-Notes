@@ -2167,6 +2167,57 @@
   .photo-strip { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* --- Image upload field --- */
+.image-upload-field__input { display: none; }
+
+.image-upload-field__dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 120px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.image-upload-field__dropzone:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+.image-upload-field__dropzone:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image-upload-field__preview {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.image-upload-field__img {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+}
+.image-upload-field__actions {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--color-surface-elevated);
+}
+
+.image-upload-field__error {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-status-error);
+}
+
 /* --- Reduced motion --- */
 @media (prefers-reduced-motion: reduce) {
   .card:hover { transform: none; }
