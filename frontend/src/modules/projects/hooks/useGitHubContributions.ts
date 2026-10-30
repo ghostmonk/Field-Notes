@@ -16,13 +16,13 @@ export interface ContributionData {
 }
 
 let cached: ContributionData | null = null;
-let pending: Promise<ContributionData | null> | null = null;
+let pending: Promise<ContributionData> | null = null;
 
-function fetchContributions(signal: AbortSignal): Promise<ContributionData | null> {
+function fetchContributions(): Promise<ContributionData> {
     if (cached) return Promise.resolve(cached);
     if (pending) return pending;
 
-    pending = fetch('/api/github/contributions', { signal })
+    pending = fetch('/api/github/contributions')
         .then((res) => {
             if (!res.ok) throw new Error(`${res.status}`);
             return res.json();
@@ -34,7 +34,6 @@ function fetchContributions(signal: AbortSignal): Promise<ContributionData | nul
         })
         .catch((err) => {
             pending = null;
-            if (err.name === 'AbortError') return null;
             throw err;
         });
 
@@ -51,14 +50,16 @@ export function useGitHubContributions() {
             return;
         }
 
-        const controller = new AbortController();
-        fetchContributions(controller.signal)
+        let cancelled = false;
+        fetchContributions()
             .then((result) => {
-                if (result) setData(result);
+                if (!cancelled) setData(result);
             })
-            .catch(() => setError(true));
+            .catch(() => {
+                if (!cancelled) setError(true);
+            });
 
-        return () => controller.abort();
+        return () => { cancelled = true; };
     }, []);
 
     return { data, error };
